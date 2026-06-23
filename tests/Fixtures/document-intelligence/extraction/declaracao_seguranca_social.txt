@@ -1,0 +1,5 @@
+Declaracao Seguranca Social
+Beneficiario: Beneficiario Ficticio
+Numero beneficiario: 12345678901
+Prestacao: Subsidio ficticio
+Valor: 350,25 EUR

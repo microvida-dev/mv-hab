@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        color-scheme: light;
+    }
+
+    body {
+        @apply bg-ink-50 text-ink-900;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+
+    a,
+    button,
+    input,
+    select,
+    textarea {
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-offset-2;
+    }
+}
+
+@layer components {
+    .mv-surface {
+        @apply rounded-lg border border-ink-100 bg-white shadow-surface;
+    }
+
+    .mv-button-primary {
+        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-transparent bg-civic-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-civic-900 disabled:opacity-50;
+    }
+
+    .mv-button-secondary {
+        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-ink-100 bg-white px-4 py-2 text-sm font-semibold text-ink-700 transition hover:bg-ink-50 disabled:opacity-50;
+    }
+
+    .mv-button-danger {
+        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-transparent bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800 disabled:opacity-50;
+    }
+
+    .mv-table {
+        @apply min-w-full divide-y divide-ink-100 text-sm;
+    }
+
+    .mv-table thead {
+        @apply bg-ink-50;
+    }
+
+    .mv-table th {
+        @apply px-4 py-3 text-left text-xs font-semibold uppercase text-ink-500;
+    }
+
+    .mv-table td {
+        @apply px-4 py-3 text-ink-700;
+    }
+}

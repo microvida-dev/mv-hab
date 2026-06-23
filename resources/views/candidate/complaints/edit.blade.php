@@ -1,0 +1,5 @@
+<x-app-layout>
+    <x-slot name="header"><div><p class="text-sm font-semibold text-civic-700">Reclamações</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">Editar reclamação</h1></div></x-slot>
+    <div class="py-8"><div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8"><form method="POST" action="{{ route('candidate.complaints.update', $complaint) }}" class="space-y-5 rounded-md border border-ink-100 bg-white p-6">@csrf @method('PATCH')<div><x-input-label for="subject" value="Assunto" /><x-text-input id="subject" name="subject" class="mt-1 w-full" value="{{ old('subject', $complaint->subject) }}" required /></div><div><x-input-label for="grounds" value="Fundamentos" /><textarea id="grounds" name="grounds" class="mt-1 w-full rounded-md border-ink-200" required>{{ old('grounds', $complaint->grounds) }}</textarea></div><div><x-input-label for="requested_outcome" value="Resultado pretendido" /><textarea id="requested_outcome" name="requested_outcome" class="mt-1 w-full rounded-md border-ink-200">{{ old('requested_outcome', $complaint->requested_outcome) }}</textarea></div><x-primary-button>Guardar</x-primary-button></form></div></div>
+</x-app-layout>
+

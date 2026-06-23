@@ -1,0 +1,5 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head><meta charset="utf-8"><title>Comprovativo {{ $number }}</title><style>body{font-family:Arial,sans-serif;color:#18212f;line-height:1.5;max-width:760px;margin:40px auto}.label{color:#596579;font-size:12px;text-transform:uppercase}.value{margin:4px 0 20px}.body{border-top:1px solid #dfe4ea;margin-top:28px;padding-top:24px;white-space:pre-line}</style></head>
+<body><h1>Comprovativo de comunicação</h1><p class="label">Número</p><p class="value">{{ $number }}</p><p class="label">Comunicação</p><p class="value">{{ $communication->communication_number }}</p><p class="label">Tipo de comprovativo</p><p class="value">{{ $type->label() }}</p><p class="label">Evento</p><p class="value">{{ $communication->event_code }}</p><p class="label">Canal e estado</p><p class="value">{{ $delivery?->channel?->label() ?? 'Interno' }} · {{ $delivery?->status?->label() ?? $communication->status->label() }}</p><p class="label">Data de geração</p><p class="value">{{ now()->format('d/m/Y H:i:s') }}</p><div class="body">{{ $communication->body }}</div></body>
+</html>

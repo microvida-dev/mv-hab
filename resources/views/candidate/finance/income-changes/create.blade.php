@@ -1,0 +1,4 @@
+<x-app-layout>
+    <x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Declarar alteração</h1></x-slot>
+    <form method="POST" action="{{ route('candidate.finance.income-changes.store') }}" class="mv-card grid gap-4">@csrf<select class="mv-input" name="tenant_financial_account_id" required>@foreach ($accounts as $account)<option value="{{ $account->id }}">{{ $account->account_number }}</option>@endforeach</select><input class="mv-input" type="date" name="changed_at" value="{{ now()->toDateString() }}"><input class="mv-input" name="monthly_income_after" type="number" step="0.01" placeholder="Rendimento mensal atual"><textarea class="mv-input" name="declared_reason" placeholder="Motivo da alteração" required></textarea><button class="mv-button-primary">Guardar</button></form>
+</x-app-layout>

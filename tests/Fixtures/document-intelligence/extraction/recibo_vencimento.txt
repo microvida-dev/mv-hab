@@ -1,0 +1,6 @@
+Recibo de Vencimento
+Entidade patronal: Empresa Ficticia Lda
+Trabalhador: Trabalhador Ficticio
+Salario base: 1.100,00 EUR
+Iliquido: 1.250,00 EUR
+Liquido: 980,50 EUR

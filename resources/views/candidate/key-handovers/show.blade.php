@@ -1,0 +1,4 @@
+<x-app-layout>
+    <x-slot name="header"><div><p class="text-sm font-semibold text-civic-700">Área pessoal</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">Entrega de chaves</h1></div></x-slot>
+    <div class="py-8"><div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8"><div class="rounded-md border border-ink-100 bg-white p-6 text-sm"><dl class="grid gap-4 md:grid-cols-2"><div><dt class="text-ink-500">Habitação</dt><dd>{{ $keyHandoverAppointment->housingUnit?->code }}</dd></div><div><dt class="text-ink-500">Estado</dt><dd>{{ $keyHandoverAppointment->status->label() }}</dd></div><div><dt class="text-ink-500">Data</dt><dd>{{ $keyHandoverAppointment->scheduled_for?->format('d/m/Y H:i') }}</dd></div><div><dt class="text-ink-500">Local</dt><dd>{{ $keyHandoverAppointment->location }}</dd></div></dl><p class="mt-4">{{ $keyHandoverAppointment->instructions }}</p></div></div></div>
+</x-app-layout>

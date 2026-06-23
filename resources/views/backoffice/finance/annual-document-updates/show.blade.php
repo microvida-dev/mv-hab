@@ -1,0 +1,4 @@
+<x-app-layout>
+    <x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">{{ $annualDocumentUpdateRequest->request_number }}</h1></x-slot>
+    <div class="mv-card space-y-4"><p>Estado: {{ $annualDocumentUpdateRequest->status->label() }}</p><p>Ano: {{ $annualDocumentUpdateRequest->reference_year }}</p><form method="POST" action="{{ route('backoffice.finance.annual-document-updates.accept', $annualDocumentUpdateRequest) }}">@csrf<button class="mv-button-secondary">Aceitar</button></form><form method="POST" action="{{ route('backoffice.finance.annual-document-updates.reject', $annualDocumentUpdateRequest) }}" class="flex gap-2">@csrf<input class="mv-input" name="reason" placeholder="Motivo" required><button class="mv-button-secondary">Rejeitar</button></form></div>
+</x-app-layout>

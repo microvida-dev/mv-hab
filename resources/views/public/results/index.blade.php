@@ -1,0 +1,5 @@
+<x-public-layout title="Resultados">
+    <section class="border-b border-ink-100 bg-ink-50"><div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8"><p class="text-sm font-semibold text-civic-700">Resultados publicados</p><h1 class="mt-2 text-3xl font-semibold text-ink-900">Listas publicadas</h1><p class="mt-3 max-w-3xl text-base leading-7 text-ink-500">Consulta pública de listas com dados minimizados e identificadores públicos.</p></div></section>
+    <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8"><div class="grid gap-4">@forelse($publications as $publication)<a href="{{ route('public.results.show', $publication) }}" class="mv-surface block p-5"><h2 class="text-lg font-semibold text-ink-900">{{ $publication->title }}</h2><p class="mt-2 text-sm text-ink-500">{{ $publication->publication_type->label() }} · {{ $publication->published_at?->format('d/m/Y') }}</p></a>@empty<div class="mv-surface p-8 text-center text-ink-500">Sem listas públicas disponíveis.</div>@endforelse</div><div class="mt-8">{{ $publications->links() }}</div></section>
+</x-public-layout>
+

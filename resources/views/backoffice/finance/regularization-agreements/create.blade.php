@@ -1,0 +1,4 @@
+<x-app-layout>
+    <x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Criar acordo</h1></x-slot>
+    <form method="POST" action="{{ route('backoffice.finance.regularization-agreements.store') }}" class="mv-card grid gap-4">@csrf<select class="mv-input" name="tenant_financial_account_id" required>@foreach ($accounts as $account)<option value="{{ $account->id }}">{{ $account->account_number }} · {{ $account->tenant?->name }}</option>@endforeach</select><input class="mv-input" type="number" name="installment_count" min="1" max="60" value="3" required><input class="mv-input" type="date" name="starts_on" value="{{ now()->addMonth()->startOfMonth()->toDateString() }}" required><textarea class="mv-input" name="terms" placeholder="Termos"></textarea><button class="mv-button-primary">Guardar</button></form>
+</x-app-layout>

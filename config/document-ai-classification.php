@@ -1,0 +1,121 @@
+<?php
+
+use App\Enums\DocumentAiDocumentType;
+
+return [
+    'thresholds' => [
+        'auto_classification' => (float) env('DOCUMENT_AI_CLASSIFICATION_MIN_CONFIDENCE', 0.90),
+        'manual_review' => (float) env('DOCUMENT_AI_CLASSIFICATION_MANUAL_REVIEW_THRESHOLD', 0.70),
+    ],
+
+    'prompt_version' => 'sprint28.classification.v1',
+    'max_prompt_chars' => (int) env('DOCUMENT_AI_CLASSIFICATION_MAX_PROMPT_CHARS', 6000),
+
+    'keywords' => [
+        DocumentAiDocumentType::CartaoCidadao->value => [
+            'cartao de cidadao',
+            'cartão de cidadão',
+            'republica portuguesa',
+            'república portuguesa',
+            'documento de identificacao',
+            'documento de identificação',
+            'numero de identificacao civil',
+            'número de identificação civil',
+        ],
+        DocumentAiDocumentType::TituloResidencia->value => [
+            'titulo de residencia',
+            'título de residência',
+            'autorizacao de residencia',
+            'autorização de residência',
+            'servico de estrangeiros',
+            'serviço de estrangeiros',
+            'aima',
+        ],
+        DocumentAiDocumentType::Passaporte->value => [
+            'passaporte',
+            'passport',
+            'passport no',
+            'issuing authority',
+        ],
+        DocumentAiDocumentType::Irs->value => [
+            'declaracao de rendimentos',
+            'declaração de rendimentos',
+            'modelo 3',
+            'irs',
+            'autoridade tributaria',
+            'autoridade tributária',
+        ],
+        DocumentAiDocumentType::NotaLiquidacao->value => [
+            'nota de liquidacao',
+            'nota de liquidação',
+            'liquidacao de irs',
+            'liquidação de irs',
+            'demonstracao de liquidacao',
+            'demonstração de liquidação',
+        ],
+        DocumentAiDocumentType::ReciboVencimento->value => [
+            'recibo de vencimento',
+            'remuneracao',
+            'remuneração',
+            'vencimento base',
+            'subsidio de alimentacao',
+            'subsídio de alimentação',
+        ],
+        DocumentAiDocumentType::DeclaracaoSegurancaSocial->value => [
+            'seguranca social',
+            'segurança social',
+            'instituto da seguranca social',
+            'instituto da segurança social',
+            'situacao contributiva',
+            'situação contributiva',
+        ],
+        DocumentAiDocumentType::DeclaracaoAt->value => [
+            'autoridade tributaria',
+            'autoridade tributária',
+            'certidao',
+            'certidão',
+            'situacao tributaria',
+            'situação tributária',
+            'portal das financas',
+            'portal das finanças',
+        ],
+        DocumentAiDocumentType::Iban->value => [
+            'iban',
+            'identificacao bancaria',
+            'identificação bancária',
+            'comprovativo de iban',
+            'numero internacional de conta bancaria',
+            'número internacional de conta bancária',
+        ],
+        DocumentAiDocumentType::ContratoArrendamento->value => [
+            'contrato de arrendamento',
+            'senhorio',
+            'arrendatario',
+            'arrendatário',
+            'renda mensal',
+        ],
+        DocumentAiDocumentType::ComprovativoMorada->value => [
+            'comprovativo de morada',
+            'domicilio fiscal',
+            'domicílio fiscal',
+            'morada fiscal',
+            'fatura',
+        ],
+        DocumentAiDocumentType::AtestadoMultiusos->value => [
+            'atestado medico de incapacidade multiuso',
+            'atestado médico de incapacidade multiuso',
+            'incapacidade permanente global',
+            'junta medica',
+            'junta médica',
+        ],
+        DocumentAiDocumentType::CertidaoEscolar->value => [
+            'certidao escolar',
+            'certidão escolar',
+            'declaracao de matricula',
+            'declaração de matrícula',
+            'estabelecimento de ensino',
+            'ano letivo',
+            'ano lectivo',
+        ],
+    ],
+];

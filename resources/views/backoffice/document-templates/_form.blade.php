@@ -1,0 +1,16 @@
+@csrf
+@if(isset($documentTemplate)) @method('PUT') @endif
+<div class="grid gap-5 md:grid-cols-2">
+    <div><x-input-label for="code" value="Código" /><x-text-input id="code" name="code" class="mt-1 w-full" :value="old('code', $documentTemplate->code ?? '')" required /></div>
+    <div><x-input-label for="name" value="Nome" /><x-text-input id="name" name="name" class="mt-1 w-full" :value="old('name', $documentTemplate->name ?? '')" required /></div>
+    <div><x-input-label for="category" value="Categoria" /><x-text-input id="category" name="category" class="mt-1 w-full" :value="old('category', $documentTemplate->category ?? 'general')" required /></div>
+    <div><x-input-label for="language" value="Idioma" /><x-text-input id="language" name="language" class="mt-1 w-full" :value="old('language', $documentTemplate->language ?? 'pt-PT')" required /></div>
+    <div class="md:col-span-2"><x-input-label for="title" value="Título" /><x-text-input id="title" name="title" class="mt-1 w-full" :value="old('title', $documentTemplate->title ?? '')" required /></div>
+    <div class="md:col-span-2"><x-input-label for="description" value="Descrição interna" /><textarea id="description" name="description" rows="3" class="mt-1 w-full rounded-md border-ink-200">{{ old('description', $documentTemplate->description ?? '') }}</textarea></div>
+    <div class="md:col-span-2"><x-input-label for="header" value="Cabeçalho" /><textarea id="header" name="header" rows="3" class="mt-1 w-full rounded-md border-ink-200">{{ old('header', $documentTemplate->header ?? '') }}</textarea></div>
+    <div class="md:col-span-2"><x-input-label for="body" value="Corpo em texto" /><textarea id="body" name="body" rows="12" class="mt-1 w-full rounded-md border-ink-200" required>{{ old('body', $documentTemplate->body ?? '') }}</textarea><p class="mt-2 text-xs text-ink-500">Use variáveis autorizadas no formato <code>@{{ codigo }}</code>.</p></div>
+    <div class="md:col-span-2"><x-input-label for="html_body" value="Corpo HTML opcional" /><textarea id="html_body" name="html_body" rows="10" class="mt-1 w-full rounded-md border-ink-200">{{ old('html_body', $documentTemplate->html_body ?? '') }}</textarea></div>
+    <div class="md:col-span-2"><x-input-label for="footer" value="Rodapé" /><textarea id="footer" name="footer" rows="3" class="mt-1 w-full rounded-md border-ink-200">{{ old('footer', $documentTemplate->footer ?? '') }}</textarea></div>
+</div>
+<div class="mt-6 flex flex-wrap gap-5">@foreach(['is_official' => 'Modelo oficial', 'is_default' => 'Modelo predefinido', 'requires_approval' => 'Exige aprovação'] as $field => $label)<label class="flex items-center gap-2 text-sm"><input type="hidden" name="{{ $field }}" value="0"><input type="checkbox" name="{{ $field }}" value="1" class="rounded border-ink-300 text-civic-700" @checked(old($field, $documentTemplate->{$field} ?? ($field === 'requires_approval')))>{{ $label }}</label>@endforeach</div>
+<div class="mt-8 flex justify-end gap-3"><a href="{{ route('backoffice.document-templates.index') }}" class="mv-button-secondary">Cancelar</a><x-primary-button>{{ isset($documentTemplate) ? 'Guardar nova versão' : 'Criar modelo' }}</x-primary-button></div>

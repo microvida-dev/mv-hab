@@ -1,0 +1,4 @@
+<x-app-layout>
+    <x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Criar revisão</h1></x-slot>
+    <form method="POST" action="{{ route('backoffice.finance.rent-reviews.store') }}" class="mv-card grid gap-4">@csrf<select class="mv-input" name="tenant_financial_account_id" required>@foreach ($accounts as $account)<option value="{{ $account->id }}">{{ $account->account_number }} · {{ $account->tenant?->name }}</option>@endforeach</select><input class="mv-input" name="proposed_rent" type="number" step="0.01" placeholder="Renda proposta"><input class="mv-input" name="effective_from" type="date" value="{{ now()->addMonth()->startOfMonth()->toDateString() }}"><textarea class="mv-input" name="reason" placeholder="Fundamento"></textarea><button class="mv-button-primary">Guardar</button></form>
+</x-app-layout>

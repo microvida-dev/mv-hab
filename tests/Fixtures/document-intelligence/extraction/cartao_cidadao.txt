@@ -1,0 +1,8 @@
+Cartao de Cidadao
+Nome: Cidadao Ficticio
+Data nascimento: 12/05/1988
+Sexo: M
+Nacionalidade: Portuguesa
+Numero documento: 00000000ZZ0
+Validade: 31/12/2030
+NIF: 123456789

@@ -1,0 +1,4 @@
+<x-app-layout>
+    <x-slot name="header"><h1 class="text-2xl font-semibold text-ink-900">Audiências prévias submetidas</h1></x-slot>
+    <div class="py-8"><div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8"><section class="mv-surface overflow-hidden"><table class="min-w-full divide-y divide-ink-100 text-sm"><tbody class="divide-y divide-ink-100">@forelse($submissions as $submission)<tr><td class="px-5 py-4 font-semibold">{{ $submission->hearing?->subject }}</td><td class="px-5 py-4">{{ $submission->status->label() }}</td><td class="px-5 py-4 text-right"><a class="font-semibold text-civic-700" href="{{ route('backoffice.preliminary-hearings.show', $submission) }}">Analisar</a></td></tr>@empty<tr><td class="px-5 py-8 text-center text-ink-500">Sem pronúncias.</td></tr>@endforelse</tbody></table></section>{{ $submissions->links() }}</div></div>
+</x-app-layout>

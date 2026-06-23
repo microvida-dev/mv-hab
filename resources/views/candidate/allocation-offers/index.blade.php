@@ -1,0 +1,4 @@
+<x-app-layout>
+    <x-slot name="header"><div><p class="text-sm font-semibold text-civic-700">Área do candidato</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">Ofertas de atribuição</h1></div></x-slot>
+    <div class="py-8"><div class="mx-auto max-w-5xl space-y-4 px-4 sm:px-6 lg:px-8"><x-flash-message /><div class="rounded-md border border-ink-100 bg-white">@forelse($offers as $offer)<a href="{{ route('candidate.allocation-offers.show', $offer) }}" class="block border-b border-ink-100 p-4"><span class="font-semibold">{{ $offer->offer_number }}</span><span class="ml-2 text-sm text-ink-500">{{ $offer->status->label() }}</span><p class="mt-1 text-sm text-ink-500">{{ $offer->housingUnit?->code }}</p></a>@empty<p class="p-6 text-sm text-ink-500">Sem ofertas de atribuição.</p>@endforelse</div>{{ $offers->links() }}</div></div>
+</x-app-layout>

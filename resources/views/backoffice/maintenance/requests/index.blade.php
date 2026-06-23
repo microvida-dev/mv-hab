@@ -1,0 +1,5 @@
+<x-app-layout>
+    <x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Pedidos de manutenção</h1></x-slot>
+    <a class="mv-button-primary" href="{{ route('backoffice.maintenance.requests.create') }}">Criar pedido</a>
+    <div class="mv-card mt-4 overflow-x-auto"><table class="min-w-full text-sm"><thead><tr class="text-left text-ink-500"><th>Número</th><th>Habitação</th><th>Categoria</th><th>Urgência</th><th>Estado</th><th>Data</th></tr></thead><tbody>@foreach ($maintenanceRequests as $request)<tr class="border-t border-ink-100"><td class="py-2"><a class="font-semibold text-civic-700" href="{{ route('backoffice.maintenance.requests.show', $request) }}">{{ $request->request_number ?? '#'.$request->id }}</a></td><td>{{ $request->housingUnit?->code }}</td><td>{{ $request->category?->name ?? '-' }}</td><td>{{ $request->urgency?->label() ?? '-' }}</td><td>{{ $request->status?->label() }}</td><td>{{ $request->reported_at?->format('d/m/Y H:i') }}</td></tr>@endforeach</tbody></table>{{ $maintenanceRequests->links() }}</div>
+</x-app-layout>

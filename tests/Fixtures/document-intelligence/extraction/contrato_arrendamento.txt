@@ -1,0 +1,7 @@
+Contrato de Arrendamento
+Senhorio: Senhorio Ficticio
+Inquilino: Inquilino Ficticio
+Morada: Rua de Teste 10, Alcanena
+Renda: 450,00 EUR
+Data inicio: 01/01/2026
+Data fim: 31/12/2030

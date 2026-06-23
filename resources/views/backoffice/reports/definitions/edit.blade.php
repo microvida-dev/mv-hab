@@ -1,0 +1,1 @@
+<x-app-layout><x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Editar {{ $report->name }}</h1></x-slot><form method="POST" action="{{ route('backoffice.reports.definitions.update', $report) }}" class="max-w-5xl">@include('backoffice.reports.definitions._form')</form></x-app-layout>

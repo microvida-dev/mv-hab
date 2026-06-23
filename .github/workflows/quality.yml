@@ -1,0 +1,36 @@
+name: quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, dom, fileinfo, mysql
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: npm ci
+      - run: cp .env.example .env
+      - run: php artisan key:generate
+      - run: composer validate
+      - run: php artisan optimize:clear
+      - run: ./vendor/bin/pint --test
+      - run: php -d memory_limit=-1 ./vendor/bin/phpunit --configuration phpunit.xml
+      - run: php artisan route:list --except-vendor
+      - run: ./vendor/bin/phpstan analyse --memory-limit=1G -v
+      - run: npm run build

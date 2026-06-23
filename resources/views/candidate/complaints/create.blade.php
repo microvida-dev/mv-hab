@@ -1,0 +1,10 @@
+<x-app-layout>
+    <x-slot name="header"><div><p class="text-sm font-semibold text-civic-700">Reclamações</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">Apresentar reclamação</h1></div></x-slot>
+    <div class="py-8"><div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8"><p class="mb-4 rounded-md bg-civic-50 p-4 text-sm text-civic-900">Pode apresentar reclamação relativamente ao resultado provisório da sua candidatura dentro do prazo indicado. A reclamação deve indicar os fundamentos e, se aplicável, juntar documentos ou informação complementar.</p><form method="POST" action="{{ route('candidate.complaints.store') }}" class="space-y-5 rounded-md border border-ink-100 bg-white p-6">@csrf
+        @php($selectedEntry = $entries->firstWhere('id', (int) request('provisional_list_entry_id')) ?? $entries->first())
+        <div><x-input-label for="provisional_list_entry_id" value="Resultado" /><select id="provisional_list_entry_id" name="provisional_list_entry_id" class="mt-1 w-full rounded-md border-ink-200">@foreach($entries as $entry)<option value="{{ $entry->id }}" @selected((string) request('provisional_list_entry_id') === (string) $entry->id)>{{ $entry->public_identifier }} · {{ $entry->provisionalList->contest?->title }}</option>@endforeach</select></div>
+        <input type="hidden" name="provisional_list_id" value="{{ old('provisional_list_id', $selectedEntry?->provisional_list_id) }}"><input type="hidden" name="application_id" value="{{ old('application_id', $selectedEntry?->application_id) }}">
+        <div><x-input-label for="subject" value="Assunto" /><x-text-input id="subject" name="subject" class="mt-1 w-full" required /></div><div><x-input-label for="grounds" value="Fundamentos" /><textarea id="grounds" name="grounds" class="mt-1 w-full rounded-md border-ink-200" required></textarea></div><div><x-input-label for="requested_outcome" value="Resultado pretendido" /><textarea id="requested_outcome" name="requested_outcome" class="mt-1 w-full rounded-md border-ink-200"></textarea></div>
+        <div class="flex justify-end"><x-primary-button>Guardar rascunho</x-primary-button></div>
+    </form></div></div>
+</x-app-layout>

@@ -1,0 +1,21 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 8
+
+    paths:
+        - app
+        - config
+        - database
+        - routes
+
+    tmpDir: storage/phpstan
+
+    universalObjectCratesClasses:
+        - Illuminate\Http\Request
+        - Illuminate\Support\Collection
+
+    excludePaths:
+        - bootstrap/cache/*
+        - storage/*

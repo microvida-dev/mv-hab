@@ -1,0 +1,4 @@
+<x-app-layout>
+    <x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Manutenção</h1></x-slot>
+    <div class="space-y-6"><div class="grid gap-4 md:grid-cols-3"><div class="mv-card"><p class="text-xs text-ink-500">Novos</p><p class="text-2xl font-semibold">{{ $counts['new'] ?? 0 }}</p></div><div class="mv-card"><p class="text-xs text-ink-500">Em análise</p><p class="text-2xl font-semibold">{{ $counts['under_review'] ?? 0 }}</p></div><div class="mv-card"><p class="text-xs text-ink-500">Resolvidos</p><p class="text-2xl font-semibold">{{ $counts['resolved'] ?? 0 }}</p></div></div><a class="mv-button-primary" href="{{ route('candidate.maintenance.requests.create') }}">Criar pedido</a><a class="mv-button-secondary" href="{{ route('candidate.maintenance.requests.index') }}">Ver pedidos</a></div>
+</x-app-layout>

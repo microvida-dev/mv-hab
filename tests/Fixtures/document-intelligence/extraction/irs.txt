@@ -1,0 +1,6 @@
+Declaracao de rendimentos IRS Modelo 3 Autoridade Tributaria
+Ano fiscal: 2025
+Sujeito passivo: Contribuinte Ficticio
+NIF: 123456789
+Rendimento global: 18.500,75 EUR
+Rendimento coletavel: 15.250,50 EUR

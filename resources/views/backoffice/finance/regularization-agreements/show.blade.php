@@ -1,0 +1,4 @@
+<x-app-layout>
+    <x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">{{ $regularizationAgreement->agreement_number }}</h1></x-slot>
+    <div class="space-y-4"><div class="mv-card"><p>Total: <strong>{{ number_format((float) $regularizationAgreement->total_amount, 2, ',', '.') }} EUR</strong></p><p>Estado: {{ $regularizationAgreement->status->label() }}</p><form method="POST" action="{{ route('backoffice.finance.regularization-agreements.approve', $regularizationAgreement) }}">@csrf<button class="mv-button-secondary">Aprovar</button></form></div><div class="mv-card">@foreach ($regularizationAgreement->installments as $installment)<p>{{ $installment->installment_number }} · {{ $installment->due_date?->format('d/m/Y') }} · {{ number_format((float) $installment->amount_due, 2, ',', '.') }} EUR</p>@endforeach</div></div>
+</x-app-layout>
