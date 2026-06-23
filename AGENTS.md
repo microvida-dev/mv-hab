@@ -62,6 +62,18 @@ Nunca expor nem commitar:
 - vendor
 - node_modules
 
+## Arranque obrigatório de cada tarefa
+
+Antes de planear ou alterar ficheiros, executar e confirmar:
+
+- pwd
+- git status
+- git remote -v
+- git branch --show-current
+
+Se o pwd não for /Users/brunocorreia/Documents/CRM HAB/MV-HAB, parar e avisar o utilizador.
+
+
 ## Comandos de validação
 
 Antes de fechar uma alteração importante, correr quando possível:
