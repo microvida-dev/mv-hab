@@ -63,4 +63,10 @@ class MunicipalTeam extends Model
     {
         return $this->hasMany(AccessChangeEvent::class);
     }
+
+    /** @return HasMany<WorkTask, $this> */
+    public function workTasks(): HasMany
+    {
+        return $this->hasMany(WorkTask::class);
+    }
 }

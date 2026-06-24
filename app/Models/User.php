@@ -117,6 +117,18 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(AdministrativeTask::class, 'assigned_to');
     }
 
+    /** @return HasMany<WorkTask, $this> */
+    public function assignedWorkTasks(): HasMany
+    {
+        return $this->hasMany(WorkTask::class, 'assigned_user_id');
+    }
+
+    /** @return HasMany<WorkTask, $this> */
+    public function createdWorkTasks(): HasMany
+    {
+        return $this->hasMany(WorkTask::class, 'created_by');
+    }
+
     /** @return HasMany<AdministrativeProcessNote, $this> */
     public function administrativeProcessNotes(): HasMany
     {

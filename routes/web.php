@@ -169,6 +169,8 @@ use App\Http\Controllers\Backoffice\TypologyAdequacyRuleController as Backoffice
 use App\Http\Controllers\Backoffice\VisitAvailabilityController as BackofficeVisitAvailabilityController;
 use App\Http\Controllers\Backoffice\VisitSlotController as BackofficeVisitSlotController;
 use App\Http\Controllers\Backoffice\WinnerRegistrationController as BackofficeWinnerRegistrationController;
+use App\Http\Controllers\Backoffice\WorkTaskController as BackofficeWorkTaskController;
+use App\Http\Controllers\Backoffice\WorkTaskDashboardController as BackofficeWorkTaskDashboardController;
 use App\Http\Controllers\Candidate\AdditionalDocumentSubmissionController as CandidateAdditionalDocumentSubmissionController;
 use App\Http\Controllers\Candidate\AdditionalInformationResponseController as CandidateAdditionalInformationResponseController;
 use App\Http\Controllers\Candidate\AdhesionRegistrationController as CandidateAdhesionRegistrationController;
@@ -717,6 +719,35 @@ Route::middleware('auth')->group(function () {
         Route::get('/comunicacoes/{tenantCommunication}', [TenantCommunicationController::class, 'show'])->name('communications.show');
         Route::post('/comunicacoes/{tenantCommunication}/mensagens', [TenantCommunicationMessageController::class, 'store'])->name('communications.messages.store');
     });
+
+    Route::prefix('backoffice')
+        ->name('backoffice.')
+        ->middleware([
+            'role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor',
+            'active.backoffice',
+            'mfa.backoffice',
+            'log.backoffice',
+        ])
+        ->group(function () {
+            Route::get('work-tasks/dashboard', BackofficeWorkTaskDashboardController::class)
+                ->name('work-tasks.dashboard');
+            Route::get('work-tasks/my', [BackofficeWorkTaskController::class, 'my'])
+                ->name('work-tasks.my');
+            Route::get('work-tasks/team', [BackofficeWorkTaskController::class, 'team'])
+                ->name('work-tasks.team');
+            Route::get('work-tasks/overdue', [BackofficeWorkTaskController::class, 'overdue'])
+                ->name('work-tasks.overdue');
+            Route::get('work-tasks', [BackofficeWorkTaskController::class, 'index'])
+                ->name('work-tasks.index');
+            Route::get('work-tasks/{workTask}', [BackofficeWorkTaskController::class, 'show'])
+                ->name('work-tasks.show');
+            Route::post('work-tasks/{workTask}/claim', [BackofficeWorkTaskController::class, 'claim'])
+                ->name('work-tasks.claim');
+            Route::post('work-tasks/{workTask}/reassign', [BackofficeWorkTaskController::class, 'reassign'])
+                ->name('work-tasks.reassign');
+            Route::post('work-tasks/{workTask}/status', [BackofficeWorkTaskController::class, 'updateStatus'])
+                ->name('work-tasks.status');
+        });
 
     Route::middleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
         ->group(function () {
