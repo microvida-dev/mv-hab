@@ -10,14 +10,17 @@ class MfaEnforcementService
         'administrator',
         'municipal_technician',
         'jury',
+        'legal_manager',
         'financial_manager',
+        'housing_manager',
+        'inspection_manager',
         'maintenance_manager',
         'auditor',
     ];
 
     public function requiresMfa(?User $user): bool
     {
-        return $user !== null && $user->hasRole(self::SENSITIVE_ROLES);
+        return $user !== null && ($user->mfa_required || $user->hasRole(self::SENSITIVE_ROLES));
     }
 
     public function hasConfirmedDevice(User $user): bool

@@ -35,4 +35,24 @@ class UserPolicy
     {
         return $this->canAccess($user, self::MODULE, 'delete');
     }
+
+    public function deactivate(User $user, User $model): bool
+    {
+        return $this->canAccess($user, self::MODULE, 'deactivate');
+    }
+
+    public function reactivate(User $user, User $model): bool
+    {
+        return $this->canAccess($user, self::MODULE, 'reactivate');
+    }
+
+    public function forceMfa(User $user, User $model): bool
+    {
+        return $this->canAccess($user, self::MODULE, 'force_mfa');
+    }
+
+    public function resetPassword(User $user, User $model): bool
+    {
+        return $this->canAccess($user, self::MODULE, 'reset_password');
+    }
 }

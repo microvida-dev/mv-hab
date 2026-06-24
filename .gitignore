@@ -26,3 +26,11 @@ Homestead.yaml
 Thumbs.db
 
 /storage/phpstan/
+
+# Laravel compiled Blade views
+/storage/framework/views/*.php
+!/storage/framework/views/.gitignore
+!/storage/framework/views/.gitkeep
+
+# PHPStan cache
+/storage/phpstan/

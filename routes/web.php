@@ -5,6 +5,10 @@ use App\Http\Controllers\Admin\DocumentReviewController as AdminDocumentReviewCo
 use App\Http\Controllers\Admin\DocumentTypeController as AdminDocumentTypeController;
 use App\Http\Controllers\Admin\ProgramController as AdminProgramController;
 use App\Http\Controllers\Admin\RequiredDocumentController as AdminRequiredDocumentController;
+use App\Http\Controllers\Backoffice\Access\AccessAuditController as BackofficeAccessAuditController;
+use App\Http\Controllers\Backoffice\Access\MunicipalTeamController as BackofficeMunicipalTeamController;
+use App\Http\Controllers\Backoffice\Access\RoleManagementController as BackofficeRoleManagementController;
+use App\Http\Controllers\Backoffice\Access\UserAdministrationController as BackofficeUserAdministrationController;
 use App\Http\Controllers\Backoffice\AdditionalDocumentRequestController as BackofficeAdditionalDocumentRequestController;
 use App\Http\Controllers\Backoffice\AdditionalDocumentSubmissionController as BackofficeAdditionalDocumentSubmissionController;
 use App\Http\Controllers\Backoffice\AdditionalInformationRequestController as BackofficeAdditionalInformationRequestController;
@@ -165,6 +169,8 @@ use App\Http\Controllers\Backoffice\TypologyAdequacyRuleController as Backoffice
 use App\Http\Controllers\Backoffice\VisitAvailabilityController as BackofficeVisitAvailabilityController;
 use App\Http\Controllers\Backoffice\VisitSlotController as BackofficeVisitSlotController;
 use App\Http\Controllers\Backoffice\WinnerRegistrationController as BackofficeWinnerRegistrationController;
+use App\Http\Controllers\Backoffice\WorkTaskController as BackofficeWorkTaskController;
+use App\Http\Controllers\Backoffice\WorkTaskDashboardController as BackofficeWorkTaskDashboardController;
 use App\Http\Controllers\Candidate\AdditionalDocumentSubmissionController as CandidateAdditionalDocumentSubmissionController;
 use App\Http\Controllers\Candidate\AdditionalInformationResponseController as CandidateAdditionalInformationResponseController;
 use App\Http\Controllers\Candidate\AdhesionRegistrationController as CandidateAdhesionRegistrationController;
@@ -714,6 +720,35 @@ Route::middleware('auth')->group(function () {
         Route::post('/comunicacoes/{tenantCommunication}/mensagens', [TenantCommunicationMessageController::class, 'store'])->name('communications.messages.store');
     });
 
+    Route::prefix('backoffice')
+        ->name('backoffice.')
+        ->middleware([
+            'role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor',
+            'active.backoffice',
+            'mfa.backoffice',
+            'log.backoffice',
+        ])
+        ->group(function () {
+            Route::get('work-tasks/dashboard', BackofficeWorkTaskDashboardController::class)
+                ->name('work-tasks.dashboard');
+            Route::get('work-tasks/my', [BackofficeWorkTaskController::class, 'my'])
+                ->name('work-tasks.my');
+            Route::get('work-tasks/team', [BackofficeWorkTaskController::class, 'team'])
+                ->name('work-tasks.team');
+            Route::get('work-tasks/overdue', [BackofficeWorkTaskController::class, 'overdue'])
+                ->name('work-tasks.overdue');
+            Route::get('work-tasks', [BackofficeWorkTaskController::class, 'index'])
+                ->name('work-tasks.index');
+            Route::get('work-tasks/{workTask}', [BackofficeWorkTaskController::class, 'show'])
+                ->name('work-tasks.show');
+            Route::post('work-tasks/{workTask}/claim', [BackofficeWorkTaskController::class, 'claim'])
+                ->name('work-tasks.claim');
+            Route::post('work-tasks/{workTask}/reassign', [BackofficeWorkTaskController::class, 'reassign'])
+                ->name('work-tasks.reassign');
+            Route::post('work-tasks/{workTask}/status', [BackofficeWorkTaskController::class, 'updateStatus'])
+                ->name('work-tasks.status');
+        });
+
     Route::middleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
         ->group(function () {
             Route::prefix('admin')->name('admin.')->group(function () {
@@ -746,6 +781,34 @@ Route::middleware('auth')->group(function () {
             });
 
             Route::prefix('backoffice')->name('backoffice.')->group(function () {
+                Route::middleware(['active.backoffice', 'mfa.backoffice', 'log.backoffice'])->group(function () {
+                    Route::get('users', [BackofficeUserAdministrationController::class, 'index'])->name('users.index');
+                    Route::get('users/create', [BackofficeUserAdministrationController::class, 'create'])->name('users.create');
+                    Route::post('users', [BackofficeUserAdministrationController::class, 'store'])->name('users.store');
+                    Route::get('users/{user}', [BackofficeUserAdministrationController::class, 'show'])->name('users.show');
+                    Route::get('users/{user}/edit', [BackofficeUserAdministrationController::class, 'edit'])->name('users.edit');
+                    Route::match(['put', 'patch'], 'users/{user}', [BackofficeUserAdministrationController::class, 'update'])->name('users.update');
+                    Route::post('users/{user}/deactivate', [BackofficeUserAdministrationController::class, 'deactivate'])->name('users.deactivate');
+                    Route::post('users/{user}/reactivate', [BackofficeUserAdministrationController::class, 'reactivate'])->name('users.reactivate');
+                    Route::post('users/{user}/force-mfa', [BackofficeUserAdministrationController::class, 'forceMfa'])->name('users.force-mfa');
+                    Route::post('users/{user}/reset-password', [BackofficeUserAdministrationController::class, 'resetPassword'])->name('users.reset-password');
+
+                    Route::get('roles', [BackofficeRoleManagementController::class, 'index'])->name('roles.index');
+                    Route::post('users/{user}/roles/assign', [BackofficeRoleManagementController::class, 'assign'])->name('users.roles.assign');
+                    Route::post('users/{user}/roles/remove', [BackofficeRoleManagementController::class, 'remove'])->name('users.roles.remove');
+
+                    Route::get('teams', [BackofficeMunicipalTeamController::class, 'index'])->name('teams.index');
+                    Route::get('teams/create', [BackofficeMunicipalTeamController::class, 'create'])->name('teams.create');
+                    Route::post('teams', [BackofficeMunicipalTeamController::class, 'store'])->name('teams.store');
+                    Route::get('teams/{municipalTeam}', [BackofficeMunicipalTeamController::class, 'show'])->name('teams.show');
+                    Route::get('teams/{municipalTeam}/edit', [BackofficeMunicipalTeamController::class, 'edit'])->name('teams.edit');
+                    Route::match(['put', 'patch'], 'teams/{municipalTeam}', [BackofficeMunicipalTeamController::class, 'update'])->name('teams.update');
+                    Route::post('teams/{municipalTeam}/members', [BackofficeMunicipalTeamController::class, 'addMember'])->name('teams.members.store');
+                    Route::post('teams/{municipalTeam}/members/remove', [BackofficeMunicipalTeamController::class, 'removeMember'])->name('teams.members.remove');
+
+                    Route::get('access-audit', [BackofficeAccessAuditController::class, 'index'])->name('access-audit.index');
+                });
+
                 Route::resource('sorteios', BackofficeLotteryDrawController::class)
                     ->parameters(['sorteios' => 'lotteryDraw'])
                     ->names('lottery-draws')
