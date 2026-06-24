@@ -26,6 +26,10 @@ class PermissionMatrixTest extends TestCase
         $jury = $this->userWithRole('jury');
         $financial = $this->userWithRole('financial_manager');
         $maintenance = $this->userWithRole('maintenance_manager');
+        $legal = $this->userWithRole('legal_manager');
+        $housing = $this->userWithRole('housing_manager');
+        $inspection = $this->userWithRole('inspection_manager');
+        $support = $this->userWithRole('support_agent');
         $candidate = $this->userWithRole('candidate');
         $auditor = $this->userWithRole('auditor');
 
@@ -34,12 +38,20 @@ class PermissionMatrixTest extends TestCase
         $this->assertTrue($jury->hasPermission('scoring.approve'));
         $this->assertTrue($financial->hasPermission('finance.approve'));
         $this->assertTrue($maintenance->hasPermission('maintenance_requests.update'));
+        $this->assertTrue($legal->hasPermission('contracts.approve'));
+        $this->assertTrue($housing->hasPermission('housing_units.update'));
+        $this->assertTrue($inspection->hasPermission('inspections.approve'));
+        $this->assertTrue($support->hasPermission('support.update'));
         $this->assertTrue($candidate->hasPermission('applications.create'));
         $this->assertTrue($auditor->hasPermission('audit_logs.view'));
 
         $this->assertFalse($candidate->hasPermission('settings.update'));
         $this->assertFalse($financial->hasPermission('scoring.update'));
         $this->assertFalse($maintenance->hasPermission('income_records.view'));
+        $this->assertFalse($legal->hasPermission('scoring.update'));
+        $this->assertFalse($housing->hasPermission('roles.assign'));
+        $this->assertFalse($inspection->hasPermission('contracts.update'));
+        $this->assertFalse($support->hasPermission('documents.view'));
         $this->assertFalse($jury->hasPermission('settings.update'));
         $this->assertFalse($technician->hasPermission('users.delete'));
         $this->assertFalse($auditor->hasPermission('applications.update'));

@@ -113,6 +113,10 @@
         ],
         'Segurança e RGPD' => [
             ['label' => 'Painel de segurança', 'route' => 'backoffice.security.dashboard', 'active' => 'backoffice.security.dashboard', 'icon' => 'dashboard', 'permission' => 'settings.view'],
+            ['label' => 'Utilizadores', 'route' => 'backoffice.users.index', 'active' => 'backoffice.users.*', 'icon' => 'users', 'permission' => 'users.view'],
+            ['label' => 'Roles', 'route' => 'backoffice.roles.index', 'active' => 'backoffice.roles.*', 'icon' => 'check', 'permission' => 'roles.view'],
+            ['label' => 'Equipas municipais', 'route' => 'backoffice.teams.index', 'active' => 'backoffice.teams.*', 'icon' => 'users', 'permission' => 'teams.view'],
+            ['label' => 'Auditoria de acessos', 'route' => 'backoffice.access-audit.index', 'active' => 'backoffice.access-audit.*', 'icon' => 'document', 'permission' => 'access_audit.view'],
             ['label' => 'MFA', 'route' => 'backoffice.security.mfa.index', 'active' => 'backoffice.security.mfa.*', 'icon' => 'check', 'permission' => 'settings.view'],
             ['label' => 'Audit trail', 'route' => 'backoffice.security.audit.events.index', 'active' => 'backoffice.security.audit.*', 'icon' => 'document', 'permission' => 'audit_logs.view'],
             ['label' => 'Pedidos RGPD', 'route' => 'backoffice.security.privacy.requests.index', 'active' => 'backoffice.security.privacy.requests.*', 'icon' => 'file', 'permission' => 'privacy.view'],

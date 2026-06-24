@@ -15,7 +15,20 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Arr;
 
-#[Fillable(['municipality_id', 'name', 'email', 'password', 'status', 'last_login_at'])]
+#[Fillable([
+    'municipality_id',
+    'name',
+    'email',
+    'password',
+    'status',
+    'last_login_at',
+    'mfa_required',
+    'internal_notes',
+    'deactivated_at',
+    'deactivated_by',
+    'reactivated_at',
+    'reactivated_by',
+])]
 #[Hidden(['password', 'remember_token'])]
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -31,6 +44,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'mfa_required' => 'boolean',
+            'deactivated_at' => 'datetime',
+            'reactivated_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -333,6 +349,20 @@ class User extends Authenticatable implements MustVerifyEmail
     public function mfaRecoveryCodes(): HasMany
     {
         return $this->hasMany(MfaRecoveryCode::class);
+    }
+
+    /** @return BelongsToMany<MunicipalTeam, $this> */
+    public function municipalTeams(): BelongsToMany
+    {
+        return $this->belongsToMany(MunicipalTeam::class)
+            ->withPivot(['role_in_team', 'joined_at', 'left_at', 'created_by'])
+            ->withTimestamps();
+    }
+
+    /** @return HasMany<AccessChangeEvent, $this> */
+    public function accessChangeEvents(): HasMany
+    {
+        return $this->hasMany(AccessChangeEvent::class, 'target_user_id');
     }
 
     /** @return HasMany<SecurityAlert, $this> */
