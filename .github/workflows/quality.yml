@@ -10,6 +10,19 @@ jobs:
   quality:
     runs-on: ubuntu-latest
 
+    env:
+      APP_ENV: testing
+      APP_DEBUG: true
+      CACHE_STORE: file
+      CACHE_DRIVER: file
+      SESSION_DRIVER: file
+      QUEUE_CONNECTION: sync
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ":memory:"
+      MAIL_MAILER: log
+      BROADCAST_CONNECTION: log
+      FILESYSTEM_DISK: local
+
     steps:
       - uses: actions/checkout@v4
 
@@ -27,6 +40,9 @@ jobs:
       - run: npm ci
       - run: cp .env.example .env
       - run: php artisan key:generate
+     
+      - run: mkdir -p storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/logs bootstrap/cache
+
       - run: composer validate
       - run: php artisan optimize:clear
       - run: ./vendor/bin/pint --test
@@ -34,3 +50,5 @@ jobs:
       - run: php artisan route:list --except-vendor
       - run: ./vendor/bin/phpstan analyse --memory-limit=1G -v
       - run: npm run build
+q
+
