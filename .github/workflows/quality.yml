@@ -69,10 +69,17 @@ jobs:
         run: |
           php artisan tinker --execute="dump(config('cache.default')); dump(config('session.driver')); dump(config('queue.default')); dump(config('database.default')); dump(config('database.connections.sqlite.database'));"
 
-      - run: php artisan optimize:clear
+      - name: Clear Laravel bootstrap cache safely
+        run: |
+          rm -f bootstrap/cache/config.php
+          rm -f bootstrap/cache/services.php
+          rm -f bootstrap/cache/packages.php
+          php artisan config:clear
+          php artisan route:clear
+          php artisan view:clear
+
       - run: ./vendor/bin/pint --test
       - run: php -d memory_limit=-1 ./vendor/bin/phpunit --configuration phpunit.xml
       - run: php artisan route:list --except-vendor
       - run: ./vendor/bin/phpstan analyse --memory-limit=1G -v
       - run: npm run build
-      
