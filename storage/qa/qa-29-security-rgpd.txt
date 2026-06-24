@@ -1,0 +1,22 @@
+## QA-29 Security and RGPD Gate
+
+## Production debug rule
+PASS: produção deve correr com debug desativado; regra documentada nos runbooks QA-29 e coberta por teste de configuração crítica.
+
+## Private storage configuration
+default_local=yes
+local_root_private=yes
+public_link_private=no
+
+## Tracked environment files
+none
+
+## Tracked forbidden runtime/vendor artifacts
+none
+
+## Public/private route coverage
+PASS: QA29ProductionReadinessTest covers public smoke, guest redirects, private storage, private public-document blocking and critical configuration guardrails.
+
+## Log sensitive pattern filename-count only
+0
+
