@@ -13,6 +13,7 @@ jobs:
     env:
       APP_ENV: testing
       APP_DEBUG: true
+      APP_URL: http://localhost
       CACHE_STORE: file
       CACHE_DRIVER: file
       SESSION_DRIVER: file
@@ -35,51 +36,76 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
 
-      - run: composer install --no-interaction --prefer-dist --no-progress
-      - run: npm ci
+      - name: Validate Composer metadata
+        run: composer validate --strict
 
-      - run: cp .env.example .env
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Force CI environment
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Prepare Laravel CI environment
         run: |
-          sed -i 's/^APP_ENV=.*/APP_ENV=testing/' .env
-          sed -i 's/^APP_DEBUG=.*/APP_DEBUG=true/' .env
-          sed -i 's/^CACHE_STORE=.*/CACHE_STORE=file/' .env
-          sed -i 's/^CACHE_DRIVER=.*/CACHE_DRIVER=file/' .env
-          sed -i 's/^SESSION_DRIVER=.*/SESSION_DRIVER=file/' .env
-          sed -i 's/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/' .env
-          sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
-          sed -i 's|^DB_DATABASE=.*|DB_DATABASE=database/database.sqlite|' .env
-          sed -i 's/^MAIL_MAILER=.*/MAIL_MAILER=log/' .env
-          sed -i 's/^BROADCAST_CONNECTION=.*/BROADCAST_CONNECTION=log/' .env
-          sed -i 's/^FILESYSTEM_DISK=.*/FILESYSTEM_DISK=local/' .env
+          cat > .env <<'ENV'
+          APP_NAME="CRM Habitacao Publica"
+          APP_ENV=testing
+          APP_KEY=
+          APP_DEBUG=true
+          APP_URL=http://localhost
 
-          rm -f bootstrap/cache/config.php
-          rm -f bootstrap/cache/services.php
-          rm -f bootstrap/cache/packages.php
+          APP_LOCALE=pt
+          APP_FALLBACK_LOCALE=pt
+          APP_FAKER_LOCALE=pt_PT
 
-          mkdir -p storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/logs bootstrap/cache database
+          LOG_CHANNEL=stack
+          LOG_LEVEL=debug
+
+          DB_CONNECTION=sqlite
+          DB_DATABASE=database/database.sqlite
+
+          CACHE_STORE=file
+          CACHE_DRIVER=file
+          SESSION_DRIVER=file
+          QUEUE_CONNECTION=sync
+          MAIL_MAILER=log
+          BROADCAST_CONNECTION=log
+          FILESYSTEM_DISK=local
+
+          VITE_APP_NAME="${APP_NAME}"
+          ENV
+
+          rm -f bootstrap/cache/config.php bootstrap/cache/services.php bootstrap/cache/packages.php
+          mkdir -p bootstrap/cache database storage/framework/views storage/framework/cache/data storage/framework/sessions storage/logs
           touch database/database.sqlite
 
-      - run: php artisan key:generate
-      - run: composer validate
+      - name: Generate application key
+        run: php artisan key:generate --no-interaction
+
+      - name: Clear Laravel bootstrap cache safely
+        run: |
+          rm -f bootstrap/cache/config.php bootstrap/cache/services.php bootstrap/cache/packages.php
+          php artisan config:clear
+          php artisan route:clear
+          php artisan view:clear
 
       - name: Debug Laravel runtime config
         run: |
           php artisan tinker --execute="dump(config('cache.default')); dump(config('session.driver')); dump(config('queue.default')); dump(config('database.default')); dump(config('database.connections.sqlite.database'));"
 
-      - name: Clear Laravel bootstrap cache safely
-        run: |
-          rm -f bootstrap/cache/config.php
-          rm -f bootstrap/cache/services.php
-          rm -f bootstrap/cache/packages.php
-          php artisan config:clear
-          php artisan route:clear
-          php artisan view:clear
+      - name: Check code style
+        run: ./vendor/bin/pint --test
 
-      - run: ./vendor/bin/pint --test
-      - run: npm run build
-      - run: php -d memory_limit=-1 ./vendor/bin/phpunit --configuration phpunit.xml
-      - run: php artisan route:list --except-vendor
-      - run: ./vendor/bin/phpstan analyse --memory-limit=1G -v
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Run PHPUnit test suite
+        run: php -d memory_limit=-1 ./vendor/bin/phpunit --configuration phpunit.xml
+
+      - name: Validate route registration
+        run: php artisan route:list --except-vendor
+
+      - name: Run static analysis
+        run: ./vendor/bin/phpstan analyse --memory-limit=1G -v
