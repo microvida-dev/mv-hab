@@ -79,7 +79,7 @@ jobs:
           php artisan view:clear
 
       - run: ./vendor/bin/pint --test
+      - run: npm run build
       - run: php -d memory_limit=-1 ./vendor/bin/phpunit --configuration phpunit.xml
       - run: php artisan route:list --except-vendor
       - run: ./vendor/bin/phpstan analyse --memory-limit=1G -v
-      - run: npm run build
