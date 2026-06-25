@@ -24,6 +24,7 @@ class DocumentAiAssistantPipeline
         private readonly DocumentAiScoreExplainer $explainer,
         private readonly DocumentSuggestionGenerator $suggestionGenerator,
         private readonly DocumentAiAssistantPersister $persister,
+        private readonly DocumentAiWorkTaskService $workTasks,
         private readonly AuditLogger $auditLogger,
     ) {}
 
@@ -42,6 +43,14 @@ class DocumentAiAssistantPipeline
             description: 'Cálculo de score IA iniciado.',
             metadata: ['document_ai_analysis_id' => $analysis->id],
         );
+        $this->auditLogger->record(
+            event: AuditEvents::UPDATE,
+            auditable: $analysis,
+            module: 'documents',
+            action: 'document_ai_validation_started',
+            description: 'Validação assistiva IA documental iniciada.',
+            metadata: ['document_ai_analysis_id' => $analysis->id],
+        );
 
         try {
             $flags = $this->flagDetector->detect($analysis);
@@ -57,6 +66,7 @@ class DocumentAiAssistantPipeline
             );
             $suggestions = $this->suggestionGenerator->generate($flags);
             $score = $this->persister->persist($analysis, $result, $flags, $suggestions, $actor);
+            $task = $this->workTasks->createForRiskScore($analysis, $score, $flags, $actor);
 
             foreach ($flags as $flag) {
                 event(new DocumentAiRiskFlagDetected((int) $analysis->id, $flag->code, $flag->severity, $flag->scoreImpact));
@@ -67,9 +77,38 @@ class DocumentAiAssistantPipeline
             }
 
             event(new DocumentAiScoreCalculated((int) $analysis->id, (int) $score->id, $result->score, $result->label, $result->requiresManualReview));
+            $this->auditLogger->record(
+                event: AuditEvents::UPDATE,
+                auditable: $analysis,
+                module: 'documents',
+                action: 'document_ai_validation_completed',
+                description: 'Validação assistiva IA documental concluída.',
+                metadata: [
+                    'document_ai_analysis_id' => $analysis->id,
+                    'document_ai_score_id' => $score->id,
+                    'flags_count' => count($flags),
+                    'suggestions_count' => count($suggestions),
+                    'work_task_id' => $task?->id,
+                    'requires_manual_review' => $result->requiresManualReview,
+                ],
+            );
 
             if ($result->requiresManualReview) {
                 event(new DocumentAiManualReviewRecommended((int) $analysis->id, (int) $score->id, $result->score, $result->label));
+                $this->auditLogger->record(
+                    event: AuditEvents::UPDATE,
+                    auditable: $analysis,
+                    module: 'documents',
+                    action: 'document_ai_manual_review_required',
+                    description: 'IA documental recomendou revisão manual.',
+                    metadata: [
+                        'document_ai_analysis_id' => $analysis->id,
+                        'document_ai_score_id' => $score->id,
+                        'score' => $result->score,
+                        'label' => $result->label->value,
+                        'work_task_id' => $task?->id,
+                    ],
+                );
             }
 
             return $score;

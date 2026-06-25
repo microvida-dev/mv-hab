@@ -21,7 +21,7 @@ class DismissDocumentAiSuggestionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'dismiss_reason' => ['nullable', 'string', 'max:1000'],
+            'dismiss_reason' => ['required', 'string', 'min:10', 'max:1000'],
         ];
     }
 }

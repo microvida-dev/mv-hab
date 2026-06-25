@@ -22,6 +22,7 @@ class AcceptDocumentAiSuggestionRequest extends FormRequest
     {
         return [
             'confirm_accept' => ['accepted'],
+            'accept_reason' => ['required', 'string', 'min:10', 'max:1000'],
         ];
     }
 }

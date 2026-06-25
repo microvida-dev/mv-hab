@@ -86,6 +86,7 @@ class DocumentAiAssistantDashboardTest extends TestCase
         $this->actingAs($admin)
             ->post(route('backoffice.document-ai.assistant.suggestions.accept', $suggestion), [
                 'confirm_accept' => '1',
+                'accept_reason' => 'Justificação técnica suficiente para aceitar a sugestão.',
             ])
             ->assertRedirect(route('backoffice.document-ai.assistant.show', $suggestion->analysis));
 

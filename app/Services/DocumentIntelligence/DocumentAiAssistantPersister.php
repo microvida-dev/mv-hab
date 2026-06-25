@@ -138,6 +138,22 @@ class DocumentAiAssistantPersister
             'metadata' => $draft->metadata,
         ]);
         $suggestion->save();
+
+        $this->auditLogger->record(
+            event: AuditEvents::CREATE,
+            auditable: $suggestion,
+            module: 'documents',
+            action: 'document_ai_suggestion_created',
+            description: 'Sugestão IA documental criada para revisão humana.',
+            metadata: [
+                'document_ai_analysis_id' => $analysis->id,
+                'document_ai_score_id' => $score->id,
+                'application_id' => $application?->id,
+                'flag_code' => $suggestion->flag_code,
+                'severity' => $suggestion->severity->value,
+                'status' => $suggestion->status->value,
+            ],
+        );
     }
 
     private function resolveApplication(DocumentAiAnalysis $analysis): ?Application

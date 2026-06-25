@@ -16,10 +16,12 @@
                         <form method="POST" action="{{ route('backoffice.document-ai.assistant.suggestions.accept', $suggestion) }}">
                             @csrf
                             <input type="hidden" name="confirm_accept" value="1">
+                            <input type="text" name="accept_reason" value="{{ old('accept_reason') }}" class="mb-2 w-full rounded-md border-ink-200 text-xs" placeholder="Justificação técnica">
                             <button type="submit" class="mv-button-secondary">Aceitar</button>
                         </form>
                         <form method="POST" action="{{ route('backoffice.document-ai.assistant.suggestions.dismiss', $suggestion) }}">
                             @csrf
+                            <input type="text" name="dismiss_reason" value="{{ old('dismiss_reason') }}" class="mb-2 w-full rounded-md border-ink-200 text-xs" placeholder="Justificação técnica">
                             <button type="submit" class="mv-button-secondary">Descartar</button>
                         </form>
                     </div>

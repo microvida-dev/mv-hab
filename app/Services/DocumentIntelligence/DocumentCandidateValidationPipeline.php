@@ -254,6 +254,17 @@ class DocumentCandidateValidationPipeline
                 'document_ai_analysis_id' => $analysis?->id,
             ],
         );
+        $this->auditLogger->record(
+            event: AuditEvents::CREATE,
+            auditable: $run,
+            module: 'documents',
+            action: 'document_ai_validation_started',
+            description: 'Validação documental assistiva iniciada.',
+            metadata: [
+                'application_id' => $run->application_id,
+                'document_ai_analysis_id' => $analysis?->id,
+            ],
+        );
     }
 
     private function auditComplete(DocumentAiValidationRun $run, ?DocumentAiAnalysis $analysis = null): void
@@ -271,6 +282,19 @@ class DocumentCandidateValidationPipeline
                 'critical_count' => $run->critical_count,
                 'medium_count' => $run->medium_count,
                 'light_count' => $run->light_count,
+                'requires_manual_review' => $run->requires_manual_review,
+            ],
+        );
+        $this->auditLogger->record(
+            event: AuditEvents::UPDATE,
+            auditable: $run,
+            module: 'documents',
+            action: 'document_ai_validation_completed',
+            description: 'Validação documental assistiva concluída.',
+            metadata: [
+                'application_id' => $run->application_id,
+                'document_ai_analysis_id' => $analysis?->id,
+                'total_checks' => $run->total_checks,
                 'requires_manual_review' => $run->requires_manual_review,
             ],
         );

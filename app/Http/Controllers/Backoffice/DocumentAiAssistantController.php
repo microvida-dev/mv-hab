@@ -109,6 +109,10 @@ class DocumentAiAssistantController extends Controller
             'status' => DocumentAiSuggestionStatus::Accepted,
             'accepted_at' => now(),
             'accepted_by' => $request->user()?->id,
+            'metadata' => [
+                ...($suggestion->metadata ?? []),
+                'accepted_reason' => $request->validated('accept_reason'),
+            ],
         ]);
         $suggestion->save();
 
@@ -149,6 +153,7 @@ class DocumentAiAssistantController extends Controller
                 'document_ai_score_id' => $suggestion->document_ai_score_id,
                 'flag_code' => $suggestion->flag_code,
                 'status' => $suggestion->status->value,
+                'has_justification' => true,
             ],
         );
     }
