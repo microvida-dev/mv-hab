@@ -44,6 +44,10 @@
         @endif
     </head>
     <body class="min-h-screen bg-white font-sans text-ink-900 antialiased">
+        <a href="#conteudo-principal" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-civic-700 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white">
+            Saltar para o conteúdo principal
+        </a>
+
         <header class="border-b border-ink-100 bg-white">
             <div class="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
                 <a href="{{ route('public.portal') }}" class="flex items-center gap-3">
@@ -79,7 +83,7 @@
             </div>
         </header>
 
-        <main>
+        <main id="conteudo-principal" tabindex="-1">
             {{ $slot }}
         </main>
 

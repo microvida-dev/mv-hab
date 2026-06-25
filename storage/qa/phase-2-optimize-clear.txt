@@ -1,0 +1,10 @@
+
+ INFO Clearing cached bootstrap files. 
+
+ config .. 0.63ms DONE
+ cache .. 4.25ms DONE
+ compiled .. 0.31ms DONE
+ events .. 0.16ms DONE
+ routes .. 0.17ms DONE
+ views .. 5.26ms DONE
+

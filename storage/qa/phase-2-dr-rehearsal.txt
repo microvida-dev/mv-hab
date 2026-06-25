@@ -1,0 +1,16 @@
++--------------------------------------------------------------------+--------+-------------------------------------------------------------------------------+
+| check | status | message |
++--------------------------------------------------------------------+--------+-------------------------------------------------------------------------------+
+| runbook:docs/11-operacoes/backup-restore-runbook.md | pass | docs/11-operacoes/backup-restore-runbook.md existe. |
+| runbook:docs/11-operacoes/rollback-runbook.md | pass | docs/11-operacoes/rollback-runbook.md existe. |
+| runbook:docs/11-operacoes/deploy-runbook.md | pass | docs/11-operacoes/deploy-runbook.md existe. |
+| runbook:docs/11-operacoes/disaster-recovery-rehearsal-runbook.md | pass | docs/11-operacoes/disaster-recovery-rehearsal-runbook.md existe. |
+| runbook:docs/11-operacoes/staging-restore-validation-checklist.md | pass | docs/11-operacoes/staging-restore-validation-checklist.md existe. |
+| runbook:docs/11-operacoes/staging-rollback-validation-checklist.md | pass | docs/11-operacoes/staging-rollback-validation-checklist.md existe. |
+| runbook:docs/11-operacoes/municipal-smoke-test-checklist.md | pass | docs/11-operacoes/municipal-smoke-test-checklist.md existe. |
+| backup_runbook | pass | Backup de DB, storage privado, configuracao e checksums documentado. |
+| restore_rehearsal | pass | Restore rehearsal documentado apenas para ambiente nao produtivo. |
+| rollback_rehearsal | pass | Rollback documentado com maintenance mode, release anterior, workers e smoke. |
+| municipal_smoke | pass | Smoke municipal cobre fluxos publicos, autenticados e RGPD. |
+| destructive_command_guard | pass | Runbooks proíbem comandos destrutivos e nao executam migrate:fresh. |
++--------------------------------------------------------------------+--------+-------------------------------------------------------------------------------+

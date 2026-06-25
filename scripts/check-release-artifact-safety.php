@@ -49,12 +49,19 @@ function defaultReleaseTargets(string $basePath): array
         'docs/08-qa/qa-38-queues-scheduler-workers-report.md',
         'docs/08-qa/qa-39-pilot-scope-dossier-sanitization-report.md',
         'docs/08-qa/qa-40-municipal-demo-data-seeder-hardening-report.md',
+        'docs/08-qa/phase-2-controlled-municipal-staging-readiness-report.md',
+        'docs/08-qa/qa-41-backup-restore-rollback-rehearsal-report.md',
+        'docs/08-qa/qa-42-wcag-accessibility-report.md',
+        'docs/08-qa/qa-43-alcanena-legal-parameterization-report.md',
+        'docs/08-qa/qa-44-municipal-rbac-team-matrix-report.md',
         'docs/11-operacoes',
         'resources',
         'routes',
         'scripts',
         'storage/qa/phase-1-artifact-safety.txt',
         'storage/qa/phase-1-secret-scan.txt',
+        'storage/qa/phase-2-artifact-safety.txt',
+        'storage/qa/phase-2-secret-scan.txt',
     ];
 
     return collectTargets($roots, $basePath);
