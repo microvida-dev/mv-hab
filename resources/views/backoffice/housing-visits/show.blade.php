@@ -24,8 +24,9 @@
                     <h2 class="text-lg font-semibold text-ink-900">Ações</h2>
                     <div class="mt-4 grid gap-3">
                         <form method="POST" action="{{ route('backoffice.housing-visits.confirm', $visit) }}">@csrf<button class="mv-button-secondary w-full">Confirmar</button></form>
-                        <form method="POST" action="{{ route('backoffice.housing-visits.complete', $visit) }}">@csrf<textarea name="staff_notes" rows="2" class="mb-2 w-full rounded-md border-ink-300 text-sm" placeholder="Notas"></textarea><button class="mv-button-secondary w-full">Concluir</button></form>
-                        <form method="POST" action="{{ route('backoffice.housing-visits.reject', $visit) }}">@csrf<textarea name="reason" rows="2" class="mb-2 w-full rounded-md border-ink-300 text-sm" placeholder="Motivo"></textarea><button class="mv-button-secondary w-full">Recusar</button></form>
+                        <form method="POST" action="{{ route('backoffice.housing-visits.complete', $visit) }}">@csrf<textarea name="staff_notes" rows="2" class="mb-2 w-full rounded-md border-ink-300 text-sm" placeholder="Notas" required></textarea><button class="mv-button-secondary w-full">Concluir</button></form>
+                        <form method="POST" action="{{ route('backoffice.housing-visits.no-show', $visit) }}">@csrf<textarea name="staff_notes" rows="2" class="mb-2 w-full rounded-md border-ink-300 text-sm" placeholder="Nota de falta de comparência" required></textarea><button class="mv-button-secondary w-full">Falta de comparência</button></form>
+                        <form method="POST" action="{{ route('backoffice.housing-visits.reject', $visit) }}">@csrf<textarea name="reason" rows="2" class="mb-2 w-full rounded-md border-ink-300 text-sm" placeholder="Motivo" required></textarea><button class="mv-button-secondary w-full">Recusar</button></form>
                         <form method="POST" action="{{ route('backoffice.housing-visits.cancel', $visit) }}">@csrf<input type="hidden" name="cancellation_reason" value="operational_reason"><textarea name="cancellation_notes" rows="2" class="mb-2 w-full rounded-md border-ink-300 text-sm" placeholder="Notas"></textarea><button class="mv-button-secondary w-full">Cancelar</button></form>
                     </div>
                 </div>

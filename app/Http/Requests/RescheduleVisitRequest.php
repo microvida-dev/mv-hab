@@ -21,7 +21,7 @@ class RescheduleVisitRequest extends FormRequest
     {
         return [
             'new_visit_slot_id' => ['required', 'exists:visit_slots,id'],
-            'reason' => ['nullable', 'string', 'max:1000'],
+            'reason' => ['required', 'string', 'max:1000'],
         ];
     }
 }

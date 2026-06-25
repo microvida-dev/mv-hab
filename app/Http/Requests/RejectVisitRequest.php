@@ -20,7 +20,7 @@ class RejectVisitRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reason' => ['nullable', 'string', 'max:2000'],
+            'reason' => ['required', 'string', 'max:2000'],
         ];
     }
 }

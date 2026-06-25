@@ -54,6 +54,13 @@ class HousingVisitController extends Controller
         return to_route('backoffice.housing-visits.show', $visit)->with('success', 'Visita concluída.');
     }
 
+    public function noShow(CompleteVisitRequest $request, HousingVisit $housingVisit): RedirectResponse
+    {
+        $visit = $this->booking->markNoShow($housingVisit, $this->authenticatedUser($request), (string) $request->validated('staff_notes'));
+
+        return to_route('backoffice.housing-visits.show', $visit)->with('success', 'Falta de comparência registada.');
+    }
+
     public function cancel(CancelVisitRequest $request, HousingVisit $housingVisit): RedirectResponse
     {
         $visit = $this->cancellation->cancel(

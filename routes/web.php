@@ -752,6 +752,50 @@ Route::middleware('auth')->group(function () {
                 ->name('work-tasks.reassign');
             Route::post('work-tasks/{workTask}/status', [BackofficeWorkTaskController::class, 'updateStatus'])
                 ->name('work-tasks.status');
+
+            Route::resource('visit-availabilities', BackofficeVisitAvailabilityController::class)
+                ->parameters(['visit-availabilities' => 'visitAvailability']);
+            Route::post('visit-availabilities/{visitAvailability}/slots', [BackofficeVisitAvailabilityController::class, 'generateSlots'])
+                ->name('visit-availabilities.slots.generate');
+
+            Route::get('visit-slots', [BackofficeVisitSlotController::class, 'index'])
+                ->name('visit-slots.index');
+            Route::post('visit-slots/{visitSlot}/block', [BackofficeVisitSlotController::class, 'block'])
+                ->name('visit-slots.block');
+            Route::post('visit-slots/{visitSlot}/unblock', [BackofficeVisitSlotController::class, 'unblock'])
+                ->name('visit-slots.unblock');
+
+            Route::get('housing-visits', [BackofficeHousingVisitController::class, 'index'])
+                ->name('housing-visits.index');
+            Route::get('housing-visits/{housingVisit}', [BackofficeHousingVisitController::class, 'show'])
+                ->name('housing-visits.show');
+            Route::post('housing-visits/{housingVisit}/confirm', [BackofficeHousingVisitController::class, 'confirm'])
+                ->name('housing-visits.confirm');
+            Route::post('housing-visits/{housingVisit}/complete', [BackofficeHousingVisitController::class, 'complete'])
+                ->name('housing-visits.complete');
+            Route::post('housing-visits/{housingVisit}/no-show', [BackofficeHousingVisitController::class, 'noShow'])
+                ->name('housing-visits.no-show');
+            Route::post('housing-visits/{housingVisit}/cancel', [BackofficeHousingVisitController::class, 'cancel'])
+                ->name('housing-visits.cancel');
+            Route::post('housing-visits/{housingVisit}/reject', [BackofficeHousingVisitController::class, 'reject'])
+                ->name('housing-visits.reject');
+
+            Route::get('support-tickets', [BackofficeSupportTicketController::class, 'index'])
+                ->name('support-tickets.index');
+            Route::get('support-tickets/{supportTicket}', [BackofficeSupportTicketController::class, 'show'])
+                ->name('support-tickets.show');
+            Route::post('support-tickets/{supportTicket}/assign', [BackofficeSupportTicketController::class, 'assign'])
+                ->name('support-tickets.assign');
+            Route::post('support-tickets/{supportTicket}/status', [BackofficeSupportTicketController::class, 'updateStatus'])
+                ->name('support-tickets.status');
+            Route::post('support-tickets/{supportTicket}/messages', [BackofficeSupportTicketMessageController::class, 'store'])
+                ->name('support-ticket-messages.store');
+            Route::get('support-ticket-attachments/{supportTicketAttachment}/download', [BackofficeSupportTicketAttachmentController::class, 'download'])
+                ->name('support-ticket-attachments.download');
+
+            Route::resource('contextual-faqs', BackofficeContextualFaqController::class)
+                ->parameters(['contextual-faqs' => 'contextualFaq'])
+                ->except(['show']);
         });
 
     Route::middleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
@@ -1044,48 +1088,6 @@ Route::middleware('auth')->group(function () {
                     Route::match(['put', 'patch'], 'configuration', [BackofficeSimulatorConfigurationController::class, 'update'])
                         ->name('configuration.update');
                 });
-
-                Route::resource('visit-availabilities', BackofficeVisitAvailabilityController::class)
-                    ->parameters(['visit-availabilities' => 'visitAvailability']);
-                Route::post('visit-availabilities/{visitAvailability}/slots', [BackofficeVisitAvailabilityController::class, 'generateSlots'])
-                    ->name('visit-availabilities.slots.generate');
-
-                Route::get('visit-slots', [BackofficeVisitSlotController::class, 'index'])
-                    ->name('visit-slots.index');
-                Route::post('visit-slots/{visitSlot}/block', [BackofficeVisitSlotController::class, 'block'])
-                    ->name('visit-slots.block');
-                Route::post('visit-slots/{visitSlot}/unblock', [BackofficeVisitSlotController::class, 'unblock'])
-                    ->name('visit-slots.unblock');
-
-                Route::get('housing-visits', [BackofficeHousingVisitController::class, 'index'])
-                    ->name('housing-visits.index');
-                Route::get('housing-visits/{housingVisit}', [BackofficeHousingVisitController::class, 'show'])
-                    ->name('housing-visits.show');
-                Route::post('housing-visits/{housingVisit}/confirm', [BackofficeHousingVisitController::class, 'confirm'])
-                    ->name('housing-visits.confirm');
-                Route::post('housing-visits/{housingVisit}/complete', [BackofficeHousingVisitController::class, 'complete'])
-                    ->name('housing-visits.complete');
-                Route::post('housing-visits/{housingVisit}/cancel', [BackofficeHousingVisitController::class, 'cancel'])
-                    ->name('housing-visits.cancel');
-                Route::post('housing-visits/{housingVisit}/reject', [BackofficeHousingVisitController::class, 'reject'])
-                    ->name('housing-visits.reject');
-
-                Route::get('support-tickets', [BackofficeSupportTicketController::class, 'index'])
-                    ->name('support-tickets.index');
-                Route::get('support-tickets/{supportTicket}', [BackofficeSupportTicketController::class, 'show'])
-                    ->name('support-tickets.show');
-                Route::post('support-tickets/{supportTicket}/assign', [BackofficeSupportTicketController::class, 'assign'])
-                    ->name('support-tickets.assign');
-                Route::post('support-tickets/{supportTicket}/status', [BackofficeSupportTicketController::class, 'updateStatus'])
-                    ->name('support-tickets.status');
-                Route::post('support-tickets/{supportTicket}/messages', [BackofficeSupportTicketMessageController::class, 'store'])
-                    ->name('support-ticket-messages.store');
-                Route::get('support-ticket-attachments/{supportTicketAttachment}/download', [BackofficeSupportTicketAttachmentController::class, 'download'])
-                    ->name('support-ticket-attachments.download');
-
-                Route::resource('contextual-faqs', BackofficeContextualFaqController::class)
-                    ->parameters(['contextual-faqs' => 'contextualFaq'])
-                    ->except(['show']);
 
                 Route::get('application-inconsistencies', [BackofficeApplicationSimulationInconsistencyController::class, 'index'])
                     ->name('application-inconsistencies.index');

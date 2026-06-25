@@ -11,7 +11,10 @@
             <x-flash-message />
             <section class="grid gap-4 md:grid-cols-4">
                 @foreach ($indicators as $label => $value)
-                    <div class="mv-surface p-5"><p class="text-xs font-semibold uppercase text-ink-500">{{ str_replace('_', ' ', $label) }}</p><p class="mt-2 text-2xl font-semibold text-ink-900">{{ $value }}</p></div>
+                    <div class="mv-surface p-5">
+                        <p class="text-xs font-semibold uppercase text-ink-500">{{ str_replace('_', ' ', $label) }}</p>
+                        <p class="mt-2 text-2xl font-semibold text-ink-900">{{ is_array($value) ? array_sum($value) : $value }}</p>
+                    </div>
                 @endforeach
             </section>
             <section class="mv-surface overflow-hidden">

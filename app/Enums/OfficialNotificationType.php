@@ -53,6 +53,7 @@ enum OfficialNotificationType: string
     case VisitRescheduled = 'visit_rescheduled';
     case VisitCancelled = 'visit_cancelled';
     case VisitCompleted = 'visit_completed';
+    case VisitNoShow = 'visit_no_show';
     case SupportTicketCreated = 'support_ticket_created';
     case SupportTicketReply = 'support_ticket_reply';
     case SupportTicketResolved = 'support_ticket_resolved';
@@ -108,6 +109,7 @@ enum OfficialNotificationType: string
             self::VisitRescheduled => 'Visita reagendada',
             self::VisitCancelled => 'Visita cancelada',
             self::VisitCompleted => 'Visita concluída',
+            self::VisitNoShow => 'Falta de comparência em visita',
             self::SupportTicketCreated => 'Pedido de apoio criado',
             self::SupportTicketReply => 'Resposta ao pedido de apoio',
             self::SupportTicketResolved => 'Pedido de apoio resolvido',

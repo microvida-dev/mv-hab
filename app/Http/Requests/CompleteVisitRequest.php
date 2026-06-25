@@ -20,7 +20,7 @@ class CompleteVisitRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'staff_notes' => ['nullable', 'string', 'max:2000'],
+            'staff_notes' => ['required', 'string', 'max:2000'],
         ];
     }
 }

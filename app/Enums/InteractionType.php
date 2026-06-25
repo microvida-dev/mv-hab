@@ -12,6 +12,7 @@ enum InteractionType: string
     case VisitRescheduled = 'visit_rescheduled';
     case VisitCancelled = 'visit_cancelled';
     case VisitCompleted = 'visit_completed';
+    case VisitNoShow = 'visit_no_show';
     case TicketCreated = 'ticket_created';
     case TicketMessageSent = 'ticket_message_sent';
     case TicketResolved = 'ticket_resolved';
@@ -26,6 +27,7 @@ enum InteractionType: string
             self::VisitRescheduled => 'Visita reagendada',
             self::VisitCancelled => 'Visita cancelada',
             self::VisitCompleted => 'Visita concluída',
+            self::VisitNoShow => 'Falta de comparência em visita',
             self::TicketCreated => 'Ticket criado',
             self::TicketMessageSent => 'Mensagem enviada',
             self::TicketResolved => 'Ticket resolvido',

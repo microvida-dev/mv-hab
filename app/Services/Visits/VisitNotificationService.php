@@ -44,6 +44,11 @@ class VisitNotificationService
         $this->notifyCandidate($visit, $actor, OfficialNotificationType::VisitCompleted, 'Visita concluída', 'A visita foi marcada como concluída pelos serviços municipais.');
     }
 
+    public function visitNoShow(HousingVisit $visit, User $actor): void
+    {
+        $this->notifyCandidate($visit, $actor, OfficialNotificationType::VisitNoShow, 'Falta de comparência registada', 'Foi registada falta de comparência na visita agendada.');
+    }
+
     private function notifyCandidate(HousingVisit $visit, User $actor, OfficialNotificationType $type, string $subject, string $body): void
     {
         $candidate = $visit->candidate;

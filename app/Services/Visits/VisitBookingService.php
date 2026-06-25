@@ -12,7 +12,9 @@ use App\Models\HousingVisit;
 use App\Models\HousingVisitStatusHistory;
 use App\Models\User;
 use App\Models\VisitSlot;
+use App\Models\WorkTask;
 use App\Services\CandidateExperience\CandidateInteractionService;
+use App\Services\Workflows\WorkTaskCreationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -22,6 +24,7 @@ class VisitBookingService
         private readonly CandidateInteractionService $interactions,
         private readonly VisitNotificationService $notifications,
         private readonly VisitAuditService $audit,
+        private readonly WorkTaskCreationService $tasks,
     ) {}
 
     /**
@@ -79,6 +82,7 @@ class VisitBookingService
                 actor: $candidate,
             );
             $this->audit->created($visit, $candidate);
+            $this->createSchedulingTask($visit->refresh(), $candidate);
             $this->notifications->visitScheduled($visit->refresh(), $candidate);
 
             return $visit->refresh();
@@ -128,6 +132,36 @@ class VisitBookingService
         );
         $this->audit->updated($visit, $actor, 'Visita concluída.');
         $this->notifications->visitCompleted($visit->refresh(), $actor);
+
+        return $visit->refresh();
+    }
+
+    public function markNoShow(HousingVisit $visit, User $actor, string $notes): HousingVisit
+    {
+        $from = VisitStatus::tryFrom((string) $visit->getRawOriginal('status'));
+        $candidate = User::query()->findOrFail($visit->candidate_user_id);
+
+        $visit->forceFill([
+            'status' => VisitStatus::Missed,
+            'completed_at' => now(),
+            'staff_notes' => $notes,
+            'staff_user_id' => $visit->staff_user_id ?: $actor->id,
+        ])->save();
+
+        $this->history($visit, $from, VisitStatus::Missed, $actor, 'Falta de comparência.', $notes);
+        $this->interactions->record(
+            user: $candidate,
+            type: InteractionType::VisitNoShow,
+            title: 'Falta de comparência registada',
+            description: 'A visita foi marcada como falta de comparência.',
+            related: $visit,
+            application: $visit->application,
+            contest: $visit->contest,
+            housingUnit: $visit->housingUnit,
+            actor: $actor,
+        );
+        $this->audit->updated($visit, $actor, 'Falta de comparência registada.');
+        $this->notifications->visitNoShow($visit->refresh(), $actor);
 
         return $visit->refresh();
     }
@@ -278,5 +312,28 @@ class VisitBookingService
             'changed_at' => now(),
             'created_at' => now(),
         ]);
+    }
+
+    private function createSchedulingTask(HousingVisit $visit, User $actor): void
+    {
+        $this->tasks->createFromSource(
+            type: WorkTask::TYPE_VISIT_SCHEDULE,
+            related: $visit,
+            actor: $actor,
+            source: $this->workTaskSource($visit),
+            priority: WorkTask::PRIORITY_NORMAL,
+            metadata: [
+                'visit_id' => $visit->id,
+                'contest_id' => $visit->contest_id,
+                'housing_unit_id' => $visit->housing_unit_id,
+                'status' => $visit->getRawOriginal('status'),
+                'channel' => 'candidate_portal',
+            ],
+        );
+    }
+
+    private function workTaskSource(HousingVisit $visit): string
+    {
+        return 'housing_visit:'.$visit->id;
     }
 }

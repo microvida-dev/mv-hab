@@ -27,8 +27,14 @@ class SupportTicketController extends Controller
     {
         Gate::authorize('viewAny', SupportTicket::class);
 
+        $user = $this->currentUser();
+
         return view('backoffice.support-tickets.index', [
-            'tickets' => SupportTicket::query()->with(['user', 'application.contest', 'assignee'])->latest('last_message_at')->paginate(20),
+            'tickets' => SupportTicket::query()
+                ->visibleToBackofficeUser($user)
+                ->with(['user', 'application.contest', 'assignee'])
+                ->latest('last_message_at')
+                ->paginate(20),
             'indicators' => $this->dashboard->indicators(),
         ]);
     }

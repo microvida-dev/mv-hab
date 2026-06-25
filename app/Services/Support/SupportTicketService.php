@@ -14,9 +14,11 @@ use App\Models\HousingUnit;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Models\User;
+use App\Models\WorkTask;
 use App\Services\Audit\AuditLogger;
 use App\Services\CandidateExperience\CandidateInteractionService;
 use App\Services\Notifications\OfficialNotificationService;
+use App\Services\Workflows\WorkTaskCreationService;
 use App\Support\AuditEvents;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +31,7 @@ class SupportTicketService
         private readonly CandidateInteractionService $interactions,
         private readonly AuditLogger $auditLogger,
         private readonly OfficialNotificationService $notifications,
+        private readonly WorkTaskCreationService $tasks,
     ) {}
 
     /**
@@ -45,14 +48,17 @@ class SupportTicketService
                 'subject' => trim((string) $data['subject']),
                 'description' => $this->plainText((string) $data['description']),
             ]);
+            $category = TicketCategory::from((string) $data['category']);
+            $priority = TicketPriority::tryFrom((string) ($data['priority'] ?? '')) ?? TicketPriority::Normal;
+
             $ticket->forceFill([
                 'ticket_number' => $this->nextNumber(),
                 'user_id' => $candidate->id,
                 'application_id' => $application?->id,
                 'contest_id' => $contest?->id,
                 'housing_unit_id' => $housingUnit?->id,
-                'category' => TicketCategory::from((string) $data['category']),
-                'priority' => TicketPriority::tryFrom((string) ($data['priority'] ?? '')) ?? TicketPriority::Normal,
+                'category' => $category,
+                'priority' => $priority,
                 'status' => TicketStatus::Open,
                 'context' => $this->context($data['context'] ?? null),
                 'last_message_at' => now(),
@@ -80,6 +86,7 @@ class SupportTicketService
             );
 
             $this->auditLogger->record(AuditEvents::CREATE, $ticket, 'support', 'support_ticket_create', 'Ticket de apoio criado.');
+            $this->createWorkTask($ticket->refresh(), $candidate, $category, $priority);
             $this->notify($candidate, $ticket, OfficialNotificationType::SupportTicketCreated, 'Pedido de apoio criado', 'O seu pedido de apoio foi registado.');
 
             return $ticket->refresh();
@@ -216,5 +223,49 @@ class SupportTicketService
         } catch (Throwable) {
             // O apoio não depende de canal externo ou de configuração de comunicações.
         }
+    }
+
+    private function createWorkTask(SupportTicket $ticket, User $actor, TicketCategory $category, TicketPriority $priority): void
+    {
+        $this->tasks->createFromSource(
+            type: $this->workTaskType($category),
+            related: $ticket,
+            actor: $actor,
+            source: 'support_ticket:'.$ticket->id,
+            priority: $this->workTaskPriority($priority),
+            metadata: [
+                'support_ticket_id' => $ticket->id,
+                'category' => $category->value,
+                'application_id' => $ticket->application_id,
+                'contest_id' => $ticket->contest_id,
+                'housing_unit_id' => $ticket->housing_unit_id,
+                'channel' => 'candidate_portal',
+            ],
+        );
+    }
+
+    private function workTaskType(TicketCategory $category): string
+    {
+        return match ($category) {
+            TicketCategory::Rgpd => WorkTask::TYPE_RGPD_REQUEST,
+            TicketCategory::Payment => WorkTask::TYPE_PAYMENT_REVIEW,
+            TicketCategory::Contract => WorkTask::TYPE_CONTRACT_REVIEW,
+            TicketCategory::Maintenance => WorkTask::TYPE_MAINTENANCE_TRIAGE,
+            TicketCategory::Legal => WorkTask::TYPE_COMPLAINT_REVIEW,
+            TicketCategory::Eligibility => WorkTask::TYPE_ELIGIBILITY_REVIEW,
+            TicketCategory::Documents => WorkTask::TYPE_DOCUMENT_REVIEW,
+            TicketCategory::Visits => WorkTask::TYPE_VISIT_SCHEDULE,
+            default => WorkTask::TYPE_SUPPORT_TICKET,
+        };
+    }
+
+    private function workTaskPriority(TicketPriority $priority): string
+    {
+        return match ($priority) {
+            TicketPriority::Low => WorkTask::PRIORITY_LOW,
+            TicketPriority::Normal => WorkTask::PRIORITY_NORMAL,
+            TicketPriority::High => WorkTask::PRIORITY_HIGH,
+            TicketPriority::Urgent => WorkTask::PRIORITY_URGENT,
+        };
     }
 }

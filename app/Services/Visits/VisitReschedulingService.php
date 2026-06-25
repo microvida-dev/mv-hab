@@ -8,7 +8,9 @@ use App\Models\HousingVisit;
 use App\Models\HousingVisitStatusHistory;
 use App\Models\User;
 use App\Models\VisitSlot;
+use App\Models\WorkTask;
 use App\Services\CandidateExperience\CandidateInteractionService;
+use App\Services\Workflows\WorkTaskCreationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -19,6 +21,7 @@ class VisitReschedulingService
         private readonly CandidateInteractionService $interactions,
         private readonly VisitNotificationService $notifications,
         private readonly VisitAuditService $audit,
+        private readonly WorkTaskCreationService $tasks,
     ) {}
 
     public function reschedule(HousingVisit $visit, VisitSlot $newSlot, User $actor, ?string $reason = null): HousingVisit
@@ -78,9 +81,28 @@ class VisitReschedulingService
                 actor: $actor,
             );
             $this->audit->updated($visit, $actor, 'Visita reagendada.');
+            $this->createSchedulingTask($visit->refresh(), $actor);
             $this->notifications->visitRescheduled($visit->refresh(), $actor);
 
             return $visit->refresh();
         });
+    }
+
+    private function createSchedulingTask(HousingVisit $visit, User $actor): void
+    {
+        $this->tasks->createFromSource(
+            type: WorkTask::TYPE_VISIT_SCHEDULE,
+            related: $visit,
+            actor: $actor,
+            source: 'housing_visit:'.$visit->id,
+            priority: WorkTask::PRIORITY_NORMAL,
+            metadata: [
+                'visit_id' => $visit->id,
+                'contest_id' => $visit->contest_id,
+                'housing_unit_id' => $visit->housing_unit_id,
+                'status' => $visit->getRawOriginal('status'),
+                'channel' => 'candidate_portal',
+            ],
+        );
     }
 }

@@ -109,6 +109,26 @@ class SupportTicket extends Model
         return $query->where('user_id', $user instanceof User ? $user->id : $user);
     }
 
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeVisibleToBackofficeUser(Builder $query, User $user): Builder
+    {
+        $hiddenCategories = collect(TicketCategory::cases())
+            ->filter(fn (TicketCategory $category): bool => $category->requiredBackofficeRoles() !== []
+                && ! $user->hasRole($category->requiredBackofficeRoles()))
+            ->map(fn (TicketCategory $category): string => $category->value)
+            ->values()
+            ->all();
+
+        if ($hiddenCategories === []) {
+            return $query;
+        }
+
+        return $query->whereNotIn('category', $hiddenCategories);
+    }
+
     public function belongsToUser(User $user): bool
     {
         return $this->user_id === $user->id;
