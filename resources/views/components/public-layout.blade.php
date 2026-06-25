@@ -3,6 +3,8 @@
     'description' => 'Portal municipal de Arrendamento Acessível. Consulte programas, concursos e prazos publicados.',
     'canonical' => null,
     'ogImage' => null,
+    'ogType' => 'website',
+    'twitterCard' => 'summary_large_image',
     'jsonLd' => null,
 ])
 
@@ -15,13 +17,17 @@
         <meta name="description" content="{{ $description }}">
         <meta property="og:title" content="{{ $title }} · MV HAB">
         <meta property="og:description" content="{{ $description }}">
-        <meta property="og:type" content="website">
+        <meta property="og:type" content="{{ $ogType }}">
+        <meta name="twitter:card" content="{{ $twitterCard }}">
+        <meta name="twitter:title" content="{{ $title }} · MV HAB">
+        <meta name="twitter:description" content="{{ $description }}">
         @if ($canonical)
             <link rel="canonical" href="{{ $canonical }}">
             <meta property="og:url" content="{{ $canonical }}">
         @endif
         @if ($ogImage)
             <meta property="og:image" content="{{ $ogImage }}">
+            <meta name="twitter:image" content="{{ $ogImage }}">
         @endif
 
         <title>{{ $title }} · MV HAB</title>

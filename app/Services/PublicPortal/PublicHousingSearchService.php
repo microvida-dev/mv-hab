@@ -5,6 +5,8 @@ namespace App\Services\PublicPortal;
 use App\Enums\HousingPublicStatus;
 use App\Models\Contest;
 use App\Models\HousingUnit;
+use App\Models\Program;
+use App\Models\VisitSlot;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -48,6 +50,14 @@ class PublicHousingSearchService
             $query->where('parish', $parish);
         }
 
+        if (($locality = $this->stringFilter($filters, 'locality')) !== null) {
+            $query->where('locality', $locality);
+        }
+
+        if (($zone = $this->stringFilter($filters, 'zone')) !== null) {
+            $query->where('public_location_description', 'like', "%{$zone}%");
+        }
+
         if (($status = $this->stringFilter($filters, 'public_status')) !== null) {
             $query->where('public_status', $status);
         }
@@ -60,8 +70,26 @@ class PublicHousingSearchService
             $query->where('monthly_rent', '<=', (float) $filters['rent_max']);
         }
 
-        if (($filters['accessible'] ?? null) !== null) {
+        if ($this->booleanFilter($filters, 'accessible')) {
             $query->whereHas('contestHousingUnits', fn (Builder $builder) => $builder->where('accessible', true));
+        }
+
+        if (($energyRating = $this->stringFilter($filters, 'energy_rating')) !== null) {
+            $query->where('energy_rating', $energyRating);
+        }
+
+        if ($this->booleanFilter($filters, 'visit_available')) {
+            $query->whereHas('visitSlots', function (Builder $builder): void {
+                /** @var Builder<VisitSlot> $builder */
+                (new VisitSlot)->scopeAvailable($builder);
+            });
+        }
+
+        if (($programSlug = $this->stringFilter($filters, 'program')) !== null) {
+            $query->whereHas('contestHousingUnits.contest.program', function (Builder $builder) use ($programSlug): void {
+                /** @var Builder<Program> $builder */
+                (new Program)->scopePubliclyVisible($builder)->where('slug', $programSlug);
+            });
         }
 
         if (($contestSlug = $this->stringFilter($filters, 'contest')) !== null) {
@@ -101,7 +129,9 @@ class PublicHousingSearchService
         return [
             'typologies' => (clone $base)->select('typology')->whereNotNull('typology')->distinct()->orderBy('typology')->pluck('typology'),
             'parishes' => (clone $base)->select('parish')->whereNotNull('parish')->distinct()->orderBy('parish')->pluck('parish'),
+            'localities' => (clone $base)->select('locality')->whereNotNull('locality')->distinct()->orderBy('locality')->pluck('locality'),
             'statuses' => collect(HousingPublicStatus::cases())->mapWithKeys(fn (HousingPublicStatus $status) => [$status->value => $status->label()]),
+            'energy_ratings' => (clone $base)->select('energy_rating')->whereNotNull('energy_rating')->distinct()->orderBy('energy_rating')->pluck('energy_rating'),
             'rent_min' => (clone $base)->min('monthly_rent'),
             'rent_max' => (clone $base)->max('monthly_rent'),
         ];
@@ -187,5 +217,13 @@ class PublicHousingSearchService
         $value = $filters[$key] ?? null;
 
         return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * @param  array<string, bool|float|int|string|null>  $filters
+     */
+    private function booleanFilter(array $filters, string $key): bool
+    {
+        return filter_var($filters[$key] ?? false, FILTER_VALIDATE_BOOL);
     }
 }

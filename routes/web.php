@@ -252,6 +252,7 @@ use App\Http\Controllers\PublicPortal\PublicContestController as PublicPortalCon
 use App\Http\Controllers\PublicPortal\PublicHousingDocumentController;
 use App\Http\Controllers\PublicPortal\PublicHousingMapController;
 use App\Http\Controllers\PublicPortal\PublicHousingUnitController;
+use App\Http\Controllers\PublicPortal\PublicSitemapController;
 use App\Http\Controllers\PublicPortalController;
 use App\Http\Controllers\PublicProgramController;
 use App\Http\Controllers\Tenant\CommunicationController as TenantCommunicationController;
@@ -265,6 +266,8 @@ use App\Http\Controllers\Tenant\PaymentController as TenantPaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', PublicPortalController::class)->name('public.portal');
+Route::get('/sitemap.xml', [PublicSitemapController::class, 'sitemap'])->name('public.sitemap');
+Route::get('/robots.txt', [PublicSitemapController::class, 'robots'])->name('public.robots');
 Route::get('/programas', [PublicProgramController::class, 'index'])->name('public.programs.index');
 Route::get('/programas/{slug}', [PublicProgramController::class, 'show'])->name('public.programs.show');
 Route::get('/oferta-habitacional', [HousingOfferController::class, 'index'])->name('public.housing-offer.index');
@@ -275,6 +278,8 @@ Route::get('/oferta-habitacional/imoveis/{slug}/brochura', [PublicHousingUnitCon
 Route::get('/oferta-habitacional/imoveis/{slug}', [PublicHousingUnitController::class, 'show'])->name('public.housing-units.show');
 Route::get('/oferta-habitacional/mapa', [PublicHousingMapController::class, 'index'])->name('public.housing-map.index');
 Route::get('/oferta-habitacional/documentos/{document}/download', [PublicHousingDocumentController::class, 'download'])->name('public.housing-documents.download');
+Route::get('/empreendimentos', [PublicHousingUnitController::class, 'index'])->name('public.developments.index');
+Route::get('/empreendimentos/{slug}', [PublicHousingUnitController::class, 'show'])->name('public.developments.show');
 Route::get('/concursos', [PublicPortalContestController::class, 'index'])->name('public.contests.legacy.index');
 Route::get('/concursos/{slug}', [PublicPortalContestController::class, 'show'])->name('public.contests.legacy.show');
 Route::get('/perguntas-frequentes', PublicFaqController::class)->name('public.faq');

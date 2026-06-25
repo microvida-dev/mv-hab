@@ -2,17 +2,30 @@
     :title="$seo['title'] ?? $housingUnit->displayTitle()"
     :description="$seo['description'] ?? ($housingUnit->public_summary ?: 'Ficha pública de habitação municipal.')"
     :canonical="$seo['canonical'] ?? null"
+    :og-image="$ogImage ?? ($seo['og_image'] ?? null)"
+    :og-type="$seo['og_type'] ?? 'article'"
     :json-ld="$jsonLd ?? null"
 >
     @php
         $cover = $housingUnit->coverImage ?: $housingUnit->publicImages->first();
         $coverUrl = $cover ? \Illuminate\Support\Facades\Storage::disk($cover->disk)->url($cover->path) : null;
+        $coordinateDecimals = match ($housingUnit->public_location_precision) {
+            \App\Enums\HousingLocationPrecision::Exact => 6,
+            \App\Enums\HousingLocationPrecision::Street => 4,
+            default => 3,
+        };
     @endphp
 
     <section class="border-b border-ink-100 bg-ink-50">
         <div class="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_28rem] lg:px-8">
             <div>
-                <a href="{{ route('public.housing-offer.index') }}" class="text-sm font-semibold text-civic-700 hover:text-civic-900">Oferta habitacional</a>
+                <nav aria-label="Breadcrumb" class="text-sm font-semibold text-civic-700">
+                    <a href="{{ route('public.portal') }}" class="hover:text-civic-900">Início</a>
+                    <span aria-hidden="true" class="mx-2 text-ink-400">/</span>
+                    <a href="{{ route('public.housing-offer.index') }}" class="hover:text-civic-900">Oferta habitacional</a>
+                    <span aria-hidden="true" class="mx-2 text-ink-400">/</span>
+                    <span>{{ $housingUnit->displayTitle() }}</span>
+                </nav>
                 <div class="mt-5 flex flex-wrap items-center gap-3">
                     <span class="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-ink-700 ring-1 ring-ink-100">{{ $housingUnit->public_reference ?: $housingUnit->code }}</span>
                     <span class="rounded-md bg-civic-50 px-2.5 py-1 text-xs font-semibold text-civic-900">{{ $housingUnit->public_status?->label() }}</span>
@@ -126,7 +139,9 @@
                 @endif
                 @if ($housingUnit->hasPublicCoordinates())
                     <div class="mt-4 rounded-md bg-civic-50 p-4 text-sm text-civic-900">
-                        Coordenadas públicas aproximadas: {{ number_format((float) $housingUnit->public_latitude, 5, ',', ' ') }}, {{ number_format((float) $housingUnit->public_longitude, 5, ',', ' ') }}
+                        Coordenadas públicas {{ $housingUnit->public_location_precision === \App\Enums\HousingLocationPrecision::Exact ? 'de referência' : 'aproximadas' }}:
+                        {{ number_format(round((float) $housingUnit->public_latitude, $coordinateDecimals), $coordinateDecimals, ',', ' ') }},
+                        {{ number_format(round((float) $housingUnit->public_longitude, $coordinateDecimals), $coordinateDecimals, ',', ' ') }}
                     </div>
                 @endif
             </section>

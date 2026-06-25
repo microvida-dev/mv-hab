@@ -1,7 +1,13 @@
 <x-public-layout title="Habitações" description="Lista pública de habitações municipais disponíveis para consulta.">
     <section class="border-b border-ink-100 bg-ink-50">
         <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-            <a href="{{ route('public.housing-offer.index') }}" class="text-sm font-semibold text-civic-700 hover:text-civic-900">Oferta habitacional</a>
+            <nav aria-label="Breadcrumb" class="text-sm font-semibold text-civic-700">
+                <a href="{{ route('public.portal') }}" class="hover:text-civic-900">Início</a>
+                <span aria-hidden="true" class="mx-2 text-ink-400">/</span>
+                <a href="{{ route('public.housing-offer.index') }}" class="hover:text-civic-900">Oferta habitacional</a>
+                <span aria-hidden="true" class="mx-2 text-ink-400">/</span>
+                <span>Habitações</span>
+            </nav>
             <h1 class="mt-3 text-3xl font-semibold text-ink-900">Habitações publicadas</h1>
             <p class="mt-3 max-w-3xl text-base leading-7 text-ink-600">Consulte as fichas públicas de habitações associadas à oferta municipal.</p>
         </div>
@@ -36,11 +42,36 @@
                 </label>
 
                 <label class="block">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Localidade</span>
+                    <select name="locality" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                        <option value="">Todas</option>
+                        @foreach ($filterOptions['localities'] as $locality)
+                            <option value="{{ $locality }}" @selected(($filters['locality'] ?? '') === $locality)>{{ $locality }}</option>
+                        @endforeach
+                    </select>
+                </label>
+
+                <label class="block">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Estado</span>
                     <select name="public_status" class="mt-1 w-full rounded-md border-ink-200 text-sm">
                         <option value="">Todos</option>
                         @foreach ($filterOptions['statuses'] as $value => $label)
                             <option value="{{ $value }}" @selected(($filters['public_status'] ?? '') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </label>
+
+                <label class="block">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Zona</span>
+                    <input type="search" name="zone" value="{{ $filters['zone'] ?? '' }}" class="mt-1 w-full rounded-md border-ink-200 text-sm" placeholder="Zona pública aproximada">
+                </label>
+
+                <label class="block">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Eficiência energética</span>
+                    <select name="energy_rating" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                        <option value="">Todas</option>
+                        @foreach ($filterOptions['energy_ratings'] as $rating)
+                            <option value="{{ $rating }}" @selected(($filters['energy_rating'] ?? '') === $rating)>{{ $rating }}</option>
                         @endforeach
                     </select>
                 </label>
@@ -63,6 +94,16 @@
                         <option value="rent_desc" @selected(($filters['sort'] ?? '') === 'rent_desc')>Renda decrescente</option>
                         <option value="typology" @selected(($filters['sort'] ?? '') === 'typology')>Tipologia</option>
                     </select>
+                </label>
+
+                <label class="flex items-end gap-2 rounded-md border border-ink-100 bg-ink-50 px-3 py-2 text-sm font-semibold text-ink-700">
+                    <input type="checkbox" name="accessible" value="1" @checked((bool) ($filters['accessible'] ?? false)) class="rounded border-ink-300 text-civic-700">
+                    Acessível
+                </label>
+
+                <label class="flex items-end gap-2 rounded-md border border-ink-100 bg-ink-50 px-3 py-2 text-sm font-semibold text-ink-700">
+                    <input type="checkbox" name="visit_available" value="1" @checked((bool) ($filters['visit_available'] ?? false)) class="rounded border-ink-300 text-civic-700">
+                    Visitas disponíveis
                 </label>
 
                 <div class="flex items-end gap-3">

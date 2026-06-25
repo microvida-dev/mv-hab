@@ -28,6 +28,7 @@ class PublicHousingUnitController extends Controller
             'housingUnit' => $housingUnit,
             'seo' => $seoService->housingUnit($housingUnit),
             'jsonLd' => $seoService->housingUnitJsonLd($housingUnit),
+            'ogImage' => $seoService->housingUnitImageUrl($housingUnit),
         ]);
     }
 
@@ -39,6 +40,7 @@ class PublicHousingUnitController extends Controller
             'housingUnit' => $housingUnit,
             'contestHousingUnit' => $housingUnit->contestHousingUnits->first(),
             'seo' => $seoService->housingUnit($housingUnit),
+            'ogImage' => $seoService->housingUnitImageUrl($housingUnit),
         ]);
     }
 }

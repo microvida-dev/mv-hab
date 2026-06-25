@@ -2,6 +2,7 @@
     :title="$seo['title'] ?? $contest->title"
     :description="$seo['description'] ?? $contest->summary"
     :canonical="$seo['canonical'] ?? null"
+    :og-type="$seo['og_type'] ?? 'article'"
     :json-ld="$jsonLd ?? null"
 >
     @php
@@ -10,7 +11,13 @@
 
     <section class="border-b border-ink-100 bg-ink-50">
         <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-            <a href="{{ route('public.contests.index') }}" class="text-sm font-semibold text-civic-700 hover:text-civic-900">Concursos</a>
+            <nav aria-label="Breadcrumb" class="text-sm font-semibold text-civic-700">
+                <a href="{{ route('public.portal') }}" class="hover:text-civic-900">Início</a>
+                <span aria-hidden="true" class="mx-2 text-ink-400">/</span>
+                <a href="{{ route('public.contests.index') }}" class="hover:text-civic-900">Concursos</a>
+                <span aria-hidden="true" class="mx-2 text-ink-400">/</span>
+                <span>{{ $contest->title }}</span>
+            </nav>
             <div class="mt-5 flex flex-wrap items-center gap-3">
                 <span class="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-ink-700 ring-1 ring-ink-100">{{ $contest->code }}</span>
                 <span class="rounded-md px-2.5 py-1 text-xs font-semibold {{ $isOpen ? 'bg-civic-50 text-civic-900' : 'bg-ink-100 text-ink-700' }}">

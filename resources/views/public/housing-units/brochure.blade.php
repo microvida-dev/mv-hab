@@ -2,6 +2,8 @@
     :title="'Brochura — '.$housingUnit->displayTitle()"
     :description="$housingUnit->public_summary ?: 'Brochura pública de habitação municipal.'"
     :canonical="route('public.housing-units.brochure', $housingUnit->public_slug)"
+    :og-image="$ogImage ?? ($seo['og_image'] ?? null)"
+    og-type="article"
 >
     @php
         $contest = $contestHousingUnit?->contest;

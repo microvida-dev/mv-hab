@@ -28,12 +28,17 @@ class SearchHousingOfferRequest extends FormRequest
             'q' => ['nullable', 'string', 'max:120'],
             'typology' => ['nullable', 'string', 'max:50'],
             'parish' => ['nullable', 'string', 'max:120'],
+            'locality' => ['nullable', 'string', 'max:120'],
+            'zone' => ['nullable', 'string', 'max:160'],
             'public_status' => ['nullable', Rule::in(HousingPublicStatus::values())],
             'rent_min' => ['nullable', 'numeric', 'min:0'],
             'rent_max' => $rentMaxRules,
+            'program' => ['nullable', 'string', 'max:160'],
             'contest' => ['nullable', 'string', 'max:160'],
             'contest_status' => ['nullable', Rule::in(['open', 'upcoming', 'closed'])],
             'accessible' => ['nullable', 'boolean'],
+            'energy_rating' => ['nullable', 'string', 'max:20'],
+            'visit_available' => ['nullable', 'boolean'],
             'sort' => ['nullable', Rule::in(['published_desc', 'rent_asc', 'rent_desc', 'typology'])],
         ];
     }
