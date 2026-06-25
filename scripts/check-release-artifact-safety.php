@@ -54,6 +54,10 @@ function defaultReleaseTargets(string $basePath): array
         'docs/08-qa/qa-42-wcag-accessibility-report.md',
         'docs/08-qa/qa-43-alcanena-legal-parameterization-report.md',
         'docs/08-qa/qa-44-municipal-rbac-team-matrix-report.md',
+        'docs/08-qa/phase-3-real-users-pilot-readiness-report.md',
+        'docs/08-qa/qa-45-dashboards-kpis-municipal-reports-report.md',
+        'docs/08-qa/qa-46-incident-observability-support-report.md',
+        'docs/08-qa/qa-47-rgpd-final-policy-alignment-report.md',
         'docs/11-operacoes',
         'resources',
         'routes',
@@ -62,6 +66,8 @@ function defaultReleaseTargets(string $basePath): array
         'storage/qa/phase-1-secret-scan.txt',
         'storage/qa/phase-2-artifact-safety.txt',
         'storage/qa/phase-2-secret-scan.txt',
+        'storage/qa/phase-3-artifact-safety.txt',
+        'storage/qa/phase-3-secret-scan.txt',
     ];
 
     return collectTargets($roots, $basePath);

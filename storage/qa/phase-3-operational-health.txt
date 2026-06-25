@@ -1,0 +1,14 @@
++---------------------+--------+---------------------------------------------------------+
+| check | status | message |
++---------------------+--------+---------------------------------------------------------+
+| app_environment | pass | Ambiente local reconhecido. |
+| debug_state | warn | APP_DEBUG ativo apenas aceitável em local/testes. |
+| database_connection | pass | Ligação à base de dados operacional. |
+| cache_store | pass | Cache operacional. |
+| queue_connection | warn | QUEUE_CONNECTION=sync apenas aceitável em local/testes. |
+| failed_jobs | pass | Failed jobs configurados e tabela disponível. |
+| private_storage | pass | Storage privado existe e é gravável. |
+| log_channel | pass | Canal de log stack configurado. |
+| schedule_list | pass | Comando schedule:list disponível. |
+| route_health | pass | Rotas carregadas pela aplicação. |
++---------------------+--------+---------------------------------------------------------+
