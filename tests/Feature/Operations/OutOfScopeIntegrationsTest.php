@@ -12,8 +12,10 @@ class OutOfScopeIntegrationsTest extends TestCase
         $document = (string) file_get_contents(base_path('docs/11-operacoes/out-of-scope-integrations.md'));
 
         foreach ([
-            'Assinatura digital',
-            'Autenticacao.gov/CMD',
+            'CMD',
+            'Autenticacao.gov',
+            'Pagamentos via plataforma',
+            'Assinatura digital qualificada',
             'MB WAY',
             'Multibanco',
             'Cartao',
@@ -24,7 +26,7 @@ class OutOfScopeIntegrationsTest extends TestCase
             $this->assertStringContainsString($integration, $document);
         }
 
-        $this->assertSame(8, substr_count($document, 'Out of scope by municipal decision'));
+        $this->assertSame(10, substr_count($document, 'Out of scope by municipal decision'));
         $this->assertStringContainsString('gestao administrativa/manual', $document);
     }
 

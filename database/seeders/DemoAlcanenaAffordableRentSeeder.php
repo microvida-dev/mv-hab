@@ -168,7 +168,7 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
                 [
                     'municipality_id' => $municipality->id,
                     'name' => $name,
-                    'password' => Hash::make('password'),
+                    'password' => $this->demoPasswordHash($email),
                     'email_verified_at' => CarbonImmutable::create(2026, 1, 1, 0),
                     'status' => 'active',
                     'last_login_at' => null,
@@ -177,6 +177,11 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
 
             $user->assignRole($role);
         }
+    }
+
+    private function demoPasswordHash(string $email): string
+    {
+        return Hash::make(hash('sha256', $email.'|mvhab-alcanena-demo-access-disabled'));
     }
 
     private function seedProgramRules(Program $program): void

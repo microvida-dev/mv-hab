@@ -1,6 +1,8 @@
 *.log
 .DS_Store
 .env
+.env.*
+!.env.example
 .env.backup
 .env.production
 .phpactor.json
@@ -17,9 +19,24 @@
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
+/backups/
+/exports/
 /storage/*.key
+/storage/app/private/
+/storage/app/exports/
+/storage/app/temp/
+/storage/app/tmp/
+/storage/framework/
+/storage/logs/
 /storage/pail
 /vendor
+*.dump
+*.key
+*.pem
+*.sql
+*.tar
+*.tar.gz
+*.zip
 _ide_helper.php
 Homestead.json
 Homestead.yaml
@@ -29,8 +46,18 @@ Thumbs.db
 
 # Laravel compiled Blade views
 /storage/framework/views/*.php
+!/storage/app/.gitignore
+!/storage/app/private/.gitignore
+!/storage/app/public/.gitignore
+!/storage/framework/.gitignore
+!/storage/framework/cache/.gitignore
+!/storage/framework/cache/.gitkeep
+!/storage/framework/sessions/.gitignore
+!/storage/framework/sessions/.gitkeep
+!/storage/framework/testing/.gitignore
 !/storage/framework/views/.gitignore
 !/storage/framework/views/.gitkeep
+!/storage/logs/.gitkeep
 
 # PHPStan cache
 /storage/phpstan/

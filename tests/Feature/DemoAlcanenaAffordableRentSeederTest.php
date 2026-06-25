@@ -150,7 +150,7 @@ class DemoAlcanenaAffordableRentSeederTest extends TestCase
             ->where('status', 'active')
             ->firstOrFail();
 
-        $this->assertTrue(Hash::check('password', $user->password));
+        $this->assertFalse(Hash::check('password', $user->password));
         $this->assertTrue($user->roles()->where('name', $role)->exists());
     }
 

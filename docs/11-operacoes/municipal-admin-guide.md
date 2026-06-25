@@ -38,7 +38,7 @@ Guia operacional para administracao municipal da MV HAB dentro do ambito aceite 
 
 - Contratos podem ter assinatura/registo manual.
 - Rendas e pagamentos sao geridos administrativamente.
-- Gateway bancario, MB WAY, Multibanco, cartao, SEPA automatico e reconciliacao automatica estao fora do ambito aceite.
+- CMD, Autenticacao.gov, pagamentos via plataforma, assinatura digital qualificada, gateway bancario, MB WAY, Multibanco, cartao, SEPA automatico e reconciliacao automatica estao fora do ambito aceite.
 
 ## Inquilino, manutencao e vistorias
 

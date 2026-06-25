@@ -74,9 +74,19 @@ Antes de abrir trafego:
 
 ```bash
 php artisan schedule:list
+php artisan mvhab:operations:queue-health
 php artisan queue:work --stop-when-empty
 php artisan queue:restart
 ```
+
+Na revisao QA-36/Phase 1 o estado e: sem tarefas agendadas atuais registadas em `schedule:list`. O cron deve continuar configurado para rotinas futuras, SLA/overdue e jobs operacionais que venham a ser ativados antes do piloto real.
+
+## Regras de ambiente
+
+- `QUEUE_CONNECTION=sync` e aceitavel apenas em local/testes.
+- Staging/piloto deve usar `database` ou `redis`.
+- Workers devem conseguir ler/gravar `storage/app/private` sem expor esse caminho publicamente.
+- Jobs devem ser idempotentes quando podem ser repetidos por retry ou deploy.
 
 ## Bloqueadores
 

@@ -6,8 +6,10 @@ As integracoes seguintes ficam formalmente fora do produto final por decisao mun
 
 | Integracao | Estado |
 | --- | --- |
-| Assinatura digital | Out of scope by municipal decision |
-| Autenticacao.gov/CMD | Out of scope by municipal decision |
+| CMD | Out of scope by municipal decision |
+| Autenticacao.gov | Out of scope by municipal decision |
+| Pagamentos via plataforma | Out of scope by municipal decision |
+| Assinatura digital qualificada | Out of scope by municipal decision |
 | MB WAY | Out of scope by municipal decision |
 | Multibanco | Out of scope by municipal decision |
 | Cartao | Out of scope by municipal decision |

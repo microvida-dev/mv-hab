@@ -41,7 +41,7 @@ php artisan optimize:clear
 
 ## Bloqueadores
 
-- `APP_DEBUG=true` em producao.
+- debug ativo em producao.
 - `.env` versionado.
 - `storage/app/private` acessivel por URL publico.
 - `QUEUE_CONNECTION=sync` em producao.

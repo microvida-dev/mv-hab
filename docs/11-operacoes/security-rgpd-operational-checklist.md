@@ -50,6 +50,6 @@ Checklist final de seguranca e RGPD para operacao municipal.
 - documento privado publico;
 - area privada sem autenticacao;
 - export sensivel sem policy/auditoria;
-- `APP_DEBUG=true` em producao;
+- debug ativo em producao;
 - secrets em Git;
 - logs com dados pessoais reais desnecessarios.
