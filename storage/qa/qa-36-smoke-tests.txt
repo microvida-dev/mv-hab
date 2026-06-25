@@ -1,0 +1,11 @@
+QA-36 municipal smoke tests
+
+Automated smoke coverage is provided by tests/Feature/Operations/MunicipalSmokeReadinessTest.php.
+Manual municipal smoke checklist is documented in docs/11-operacoes/municipal-smoke-test-checklist.md.
+
+Executed evidence:
+- phpunit full suite: PASS, 386 tests, 2446 assertions.
+- phpunit --filter QA36: PASS, 2 tests, 22 assertions.
+- route:list: PASS, 1119 routes.
+
+Result: PASS_AUTOMATED_SMOKE_AND_MANUAL_CHECKLIST_DEFINED

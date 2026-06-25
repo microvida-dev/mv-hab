@@ -93,7 +93,8 @@ class Sprint22CandidateSupportTest extends TestCase
         $candidate = $this->userWithRole('candidate');
         $contest = Contest::factory()->for(Program::factory()->published())->open()->create();
 
-        $this->actingAs($staff)
+        $this->withSession(['mfa.verified_at' => now()])
+            ->actingAs($staff)
             ->post(route('backoffice.visit-availabilities.store'), [
                 'contest_id' => $contest->id,
                 'staff_user_id' => $staff->id,
@@ -109,7 +110,8 @@ class Sprint22CandidateSupportTest extends TestCase
 
         $availability = VisitAvailability::query()->firstOrFail();
 
-        $this->actingAs($staff)
+        $this->withSession(['mfa.verified_at' => now()])
+            ->actingAs($staff)
             ->post(route('backoffice.visit-availabilities.slots.generate', $availability), [
                 'location' => 'Edifício municipal',
             ])
@@ -125,13 +127,15 @@ class Sprint22CandidateSupportTest extends TestCase
             'ends_at' => $slot->ends_at,
         ]);
 
-        $this->actingAs($staff)
+        $this->withSession(['mfa.verified_at' => now()])
+            ->actingAs($staff)
             ->post(route('backoffice.housing-visits.confirm', $visit))
             ->assertRedirect();
 
         $this->assertSame(VisitStatus::Confirmed, $visit->refresh()->status);
 
-        $this->actingAs($staff)
+        $this->withSession(['mfa.verified_at' => now()])
+            ->actingAs($staff)
             ->post(route('backoffice.housing-visits.complete', $visit), ['staff_notes' => 'Concluída em teste.'])
             ->assertRedirect();
 
@@ -174,7 +178,8 @@ class Sprint22CandidateSupportTest extends TestCase
             'visibility' => MessageVisibility::CandidateVisible->value,
         ]);
 
-        $this->actingAs($staff)
+        $this->withSession(['mfa.verified_at' => now()])
+            ->actingAs($staff)
             ->post(route('backoffice.support-ticket-messages.store', $ticket), [
                 'message' => 'Nota interna dos serviços.',
                 'visibility' => MessageVisibility::InternalOnly->value,
@@ -217,7 +222,8 @@ class Sprint22CandidateSupportTest extends TestCase
             'severity' => InconsistencySeverity::Warning->value,
         ]);
 
-        $this->actingAs($staff)
+        $this->withSession(['mfa.verified_at' => now()])
+            ->actingAs($staff)
             ->post(route('backoffice.application-inconsistencies.resolve', $inconsistency), [
                 'resolution_note' => 'Revisto em teste.',
             ])

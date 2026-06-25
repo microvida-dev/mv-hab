@@ -1,0 +1,8 @@
+QA-36 rollback rehearsal
+
+No real rollback was executed in this local workspace.
+Rollback procedure, abort criteria and post-rollback smoke checks are documented in docs/11-operacoes/rollback-runbook.md.
+
+Limitation: rollback must be rehearsed in the target staging environment before municipal production.
+
+Result: DOCUMENTED_ONLY_SAFE_LOCAL

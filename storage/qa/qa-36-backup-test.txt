@@ -1,0 +1,6 @@
+QA-36 backup rehearsal
+
+No real database dump was created in this repository.
+Backup readiness is documented in docs/11-operacoes/backup-restore-runbook.md with placeholder commands, checksums, encryption and retention rules.
+
+Result: DOCUMENTED_ONLY_SAFE_LOCAL

@@ -1,0 +1,8 @@
+QA-36 restore rehearsal
+
+No restore was executed against real data in this local workspace.
+Restore steps and post-restore smoke checks are documented in docs/11-operacoes/backup-restore-runbook.md.
+
+Limitation: restore must be rehearsed in a disposable non-production environment before municipal production.
+
+Result: NOT_EXECUTED_NO_DISPOSABLE_ENVIRONMENT
