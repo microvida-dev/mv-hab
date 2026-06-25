@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\DocumentAccessAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RejectDocumentSubmissionRequest;
 use App\Http\Requests\ValidateDocumentSubmissionRequest;
@@ -33,9 +34,12 @@ class DocumentReviewController extends Controller
         return view('admin.document-reviews.index', compact('submissions'));
     }
 
-    public function show(DocumentSubmission $documentSubmission): View
+    public function show(Request $request, DocumentSubmission $documentSubmission): View
     {
-        Gate::authorize('view', $documentSubmission);
+        if (Gate::denies('view', $documentSubmission)) {
+            $this->accessService->denied($documentSubmission, $this->authenticatedUser($request), 'view');
+            abort(403);
+        }
 
         $documentSubmission->load([
             'documentType',
@@ -48,6 +52,7 @@ class DocumentReviewController extends Controller
             'reviews.reviewedBy',
             'accessLogs.user',
         ]);
+        $this->accessService->record($documentSubmission, DocumentAccessAction::View, $documentSubmission->currentVersion, $this->authenticatedUser($request));
 
         return view('admin.document-reviews.show', ['submission' => $documentSubmission]);
     }
@@ -97,7 +102,10 @@ class DocumentReviewController extends Controller
 
     public function download(Request $request, DocumentSubmission $documentSubmission): StreamedResponse
     {
-        Gate::authorize('download', $documentSubmission);
+        if (Gate::denies('download', $documentSubmission)) {
+            $this->accessService->denied($documentSubmission, $this->authenticatedUser($request), 'download');
+            abort(403);
+        }
 
         return $this->accessService->download($documentSubmission->load('currentVersion'), $this->authenticatedUser($request));
     }

@@ -20,6 +20,12 @@ class SensitiveDataAccessLog extends Model
         return ['accessed_at' => 'datetime'];
     }
 
+    protected static function booted(): void
+    {
+        static::updating(fn () => false);
+        static::deleting(fn () => false);
+    }
+
     /**
      * @return BelongsTo<User, $this>
      */

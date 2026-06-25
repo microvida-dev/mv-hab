@@ -44,6 +44,7 @@ class MfaDeviceService
 
         $device->forceFill(['confirmed_at' => now(), 'last_used_at' => now()])->save();
         $this->audit->record('mfa.device.confirmed', $device, AuditEventCategory::Security, AuditEventSeverity::Security, 'MFA ativado.', subject: $subject, actor: $actor ?? $subject);
+        $this->audit->record('mfa_enabled', $device, AuditEventCategory::Security, AuditEventSeverity::Security, 'MFA ativado para perfil sensível.', subject: $subject, actor: $actor ?? $subject);
 
         return true;
     }
@@ -57,6 +58,7 @@ class MfaDeviceService
 
         $device->forceFill(['disabled_at' => now()])->save();
         $this->audit->record('mfa.device.disabled', $device, AuditEventCategory::Security, AuditEventSeverity::Warning, 'MFA desativado.', subject: $subject, actor: $actor);
+        $this->audit->record('mfa_disabled', $device, AuditEventCategory::Security, AuditEventSeverity::Warning, 'MFA desativado com auditoria sensível.', subject: $subject, actor: $actor);
     }
 
     /**

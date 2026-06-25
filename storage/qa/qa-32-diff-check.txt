@@ -1,0 +1,1 @@
+{"tool":"git diff --check","result":"passed"}

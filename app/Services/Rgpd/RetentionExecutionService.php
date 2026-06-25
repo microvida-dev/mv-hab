@@ -35,6 +35,7 @@ class RetentionExecutionService
         ]);
 
         $this->audit->record('retention.simulated', $execution, AuditEventCategory::Rgpd, AuditEventSeverity::Notice, 'Simulação de retenção executada.', actor: $actor);
+        $this->audit->record('rgpd_retention_simulated', $execution, AuditEventCategory::Rgpd, AuditEventSeverity::Notice, 'Simulação RGPD de retenção executada.', actor: $actor);
 
         return $execution;
     }
@@ -42,6 +43,7 @@ class RetentionExecutionService
     public function approve(RetentionExecution $execution, User $actor): RetentionExecution
     {
         $execution->forceFill(['status' => RetentionExecutionStatus::Approved, 'approved_by' => $actor->id])->save();
+        $this->audit->record('rgpd_retention_approved', $execution, AuditEventCategory::Rgpd, AuditEventSeverity::Warning, 'Execução de retenção aprovada.', actor: $actor);
 
         return $execution->refresh();
     }
@@ -70,6 +72,7 @@ class RetentionExecutionService
         ])->save();
 
         $this->audit->record('retention.executed', $execution, AuditEventCategory::Rgpd, AuditEventSeverity::Warning, 'Execução de retenção registada.', actor: $actor);
+        $this->audit->record('rgpd_retention_executed', $execution, AuditEventCategory::Rgpd, AuditEventSeverity::Warning, 'Execução RGPD de retenção registada.', actor: $actor);
 
         return $execution->refresh();
     }

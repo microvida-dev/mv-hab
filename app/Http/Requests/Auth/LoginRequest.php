@@ -2,15 +2,12 @@
 
 namespace App\Http\Requests\Auth;
 
-use App\Enums\AccessLogType;
-use App\Services\Security\AccessLogService;
-use App\Services\Security\SecurityAlertService;
+use App\Services\Security\LoginHistoryService;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
@@ -51,10 +48,7 @@ class LoginRequest extends FormRequest
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
-            $log = app(AccessLogService::class)->record(AccessLogType::FailedLogin, metadata: [
-                'email_hash' => hash('sha256', Str::lower((string) $this->string('email'))),
-            ]);
-            app(SecurityAlertService::class)->evaluateAccess($log);
+            app(LoginHistoryService::class)->recordFailed((string) $this->string('email'));
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
@@ -92,6 +86,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return str((string) $this->string('email'))->lower()->transliterate().'|'.$this->ip();
     }
 }

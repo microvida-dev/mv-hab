@@ -47,7 +47,10 @@ class DocumentController extends Controller
 
     public function show(Request $request, DocumentSubmission $documentSubmission): View
     {
-        Gate::authorize('view', $documentSubmission);
+        if (Gate::denies('view', $documentSubmission)) {
+            $this->accessService->denied($documentSubmission, $this->authenticatedUser($request), 'view');
+            abort(403);
+        }
 
         $documentSubmission->load([
             'documentType',
@@ -139,7 +142,10 @@ class DocumentController extends Controller
 
     public function download(Request $request, DocumentSubmission $documentSubmission): StreamedResponse
     {
-        Gate::authorize('download', $documentSubmission);
+        if (Gate::denies('download', $documentSubmission)) {
+            $this->accessService->denied($documentSubmission, $this->authenticatedUser($request), 'download');
+            abort(403);
+        }
 
         return $this->accessService->download($documentSubmission->load('currentVersion'), $this->authenticatedUser($request));
     }

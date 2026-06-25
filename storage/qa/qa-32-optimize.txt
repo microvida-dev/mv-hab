@@ -1,0 +1,8 @@
+
+ INFO Caching framework bootstrap, configuration, and metadata. 
+
+ config .. 24.32ms DONE
+ events .. 1.06ms DONE
+ routes .. 102.81ms DONE
+ views .. 911.55ms DONE
+

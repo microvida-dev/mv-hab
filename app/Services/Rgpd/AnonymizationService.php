@@ -37,6 +37,7 @@ class AnonymizationService
         ]);
 
         $this->audit->record('anonymization_request.created', $request, AuditEventCategory::Rgpd, AuditEventSeverity::Warning, 'Pedido de anonimização criado.', actor: $actor);
+        $this->audit->record('rgpd_anonymization_requested', $request, AuditEventCategory::Rgpd, AuditEventSeverity::Warning, 'Pedido RGPD de anonimização registado.', subject: $request->user, actor: $actor);
 
         return $request;
     }
@@ -44,6 +45,7 @@ class AnonymizationService
     public function approve(AnonymizationRequest $request, User $actor): AnonymizationRequest
     {
         $request->forceFill(['status' => AnonymizationStatus::Approved, 'approved_by' => $actor->id, 'approved_at' => now()])->save();
+        $this->audit->record('rgpd_anonymization_approved', $request, AuditEventCategory::Rgpd, AuditEventSeverity::Warning, 'Anonimização aprovada.', subject: $request->user, actor: $actor);
 
         return $request->refresh();
     }
@@ -71,6 +73,7 @@ class AnonymizationService
         ])->save();
 
         $this->audit->record('anonymization_request.executed', $request, AuditEventCategory::Rgpd, AuditEventSeverity::Critical, 'Anonimização executada.', subject: $request->user, actor: $actor);
+        $this->audit->record('rgpd_anonymization_executed', $request, AuditEventCategory::Rgpd, AuditEventSeverity::Critical, 'Anonimização RGPD executada.', subject: $request->user, actor: $actor);
 
         return $request->refresh();
     }

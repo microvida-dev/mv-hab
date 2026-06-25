@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\Audit\AuditTrailService;
 use App\Services\Security\AccessLogService;
 use App\Services\Security\SensitiveDataAccessService;
+use DateTimeInterface;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -58,6 +59,12 @@ class DataExportService
         ]);
 
         $this->audit->record('data_export.generated', $package, AuditEventCategory::Rgpd, AuditEventSeverity::Warning, 'Exportação de dados do titular gerada.', subject: $subject, actor: $actor);
+        $expiresAt = $package->getAttribute('expires_at');
+        $this->audit->record('sensitive_export_created', $package, AuditEventCategory::Rgpd, AuditEventSeverity::Warning, 'Exportação sensível criada em storage privado.', metadata: [
+            'format' => $package->format,
+            'expires_at' => $expiresAt instanceof DateTimeInterface ? $expiresAt->format(DATE_ATOM) : null,
+        ], subject: $subject, actor: $actor);
+        $this->audit->record('rgpd_export_requested', $package, AuditEventCategory::Rgpd, AuditEventSeverity::Warning, 'Exportação RGPD gerada após pedido do titular.', subject: $subject, actor: $actor);
         $this->sensitiveAccess->record($actor, $package, 'export', $subject, 'highly_sensitive', 'Exportação RGPD autorizada.');
 
         return $package;
@@ -74,6 +81,7 @@ class DataExportService
         $this->access->record(AccessLogType::ExportDownload, $actor, $package, 200);
         $this->sensitiveAccess->record($actor, $package, 'download', $subject, 'highly_sensitive', 'Download de exportação RGPD.');
         $this->audit->record('data_export.downloaded', $package, AuditEventCategory::Rgpd, AuditEventSeverity::Warning, 'Exportação de dados do titular descarregada.', subject: $subject, actor: $actor);
+        $this->audit->record('sensitive_export_downloaded', $package, AuditEventCategory::Rgpd, AuditEventSeverity::Warning, 'Download de exportação sensível auditado.', subject: $subject, actor: $actor);
 
         return Storage::disk($package->storage_disk)->download($package->storage_path, $package->filename, [
             'X-Content-Type-Options' => 'nosniff',

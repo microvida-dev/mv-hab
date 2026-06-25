@@ -190,4 +190,21 @@ class WorkTaskSlaService
 
         return $count;
     }
+
+    public function auditPolicyChanged(WorkTaskSlaPolicy $policy, User $actor, int $oldBusinessDays, int $newBusinessDays): void
+    {
+        app(AuditTrailService::class)->record(
+            eventCode: 'work_task_sla_changed',
+            auditable: $policy,
+            category: AuditEventCategory::Workflow,
+            severity: AuditEventSeverity::Warning,
+            description: 'Política de SLA de tarefa alterada.',
+            oldValues: ['business_days' => $oldBusinessDays],
+            newValues: ['business_days' => $newBusinessDays],
+            metadata: [
+                'type' => $policy->type,
+            ],
+            actor: $actor,
+        );
+    }
 }

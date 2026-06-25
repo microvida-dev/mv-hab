@@ -46,6 +46,15 @@ class DocumentAccessService
         ]);
         $log->save();
 
+        if ($action === DocumentAccessAction::View && $actor instanceof User) {
+            $this->access->record(AccessLogType::DocumentView, $actor, $submission, 200);
+            $this->sensitiveAccess->record($actor, $submission, 'view', $submission->user, 'highly_sensitive', 'Consulta documental autorizada.');
+            $this->audit->record('document_viewed', $submission, AuditEventCategory::Documents, AuditEventSeverity::Warning, 'Documento consultado.', metadata: [
+                'document_version_id' => $version?->id,
+                'document_access_log_id' => $log->id,
+            ], subject: $submission->user, actor: $actor);
+        }
+
         return $log;
     }
 
@@ -61,6 +70,9 @@ class DocumentAccessService
         $this->audit->record('document.downloaded', $submission, AuditEventCategory::Documents, AuditEventSeverity::Warning, 'Documento descarregado.', metadata: [
             'document_version_id' => $version->id,
             'filename' => $version->original_filename,
+        ], subject: $submission->user, actor: $actor);
+        $this->audit->record('document_downloaded', $submission, AuditEventCategory::Documents, AuditEventSeverity::Warning, 'Download documental auditado para QA-32.', metadata: [
+            'document_version_id' => $version->id,
         ], subject: $submission->user, actor: $actor);
 
         $stream = Storage::disk($version->storage_disk)->readStream($version->storage_path);
@@ -83,6 +95,17 @@ class DocumentAccessService
             'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'private, no-store',
         ]);
+    }
+
+    public function denied(DocumentSubmission $submission, User $actor, string $action): void
+    {
+        $this->access->record(AccessLogType::DocumentView, $actor, $submission, 403, [
+            'denied_action' => $action,
+        ]);
+        $this->sensitiveAccess->record($actor, $submission, 'denied', $submission->user, 'highly_sensitive', 'Acesso documental negado.');
+        $this->audit->record('document_access_denied', $submission, AuditEventCategory::Documents, AuditEventSeverity::Security, 'Acesso documental negado por policy.', metadata: [
+            'action' => $action,
+        ], subject: $submission->user, actor: $actor);
     }
 
     private function request(): ?Request

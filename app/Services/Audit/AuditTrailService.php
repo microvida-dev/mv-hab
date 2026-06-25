@@ -32,12 +32,13 @@ class AuditTrailService
         ?User $subject = null,
         ?Model $related = null,
         ?User $actor = null,
+        bool $useAuthenticatedUser = true,
     ): AuditEvent {
         $request = $this->request();
 
         return AuditEvent::query()->create([
             'event_number' => $this->number(),
-            'user_id' => $actor instanceof User ? $actor->id : Auth::id(),
+            'user_id' => $this->actorId($actor, $useAuthenticatedUser),
             'event_code' => $eventCode,
             'event_category' => $category,
             'severity' => $severity,
@@ -57,6 +58,31 @@ class AuditTrailService
             'metadata' => $metadata === [] ? null : $this->formatter->mask($metadata),
             'occurred_at' => now(),
         ]);
+    }
+
+    private function actorId(?User $actor, bool $useAuthenticatedUser): ?int
+    {
+        if ($actor instanceof User) {
+            return $actor->id;
+        }
+
+        if (! $useAuthenticatedUser) {
+            return null;
+        }
+
+        $authId = Auth::id();
+
+        if ($authId === null) {
+            return null;
+        }
+
+        $existingId = User::query()->whereKey($authId)->value('id');
+
+        if (is_int($existingId)) {
+            return $existingId;
+        }
+
+        return is_numeric($existingId) ? (int) $existingId : null;
     }
 
     private function number(): string

@@ -27,6 +27,12 @@ class DocumentAccessLog extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::updating(fn () => false);
+        static::deleting(fn () => false);
+    }
+
     /** @return BelongsTo<DocumentSubmission, $this> */
     public function documentSubmission(): BelongsTo
     {

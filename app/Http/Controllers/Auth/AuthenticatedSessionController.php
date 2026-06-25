@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Enums\AccessLogType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Services\Security\AccessLogService;
+use App\Services\Security\LoginHistoryService;
 use App\Services\Security\MfaEnforcementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,7 +29,7 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
-        app(AccessLogService::class)->record(AccessLogType::Login, $this->authenticatedUser($request), statusCode: 200);
+        app(LoginHistoryService::class)->recordSuccess($this->authenticatedUser($request));
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
@@ -40,7 +39,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        app(AccessLogService::class)->record(AccessLogType::Logout, $this->authenticatedUser($request), statusCode: 200);
+        app(LoginHistoryService::class)->recordLogout($this->authenticatedUser($request));
         app(MfaEnforcementService::class)->forgetVerification();
         Auth::guard('web')->logout();
 

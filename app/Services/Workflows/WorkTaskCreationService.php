@@ -118,7 +118,21 @@ class WorkTaskCreationService
     private function minimizeMetadata(array $metadata): array
     {
         return collect($metadata)
-            ->reject(fn (mixed $value, string $key): bool => in_array(strtolower($key), ['password', 'token', 'secret', 'nif', 'document_path', 'storage_path'], true))
+            ->reject(fn (mixed $value, string $key): bool => in_array(strtolower($key), [
+                'password',
+                'token',
+                'secret',
+                'nif',
+                'email',
+                'phone',
+                'telefone',
+                'address',
+                'morada',
+                'income',
+                'rendimento',
+                'document_path',
+                'storage_path',
+            ], true))
             ->all();
     }
 

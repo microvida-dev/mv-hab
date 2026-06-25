@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Policies\RoleAssignmentPolicy;
 use App\Policies\UserAdministrationPolicy;
+use App\Services\Security\SessionRevocationService;
 use DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Arr;
@@ -31,6 +32,7 @@ class UserAdministrationService
         private readonly AccessChangeLogger $logger,
         private readonly UserAdministrationPolicy $userPolicy,
         private readonly RoleAssignmentPolicy $rolePolicy,
+        private readonly SessionRevocationService $sessions,
     ) {}
 
     /**
@@ -166,6 +168,8 @@ class UserAdministrationService
                 'deactivated_by' => $actor->id,
             ])->save();
 
+            $revokedSessions = $this->sessions->revokeAllForUser($target, $actor, 'Utilizador desativado; sessões revogadas.');
+
             $this->logger->record(
                 'user_deactivated',
                 $actor,
@@ -175,6 +179,17 @@ class UserAdministrationService
                 newValues: [
                     'status' => $target->status,
                     'deactivated_by' => $actor->id,
+                    'revoked_sessions_count' => $revokedSessions,
+                ],
+            );
+
+            $this->logger->record(
+                'user_deactivated_session_revoked',
+                $actor,
+                $justification,
+                target: $target,
+                newValues: [
+                    'revoked_sessions_count' => $revokedSessions,
                 ],
             );
 
@@ -231,6 +246,14 @@ class UserAdministrationService
 
             $this->logger->record(
                 'user_mfa_enforced',
+                $actor,
+                $justification,
+                target: $target,
+                oldValues: ['mfa_required' => false],
+                newValues: ['mfa_required' => true],
+            );
+            $this->logger->record(
+                'mfa_enforced',
                 $actor,
                 $justification,
                 target: $target,
