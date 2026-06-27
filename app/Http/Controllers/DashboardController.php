@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\Navigation\FavoritesService;
-use App\Services\Navigation\RecentItemsService;
-use App\Services\Navigation\WorkspaceService;
+use App\Services\Dashboard\DashboardAuthorizationService;
+use App\Services\Dashboard\ProfileDashboardService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,22 +12,26 @@ class DashboardController extends Controller
 {
     public function __invoke(
         Request $request,
-        WorkspaceService $workspaces,
-        FavoritesService $favorites,
-        RecentItemsService $recentItems,
+        DashboardAuthorizationService $authorization,
+        ProfileDashboardService $dashboards,
     ): View|RedirectResponse {
-        if ($this->authenticatedUser($request)->hasRole('candidate')) {
+        $user = $this->authenticatedUser($request);
+
+        abort_unless($authorization->isActive($user), 403);
+
+        if ($user->hasRole('candidate')) {
             return to_route('candidate.dashboard');
         }
 
-        $user = $this->authenticatedUser($request);
+        $dashboard = $dashboards->forUser($user);
 
         return view('dashboard', [
-            'workspaces' => $workspaces->availableFor($user),
-            'favorites' => $favorites->forUser($user),
-            'recentItems' => $recentItems->forUser($user),
-            'quickActions' => $workspaces->quickActions($user),
-            'searchGroups' => $workspaces->searchGroups($user),
+            'dashboard' => $dashboard,
+            'workspaces' => $dashboard['workspaces'],
+            'favorites' => $dashboard['favorites'],
+            'recentItems' => $dashboard['recent_items'],
+            'quickActions' => $dashboard['quick_actions'],
+            'searchGroups' => $dashboard['search_groups'],
         ]);
     }
 }

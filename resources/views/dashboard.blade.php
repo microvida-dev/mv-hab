@@ -47,6 +47,28 @@
                 @endif
             </section>
 
+            <x-dashboard.profile-dashboard :dashboard="$dashboard" />
+
+            <section>
+                <div class="mb-4 flex flex-col gap-1">
+                    <h2 class="text-lg font-semibold text-ink-900">Indicadores do perfil</h2>
+                    <p class="text-sm text-ink-500">Contagens agregadas e autorizadas para orientar a operação diária.</p>
+                </div>
+
+                @if (($dashboard['metrics'] ?? []) !== [])
+                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        @foreach ($dashboard['metrics'] as $metric)
+                            <x-dashboard.kpi-card :metric="$metric" />
+                        @endforeach
+                    </div>
+                @else
+                    <x-dashboard.empty-state
+                        title="Sem indicadores disponíveis"
+                        description="Não existem KPIs autorizados ou dados operacionais para apresentar neste momento."
+                    />
+                @endif
+            </section>
+
             <section>
                 <div class="mb-4 flex flex-col gap-1">
                     <h2 class="text-lg font-semibold text-ink-900">Workspaces</h2>
@@ -64,17 +86,27 @@
                         </div>
                         <div class="grid gap-0 divide-y divide-ink-100 md:grid-cols-2 md:divide-x md:divide-y-0">
                             @forelse ($quickActions as $action)
-                                <a href="{{ route($action['route'], $action['parameters'] ?? []) }}" class="flex min-h-24 items-start gap-3 px-5 py-4 transition hover:bg-ink-50">
-                                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-civic-50 text-civic-700">
-                                        <x-ui-icon name="arrow" class="h-4 w-4" />
-                                    </span>
-                                    <span>
-                                        <span class="block text-sm font-semibold text-ink-900">{{ $action['label'] }}</span>
-                                        <span class="mt-1 block text-sm text-ink-500">Abrir no workspace autorizado.</span>
-                                    </span>
-                                </a>
+                                <x-dashboard.quick-action :action="$action" />
                             @empty
                                 <p class="px-5 py-4 text-sm text-ink-500">Não existem ações rápidas disponíveis para o seu perfil.</p>
+                            @endforelse
+                        </div>
+                    </section>
+
+                    <section class="rounded-md border border-ink-100 bg-white">
+                        <div class="border-b border-ink-100 px-5 py-4">
+                            <h2 class="text-base font-semibold text-ink-900">Alertas e prazos</h2>
+                        </div>
+                        <div class="divide-y divide-ink-100">
+                            @forelse (($dashboard['deadlines'] ?? []) as $alert)
+                                <x-dashboard.deadline-alert :alert="$alert" />
+                            @empty
+                                <div class="p-5">
+                                    <x-dashboard.empty-state
+                                        title="Sem alertas ativos"
+                                        description="Não existem prazos ou alertas autorizados para apresentar."
+                                    />
+                                </div>
                             @endforelse
                         </div>
                     </section>
@@ -85,9 +117,9 @@
                                 <x-ui-icon name="alert" class="h-4 w-4" />
                             </span>
                             <div>
-                                <h2 class="text-base font-semibold text-ink-900">Notificações</h2>
+                                <h2 class="text-base font-semibold text-ink-900">{{ $dashboard['notifications_summary']['label'] ?? 'Notificações' }}</h2>
                                 <p class="mt-1 text-sm text-ink-500">
-                                    As notificações operacionais continuam nos módulos existentes. Este painel reserva o ponto de entrada global para alertas e trabalho pendente.
+                                    {{ $dashboard['notifications_summary']['description'] ?? 'As notificações operacionais continuam nos módulos existentes.' }}
                                 </p>
                             </div>
                         </div>
@@ -95,6 +127,7 @@
                 </div>
 
                 <div class="space-y-6">
+                    <x-dashboard.widget-panel :widgets="$dashboard['widgets'] ?? []" />
                     <x-navigation.favorites :favorites="$favorites" />
                     <x-navigation.recent-items :items="$recentItems" />
                 </div>
