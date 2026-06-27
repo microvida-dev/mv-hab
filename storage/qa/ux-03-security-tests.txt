@@ -1,0 +1,10 @@
+PHPUnit 12.5.28 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.21
+Configuration: /Users/brunocorreia/Documents/CRM HAB/MV-HAB/phpunit.xml
+
+........................................................          56 / 56 (100%)
+
+Time: 00:08.013, Memory: 103.00 MB
+
+[30;42mOK (56 tests, 350 assertions)[0m

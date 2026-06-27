@@ -29,6 +29,7 @@ use App\Http\Controllers\Backoffice\ApplicationReportController as BackofficeApp
 use App\Http\Controllers\Backoffice\ApplicationReviewController as BackofficeApplicationReviewController;
 use App\Http\Controllers\Backoffice\ApplicationScoreController as BackofficeApplicationScoreController;
 use App\Http\Controllers\Backoffice\ApplicationSimulationInconsistencyController as BackofficeApplicationSimulationInconsistencyController;
+use App\Http\Controllers\Backoffice\CaseWorkspaceController as BackofficeCaseWorkspaceController;
 use App\Http\Controllers\Backoffice\CommunicationDeliveryController as BackofficeCommunicationDeliveryController;
 use App\Http\Controllers\Backoffice\CommunicationLogController as BackofficeCommunicationLogController;
 use App\Http\Controllers\Backoffice\CommunicationReceiptController as BackofficeCommunicationReceiptController;
@@ -1109,6 +1110,11 @@ Route::middleware('auth')->group(function () {
                     ->name('application-inconsistencies.index');
                 Route::post('application-inconsistencies/{inconsistency}/resolve', [BackofficeApplicationSimulationInconsistencyController::class, 'resolve'])
                     ->name('application-inconsistencies.resolve');
+
+                Route::prefix('cases')->name('cases.')->group(function () {
+                    Route::get('applications/{application}', [BackofficeCaseWorkspaceController::class, 'application'])
+                        ->name('applications.show');
+                });
 
                 Route::get('applications', [BackofficeApplicationController::class, 'index'])
                     ->name('applications.index');

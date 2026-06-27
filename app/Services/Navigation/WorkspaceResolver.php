@@ -21,6 +21,10 @@ class WorkspaceResolver
             return null;
         }
 
+        if (str_starts_with($routeName, 'backoffice.cases.applications.')) {
+            return $this->workspaces->authorizedWorkspace($user, 'atendimento');
+        }
+
         $item = $this->workspaces->findVisibleItemByRoute($user, $routeName);
 
         if (! is_array($item)) {

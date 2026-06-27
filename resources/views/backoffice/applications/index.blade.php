@@ -56,7 +56,10 @@
                                     </td>
                                     <td class="px-5 py-4 text-ink-700">{{ $application->status->label() }}</td>
                                     <td class="px-5 py-4 text-ink-600">{{ $application->submitted_at?->format('d/m/Y H:i') ?? '—' }}</td>
-                                    <td class="px-5 py-4 text-right"><a href="{{ route('backoffice.applications.show', $application) }}" class="font-semibold text-civic-700">Consultar</a></td>
+                                    <td class="px-5 py-4 text-right">
+                                        <a href="{{ route('backoffice.cases.applications.show', $application) }}" class="font-semibold text-civic-700">Abrir processo</a>
+                                        <a href="{{ route('backoffice.applications.show', $application) }}" class="ml-3 font-semibold text-ink-500">Detalhe</a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr><td colspan="6" class="px-5 py-8 text-center text-ink-500">Não existem candidaturas para os filtros selecionados.</td></tr>
