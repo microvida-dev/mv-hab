@@ -19,10 +19,16 @@
             Saltar para o conteúdo principal
         </a>
 
-        <div x-data="{ sidebarOpen: false }" class="min-h-screen bg-ink-50">
-            @include('layouts.navigation')
+        @php
+            $showSidebar = ! request()->routeIs('dashboard');
+        @endphp
 
-            <div class="lg:ps-72">
+        <div x-data="{ sidebarOpen: false }" class="min-h-screen bg-ink-50">
+            @if ($showSidebar)
+                @include('layouts.navigation')
+            @endif
+
+            <div @class(['lg:ps-72' => $showSidebar])>
                 @isset($header)
                     <header class="border-b border-ink-100 bg-white">
                         <div class="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
@@ -32,6 +38,10 @@
                 @endisset
 
                 <main id="conteudo-principal" tabindex="-1">
+                    @if ($showSidebar)
+                        <x-navigation.breadcrumbs />
+                    @endif
+
                     {{ $slot }}
                 </main>
             </div>

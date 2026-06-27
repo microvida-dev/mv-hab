@@ -1,68 +1,18 @@
-@php
-    $metricIcons = [
-        'Munícipes' => 'users',
-        'Agregados familiares' => 'users',
-        'Habitações' => 'home',
-        'Candidaturas' => 'file',
-        'Contratos ativos' => 'document',
-        'Pagamentos recebidos' => 'wallet',
-        'Pedidos de manutenção abertos' => 'tool',
-    ];
-
-    $quickActions = [
-        [
-            'label' => 'Novo munícipe',
-            'description' => 'Criar registo base para atendimento municipal.',
-            'route' => 'citizens.create',
-            'icon' => 'users',
-        ],
-        [
-            'label' => 'Nova candidatura',
-            'description' => 'Abrir candidatura no fluxo CRM atual.',
-            'route' => 'applications.create',
-            'icon' => 'file',
-        ],
-        [
-            'label' => 'Registar habitação',
-            'description' => 'Adicionar fogo ao parque habitacional.',
-            'route' => 'housing-units.create',
-            'icon' => 'home',
-        ],
-        [
-            'label' => 'Pedido de manutenção',
-            'description' => 'Criar pedido operacional para um imóvel.',
-            'route' => 'maintenance-requests.create',
-            'icon' => 'tool',
-        ],
-    ];
-
-    $workQueues = [
-        ['label' => 'Candidaturas em curso', 'route' => 'applications.index', 'icon' => 'file'],
-        ['label' => 'Documentos submetidos', 'route' => 'documents.index', 'icon' => 'document'],
-        ['label' => 'Pagamentos e vencimentos', 'route' => 'payments.index', 'icon' => 'wallet'],
-        ['label' => 'Manutenção aberta', 'route' => 'maintenance-requests.index', 'icon' => 'tool'],
-    ];
-@endphp
-
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Operação municipal</p>
-                <h1 class="mt-1 text-2xl font-semibold leading-tight text-ink-900">Dashboard</h1>
-                <p class="mt-1 max-w-2xl text-sm text-ink-500">Visão geral do CRM atual e da preparação para a plataforma processual MV HAB.</p>
+                <p class="text-sm font-semibold text-civic-700">Centro de Operações Municipal da Habitação</p>
+                <h1 class="mt-1 text-2xl font-semibold leading-tight text-ink-900">Painel Principal</h1>
+                <p class="mt-1 max-w-3xl text-sm text-ink-500">
+                    Aceda aos workspaces disponíveis para o seu perfil e continue a operação municipal a partir de áreas funcionais.
+                </p>
             </div>
 
-            <div class="flex flex-wrap gap-2">
-                <a href="{{ route('citizens.create') }}" class="mv-button-secondary">
-                    <x-ui-icon name="plus" class="h-4 w-4" />
-                    <span>Novo munícipe</span>
-                </a>
-                <a href="{{ route('applications.create') }}" class="mv-button-primary">
-                    <x-ui-icon name="plus" class="h-4 w-4" />
-                    <span>Nova candidatura</span>
-                </a>
-            </div>
+            <a href="{{ route('public.portal') }}" class="mv-button-secondary">
+                <x-ui-icon name="home" class="h-4 w-4" />
+                <span>Portal público</span>
+            </a>
         </div>
     </x-slot>
 
@@ -70,79 +20,83 @@
         <div class="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
 
-            <section>
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    @foreach ($metrics as $metric)
-                        <x-stat-card
-                            :label="$metric['label']"
-                            :value="$metric['value']"
-                            :description="$metric['description']"
-                            :currency="$metric['currency'] ?? false"
-                            :icon="$metricIcons[$metric['label']] ?? null"
-                        />
-                    @endforeach
+            <section class="rounded-md border border-ink-100 bg-white p-5">
+                <label for="global-search" class="text-sm font-semibold text-ink-900">Pesquisar</label>
+                <div class="mt-2 flex flex-col gap-3 md:flex-row md:items-center">
+                    <input
+                        id="global-search"
+                        type="search"
+                        class="w-full rounded-md border-ink-200 text-sm shadow-sm focus:border-civic-600 focus:ring-civic-600"
+                        placeholder="Pesquisar munícipe, concurso, contrato, candidatura, documento, relatório, fogo ou Work Task..."
+                        aria-describedby="global-search-help"
+                    >
+                    <button type="button" class="mv-button-primary md:w-40" disabled>
+                        Preparado
+                    </button>
                 </div>
-            </section>
+                <p id="global-search-help" class="mt-3 text-sm text-ink-500">
+                    A pesquisa universal fica preparada nesta fundação e será ativada por fonte de dados nas próximas iterações.
+                </p>
 
-            <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-                <div>
-                    <div class="flex items-center justify-between gap-4">
-                        <div>
-                            <h2 class="text-base font-semibold text-ink-900">Ações rápidas</h2>
-                            <p class="mt-1 text-sm text-ink-500">Entradas frequentes do backoffice atual.</p>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 grid gap-3 md:grid-cols-2">
-                        @foreach ($quickActions as $action)
-                            <a href="{{ route($action['route']) }}" class="mv-surface flex min-h-28 items-start gap-4 p-4 transition hover:border-civic-100 hover:bg-civic-50/40">
-                                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-civic-50 text-civic-700">
-                                    <x-ui-icon :name="$action['icon']" class="h-5 w-5" />
-                                </span>
-                                <span>
-                                    <span class="block text-sm font-semibold text-ink-900">{{ $action['label'] }}</span>
-                                    <span class="mt-1 block text-sm leading-5 text-ink-500">{{ $action['description'] }}</span>
-                                </span>
-                            </a>
+                @if ($searchGroups !== [])
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        @foreach ($searchGroups as $group)
+                            <span class="rounded-md bg-ink-50 px-3 py-1 text-xs font-semibold text-ink-600">{{ $group['label'] }}</span>
                         @endforeach
                     </div>
+                @endif
+            </section>
+
+            <section>
+                <div class="mb-4 flex flex-col gap-1">
+                    <h2 class="text-lg font-semibold text-ink-900">Workspaces</h2>
+                    <p class="text-sm text-ink-500">Cada workspace agrupa apenas os módulos permitidos pelo seu perfil.</p>
+                </div>
+
+                <x-navigation.workspace-grid :workspaces="$workspaces" :favorites="$favorites" />
+            </section>
+
+            <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+                <div class="space-y-6">
+                    <section class="rounded-md border border-ink-100 bg-white">
+                        <div class="border-b border-ink-100 px-5 py-4">
+                            <h2 class="text-base font-semibold text-ink-900">Ações rápidas</h2>
+                        </div>
+                        <div class="grid gap-0 divide-y divide-ink-100 md:grid-cols-2 md:divide-x md:divide-y-0">
+                            @forelse ($quickActions as $action)
+                                <a href="{{ route($action['route'], $action['parameters'] ?? []) }}" class="flex min-h-24 items-start gap-3 px-5 py-4 transition hover:bg-ink-50">
+                                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-civic-50 text-civic-700">
+                                        <x-ui-icon name="arrow" class="h-4 w-4" />
+                                    </span>
+                                    <span>
+                                        <span class="block text-sm font-semibold text-ink-900">{{ $action['label'] }}</span>
+                                        <span class="mt-1 block text-sm text-ink-500">Abrir no workspace autorizado.</span>
+                                    </span>
+                                </a>
+                            @empty
+                                <p class="px-5 py-4 text-sm text-ink-500">Não existem ações rápidas disponíveis para o seu perfil.</p>
+                            @endforelse
+                        </div>
+                    </section>
+
+                    <section class="rounded-md border border-ink-100 bg-white p-5">
+                        <div class="flex items-start gap-3">
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-ink-50 text-ink-700">
+                                <x-ui-icon name="alert" class="h-4 w-4" />
+                            </span>
+                            <div>
+                                <h2 class="text-base font-semibold text-ink-900">Notificações</h2>
+                                <p class="mt-1 text-sm text-ink-500">
+                                    As notificações operacionais continuam nos módulos existentes. Este painel reserva o ponto de entrada global para alertas e trabalho pendente.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
                 </div>
 
                 <div class="space-y-6">
-                    <section class="mv-surface overflow-hidden">
-                        <div class="border-b border-ink-100 px-5 py-4">
-                            <h2 class="text-base font-semibold text-ink-900">Filas de trabalho</h2>
-                        </div>
-                        <div class="divide-y divide-ink-100">
-                            @foreach ($workQueues as $queue)
-                                <a href="{{ route($queue['route']) }}" class="flex items-center gap-3 px-5 py-4 transition hover:bg-ink-50">
-                                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-ink-50 text-ink-700">
-                                        <x-ui-icon :name="$queue['icon']" class="h-4 w-4" />
-                                    </span>
-                                    <span class="text-sm font-semibold text-ink-900">{{ $queue['label'] }}</span>
-                                    <x-ui-icon name="arrow" class="ms-auto h-4 w-4 text-ink-500" />
-                                </a>
-                            @endforeach
-                        </div>
-                    </section>
-
-                    <section class="mv-surface p-5">
-                        <h2 class="text-base font-semibold text-ink-900">Fundação técnica</h2>
-                        <div class="mt-4 space-y-3 text-sm text-ink-600">
-                            <div class="flex gap-3">
-                                <x-ui-icon name="check" class="mt-0.5 h-4 w-4 shrink-0 text-civic-700" />
-                                <p>RBAC e auditoria inicial preparados na Sprint 1.</p>
-                            </div>
-                            <div class="flex gap-3">
-                                <x-ui-icon name="check" class="mt-0.5 h-4 w-4 shrink-0 text-civic-700" />
-                                <p>UX/UI base organizada para evolução gradual dos módulos existentes.</p>
-                            </div>
-                            <div class="flex gap-3">
-                                <x-ui-icon name="alert" class="mt-0.5 h-4 w-4 shrink-0 text-signal-700" />
-                                <p>Policies ainda não estão aplicadas nos controllers até existir atribuição de roles.</p>
-                            </div>
-                        </div>
-                    </section>
+                    <x-navigation.favorites :favorites="$favorites" />
+                    <x-navigation.recent-items :items="$recentItems" />
                 </div>
             </section>
         </div>

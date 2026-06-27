@@ -1,41 +1,13 @@
 @php
-    $isCandidate = Auth::user()->hasRole('candidate');
-    $homeRoute = $isCandidate ? 'candidate.dashboard' : 'dashboard';
+    $user = Auth::user();
+    $isCandidate = $user->hasRole('candidate');
+    $candidateNavigation = $isCandidate
+        ? app(\App\Services\CandidateExperience\CandidateNavigationService::class)->forUser($user)
+        : null;
+    $homeRoute = $candidateNavigation['home_route'] ?? 'dashboard';
+    $navigationFooterLinks = $candidateNavigation['footer'] ?? [];
 
-    $navigationGroups = $isCandidate ? [
-        'Área pessoal' => [
-            ['label' => 'Visão geral', 'route' => 'candidate.dashboard', 'active' => 'candidate.dashboard', 'icon' => 'dashboard'],
-            ['label' => 'O meu registo', 'route' => 'candidate.registration.show', 'active' => 'candidate.registration.*', 'icon' => 'user'],
-            ['label' => 'Agregado', 'route' => 'candidate.household.show', 'active' => 'candidate.household*', 'icon' => 'users'],
-            ['label' => 'Rendimentos', 'route' => 'candidate.income-records.index', 'active' => 'candidate.income-records.*', 'icon' => 'wallet'],
-            ['label' => 'Habitação atual', 'route' => 'candidate.current-housing.show', 'active' => 'candidate.current-housing.*', 'icon' => 'home'],
-            ['label' => 'Simulações', 'route' => 'candidate.simulations.index', 'active' => 'candidate.simulations.*', 'icon' => 'check'],
-            ['label' => 'Renovações', 'route' => 'candidate.registration-renewals.index', 'active' => 'candidate.registration-renewals.*', 'icon' => 'document'],
-            ['label' => 'Elegibilidade', 'route' => 'candidate.eligibility.index', 'active' => 'candidate.eligibility.*', 'icon' => 'check'],
-            ['label' => 'Candidaturas', 'route' => 'candidate.applications.index', 'active' => 'candidate.applications.*', 'icon' => 'file'],
-            ['label' => 'Visitas', 'route' => 'candidate.visits.index', 'active' => 'candidate.visits.*', 'icon' => 'home'],
-            ['label' => 'Apoio', 'route' => 'candidate.support-tickets.index', 'active' => 'candidate.support-tickets.*', 'icon' => 'alert'],
-            ['label' => 'Interações', 'route' => 'candidate.interactions.index', 'active' => 'candidate.interactions.*', 'icon' => 'document'],
-            ['label' => 'FAQ contextual', 'route' => 'candidate.contextual-faq.index', 'active' => 'candidate.contextual-faq.*', 'icon' => 'check'],
-            ['label' => 'Processos', 'route' => 'candidate.processes.index', 'active' => 'candidate.processes.*', 'icon' => 'file'],
-            ['label' => 'Aperfeiçoamento', 'route' => 'candidate.correction-requests.index', 'active' => 'candidate.correction-requests.*', 'icon' => 'alert'],
-            ['label' => 'Documentos', 'route' => 'candidate.documents.index', 'active' => 'candidate.documents.*', 'icon' => 'document'],
-            ['label' => 'Preferências', 'route' => 'candidate.housing-preferences.index', 'active' => 'candidate.housing-preferences.*', 'icon' => 'home'],
-            ['label' => 'Ofertas', 'route' => 'candidate.allocation-offers.index', 'active' => 'candidate.allocation-offers.*', 'icon' => 'file'],
-            ['label' => 'Atribuições', 'route' => 'candidate.allocations.index', 'active' => 'candidate.allocations.*', 'icon' => 'check'],
-            ['label' => 'Área do inquilino', 'route' => 'tenant.dashboard', 'active' => 'tenant.*', 'icon' => 'home'],
-            ['label' => 'Contratos', 'route' => 'candidate.contracts.index', 'active' => 'candidate.contracts.*', 'icon' => 'document'],
-            ['label' => 'Financeiro', 'route' => 'candidate.finance.index', 'active' => 'candidate.finance.*', 'icon' => 'wallet'],
-            ['label' => 'Manutenção', 'route' => 'candidate.maintenance.index', 'active' => 'candidate.maintenance.*', 'icon' => 'tool'],
-            ['label' => 'Vistorias', 'route' => 'candidate.inspections.index', 'active' => 'candidate.inspections.*', 'icon' => 'check'],
-            ['label' => 'Notificações', 'route' => 'candidate.notifications.index', 'active' => 'candidate.notifications.*', 'icon' => 'alert'],
-            ['label' => 'Comunicações', 'route' => 'candidate.communications.index', 'active' => 'candidate.communications.*', 'icon' => 'document'],
-            ['label' => 'Documentos oficiais', 'route' => 'candidate.official-documents.index', 'active' => 'candidate.official-documents.*', 'icon' => 'file'],
-            ['label' => 'Privacidade RGPD', 'route' => 'candidate.privacy.index', 'active' => 'candidate.privacy.*', 'icon' => 'check'],
-            ['label' => 'Preferências de contacto', 'route' => 'candidate.notification-preferences.edit', 'active' => 'candidate.notification-preferences.*', 'icon' => 'user'],
-            ['label' => 'Perfil da conta', 'route' => 'candidate.profile', 'active' => 'profile.*', 'icon' => 'user'],
-        ],
-    ] : [
+    $navigationGroups = $isCandidate ? $candidateNavigation['groups'] : [
         'Operação' => [
             ['label' => 'Dashboard', 'route' => 'dashboard', 'active' => 'dashboard', 'icon' => 'dashboard'],
             ['label' => 'Caixa de trabalho', 'route' => 'backoffice.work-tasks.my', 'active' => 'backoffice.work-tasks.*', 'icon' => 'check', 'model' => \App\Models\WorkTask::class],
@@ -134,6 +106,16 @@
             ['label' => 'Documentos oficiais', 'route' => 'backoffice.official-documents.index', 'active' => 'backoffice.official-documents.*', 'icon' => 'file', 'model' => \App\Models\GeneratedOfficialDocument::class],
         ],
     ];
+
+    if (! $isCandidate) {
+        $route = request()->route();
+        $workspaceParam = $route?->parameter('workspace');
+        $workspaceKey = is_string($workspaceParam) ? $workspaceParam : null;
+        $currentWorkspace = app(\App\Services\Navigation\WorkspaceResolver::class)
+            ->resolve($user, $route?->getName(), $workspaceKey);
+        $navigationGroups = app(\App\Services\Navigation\WorkspaceService::class)
+            ->navigationGroups($user, is_array($currentWorkspace) ? (string) $currentWorkspace['key'] : null);
+    }
 @endphp
 
 <div class="lg:hidden">
@@ -171,21 +153,7 @@
         </div>
 
         <div class="flex-1 overflow-y-auto px-4 py-5">
-            @foreach ($navigationGroups as $group => $links)
-                <div class="{{ $loop->first ? '' : 'mt-6' }}">
-                    <p class="px-3 text-xs font-semibold uppercase text-ink-500">{{ $group }}</p>
-                    <div class="mt-2 space-y-1">
-                        @foreach ($links as $link)
-                            @if ((! isset($link['model']) || Auth::user()->can('viewAny', $link['model'])) && (! isset($link['permission']) || Auth::user()->hasPermission($link['permission'])))
-                                <x-responsive-nav-link :href="route($link['route'])" :active="request()->routeIs($link['active'])">
-                                    <x-ui-icon :name="$link['icon']" class="h-4 w-4 shrink-0" />
-                                    <span>{{ $link['label'] }}</span>
-                                </x-responsive-nav-link>
-                            @endif
-                        @endforeach
-                    </div>
-                </div>
-            @endforeach
+            <x-navigation.context-sidebar :groups="$navigationGroups" responsive />
         </div>
 
         <div class="border-t border-ink-100 p-4">
@@ -194,19 +162,38 @@
                     <x-ui-icon name="user" class="h-5 w-5" />
                 </div>
                 <div class="min-w-0">
-                    <p class="truncate text-sm font-semibold text-ink-900">{{ Auth::user()->name }}</p>
-                    <p class="truncate text-xs text-ink-500">{{ Auth::user()->email }}</p>
+                    <p class="truncate text-sm font-semibold text-ink-900">{{ $user->name }}</p>
+                    <p class="truncate text-xs text-ink-500">{{ $user->email }}</p>
                 </div>
             </div>
 
-            <div class="mt-4 grid gap-2">
-                <a href="{{ route('public.portal') }}" class="mv-button-secondary">Portal público</a>
-                <a href="{{ route('profile.edit') }}" class="mv-button-secondary">Perfil</a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="mv-button-secondary w-full">Terminar sessão</button>
-                </form>
-            </div>
+            @if ($isCandidate)
+                <div class="mt-4 space-y-1">
+                    @foreach ($navigationFooterLinks as $link)
+                        <a href="{{ route($link['route']) }}" class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink-600 transition hover:bg-ink-50 hover:text-ink-900">
+                            <x-ui-icon :name="$link['icon']" class="h-4 w-4 shrink-0" />
+                            <span>{{ $link['label'] }}</span>
+                        </a>
+                    @endforeach
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-ink-600 transition hover:bg-ink-50 hover:text-ink-900">
+                            <x-ui-icon name="alert" class="h-4 w-4 shrink-0" />
+                            <span>Terminar sessão</span>
+                        </button>
+                    </form>
+                </div>
+            @else
+                <div class="mt-4 grid gap-2">
+                    <a href="{{ route('public.portal') }}" class="mv-button-secondary">Portal público</a>
+                    <a href="{{ route('profile.edit') }}" class="mv-button-secondary">Perfil</a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="mv-button-secondary w-full">Terminar sessão</button>
+                    </form>
+                </div>
+            @endif
         </div>
     </aside>
 </div>
@@ -223,54 +210,69 @@
     </div>
 
     <div class="flex-1 overflow-y-auto px-4 py-6">
-        @foreach ($navigationGroups as $group => $links)
-            <div class="{{ $loop->first ? '' : 'mt-7' }}">
-                <p class="px-3 text-xs font-semibold uppercase text-ink-500">{{ $group }}</p>
-                <div class="mt-2 space-y-1">
-                    @foreach ($links as $link)
-                        @if ((! isset($link['model']) || Auth::user()->can('viewAny', $link['model'])) && (! isset($link['permission']) || Auth::user()->hasPermission($link['permission'])))
-                            <x-nav-link :href="route($link['route'])" :active="request()->routeIs($link['active'])">
-                                <x-ui-icon :name="$link['icon']" class="h-4 w-4 shrink-0" />
-                                <span>{{ $link['label'] }}</span>
-                            </x-nav-link>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-        @endforeach
+        <x-navigation.context-sidebar :groups="$navigationGroups" />
     </div>
 
     <div class="border-t border-ink-100 p-4">
-        <x-dropdown align="right" width="48">
-            <x-slot name="trigger">
-                <button class="flex w-full items-center gap-3 rounded-md border border-ink-100 bg-white px-3 py-3 text-left transition hover:bg-ink-50">
+        @if ($isCandidate)
+            <div class="flex items-center gap-3 rounded-md border border-ink-100 bg-white px-3 py-3">
+                <span class="flex h-10 w-10 items-center justify-center rounded-md bg-civic-50 text-civic-700">
+                    <x-ui-icon name="user" class="h-5 w-5" />
+                </span>
+                <span class="min-w-0 flex-1">
+                    <span class="block truncate text-sm font-semibold text-ink-900">{{ $user->name }}</span>
+                    <span class="block truncate text-xs text-ink-500">{{ $user->email }}</span>
+                </span>
+            </div>
+
+            <div class="mt-4 space-y-1">
+                @foreach ($navigationFooterLinks as $link)
+                    <a href="{{ route($link['route']) }}" class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink-600 transition hover:bg-ink-50 hover:text-ink-900">
+                        <x-ui-icon :name="$link['icon']" class="h-4 w-4 shrink-0" />
+                        <span>{{ $link['label'] }}</span>
+                    </a>
+                @endforeach
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-ink-600 transition hover:bg-ink-50 hover:text-ink-900">
+                        <x-ui-icon name="alert" class="h-4 w-4 shrink-0" />
+                        <span>Terminar sessão</span>
+                    </button>
+                </form>
+            </div>
+        @else
+            <x-dropdown align="right" width="48">
+                <x-slot name="trigger">
+                    <button class="flex w-full items-center gap-3 rounded-md border border-ink-100 bg-white px-3 py-3 text-left transition hover:bg-ink-50">
                     <span class="flex h-10 w-10 items-center justify-center rounded-md bg-civic-50 text-civic-700">
                         <x-ui-icon name="user" class="h-5 w-5" />
                     </span>
                     <span class="min-w-0 flex-1">
-                        <span class="block truncate text-sm font-semibold text-ink-900">{{ Auth::user()->name }}</span>
-                        <span class="block truncate text-xs text-ink-500">{{ Auth::user()->email }}</span>
+                        <span class="block truncate text-sm font-semibold text-ink-900">{{ $user->name }}</span>
+                        <span class="block truncate text-xs text-ink-500">{{ $user->email }}</span>
                     </span>
                     <x-ui-icon name="arrow" class="h-4 w-4 text-ink-500" />
-                </button>
-            </x-slot>
+                    </button>
+                </x-slot>
 
-            <x-slot name="content">
-                <x-dropdown-link :href="route('public.portal')">
-                    Portal público
-                </x-dropdown-link>
-
-                <x-dropdown-link :href="route('profile.edit')">
-                    Perfil
-                </x-dropdown-link>
-
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
-                        Terminar sessão
+                <x-slot name="content">
+                    <x-dropdown-link :href="route('public.portal')">
+                        Portal público
                     </x-dropdown-link>
-                </form>
-            </x-slot>
-        </x-dropdown>
+
+                    <x-dropdown-link :href="route('profile.edit')">
+                        Perfil
+                    </x-dropdown-link>
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
+                            Terminar sessão
+                        </x-dropdown-link>
+                    </form>
+                </x-slot>
+            </x-dropdown>
+        @endif
     </div>
 </aside>

@@ -242,6 +242,8 @@ use App\Http\Controllers\HouseholdController;
 use App\Http\Controllers\HousingApplicationController;
 use App\Http\Controllers\HousingUnitController;
 use App\Http\Controllers\MaintenanceRequestController;
+use App\Http\Controllers\Navigation\FavoriteController as NavigationFavoriteController;
+use App\Http\Controllers\Navigation\WorkspaceController as NavigationWorkspaceController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicArea\PublishedResultListController;
@@ -291,8 +293,22 @@ Route::get('/simulador/resultado/{uuid}', [AdvancedSimulatorController::class, '
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)
-        ->middleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor,candidate')
+        ->middleware('role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor,candidate')
         ->name('dashboard');
+
+    Route::middleware([
+        'role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor',
+        'active.backoffice',
+        'mfa.backoffice',
+        'log.backoffice',
+    ])->group(function () {
+        Route::get('/workspaces/{workspace}', NavigationWorkspaceController::class)
+            ->name('workspaces.show');
+        Route::post('/navigation/favorites', [NavigationFavoriteController::class, 'store'])
+            ->name('navigation.favorites.store');
+        Route::delete('/navigation/favorites/{navigationFavorite}', [NavigationFavoriteController::class, 'destroy'])
+            ->name('navigation.favorites.destroy');
+    });
 
     Route::prefix('area-candidato')
         ->name('candidate.')
