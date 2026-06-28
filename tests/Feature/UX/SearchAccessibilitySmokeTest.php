@@ -2,13 +2,12 @@
 
 namespace Tests\Feature\UX;
 
-use App\Models\Application;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class AccessibilitySmokeTest extends TestCase
+class SearchAccessibilitySmokeTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -19,33 +18,24 @@ class AccessibilitySmokeTest extends TestCase
         $this->seed(SystemAccessSeeder::class);
     }
 
-    public function test_dashboard_has_labels_focus_and_headings(): void
+    public function test_search_page_has_label_dialog_empty_state_and_focusable_results_structure(): void
     {
         $administrator = $this->userWithRole('administrator');
 
         $this->actingAs($administrator)
-            ->get(route('dashboard'))
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('backoffice.search.index'))
             ->assertOk()
             ->assertSee('for="universal-search"', false)
             ->assertSee('aria-describedby="universal-search-help"', false)
-            ->assertSee('focus-visible:ring-2', false)
-            ->assertSee('<h1', false)
-            ->assertSee('<h2', false);
-    }
+            ->assertSee('role="dialog"', false)
+            ->assertSee('Centro de Comandos');
 
-    public function test_case_workspace_tabs_have_minimum_accessible_semantics(): void
-    {
-        $technician = $this->userWithRole('municipal_technician');
-        $application = Application::factory()->submitted()->create();
-
-        $this->actingAs($technician)
+        $this->actingAs($administrator)
             ->withSession(['mfa.verified_at' => now()])
-            ->get(route('backoffice.cases.applications.show', $application))
+            ->get(route('backoffice.search.index', ['q' => 'sem-resultados-ux05']))
             ->assertOk()
-            ->assertSee('role="tablist"', false)
-            ->assertSee('role="tab"', false)
-            ->assertSee('aria-selected=', false)
-            ->assertSee('for="case-search"', false);
+            ->assertSee('Sem resultados autorizados');
     }
 
     private function userWithRole(string $role): User

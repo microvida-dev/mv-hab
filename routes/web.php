@@ -258,6 +258,7 @@ use App\Http\Controllers\PublicPortal\PublicHousingUnitController;
 use App\Http\Controllers\PublicPortal\PublicSitemapController;
 use App\Http\Controllers\PublicPortalController;
 use App\Http\Controllers\PublicProgramController;
+use App\Http\Controllers\Search\UniversalSearchController;
 use App\Http\Controllers\Tenant\CommunicationController as TenantCommunicationController;
 use App\Http\Controllers\Tenant\CommunicationMessageController as TenantCommunicationMessageController;
 use App\Http\Controllers\Tenant\ContractController as TenantContractController;
@@ -751,6 +752,11 @@ Route::middleware('auth')->group(function () {
             'log.backoffice',
         ])
         ->group(function () {
+            Route::get('search', [UniversalSearchController::class, 'index'])
+                ->name('search.index');
+            Route::get('search/commands', [UniversalSearchController::class, 'commands'])
+                ->name('search.commands');
+
             Route::get('work-tasks/dashboard', BackofficeWorkTaskDashboardController::class)
                 ->name('work-tasks.dashboard');
             Route::get('work-tasks/my', [BackofficeWorkTaskController::class, 'my'])

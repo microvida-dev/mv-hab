@@ -18,32 +18,7 @@
         <div class="mv-page-shell">
             <x-flash-message />
 
-            <x-ui.card>
-                <label for="global-search" class="text-sm font-semibold text-ink-900">Pesquisar</label>
-                <div class="mt-2 flex flex-col gap-3 md:flex-row md:items-center">
-                    <input
-                        id="global-search"
-                        type="search"
-                        class="w-full rounded-md border-ink-200 text-sm shadow-sm focus:border-civic-600 focus:ring-civic-600"
-                        placeholder="Pesquisar munícipe, concurso, contrato, candidatura, documento, relatório, fogo ou Work Task..."
-                        aria-describedby="global-search-help"
-                    >
-                    <x-ui.action-button type="button" variant="primary" class="md:w-40" disabled>
-                        Preparado
-                    </x-ui.action-button>
-                </div>
-                <p id="global-search-help" class="mt-3 text-sm text-ink-500">
-                    A pesquisa universal fica preparada nesta fundação e será ativada por fonte de dados nas próximas iterações.
-                </p>
-
-                @if ($searchGroups !== [])
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        @foreach ($searchGroups as $group)
-                            <x-ui.status-badge status="neutral" :label="$group['label']" />
-                        @endforeach
-                    </div>
-                @endif
-            </x-ui.card>
+            <x-search.universal-search :groups="$searchGroups" />
 
             <x-dashboard.profile-dashboard :dashboard="$dashboard" />
 
