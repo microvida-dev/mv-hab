@@ -16,7 +16,7 @@
                 <a class="mv-button-secondary" href="{{ route('backoffice.work-tasks.my') }}">Minhas</a>
                 <a class="mv-button-secondary" href="{{ route('backoffice.work-tasks.team') }}">Equipa</a>
                 <a class="mv-button-secondary" href="{{ route('backoffice.work-tasks.overdue') }}">Vencidas</a>
-                <a class="mv-button-primary" href="{{ route('backoffice.work-tasks.dashboard') }}">Dashboard</a>
+                <a class="mv-button-primary" href="{{ route('backoffice.work-tasks.dashboard') }}">Painel</a>
             </div>
         </div>
     </x-slot>
@@ -88,7 +88,7 @@
                                 <td class="px-4 py-3 font-semibold text-ink-900">{{ $task->task_number }}</td>
                                 <td class="px-4 py-3 text-ink-700">{{ \App\Models\WorkTask::typeLabel($task->type) }}</td>
                                 <td class="px-4 py-3 text-ink-700">{{ \App\Models\WorkTask::statusLabel($task->status) }}</td>
-                                <td class="px-4 py-3 text-ink-700">{{ ucfirst($task->priority) }}</td>
+                                <td class="px-4 py-3 text-ink-700">{{ app(\App\Services\UX\MunicipalLanguageService::class)->priorityLabel((string) $task->priority) }}</td>
                                 <td class="px-4 py-3 text-ink-600">{{ $task->municipalTeam?->name ?? 'Fila geral' }}</td>
                                 <td class="px-4 py-3 text-ink-600">{{ $task->assignedUser?->name ?? 'Por atribuir' }}</td>
                                 <td class="px-4 py-3 text-ink-600">{{ $task->due_at?->format('d/m/Y H:i') ?? '—' }}</td>

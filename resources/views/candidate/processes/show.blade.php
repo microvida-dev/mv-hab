@@ -72,7 +72,7 @@
             </section>
 
             <section class="mv-surface p-6">
-                <h2 class="text-lg font-semibold text-ink-900">Timeline resumida</h2>
+                <h2 class="text-lg font-semibold text-ink-900">Cronologia resumida</h2>
                 <div class="mt-4 space-y-3">
                     @forelse ($timeline as $event)
                         <div class="rounded-md border border-ink-100 p-4 text-sm">

@@ -46,7 +46,7 @@ class WorkspaceSearchSource implements SearchSource
                 'type' => 'workspace',
                 'group_key' => 'workspaces',
                 'group_label' => $this->label(),
-                'label' => (string) ($workspace['title'] ?? 'Workspace'),
+                'label' => (string) ($workspace['title'] ?? 'Espaço de Trabalho'),
                 'subtitle' => (string) ($workspace['description'] ?? ''),
                 'route_name' => 'workspaces.show',
                 'route_parameters' => [(string) ($workspace['key'] ?? '')],

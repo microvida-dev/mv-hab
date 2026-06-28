@@ -70,7 +70,7 @@ class CaseWorkspaceService
     {
         $tabs = [
             $this->tab('summary', 'Resumo', 'applications.view'),
-            $this->tab('timeline', 'Timeline', 'applications.view'),
+            $this->tab('timeline', 'Cronologia', 'applications.view'),
             $this->tab('documents', 'Documentos', 'documents.view'),
             $this->tab('eligibility', 'Elegibilidade', 'eligibility.view'),
             $this->tab('scoring', 'Pontuação', 'scoring.view'),
@@ -98,9 +98,9 @@ class CaseWorkspaceService
             'alerts' => $application->correctionRequests()->where('response_deadline_at', '<', now())->count(),
             'quick_links' => array_values(array_filter([
                 $this->link($user, 'Detalhe legado', 'backoffice.applications.show', 'applications.view', [$application]),
-                $this->link($user, 'Timeline completa', 'backoffice.applications.timeline', 'applications.view', [$application]),
+                $this->link($user, 'Cronologia completa', 'backoffice.applications.timeline', 'applications.view', [$application]),
                 $this->link($user, 'Dossier documental', 'backoffice.applications.document-dossier.show', 'documents.view', [$application]),
-                $this->link($user, 'Work Tasks', 'backoffice.work-tasks.index', 'work_tasks.view'),
+                $this->link($user, 'Tarefas', 'backoffice.work-tasks.index', 'work_tasks.view'),
             ])),
         ];
     }

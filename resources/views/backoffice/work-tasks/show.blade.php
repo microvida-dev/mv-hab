@@ -4,7 +4,7 @@
             <div>
                 <p class="text-sm font-semibold text-civic-700">{{ $task->task_number }}</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ \App\Models\WorkTask::typeLabel($task->type) }}</h1>
-                <p class="mt-1 text-sm text-ink-500">{{ \App\Models\WorkTask::statusLabel($task->status) }} · {{ ucfirst($task->priority) }}</p>
+                <p class="mt-1 text-sm text-ink-500">{{ \App\Models\WorkTask::statusLabel($task->status) }} · {{ app(\App\Services\UX\MunicipalLanguageService::class)->priorityLabel((string) $task->priority) }}</p>
             </div>
             <a class="mv-button-secondary" href="{{ route('backoffice.work-tasks.index') }}">Voltar</a>
         </div>

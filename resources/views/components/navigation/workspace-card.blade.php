@@ -20,7 +20,7 @@
                 type="submit"
                 class="rounded-md border border-ink-100 px-2.5 py-2 text-xs font-semibold text-ink-600 transition hover:border-civic-200 hover:bg-civic-50 hover:text-civic-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-offset-2"
                 aria-label="Fixar {{ $workspace['title'] }}"
-                title="Fixar workspace"
+                title="Fixar espaço de trabalho"
             >
                 {{ $isFavorite ? 'Fixado' : 'Fixar' }}
             </button>

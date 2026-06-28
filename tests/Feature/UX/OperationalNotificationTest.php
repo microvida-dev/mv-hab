@@ -33,7 +33,7 @@ class OperationalNotificationTest extends TestCase
         $this->actingAs($administrator)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Inbox Municipal')
+            ->assertSee('Caixa de Entrada Municipal')
             ->assertSee('1 notificações operacionais agrupadas');
     }
 }

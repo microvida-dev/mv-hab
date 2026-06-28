@@ -26,7 +26,7 @@
                     </dl>
                 </div>
                 <div class="mv-surface p-5">
-                    <h2 class="text-lg font-semibold text-ink-900">Roles</h2>
+                    <h2 class="text-lg font-semibold text-ink-900">Perfis</h2>
                     <p class="mt-3 text-sm text-ink-700">{{ $user->roles->pluck('label')->join(', ') ?: 'Sem role' }}</p>
                 </div>
                 <div class="mv-surface p-5">

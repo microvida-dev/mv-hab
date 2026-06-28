@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-end justify-between gap-4">
-            <div><p class="text-sm font-semibold text-civic-700">Comunicações</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">Templates</h1></div>
+            <div><p class="text-sm font-semibold text-civic-700">Comunicações</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">Modelos</h1></div>
             @can('create', \App\Models\NotificationTemplate::class)
                 <a href="{{ route('backoffice.communications.templates.create') }}" class="mv-button-primary">Novo template</a>
             @endcan

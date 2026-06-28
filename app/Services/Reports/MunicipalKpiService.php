@@ -55,7 +55,7 @@ class MunicipalKpiService
             ['code' => 'correction_requests', 'label' => 'Pedidos de aperfeiçoamento', 'sensitivity' => 'restricted', 'source' => 'correction_requests'],
             ['code' => 'visits_by_status', 'label' => 'Visitas por estado', 'sensitivity' => 'aggregated', 'source' => 'housing_visits'],
             ['code' => 'tickets_by_status', 'label' => 'Tickets por estado', 'sensitivity' => 'aggregated', 'source' => 'support_tickets'],
-            ['code' => 'work_tasks_by_team', 'label' => 'Work Tasks por equipa', 'sensitivity' => 'internal', 'source' => 'work_tasks'],
+            ['code' => 'work_tasks_by_team', 'label' => 'Tarefas por equipa', 'sensitivity' => 'internal', 'source' => 'work_tasks'],
             ['code' => 'work_tasks_by_sla', 'label' => 'Cumprimento SLA operacional', 'sensitivity' => 'internal', 'source' => 'work_tasks'],
             ['code' => 'lists_by_type', 'label' => 'Listas publicadas por tipo', 'sensitivity' => 'internal', 'source' => 'list_publications'],
             ['code' => 'active_contracts', 'label' => 'Contratos ativos', 'sensitivity' => 'restricted', 'source' => 'contracts'],

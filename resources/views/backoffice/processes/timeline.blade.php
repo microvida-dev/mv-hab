@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header"><h1 class="text-2xl font-semibold text-ink-900">Timeline completa da candidatura</h1></x-slot>
+    <x-slot name="header"><h1 class="text-2xl font-semibold text-ink-900">Cronologia completa da candidatura</h1></x-slot>
     <div class="py-8"><div class="mx-auto max-w-5xl space-y-5 px-4 sm:px-6 lg:px-8">
         @foreach ($phases as $phase => $events)
             <section class="space-y-3">

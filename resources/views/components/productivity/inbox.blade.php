@@ -5,7 +5,7 @@
 <section {{ $attributes->merge(['class' => 'mv-card']) }} aria-live="polite">
     <div class="border-b border-ink-100 px-5 py-4">
         <x-ui.section-header
-            title="Inbox Municipal"
+            title="Caixa de Entrada Municipal"
             description="Notificações existentes agrupadas por categoria operacional autorizada."
         />
     </div>
@@ -32,7 +32,7 @@
             <div class="p-5">
                 <x-ui.empty-state
                     title="Sem notificações autorizadas"
-                    description="A inbox agrega apenas notificações já existentes e visíveis para o perfil atual."
+                    description="A caixa de entrada agrega apenas notificações já existentes e visíveis para o perfil atual."
                 />
             </div>
         @endforelse

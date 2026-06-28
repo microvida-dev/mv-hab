@@ -54,10 +54,10 @@ class CommandSearchSource implements SearchSource
             ],
             [
                 'label' => 'Abrir produtividade',
-                'subtitle' => 'Centro de trabalho, prioridades, inbox e carga operacional.',
+                'subtitle' => 'Centro de trabalho, prioridades, caixa de entrada e carga operacional.',
                 'route_name' => 'backoffice.productivity.index',
                 'permission' => 'work_tasks.view',
-                'keywords' => 'produtividade centro trabalho prioridades inbox fila agenda',
+                'keywords' => 'produtividade centro trabalho prioridades caixa entrada fila agenda',
             ],
             [
                 'label' => 'Ver tarefas vencidas',
@@ -98,7 +98,7 @@ class CommandSearchSource implements SearchSource
 
         foreach ($this->workspaces->availableFor($user) as $workspace) {
             $commands[] = [
-                'label' => 'Abrir Workspace '.$workspace['title'],
+                'label' => 'Abrir Espaço de Trabalho '.$workspace['title'],
                 'subtitle' => (string) $workspace['description'],
                 'route_name' => 'workspaces.show',
                 'route_parameters' => [(string) $workspace['key']],

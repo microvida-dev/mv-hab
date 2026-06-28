@@ -40,7 +40,7 @@ class MunicipalInboxTest extends TestCase
             ->withSession($this->verifiedBackofficeSession())
             ->get(route('backoffice.productivity.index'))
             ->assertOk()
-            ->assertSee('Inbox Municipal')
+            ->assertSee('Caixa de Entrada Municipal')
             ->assertSee('Operacional')
             ->assertSee('Pedido de apoio criado')
             ->assertDontSee('Assunto interno sensível')

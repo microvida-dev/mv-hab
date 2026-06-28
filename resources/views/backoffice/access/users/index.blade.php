@@ -57,7 +57,7 @@
                     <thead>
                         <tr>
                             <th>Nome</th>
-                            <th>Roles</th>
+                            <th>Perfis</th>
                             <th>Equipas</th>
                             <th>Estado</th>
                             <th>MFA</th>

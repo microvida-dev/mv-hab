@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Timeline processual</p>
+            <p class="text-sm font-semibold text-civic-700">Cronologia processual</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $process->process_number }}</h1>
         </div>
     </x-slot>

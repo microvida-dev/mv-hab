@@ -3,7 +3,7 @@
         <x-ui.page-header
             eyebrow="Centro de Operações Municipal da Habitação"
             title="Painel Principal"
-            description="Aceda aos workspaces disponíveis para o seu perfil e continue a operação municipal a partir de áreas funcionais."
+            description="Aceda aos espaços de trabalho disponíveis para o seu perfil e continue a operação municipal a partir de áreas funcionais."
         >
             <x-slot name="actions">
                 <x-ui.action-button :href="route('public.portal')">
@@ -29,7 +29,7 @@
                     <x-ui.card>
                         <div class="flex h-full flex-col justify-between gap-4">
                             <div>
-                                <p class="text-sm font-semibold text-ink-900">{{ $productivity['notification_summary']['label'] ?? 'Inbox Municipal' }}</p>
+                                <p class="text-sm font-semibold text-ink-900">{{ $productivity['notification_summary']['label'] ?? 'Caixa de Entrada Municipal' }}</p>
                                 <p class="mt-2 text-sm leading-6 text-ink-500">{{ $productivity['notification_summary']['description'] ?? 'Sem notificações operacionais autorizadas.' }}</p>
                             </div>
                             <x-ui.action-button :href="route('backoffice.productivity.index')">
@@ -67,8 +67,8 @@
             <section>
                 <x-ui.section-header
                     class="mb-4"
-                    title="Workspaces"
-                    description="Cada workspace agrupa apenas os módulos permitidos pelo seu perfil."
+                    title="Espaços de Trabalho"
+                    description="Cada espaço de trabalho agrupa apenas os módulos permitidos pelo seu perfil."
                 />
 
                 <x-navigation.workspace-grid :workspaces="$workspaces" :favorites="$favorites" />

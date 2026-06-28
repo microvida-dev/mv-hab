@@ -20,7 +20,7 @@
             <div class="p-5">
                 <x-ui.empty-state
                     title="Sem favoritos"
-                    description="Fixe workspaces ou páginas usadas com frequência."
+                    description="Fixe espaços de trabalho ou páginas usadas com frequência."
                     icon="check"
                 />
             </div>

@@ -1,1 +1,1 @@
-<x-app-layout><x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Novo dashboard</h1></x-slot><form method="POST" action="{{ route('backoffice.reports.dashboards.store') }}" class="max-w-4xl">@include('backoffice.reports.dashboards._form')</form></x-app-layout>
+<x-app-layout><x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Novo painel</h1></x-slot><form method="POST" action="{{ route('backoffice.reports.dashboards.store') }}" class="max-w-4xl">@include('backoffice.reports.dashboards._form')</form></x-app-layout>

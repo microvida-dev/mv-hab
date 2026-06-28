@@ -4,7 +4,7 @@
 
 <section id="case-tab-timeline" class="mv-card">
     <div class="border-b border-ink-100 px-5 py-4">
-        <x-ui.section-header title="Timeline" description="Histórico cronológico autorizado e minimizado." />
+        <x-ui.section-header title="Cronologia" description="Histórico cronológico autorizado e minimizado." />
     </div>
     <div class="divide-y divide-ink-100">
         @forelse ($items as $item)

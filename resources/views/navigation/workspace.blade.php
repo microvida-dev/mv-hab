@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <x-ui.page-header
-            eyebrow="Workspace municipal"
+            eyebrow="Espaço de Trabalho Municipal"
             :title="$workspace['title']"
             :description="$workspace['description']"
         >
@@ -11,7 +11,7 @@
                     <input type="hidden" name="workspace_key" value="{{ $workspace['key'] }}">
                     <x-ui.action-button type="submit">
                         <x-ui-icon name="check" class="h-4 w-4" />
-                        <span>Fixar workspace</span>
+                        <span>Fixar espaço</span>
                     </x-ui.action-button>
                 </form>
             </x-slot>
@@ -37,7 +37,7 @@
                                         </span>
                                         <span>
                                             <span class="block text-sm font-semibold text-ink-900">{{ $item['label'] }}</span>
-                                            <span class="mt-1 block text-sm text-ink-500">Abrir módulo no contexto deste workspace.</span>
+                                            <span class="mt-1 block text-sm text-ink-500">Abrir módulo neste espaço de trabalho.</span>
                                         </span>
                                     </a>
                                 @endforeach

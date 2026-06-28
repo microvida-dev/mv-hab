@@ -5,7 +5,7 @@
 <section {{ $attributes->merge(['class' => 'mv-card']) }}>
     <div class="border-b border-ink-100 px-5 py-4">
         <x-ui.section-header
-            title="My Work"
+            title="O Meu Trabalho"
             description="Trabalho agregado do utilizador e da sua equipa, ordenado por prioridade e prazo."
         />
     </div>

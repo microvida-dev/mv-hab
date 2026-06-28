@@ -33,7 +33,7 @@ class DashboardWidgetRegistry
         return match ($profile) {
             'administrator' => [
                 $this->panel('admin_security', 'Administração e segurança', 'Utilizadores, equipas, MFA, alertas e auditoria.'),
-                $this->panel('admin_operations', 'Operação transversal', 'Work Tasks críticas, relatórios e riscos operacionais.'),
+                $this->panel('admin_operations', 'Operação transversal', 'Tarefas críticas, relatórios e riscos operacionais.'),
             ],
             'municipal_technician' => [
                 $this->panel('technical_review', 'Revisão técnica', 'Candidaturas, documentos, aperfeiçoamentos e SLA.'),

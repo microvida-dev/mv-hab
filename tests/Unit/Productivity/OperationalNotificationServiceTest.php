@@ -33,7 +33,7 @@ class OperationalNotificationServiceTest extends TestCase
 
         $summary = app(OperationalNotificationService::class)->summary($administrator);
 
-        $this->assertSame('Inbox Municipal', $summary['label']);
+        $this->assertSame('Caixa de Entrada Municipal', $summary['label']);
         $this->assertSame(1, $summary['total']);
     }
 }

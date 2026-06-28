@@ -36,7 +36,7 @@ class DashboardQuickActionService
                 $this->action('Gerir utilizadores', 'backoffice.users.index', 'users.view', 'Administração de acessos municipais.'),
                 $this->action('Rever segurança', 'backoffice.security.dashboard', null, 'Alertas, MFA e RGPD operacional.', ['administrator', 'auditor']),
                 $this->action('Relatórios municipais', 'backoffice.reports.index', 'reports.view', 'KPIs e reporting autorizado.'),
-                $this->action('Work Tasks', 'backoffice.work-tasks.dashboard', 'work_tasks.dashboard', 'Carga operacional e SLA.'),
+                $this->action('Tarefas', 'backoffice.work-tasks.dashboard', 'work_tasks.dashboard', 'Carga operacional e SLA.'),
             ],
             'municipal_technician' => [
                 $this->action('Rever documentos', 'admin.document-reviews.index', 'documents.view', 'Documentos pendentes e correções.'),

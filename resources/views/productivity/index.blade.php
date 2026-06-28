@@ -3,7 +3,7 @@
         <x-ui.page-header
             eyebrow="Centro de Operações Municipal"
             title="Produtividade"
-            description="Centro de trabalho, prioridades, inbox e carga operacional agregados a partir de dados autorizados."
+            description="Centro de trabalho, prioridades, caixa de entrada e carga operacional agregados a partir de dados autorizados."
         >
             <x-slot name="actions">
                 <x-ui.action-button :href="route('dashboard')">

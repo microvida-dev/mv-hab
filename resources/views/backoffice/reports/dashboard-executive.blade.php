@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header"><div><h1 class="text-xl font-semibold text-ink-900">Dashboard executivo</h1><p class="mt-1 text-sm text-ink-500">Visão agregada para decisão municipal.</p></div></x-slot>
+    <x-slot name="header"><div><h1 class="text-xl font-semibold text-ink-900">Painel executivo</h1><p class="mt-1 text-sm text-ink-500">Visão agregada para decisão municipal.</p></div></x-slot>
     <div class="space-y-8">
         @include('backoffice.reports._filters')
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

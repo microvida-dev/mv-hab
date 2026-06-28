@@ -33,7 +33,7 @@ class ProductivityPresenter
             'id' => 'work-task-'.$task->getKey(),
             'title' => WorkTask::typeLabel((string) $task->type).' · '.$task->task_number,
             'type' => 'work_task',
-            'type_label' => 'Work Task',
+            'type_label' => 'Tarefa',
             'status' => (string) $task->status,
             'status_label' => WorkTask::statusLabel((string) $task->status),
             'priority' => (string) $task->priority,

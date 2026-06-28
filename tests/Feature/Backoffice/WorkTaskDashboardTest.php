@@ -48,7 +48,7 @@ class WorkTaskDashboardTest extends TestCase
             ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.work-tasks.dashboard'))
             ->assertOk()
-            ->assertSee('Dashboard de tarefas')
+            ->assertSee('Painel de tarefas')
             ->assertSee('Cumprimento SLA');
     }
 

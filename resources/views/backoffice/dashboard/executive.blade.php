@@ -23,7 +23,7 @@
     <x-slot name="header">
         <div>
             <p class="text-sm font-semibold text-civic-700">Backoffice operacional</p>
-            <h1 class="mt-1 text-2xl font-semibold text-ink-900">Dashboard executivo</h1>
+            <h1 class="mt-1 text-2xl font-semibold text-ink-900">Painel executivo</h1>
             <p class="mt-1 text-sm text-ink-500">Síntese municipal para acompanhamento de concursos, decisão e execução.</p>
         </div>
     </x-slot>

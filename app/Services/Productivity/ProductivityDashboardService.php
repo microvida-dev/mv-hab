@@ -55,7 +55,7 @@ class ProductivityDashboardService
             'my_work' => [],
             'inbox' => [],
             'notification_summary' => [
-                'label' => 'Inbox Municipal',
+                'label' => 'Caixa de Entrada Municipal',
                 'description' => 'Sem acesso à produtividade de backoffice.',
                 'total' => 0,
                 'groups' => [],
@@ -76,7 +76,7 @@ class ProductivityDashboardService
             'actions' => [
                 ['label' => 'Abrir item', 'enabled' => true, 'reason' => null],
                 ['label' => 'Exportar', 'enabled' => false, 'reason' => 'Não disponível nesta versão.'],
-                ['label' => 'Atribuir', 'enabled' => false, 'reason' => 'Use o fluxo autorizado de Work Tasks.'],
+                ['label' => 'Atribuir', 'enabled' => false, 'reason' => 'Use o fluxo autorizado de tarefas.'],
             ],
         ];
     }

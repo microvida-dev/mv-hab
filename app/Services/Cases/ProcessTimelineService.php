@@ -66,7 +66,7 @@ class ProcessTimelineService
             ->map(fn (WorkTask $task): array => $this->timelineItem(
                 $task->created_at,
                 'work_task',
-                'Work Task: '.$task->type,
+                'Tarefa: '.$task->type,
                 'Tarefa operacional '.$task->status.'.',
                 'work_tasks',
             ));

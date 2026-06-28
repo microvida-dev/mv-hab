@@ -26,7 +26,7 @@ class WorkspaceDashboardTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Painel Principal')
-            ->assertSee('Workspaces')
+            ->assertSee('Espaços de Trabalho')
             ->assertSee('Atendimento')
             ->assertSee('Concursos')
             ->assertSee('Património')

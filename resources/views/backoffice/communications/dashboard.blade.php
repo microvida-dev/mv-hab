@@ -20,7 +20,7 @@
                     'Em fila' => $totals['queued'],
                     'Falhadas' => $totals['failed'],
                     'Aguarda configuração' => $totals['pending_configuration'],
-                    'Templates' => $totals['templates'],
+                    'Modelos' => $totals['templates'],
                     'Documentos' => $totals['documents'],
                 ] as $label => $value)
                     <div class="rounded-md border border-ink-100 bg-white p-5">

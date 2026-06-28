@@ -3,7 +3,7 @@
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
                 <p class="text-sm font-semibold text-civic-700">Produtividade operacional</p>
-                <h1 class="mt-1 text-2xl font-semibold text-ink-900">Dashboard de tarefas</h1>
+                <h1 class="mt-1 text-2xl font-semibold text-ink-900">Painel de tarefas</h1>
             </div>
             <a class="mv-button-secondary" href="{{ route('backoffice.work-tasks.index') }}">Tarefas</a>
         </div>

@@ -9,7 +9,7 @@
 
     $navigationGroups = $isCandidate ? $candidateNavigation['groups'] : [
         'Operação' => [
-            ['label' => 'Dashboard', 'route' => 'dashboard', 'active' => 'dashboard', 'icon' => 'dashboard'],
+            ['label' => 'Painel Principal', 'route' => 'dashboard', 'active' => 'dashboard', 'icon' => 'dashboard'],
             ['label' => 'Caixa de trabalho', 'route' => 'backoffice.work-tasks.my', 'active' => 'backoffice.work-tasks.*', 'icon' => 'check', 'model' => \App\Models\WorkTask::class],
             ['label' => 'Exploração pós-atribuição', 'route' => 'backoffice.tenant-operations.dashboard', 'active' => 'backoffice.tenant-operations.*', 'icon' => 'home', 'model' => \App\Models\LandlordDashboardSnapshot::class],
         ],
@@ -25,7 +25,7 @@
             ['label' => 'Munícipes', 'route' => 'citizens.index', 'active' => 'citizens.*', 'icon' => 'users'],
             ['label' => 'Agregados', 'route' => 'households.index', 'active' => 'households.*', 'icon' => 'users'],
             ['label' => 'Candidaturas formais', 'route' => 'backoffice.applications.index', 'active' => 'backoffice.applications.*', 'icon' => 'file', 'model' => \App\Models\Application::class],
-            ['label' => 'Insights do simulador', 'route' => 'backoffice.simulator.insights.index', 'active' => 'backoffice.simulator.*', 'icon' => 'dashboard', 'permission' => 'simulator.view'],
+            ['label' => 'Indicadores do simulador', 'route' => 'backoffice.simulator.insights.index', 'active' => 'backoffice.simulator.*', 'icon' => 'dashboard', 'permission' => 'simulator.view'],
             ['label' => 'Receção administrativa', 'route' => 'backoffice.application-intake.index', 'active' => 'backoffice.application-intake.*', 'icon' => 'file', 'model' => \App\Models\AdministrativeProcess::class],
             ['label' => 'Processos administrativos', 'route' => 'backoffice.administrative-processes.index', 'active' => 'backoffice.administrative-processes.*', 'icon' => 'document', 'model' => \App\Models\AdministrativeProcess::class],
             ['label' => 'Tarefas administrativas', 'route' => 'backoffice.administrative-tasks.index', 'active' => 'backoffice.administrative-tasks.*', 'icon' => 'check', 'model' => \App\Models\AdministrativeTask::class],
@@ -80,18 +80,18 @@
         ],
         'Análise' => [
             ['label' => 'Relatórios', 'route' => 'backoffice.reports.index', 'active' => 'backoffice.reports.index', 'icon' => 'document', 'model' => \App\Models\ReportDefinition::class],
-            ['label' => 'Dashboard operacional', 'route' => 'backoffice.reports.operational', 'active' => 'backoffice.reports.operational', 'icon' => 'dashboard', 'model' => \App\Models\DashboardDefinition::class],
-            ['label' => 'Dashboard executivo', 'route' => 'backoffice.reports.executive', 'active' => 'backoffice.reports.executive', 'icon' => 'dashboard', 'model' => \App\Models\DashboardDefinition::class, 'permission' => 'reports.view_executive'],
+            ['label' => 'Painel operacional', 'route' => 'backoffice.reports.operational', 'active' => 'backoffice.reports.operational', 'icon' => 'dashboard', 'model' => \App\Models\DashboardDefinition::class],
+            ['label' => 'Painel executivo', 'route' => 'backoffice.reports.executive', 'active' => 'backoffice.reports.executive', 'icon' => 'dashboard', 'model' => \App\Models\DashboardDefinition::class, 'permission' => 'reports.view_executive'],
             ['label' => 'Exportações', 'route' => 'backoffice.reports.exports.index', 'active' => 'backoffice.reports.exports.*', 'icon' => 'file', 'model' => \App\Models\ReportExport::class],
         ],
         'Segurança e RGPD' => [
             ['label' => 'Painel de segurança', 'route' => 'backoffice.security.dashboard', 'active' => 'backoffice.security.dashboard', 'icon' => 'dashboard', 'permission' => 'settings.view'],
             ['label' => 'Utilizadores', 'route' => 'backoffice.users.index', 'active' => 'backoffice.users.*', 'icon' => 'users', 'permission' => 'users.view'],
-            ['label' => 'Roles', 'route' => 'backoffice.roles.index', 'active' => 'backoffice.roles.*', 'icon' => 'check', 'permission' => 'roles.view'],
+            ['label' => 'Perfis', 'route' => 'backoffice.roles.index', 'active' => 'backoffice.roles.*', 'icon' => 'check', 'permission' => 'roles.view'],
             ['label' => 'Equipas municipais', 'route' => 'backoffice.teams.index', 'active' => 'backoffice.teams.*', 'icon' => 'users', 'permission' => 'teams.view'],
             ['label' => 'Auditoria de acessos', 'route' => 'backoffice.access-audit.index', 'active' => 'backoffice.access-audit.*', 'icon' => 'document', 'permission' => 'access_audit.view'],
             ['label' => 'MFA', 'route' => 'backoffice.security.mfa.index', 'active' => 'backoffice.security.mfa.*', 'icon' => 'check', 'permission' => 'settings.view'],
-            ['label' => 'Audit trail', 'route' => 'backoffice.security.audit.events.index', 'active' => 'backoffice.security.audit.*', 'icon' => 'document', 'permission' => 'audit_logs.view'],
+            ['label' => 'Auditoria', 'route' => 'backoffice.security.audit.events.index', 'active' => 'backoffice.security.audit.*', 'icon' => 'document', 'permission' => 'audit_logs.view'],
             ['label' => 'Pedidos RGPD', 'route' => 'backoffice.security.privacy.requests.index', 'active' => 'backoffice.security.privacy.requests.*', 'icon' => 'file', 'permission' => 'privacy.view'],
             ['label' => 'Alertas', 'route' => 'backoffice.security.alerts.index', 'active' => 'backoffice.security.alerts.*', 'icon' => 'alert', 'permission' => 'settings.audit'],
             ['label' => 'Checklists', 'route' => 'backoffice.security.checklists.index', 'active' => 'backoffice.security.checklists.*', 'icon' => 'check', 'permission' => 'settings.audit'],
@@ -99,7 +99,7 @@
         'Comunicações' => [
             ['label' => 'Centro de comunicações', 'route' => 'backoffice.communications.index', 'active' => 'backoffice.communications.index', 'icon' => 'alert', 'model' => \App\Models\CommunicationLog::class],
             ['label' => 'Histórico', 'route' => 'backoffice.communications.logs.index', 'active' => 'backoffice.communications.logs.*', 'icon' => 'document', 'model' => \App\Models\CommunicationLog::class],
-            ['label' => 'Templates', 'route' => 'backoffice.communications.templates.index', 'active' => 'backoffice.communications.templates.*', 'icon' => 'file', 'model' => \App\Models\NotificationTemplate::class],
+            ['label' => 'Modelos', 'route' => 'backoffice.communications.templates.index', 'active' => 'backoffice.communications.templates.*', 'icon' => 'file', 'model' => \App\Models\NotificationTemplate::class],
             ['label' => 'Regras por evento', 'route' => 'backoffice.communications.event-rules.index', 'active' => 'backoffice.communications.event-rules.*', 'icon' => 'check', 'model' => \App\Models\NotificationEventRule::class],
             ['label' => 'Variáveis', 'route' => 'backoffice.communications.variables.index', 'active' => 'backoffice.communications.variables.*', 'icon' => 'document', 'model' => \App\Models\TemplateVariable::class],
             ['label' => 'Modelos documentais', 'route' => 'backoffice.document-templates.index', 'active' => 'backoffice.document-templates.*', 'icon' => 'document', 'model' => \App\Models\DocumentTemplate::class],

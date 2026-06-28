@@ -16,7 +16,7 @@
     <x-slot name="header">
         <div>
             <p class="text-sm font-semibold text-civic-700">Backoffice operacional</p>
-            <h1 class="mt-1 text-2xl font-semibold text-ink-900">Dashboard operacional</h1>
+            <h1 class="mt-1 text-2xl font-semibold text-ink-900">Painel operacional</h1>
             <p class="mt-1 text-sm text-ink-500">Acompanhamento diário de prazos, candidaturas, documentos, alertas e visitas.</p>
         </div>
     </x-slot>

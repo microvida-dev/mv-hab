@@ -49,12 +49,12 @@ class Sprint24BackofficeOperationalTest extends TestCase
         $this->actingAs($this->userWithRole('administrator'))
             ->get(route('backoffice.operational.dashboard'))
             ->assertOk()
-            ->assertSee('Dashboard operacional');
+            ->assertSee('Painel operacional');
 
         $this->actingAs($this->userWithRole('administrator'))
             ->get(route('backoffice.operational.executive-dashboard'))
             ->assertOk()
-            ->assertSee('Dashboard executivo');
+            ->assertSee('Painel executivo');
     }
 
     public function test_application_report_and_document_dossier_are_generated_in_private_storage(): void

@@ -44,7 +44,7 @@ class CaseTimelineTest extends TestCase
             ->get(route('backoffice.cases.applications.show', $application))
             ->assertOk()
             ->assertSee('Documento recebido')
-            ->assertSee('Work Task')
+            ->assertSee('Tarefa')
             ->assertDontSee('123456789')
             ->assertDontSee('storage/app/private');
     }

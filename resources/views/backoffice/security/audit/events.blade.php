@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header"><h1 class="text-2xl font-semibold text-ink-900">Audit trail imutável</h1></x-slot>
+    <x-slot name="header"><h1 class="text-2xl font-semibold text-ink-900">Auditoria imutável</h1></x-slot>
     <div class="py-8"><div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
         <section class="mv-surface overflow-hidden">
             <table class="mv-table">

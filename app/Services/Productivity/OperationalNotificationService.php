@@ -17,7 +17,7 @@ class OperationalNotificationService
         $total = collect($groups)->sum(fn (array $group): int => count($group['items']));
 
         return [
-            'label' => 'Inbox Municipal',
+            'label' => 'Caixa de Entrada Municipal',
             'description' => $total > 0
                 ? $total.' notificações operacionais agrupadas por categoria autorizada.'
                 : 'Sem notificações operacionais autorizadas para apresentar.',

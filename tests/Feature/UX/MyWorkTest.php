@@ -41,7 +41,7 @@ class MyWorkTest extends TestCase
             ->withSession($this->verifiedBackofficeSession())
             ->get(route('backoffice.productivity.index'))
             ->assertOk()
-            ->assertSee('My Work')
+            ->assertSee('O Meu Trabalho')
             ->assertSee('Atribuído a mim')
             ->assertSee('Fila da minha equipa')
             ->assertSee('WTK-UX06-MY')

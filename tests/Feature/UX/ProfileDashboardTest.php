@@ -32,7 +32,7 @@ class ProfileDashboardTest extends TestCase
             ->assertSee('Utilizadores ativos')
             ->assertSee('Equipas ativas')
             ->assertSee('Alertas de segurança')
-            ->assertSee('Workspaces');
+            ->assertSee('Espaços de Trabalho');
     }
 
     public function test_municipal_technician_sees_operational_review_dashboard(): void

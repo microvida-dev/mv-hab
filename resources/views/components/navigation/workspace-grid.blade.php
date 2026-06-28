@@ -15,8 +15,8 @@
         />
     @empty
         <x-ui.empty-state
-            title="Sem workspaces disponíveis"
-            description="Não existem workspaces disponíveis para o seu perfil."
+            title="Sem espaços de trabalho disponíveis"
+            description="Não existem espaços de trabalho disponíveis para o seu perfil."
         />
     @endforelse
 </div>

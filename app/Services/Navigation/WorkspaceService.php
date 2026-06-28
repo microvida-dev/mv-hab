@@ -122,7 +122,7 @@ class WorkspaceService
             ['permission' => 'documents.view', 'label' => 'Documento', 'examples' => ['tipo', 'estado']],
             ['permission' => 'reports.view', 'label' => 'Relatório', 'examples' => ['KPI', 'exportação']],
             ['permission' => 'housing_units.view', 'label' => 'Fogo', 'examples' => ['tipologia', 'freguesia']],
-            ['permission' => 'work_tasks.view', 'label' => 'Work Task', 'examples' => ['SLA', 'equipa']],
+            ['permission' => 'work_tasks.view', 'label' => 'Tarefa', 'examples' => ['SLA', 'equipa']],
         ];
 
         return array_values(array_map(
@@ -267,11 +267,11 @@ class WorkspaceService
                     $this->group('Operação', [
                         $this->workspaceDashboard('gestao'),
                         $this->item('Produtividade', 'backoffice.productivity.index', 'backoffice.productivity.*', 'work_tasks.view'),
-                        $this->item('Work Tasks', 'backoffice.work-tasks.my', 'backoffice.work-tasks.*', 'work_tasks.view', null, WorkTask::class),
-                        $this->item('Dashboard de tarefas', 'backoffice.work-tasks.dashboard', 'backoffice.work-tasks.dashboard', 'work_tasks.dashboard'),
+                        $this->item('Tarefas', 'backoffice.work-tasks.my', 'backoffice.work-tasks.*', 'work_tasks.view', null, WorkTask::class),
+                        $this->item('Painel de tarefas', 'backoffice.work-tasks.dashboard', 'backoffice.work-tasks.dashboard', 'work_tasks.dashboard'),
                         $this->item('Relatórios', 'backoffice.reports.index', 'backoffice.reports.*', 'reports.view', null, ReportDefinition::class),
                         $this->item('KPIs operacionais', 'backoffice.reports.operational', 'backoffice.reports.operational', 'reports.view'),
-                        $this->item('Dashboard executivo', 'backoffice.reports.executive', 'backoffice.reports.executive', 'reports.view_executive'),
+                        $this->item('Painel executivo', 'backoffice.reports.executive', 'backoffice.reports.executive', 'reports.view_executive'),
                     ]),
                     $this->group('Rastreabilidade', [
                         $this->item('Auditoria', 'backoffice.security.audit.events.index', 'backoffice.security.audit.*', 'audit_logs.view', null, AuditEvent::class),
@@ -322,7 +322,7 @@ class WorkspaceService
     private function workspaceDashboard(string $workspace): array
     {
         return [
-            'label' => 'Dashboard',
+            'label' => 'Painel',
             'route' => 'workspaces.show',
             'parameters' => ['workspace' => $workspace],
             'active' => 'workspaces.show',
@@ -398,7 +398,7 @@ class WorkspaceService
     private function workspaceShortcutGroups(User $user): array
     {
         return [
-            $this->group('Workspaces', array_map(
+            $this->group('Espaços de Trabalho', array_map(
                 fn (array $workspace): array => [
                     'label' => (string) $workspace['title'],
                     'route' => 'workspaces.show',

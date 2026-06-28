@@ -59,7 +59,7 @@
                 <div class="mv-surface p-6">
                     <div class="flex items-start justify-between gap-4">
                         <h2 class="text-lg font-semibold text-ink-900">Ações processuais</h2>
-                        <a href="{{ route('backoffice.administrative-processes.timeline', $process) }}" class="text-sm font-semibold text-civic-700">Timeline</a>
+                        <a href="{{ route('backoffice.administrative-processes.timeline', $process) }}" class="text-sm font-semibold text-civic-700">Cronologia</a>
                     </div>
                     <div class="mt-4 flex flex-wrap gap-3">
                         <a href="{{ route('backoffice.application-reviews.create', $process) }}" class="mv-button-secondary">Nova análise</a>

@@ -31,7 +31,7 @@ class CaseWorkspaceTest extends TestCase
             ->assertSee('Espaço de Trabalho do Processo')
             ->assertSee('Candidatura')
             ->assertSee('Resumo')
-            ->assertSee('Timeline')
+            ->assertSee('Cronologia')
             ->assertSee('Documentos')
             ->assertSee('Checklist processual')
             ->assertSee('Painel do processo');

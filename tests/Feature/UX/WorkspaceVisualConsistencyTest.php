@@ -41,7 +41,7 @@ class WorkspaceVisualConsistencyTest extends TestCase
             ->withSession(['mfa.verified_at' => now()])
             ->get(route('workspaces.show', 'concursos'))
             ->assertOk()
-            ->assertSee('Workspace municipal')
+            ->assertSee('Espaço de Trabalho Municipal')
             ->assertSee('mv-page-shell', false)
             ->assertSee('mv-card', false)
             ->assertSee('focus-visible:ring-2', false)

@@ -78,7 +78,7 @@
                         @case('tasks')
                             <x-ui.card id="case-tab-tasks">
                                 <x-ui.section-header title="Tarefas" />
-                                <p class="mt-2 text-sm text-ink-500">Work Tasks associadas ao processo mantêm SLA, ownership e auditoria próprios.</p>
+                                <p class="mt-2 text-sm text-ink-500">Tarefas associadas ao processo mantêm SLA, responsabilidade e auditoria próprios.</p>
                             </x-ui.card>
                             @break
 
@@ -99,7 +99,7 @@
                         @case('audit')
                             <x-ui.card id="case-tab-audit">
                                 <x-ui.section-header title="Auditoria" />
-                                <p class="mt-2 text-sm text-ink-500">Auditoria é apenas consultiva neste workspace e não é editável.</p>
+                                <p class="mt-2 text-sm text-ink-500">Auditoria é apenas consultiva neste espaço de trabalho e não é editável.</p>
                             </x-ui.card>
                             @break
                     @endswitch

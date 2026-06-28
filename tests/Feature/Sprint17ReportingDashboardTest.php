@@ -57,7 +57,7 @@ class Sprint17ReportingDashboardTest extends TestCase
         $this->actingAs($technician)
             ->get(route('backoffice.reports.operational'))
             ->assertOk()
-            ->assertSee('Dashboard operacional')
+            ->assertSee('Painel operacional')
             ->assertDontSee('reports.view_financial');
 
         $this->actingAs($technician)
@@ -67,7 +67,7 @@ class Sprint17ReportingDashboardTest extends TestCase
         $this->actingAs($this->userWithRole('administrator'))
             ->get(route('backoffice.reports.executive'))
             ->assertOk()
-            ->assertSee('Dashboard executivo');
+            ->assertSee('Painel executivo');
     }
 
     public function test_indicators_apply_program_and_contest_filters(): void

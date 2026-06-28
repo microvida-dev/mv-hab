@@ -29,7 +29,7 @@
                         </select>
                     </label>
                     <label class="flex items-center gap-2 text-sm font-semibold text-ink-700"><input type="checkbox" name="include_documents" value="1" class="rounded border-ink-300"> Documentos</label>
-                    <label class="flex items-center gap-2 text-sm font-semibold text-ink-700"><input type="checkbox" name="include_timeline" value="1" class="rounded border-ink-300"> Timeline</label>
+                    <label class="flex items-center gap-2 text-sm font-semibold text-ink-700"><input type="checkbox" name="include_timeline" value="1" class="rounded border-ink-300"> Cronologia</label>
                     <label class="flex items-center gap-2 text-sm font-semibold text-ink-700"><input type="checkbox" name="include_internal_notes" value="1" class="rounded border-ink-300"> Notas internas</label>
                     <div class="md:col-span-4">
                         <button class="mv-button-primary">Gerar relatório</button>

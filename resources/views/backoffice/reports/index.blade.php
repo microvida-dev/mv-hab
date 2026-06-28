@@ -2,8 +2,8 @@
     <x-slot name="header"><div><h1 class="text-xl font-semibold text-ink-900">Relatórios e indicadores</h1><p class="mt-1 text-sm text-ink-500">Consulta operacional, executiva e exportações auditadas.</p></div></x-slot>
     <div class="space-y-8">
         <nav class="flex flex-wrap gap-3">
-            <a class="mv-button-primary" href="{{ route('backoffice.reports.operational') }}">Dashboard operacional</a>
-            @if (Auth::user()->hasPermission('reports.view_executive'))<a class="mv-button-secondary" href="{{ route('backoffice.reports.executive') }}">Dashboard executivo</a>@endif
+            <a class="mv-button-primary" href="{{ route('backoffice.reports.operational') }}">Painel operacional</a>
+            @if (Auth::user()->hasPermission('reports.view_executive'))<a class="mv-button-secondary" href="{{ route('backoffice.reports.executive') }}">Painel executivo</a>@endif
             <a class="mv-button-secondary" href="{{ route('backoffice.reports.runs.index') }}">Execuções</a>
             <a class="mv-button-secondary" href="{{ route('backoffice.reports.exports.index') }}">Exportações</a>
             <a class="mv-button-secondary" href="{{ route('backoffice.reports.filter-presets.index') }}">Filtros guardados</a>
