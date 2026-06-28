@@ -8,7 +8,7 @@
     $deadlines = $dashboard['deadlines'] ?? [];
 @endphp
 
-<section class="rounded-md border border-civic-100 bg-civic-50/60 p-5">
+<section class="rounded-lg border border-civic-100 bg-civic-50/60 p-5 shadow-surface">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
             <p class="text-sm font-semibold text-civic-800">{{ $dashboard['greeting'] }}</p>
@@ -20,13 +20,13 @@
             @if ($teamNames !== [])
                 <div class="mt-3 flex flex-wrap gap-2">
                     @foreach ($teamNames as $teamName)
-                        <span class="rounded-md bg-white px-3 py-1 text-xs font-semibold text-ink-600">{{ $teamName }}</span>
+                        <x-ui.status-badge status="neutral" :label="$teamName" class="bg-white" />
                     @endforeach
                 </div>
             @endif
         </div>
 
-        <div class="rounded-md border border-civic-100 bg-white px-4 py-3 text-sm">
+        <div class="rounded-lg border border-civic-100 bg-white px-4 py-3 text-sm shadow-surface">
             <p class="font-semibold text-ink-900">{{ count($metrics) }} indicadores</p>
             <p class="mt-1 text-ink-500">{{ count($deadlines) }} alertas autorizados</p>
         </div>

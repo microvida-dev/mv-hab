@@ -2,9 +2,9 @@
     'widgets' => [],
 ])
 
-<section class="rounded-md border border-ink-100 bg-white">
+<section class="mv-card">
     <div class="border-b border-ink-100 px-5 py-4">
-        <h2 class="text-base font-semibold text-ink-900">Foco do perfil</h2>
+        <x-ui.section-header title="Foco do perfil" />
     </div>
     <div class="divide-y divide-ink-100">
         @forelse ($widgets as $widget)

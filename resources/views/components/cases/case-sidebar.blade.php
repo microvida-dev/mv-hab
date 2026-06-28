@@ -8,14 +8,14 @@
     $nextAction = $workspace['next_action'];
 @endphp
 
-<section class="rounded-md border border-ink-100 bg-white">
+<section class="mv-card">
     <div class="border-b border-ink-100 px-5 py-4">
-        <h2 class="text-base font-semibold text-ink-900">Painel do processo</h2>
+        <x-ui.section-header title="Painel do processo" />
     </div>
     <div class="space-y-4 p-5 text-sm">
         <div>
             <p class="text-xs font-semibold uppercase text-ink-500">Estado atual</p>
-            <p class="mt-1 font-semibold text-ink-900">{{ $summary['status'] }}</p>
+            <p class="mt-1"><x-ui.status-badge status="civic" :label="$summary['status']" /></p>
         </div>
         <div>
             <p class="text-xs font-semibold uppercase text-ink-500">SLA</p>
@@ -37,7 +37,7 @@
                 <p class="text-xs font-semibold uppercase text-ink-500">Links rápidos</p>
                 <div class="mt-2 space-y-2">
                     @foreach ($sidebar['quick_links'] as $link)
-                        <a href="{{ route($link['route'], $link['parameters'] ?? []) }}" class="block rounded-md bg-ink-50 px-3 py-2 font-semibold text-civic-700">
+                        <a href="{{ route($link['route'], $link['parameters'] ?? []) }}" class="block rounded-md bg-ink-50 px-3 py-2 font-semibold text-civic-700 transition hover:bg-civic-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-offset-2">
                             {{ $link['label'] }}
                         </a>
                     @endforeach

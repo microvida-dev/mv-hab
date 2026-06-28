@@ -2,9 +2,9 @@
     'items' => [],
 ])
 
-<section id="case-tab-timeline" class="rounded-md border border-ink-100 bg-white">
+<section id="case-tab-timeline" class="mv-card">
     <div class="border-b border-ink-100 px-5 py-4">
-        <h2 class="text-base font-semibold text-ink-900">Timeline</h2>
+        <x-ui.section-header title="Timeline" description="Histórico cronológico autorizado e minimizado." />
     </div>
     <div class="divide-y divide-ink-100">
         @forelse ($items as $item)
@@ -16,7 +16,12 @@
                 @endif
             </article>
         @empty
-            <p class="px-5 py-6 text-sm text-ink-500">Ainda não existem eventos cronológicos para este processo.</p>
+            <div class="p-5">
+                <x-ui.empty-state
+                    title="Sem eventos"
+                    description="Ainda não existem eventos cronológicos para este processo."
+                />
+            </div>
         @endforelse
     </div>
 </section>

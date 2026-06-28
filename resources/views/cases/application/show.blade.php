@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-8">
-        <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+        <div class="mv-page-shell">
             <x-flash-message />
 
             <x-cases.case-header :summary="$workspace['summary']" />
@@ -24,27 +24,15 @@
                 @foreach ($workspace['tabs'] as $tab)
                     @switch($tab['key'])
                         @case('summary')
-                            <section id="case-tab-summary" class="rounded-md border border-ink-100 bg-white p-5">
-                                <h2 class="text-base font-semibold text-ink-900">Resumo</h2>
-                                <dl class="mt-4 grid gap-4 md:grid-cols-2">
-                                    <div>
-                                        <dt class="text-xs font-semibold uppercase text-ink-500">Referência</dt>
-                                        <dd class="mt-1 text-sm font-semibold text-ink-900">{{ $workspace['summary']['reference'] }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-xs font-semibold uppercase text-ink-500">Estado</dt>
-                                        <dd class="mt-1 text-sm font-semibold text-ink-900">{{ $workspace['summary']['status'] }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-xs font-semibold uppercase text-ink-500">Criada</dt>
-                                        <dd class="mt-1 text-sm text-ink-700">{{ $workspace['summary']['created_at']?->format('d/m/Y H:i') ?? '—' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-xs font-semibold uppercase text-ink-500">Submetida</dt>
-                                        <dd class="mt-1 text-sm text-ink-700">{{ $workspace['summary']['submitted_at']?->format('d/m/Y H:i') ?? '—' }}</dd>
-                                    </div>
-                                </dl>
-                            </section>
+                            <x-ui.card id="case-tab-summary">
+                                <x-ui.section-header title="Resumo" />
+                                <x-ui.data-list class="mt-4" :items="[
+                                    ['label' => 'Referência', 'value' => $workspace['summary']['reference']],
+                                    ['label' => 'Estado', 'value' => $workspace['summary']['status']],
+                                    ['label' => 'Criada', 'value' => $workspace['summary']['created_at']?->format('d/m/Y H:i') ?? '—'],
+                                    ['label' => 'Submetida', 'value' => $workspace['summary']['submitted_at']?->format('d/m/Y H:i') ?? '—'],
+                                ]" />
+                            </x-ui.card>
                             <x-cases.process-checklist :items="$workspace['checklist']" />
                             @break
 
@@ -53,66 +41,66 @@
                             @break
 
                         @case('documents')
-                            <section id="case-tab-documents" class="rounded-md border border-ink-100 bg-white p-5">
-                                <h2 class="text-base font-semibold text-ink-900">Documentos</h2>
+                            <x-ui.card id="case-tab-documents">
+                                <x-ui.section-header title="Documentos" />
                                 <p class="mt-2 text-sm text-ink-500">Documentos privados continuam acessíveis apenas pelas rotas protegidas de revisão documental.</p>
-                            </section>
+                            </x-ui.card>
                             @break
 
                         @case('eligibility')
-                            <section id="case-tab-eligibility" class="rounded-md border border-ink-100 bg-white p-5">
-                                <h2 class="text-base font-semibold text-ink-900">Elegibilidade</h2>
+                            <x-ui.card id="case-tab-eligibility">
+                                <x-ui.section-header title="Elegibilidade" />
                                 <p class="mt-2 text-sm text-ink-500">Resultado: {{ $application->latestEligibilityCheck?->result?->label() ?? 'Sem verificação formal' }}</p>
-                            </section>
+                            </x-ui.card>
                             @break
 
                         @case('scoring')
-                            <section id="case-tab-scoring" class="rounded-md border border-ink-100 bg-white p-5">
-                                <h2 class="text-base font-semibold text-ink-900">Pontuação</h2>
+                            <x-ui.card id="case-tab-scoring">
+                                <x-ui.section-header title="Pontuação" />
                                 <p class="mt-2 text-sm text-ink-500">Pontuação operacional: {{ $application->latestApplicationScore?->total_score ?? 'Sem classificação registada' }}</p>
-                            </section>
+                            </x-ui.card>
                             @break
 
                         @case('lists')
-                            <section id="case-tab-lists" class="rounded-md border border-ink-100 bg-white p-5">
-                                <h2 class="text-base font-semibold text-ink-900">Listas</h2>
+                            <x-ui.card id="case-tab-lists">
+                                <x-ui.section-header title="Listas" />
                                 <p class="mt-2 text-sm text-ink-500">Entradas provisórias e definitivas são consultadas nos módulos de listas autorizados.</p>
-                            </section>
+                            </x-ui.card>
                             @break
 
                         @case('communications')
-                            <section id="case-tab-communications" class="rounded-md border border-ink-100 bg-white p-5">
-                                <h2 class="text-base font-semibold text-ink-900">Comunicações</h2>
+                            <x-ui.card id="case-tab-communications">
+                                <x-ui.section-header title="Comunicações" />
                                 <p class="mt-2 text-sm text-ink-500">Comunicações são apresentadas de forma agregada e sem conteúdo sensível desnecessário.</p>
-                            </section>
+                            </x-ui.card>
                             @break
 
                         @case('tasks')
-                            <section id="case-tab-tasks" class="rounded-md border border-ink-100 bg-white p-5">
-                                <h2 class="text-base font-semibold text-ink-900">Tarefas</h2>
+                            <x-ui.card id="case-tab-tasks">
+                                <x-ui.section-header title="Tarefas" />
                                 <p class="mt-2 text-sm text-ink-500">Work Tasks associadas ao processo mantêm SLA, ownership e auditoria próprios.</p>
-                            </section>
+                            </x-ui.card>
                             @break
 
                         @case('visits')
-                            <section id="case-tab-visits" class="rounded-md border border-ink-100 bg-white p-5">
-                                <h2 class="text-base font-semibold text-ink-900">Visitas</h2>
+                            <x-ui.card id="case-tab-visits">
+                                <x-ui.section-header title="Visitas" />
                                 <p class="mt-2 text-sm text-ink-500">Visitas associadas são tratadas pelo módulo de visitas autorizado.</p>
-                            </section>
+                            </x-ui.card>
                             @break
 
                         @case('rgpd')
-                            <section id="case-tab-rgpd" class="rounded-md border border-ink-100 bg-white p-5">
-                                <h2 class="text-base font-semibold text-ink-900">RGPD</h2>
+                            <x-ui.card id="case-tab-rgpd">
+                                <x-ui.section-header title="RGPD" />
                                 <p class="mt-2 text-sm text-ink-500">Pedidos e direitos do titular são tratados por fluxos RGPD próprios e auditados.</p>
-                            </section>
+                            </x-ui.card>
                             @break
 
                         @case('audit')
-                            <section id="case-tab-audit" class="rounded-md border border-ink-100 bg-white p-5">
-                                <h2 class="text-base font-semibold text-ink-900">Auditoria</h2>
+                            <x-ui.card id="case-tab-audit">
+                                <x-ui.section-header title="Auditoria" />
                                 <p class="mt-2 text-sm text-ink-500">Auditoria é apenas consultiva neste workspace e não é editável.</p>
-                            </section>
+                            </x-ui.card>
                             @break
                     @endswitch
                 @endforeach

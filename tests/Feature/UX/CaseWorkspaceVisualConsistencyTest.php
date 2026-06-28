@@ -8,7 +8,7 @@ use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class CaseWorkspaceTest extends TestCase
+class CaseWorkspaceVisualConsistencyTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -19,7 +19,7 @@ class CaseWorkspaceTest extends TestCase
         $this->seed(SystemAccessSeeder::class);
     }
 
-    public function test_authorized_technician_opens_application_case_workspace(): void
+    public function test_application_case_workspace_uses_design_system_structure(): void
     {
         $technician = $this->userWithRole('municipal_technician');
         $application = Application::factory()->submitted()->create();
@@ -29,30 +29,12 @@ class CaseWorkspaceTest extends TestCase
             ->get(route('backoffice.cases.applications.show', $application))
             ->assertOk()
             ->assertSee('Espaço de Trabalho do Processo')
-            ->assertSee('Candidatura')
-            ->assertSee('Resumo')
-            ->assertSee('Timeline')
-            ->assertSee('Documentos')
+            ->assertSee('Painel do processo')
+            ->assertSee('Progresso visual')
             ->assertSee('Checklist processual')
-            ->assertSee('Painel do processo');
-    }
-
-    public function test_dashboard_and_workspace_navigation_remain_available(): void
-    {
-        $administrator = $this->userWithRole('administrator');
-
-        $this->actingAs($administrator)
-            ->get(route('dashboard'))
-            ->assertOk()
-            ->assertSee('Painel Principal')
-            ->assertSee('Indicadores do perfil');
-
-        $this->actingAs($administrator)
-            ->withSession(['mfa.verified_at' => now()])
-            ->get(route('workspaces.show', 'atendimento'))
-            ->assertOk()
-            ->assertSee('Atendimento')
-            ->assertSee('Candidaturas');
+            ->assertSee('mv-card', false)
+            ->assertSee('role="tab"', false)
+            ->assertSee('aria-label="Separadores do processo"', false);
     }
 
     private function userWithRole(string $role): User

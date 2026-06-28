@@ -14,8 +14,9 @@
             :is-favorite="$favoriteWorkspaceKeys->contains($workspace['key'])"
         />
     @empty
-        <div class="rounded-md border border-ink-100 bg-white p-5 text-sm text-ink-500">
-            Não existem workspaces disponíveis para o seu perfil.
-        </div>
+        <x-ui.empty-state
+            title="Sem workspaces disponíveis"
+            description="Não existem workspaces disponíveis para o seu perfil."
+        />
     @endforelse
 </div>

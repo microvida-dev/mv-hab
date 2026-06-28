@@ -25,8 +25,32 @@
 }
 
 @layer components {
+    .mv-page-shell {
+        @apply mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8;
+    }
+
     .mv-surface {
         @apply rounded-lg border border-ink-100 bg-white shadow-surface;
+    }
+
+    .mv-card {
+        @apply rounded-lg border border-ink-100 bg-white shadow-surface;
+    }
+
+    .mv-card-muted {
+        @apply rounded-lg border border-ink-100 bg-ink-50 shadow-surface;
+    }
+
+    .mv-card-interactive {
+        @apply rounded-lg border border-ink-100 bg-white shadow-surface transition hover:border-civic-200 hover:bg-ink-50 hover:shadow-md;
+    }
+
+    .mv-section-title {
+        @apply text-base font-semibold text-ink-900;
+    }
+
+    .mv-section-description {
+        @apply mt-1 text-sm leading-5 text-ink-500;
     }
 
     .mv-button-primary {
@@ -39,6 +63,58 @@
 
     .mv-button-danger {
         @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-transparent bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800 disabled:opacity-50;
+    }
+
+    .mv-focus-ring {
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-offset-2;
+    }
+
+    .mv-badge {
+        @apply inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold;
+    }
+
+    .mv-badge-neutral {
+        @apply bg-ink-50 text-ink-700;
+    }
+
+    .mv-badge-info {
+        @apply bg-sky-50 text-sky-800;
+    }
+
+    .mv-badge-success,
+    .mv-badge-completed {
+        @apply bg-emerald-50 text-emerald-800;
+    }
+
+    .mv-badge-warning,
+    .mv-badge-pending {
+        @apply bg-amber-50 text-amber-800;
+    }
+
+    .mv-badge-danger,
+    .mv-badge-overdue,
+    .mv-badge-blocked {
+        @apply bg-red-50 text-red-800;
+    }
+
+    .mv-badge-civic {
+        @apply bg-civic-50 text-civic-800;
+    }
+
+    .mv-tab {
+        @apply rounded-md px-3 py-2 text-sm font-semibold text-ink-600 transition hover:bg-ink-50 hover:text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-offset-2;
+    }
+
+    .mv-tab-active {
+        @apply bg-civic-50 text-civic-800;
+    }
+
+    .mv-data-label {
+        @apply text-xs font-semibold uppercase text-ink-500;
+    }
+
+    .mv-data-value {
+        @apply mt-1 text-sm font-semibold text-ink-900;
     }
 
     .mv-table {

@@ -1,26 +1,24 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-                <p class="text-sm font-semibold text-civic-700">Centro de Operações Municipal da Habitação</p>
-                <h1 class="mt-1 text-2xl font-semibold leading-tight text-ink-900">Painel Principal</h1>
-                <p class="mt-1 max-w-3xl text-sm text-ink-500">
-                    Aceda aos workspaces disponíveis para o seu perfil e continue a operação municipal a partir de áreas funcionais.
-                </p>
-            </div>
-
-            <a href="{{ route('public.portal') }}" class="mv-button-secondary">
-                <x-ui-icon name="home" class="h-4 w-4" />
-                <span>Portal público</span>
-            </a>
-        </div>
+        <x-ui.page-header
+            eyebrow="Centro de Operações Municipal da Habitação"
+            title="Painel Principal"
+            description="Aceda aos workspaces disponíveis para o seu perfil e continue a operação municipal a partir de áreas funcionais."
+        >
+            <x-slot name="actions">
+                <x-ui.action-button :href="route('public.portal')">
+                    <x-ui-icon name="home" class="h-4 w-4" />
+                    <span>Portal Público</span>
+                </x-ui.action-button>
+            </x-slot>
+        </x-ui.page-header>
     </x-slot>
 
     <div class="py-8">
-        <div class="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
+        <div class="mv-page-shell">
             <x-flash-message />
 
-            <section class="rounded-md border border-ink-100 bg-white p-5">
+            <x-ui.card>
                 <label for="global-search" class="text-sm font-semibold text-ink-900">Pesquisar</label>
                 <div class="mt-2 flex flex-col gap-3 md:flex-row md:items-center">
                     <input
@@ -30,9 +28,9 @@
                         placeholder="Pesquisar munícipe, concurso, contrato, candidatura, documento, relatório, fogo ou Work Task..."
                         aria-describedby="global-search-help"
                     >
-                    <button type="button" class="mv-button-primary md:w-40" disabled>
+                    <x-ui.action-button type="button" variant="primary" class="md:w-40" disabled>
                         Preparado
-                    </button>
+                    </x-ui.action-button>
                 </div>
                 <p id="global-search-help" class="mt-3 text-sm text-ink-500">
                     A pesquisa universal fica preparada nesta fundação e será ativada por fonte de dados nas próximas iterações.
@@ -41,19 +39,20 @@
                 @if ($searchGroups !== [])
                     <div class="mt-4 flex flex-wrap gap-2">
                         @foreach ($searchGroups as $group)
-                            <span class="rounded-md bg-ink-50 px-3 py-1 text-xs font-semibold text-ink-600">{{ $group['label'] }}</span>
+                            <x-ui.status-badge status="neutral" :label="$group['label']" />
                         @endforeach
                     </div>
                 @endif
-            </section>
+            </x-ui.card>
 
             <x-dashboard.profile-dashboard :dashboard="$dashboard" />
 
             <section>
-                <div class="mb-4 flex flex-col gap-1">
-                    <h2 class="text-lg font-semibold text-ink-900">Indicadores do perfil</h2>
-                    <p class="text-sm text-ink-500">Contagens agregadas e autorizadas para orientar a operação diária.</p>
-                </div>
+                <x-ui.section-header
+                    class="mb-4"
+                    title="Indicadores do perfil"
+                    description="Contagens agregadas e autorizadas para orientar a operação diária."
+                />
 
                 @if (($dashboard['metrics'] ?? []) !== [])
                     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -70,32 +69,38 @@
             </section>
 
             <section>
-                <div class="mb-4 flex flex-col gap-1">
-                    <h2 class="text-lg font-semibold text-ink-900">Workspaces</h2>
-                    <p class="text-sm text-ink-500">Cada workspace agrupa apenas os módulos permitidos pelo seu perfil.</p>
-                </div>
+                <x-ui.section-header
+                    class="mb-4"
+                    title="Workspaces"
+                    description="Cada workspace agrupa apenas os módulos permitidos pelo seu perfil."
+                />
 
                 <x-navigation.workspace-grid :workspaces="$workspaces" :favorites="$favorites" />
             </section>
 
             <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
                 <div class="space-y-6">
-                    <section class="rounded-md border border-ink-100 bg-white">
+                    <section class="mv-card">
                         <div class="border-b border-ink-100 px-5 py-4">
-                            <h2 class="text-base font-semibold text-ink-900">Ações rápidas</h2>
+                            <x-ui.section-header title="Ações rápidas" />
                         </div>
                         <div class="grid gap-0 divide-y divide-ink-100 md:grid-cols-2 md:divide-x md:divide-y-0">
                             @forelse ($quickActions as $action)
                                 <x-dashboard.quick-action :action="$action" />
                             @empty
-                                <p class="px-5 py-4 text-sm text-ink-500">Não existem ações rápidas disponíveis para o seu perfil.</p>
+                                <div class="p-5">
+                                    <x-ui.empty-state
+                                        title="Sem ações rápidas"
+                                        description="Não existem ações rápidas disponíveis para o seu perfil."
+                                    />
+                                </div>
                             @endforelse
                         </div>
                     </section>
 
-                    <section class="rounded-md border border-ink-100 bg-white">
+                    <section class="mv-card">
                         <div class="border-b border-ink-100 px-5 py-4">
-                            <h2 class="text-base font-semibold text-ink-900">Alertas e prazos</h2>
+                            <x-ui.section-header title="Alertas e prazos" />
                         </div>
                         <div class="divide-y divide-ink-100">
                             @forelse (($dashboard['deadlines'] ?? []) as $alert)
@@ -111,7 +116,7 @@
                         </div>
                     </section>
 
-                    <section class="rounded-md border border-ink-100 bg-white p-5">
+                    <x-ui.card>
                         <div class="flex items-start gap-3">
                             <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-ink-50 text-ink-700">
                                 <x-ui-icon name="alert" class="h-4 w-4" />
@@ -123,7 +128,7 @@
                                 </p>
                             </div>
                         </div>
-                    </section>
+                    </x-ui.card>
                 </div>
 
                 <div class="space-y-6">
