@@ -1,4 +1,13 @@
 @php
+    $authorized = $authorized ?? true;
+    $icon = $icon ?? null;
+    $title = $title ?? '';
+    $description = $description ?? '';
+    $href = $href ?? null;
+    $metric = $metric ?? null;
+    $status = $status ?? null;
+    $actionLabel = $actionLabel ?? 'Abrir';
+
     $cardClasses = $authorized
         ? 'mv-card-interactive group flex h-full flex-col justify-between gap-4 p-5'
         : 'mv-card flex h-full flex-col justify-between gap-4 p-5 opacity-70';
