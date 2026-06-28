@@ -266,6 +266,7 @@ class WorkspaceService
                 'groups' => [
                     $this->group('Operação', [
                         $this->workspaceDashboard('gestao'),
+                        $this->item('Produtividade', 'backoffice.productivity.index', 'backoffice.productivity.*', 'work_tasks.view'),
                         $this->item('Work Tasks', 'backoffice.work-tasks.my', 'backoffice.work-tasks.*', 'work_tasks.view', null, WorkTask::class),
                         $this->item('Dashboard de tarefas', 'backoffice.work-tasks.dashboard', 'backoffice.work-tasks.dashboard', 'work_tasks.dashboard'),
                         $this->item('Relatórios', 'backoffice.reports.index', 'backoffice.reports.*', 'reports.view', null, ReportDefinition::class),

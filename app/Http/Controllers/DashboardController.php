@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\Dashboard\DashboardAuthorizationService;
 use App\Services\Dashboard\ProfileDashboardService;
+use App\Services\Productivity\ProductivityDashboardService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ class DashboardController extends Controller
         Request $request,
         DashboardAuthorizationService $authorization,
         ProfileDashboardService $dashboards,
+        ProductivityDashboardService $productivity,
     ): View|RedirectResponse {
         $user = $this->authenticatedUser($request);
 
@@ -24,9 +26,11 @@ class DashboardController extends Controller
         }
 
         $dashboard = $dashboards->forUser($user);
+        $productivityDashboard = $productivity->forUser($user);
 
         return view('dashboard', [
             'dashboard' => $dashboard,
+            'productivity' => $productivityDashboard,
             'workspaces' => $dashboard['workspaces'],
             'favorites' => $dashboard['favorites'],
             'recentItems' => $dashboard['recent_items'],

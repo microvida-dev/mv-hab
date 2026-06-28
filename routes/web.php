@@ -113,6 +113,7 @@ use App\Http\Controllers\Backoffice\ProcedureMinuteController as BackofficeProce
 use App\Http\Controllers\Backoffice\ProcedureTemplateController as BackofficeProcedureTemplateController;
 use App\Http\Controllers\Backoffice\ProcessConfirmationController as BackofficeProcessConfirmationController;
 use App\Http\Controllers\Backoffice\ProcessTimelineController as BackofficeProcessTimelineController;
+use App\Http\Controllers\Backoffice\ProductivityController as BackofficeProductivityController;
 use App\Http\Controllers\Backoffice\PropertyInspectionAttachmentController as BackofficePropertyInspectionAttachmentController;
 use App\Http\Controllers\Backoffice\PropertyInspectionController as BackofficePropertyInspectionController;
 use App\Http\Controllers\Backoffice\PropertyInspectionItemController as BackofficePropertyInspectionItemController;
@@ -756,6 +757,9 @@ Route::middleware('auth')->group(function () {
                 ->name('search.index');
             Route::get('search/commands', [UniversalSearchController::class, 'commands'])
                 ->name('search.commands');
+
+            Route::get('productivity', BackofficeProductivityController::class)
+                ->name('productivity.index');
 
             Route::get('work-tasks/dashboard', BackofficeWorkTaskDashboardController::class)
                 ->name('work-tasks.dashboard');

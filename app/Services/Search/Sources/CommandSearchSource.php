@@ -53,6 +53,13 @@ class CommandSearchSource implements SearchSource
                 'keywords' => 'tarefas minhas trabalho',
             ],
             [
+                'label' => 'Abrir produtividade',
+                'subtitle' => 'Centro de trabalho, prioridades, inbox e carga operacional.',
+                'route_name' => 'backoffice.productivity.index',
+                'permission' => 'work_tasks.view',
+                'keywords' => 'produtividade centro trabalho prioridades inbox fila agenda',
+            ],
+            [
                 'label' => 'Ver tarefas vencidas',
                 'subtitle' => 'Consultar tarefas com prazo ultrapassado.',
                 'route_name' => 'backoffice.work-tasks.overdue',

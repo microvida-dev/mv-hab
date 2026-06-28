@@ -22,6 +22,27 @@
 
             <x-dashboard.profile-dashboard :dashboard="$dashboard" />
 
+            @if (($productivity['enabled'] ?? false) === true)
+                <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+                    <x-productivity.next-case :next-case="$productivity['next_case'] ?? null" />
+
+                    <x-ui.card>
+                        <div class="flex h-full flex-col justify-between gap-4">
+                            <div>
+                                <p class="text-sm font-semibold text-ink-900">{{ $productivity['notification_summary']['label'] ?? 'Inbox Municipal' }}</p>
+                                <p class="mt-2 text-sm leading-6 text-ink-500">{{ $productivity['notification_summary']['description'] ?? 'Sem notificações operacionais autorizadas.' }}</p>
+                            </div>
+                            <x-ui.action-button :href="route('backoffice.productivity.index')">
+                                <x-ui-icon name="bolt" class="h-4 w-4" />
+                                <span>Abrir produtividade</span>
+                            </x-ui.action-button>
+                        </div>
+                    </x-ui.card>
+                </section>
+
+                <x-productivity.action-center :sections="$productivity['action_center'] ?? []" compact />
+            @endif
+
             <section>
                 <x-ui.section-header
                     class="mb-4"
