@@ -62,7 +62,13 @@
                             @if ($item['submission'])
                                 <a href="{{ route('candidate.documents.show', $item['submission']) }}" class="text-sm font-semibold text-civic-700">Consultar</a>
                             @else
-                                <a href="{{ route('candidate.documents.create', ['item' => $item['key'], 'application' => $application->public_id]) }}" class="mv-button-secondary">Submeter</a>
+                                <a href="{{ route('candidate.documents.create', [
+                                    'application' => $application->public_id,
+                                    'item' => $item['key'],
+                                    'required_document_id' => $item['required_document_id'],
+                                    'target_type' => $item['target_type'],
+                                    'target_id' => $item['target_id'],
+                                ]) }}" class="mv-button-secondary">Submeter</a>
                             @endif
                         </div>
                     @endforeach

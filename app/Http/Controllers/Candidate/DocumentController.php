@@ -79,10 +79,7 @@ class DocumentController extends Controller
         $application = null;
 
         if ($request->filled('application')) {
-            $application = Application::query()
-                ->forUser($this->authenticatedUser($request))
-                ->where('public_id', $request->query('application'))
-                ->firstOrFail();
+            $application = $this->candidateApplicationFromRequest($request);
             Gate::authorize('update', $application);
         }
 
@@ -90,9 +87,14 @@ class DocumentController extends Controller
             ? $this->checklistService->forApplication($application)
             : $this->checklistService->forRegistration($registration);
         $rawItems = $checklist['items'] ?? [];
-        $itemsArray = is_array($rawItems)
-            ? array_values(array_filter($rawItems, fn ($item): bool => is_array($item)))
-            : [];
+        $itemsArray = match (true) {
+            $rawItems instanceof Collection => $rawItems
+                ->filter(fn ($item): bool => is_array($item))
+                ->values()
+                ->all(),
+            is_array($rawItems) => array_values(array_filter($rawItems, fn ($item): bool => is_array($item))),
+            default => [],
+        };
         /** @var Collection<int, array<string, mixed>> $items */
         $items = new Collection($itemsArray);
         $item = $this->selectedChecklistItem($items, $request);
@@ -165,16 +167,62 @@ class DocumentController extends Controller
      */
     private function selectedChecklistItem(Collection $items, Request $request): ?array
     {
+        $item = $this->selectedChecklistItemByTarget($items, $request);
+
+        if ($item !== null) {
+            return $item;
+        }
+
         if ($request->filled('item')) {
             $item = $items->firstWhere('key', $request->query('item'));
 
             return is_array($item) ? $item : null;
         }
 
-        return $items->first(function (array $item) use ($request) {
-            return (int) $item['required_document_id'] === $request->integer('required_document_id')
+        return null;
+    }
+
+    /**
+     * @param  Collection<int, array<string, mixed>>  $items
+     * @return array<string, mixed>|null
+     */
+    private function selectedChecklistItemByTarget(Collection $items, Request $request): ?array
+    {
+        if (! $request->filled('required_document_id')
+            || ! $request->filled('target_type')
+            || ! $request->filled('target_id')) {
+            return null;
+        }
+
+        $item = $items->first(function (array $item) use ($request): bool {
+            return isset($item['required_document_id'], $item['target_type'], $item['target_id'])
+                && (int) $item['required_document_id'] === $request->integer('required_document_id')
                 && $item['target_type'] === $request->query('target_type')
                 && (int) $item['target_id'] === $request->integer('target_id');
         });
+
+        return is_array($item) ? $item : null;
+    }
+
+    private function candidateApplicationFromRequest(Request $request): Application
+    {
+        $identifier = $request->input('application');
+
+        abort_if(! is_string($identifier) && ! is_numeric($identifier), 404);
+
+        $identifier = trim((string) $identifier);
+
+        abort_if($identifier === '', 404);
+
+        return Application::query()
+            ->forUser($this->authenticatedUser($request))
+            ->where(function ($query) use ($identifier): void {
+                $query->where('public_id', $identifier);
+
+                if (ctype_digit($identifier)) {
+                    $query->orWhere('id', (int) $identifier);
+                }
+            })
+            ->firstOrFail();
     }
 }

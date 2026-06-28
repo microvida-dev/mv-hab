@@ -86,7 +86,12 @@
                                                 <a href="{{ route('candidate.documents.replace.create', $item['submission']) }}" class="mv-button-primary">Substituir</a>
                                             @endcan
                                         @else
-                                            <a href="{{ route('candidate.documents.create', ['item' => $item['key']]) }}" class="mv-button-primary">
+                                            <a href="{{ route('candidate.documents.create', [
+                                                'item' => $item['key'],
+                                                'required_document_id' => $item['required_document_id'],
+                                                'target_type' => $item['target_type'],
+                                                'target_id' => $item['target_id'],
+                                            ]) }}" class="mv-button-primary">
                                                 <x-ui-icon name="plus" class="h-4 w-4" />
                                                 Submeter
                                             </a>
