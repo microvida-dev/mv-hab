@@ -120,11 +120,35 @@ class IncomeRecordController extends Controller
      */
     private function incomeSources(): Collection
     {
+        $hasUsableSources = IncomeSource::query()
+            ->where('is_active', true)
+            ->where('code', '!=', IncomeSourceType::NoIncome->value)
+            ->exists();
+
+        if (! $hasUsableSources) {
+            $this->restoreDefaultIncomeSources();
+        }
+
         return IncomeSource::query()
             ->where('is_active', true)
             ->where('code', '!=', IncomeSourceType::NoIncome->value)
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
+    }
+
+    private function restoreDefaultIncomeSources(): void
+    {
+        foreach (IncomeSourceType::cases() as $index => $type) {
+            IncomeSource::query()->updateOrCreate(
+                ['code' => $type->value],
+                [
+                    'name' => $type->label(),
+                    'description' => 'Fonte de rendimento configurada pelo sistema.',
+                    'is_active' => true,
+                    'sort_order' => ($index + 1) * 10,
+                ],
+            );
+        }
     }
 }
