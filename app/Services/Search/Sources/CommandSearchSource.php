@@ -88,6 +88,13 @@ class CommandSearchSource implements SearchSource
                 'keywords' => 'relatórios kpis indicadores gestão',
             ],
             [
+                'label' => 'Abrir centro analítico',
+                'subtitle' => 'Consultar KPIs executivos, gráficos, SLA e carga operacional.',
+                'route_name' => 'backoffice.analytics.index',
+                'permission' => 'reports.view',
+                'keywords' => 'analytics centro analítico executivo gráficos métricas',
+            ],
+            [
                 'label' => 'Abrir auditoria',
                 'subtitle' => 'Consultar eventos de auditoria autorizados.',
                 'route_name' => 'backoffice.security.audit.events.index',

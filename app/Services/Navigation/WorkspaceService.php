@@ -269,6 +269,7 @@ class WorkspaceService
                         $this->item('Produtividade', 'backoffice.productivity.index', 'backoffice.productivity.*', 'work_tasks.view'),
                         $this->item('Tarefas', 'backoffice.work-tasks.my', 'backoffice.work-tasks.*', 'work_tasks.view', null, WorkTask::class),
                         $this->item('Painel de tarefas', 'backoffice.work-tasks.dashboard', 'backoffice.work-tasks.dashboard', 'work_tasks.dashboard'),
+                        $this->item('Centro analítico', 'backoffice.analytics.index', 'backoffice.analytics.*', 'reports.view'),
                         $this->item('Relatórios', 'backoffice.reports.index', 'backoffice.reports.*', 'reports.view', null, ReportDefinition::class),
                         $this->item('KPIs operacionais', 'backoffice.reports.operational', 'backoffice.reports.operational', 'reports.view'),
                         $this->item('Painel executivo', 'backoffice.reports.executive', 'backoffice.reports.executive', 'reports.view_executive'),

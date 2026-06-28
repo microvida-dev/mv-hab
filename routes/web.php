@@ -131,6 +131,7 @@ use App\Http\Controllers\Backoffice\RentCalculationController as BackofficeRentC
 use App\Http\Controllers\Backoffice\RentManualReviewController as BackofficeRentManualReviewController;
 use App\Http\Controllers\Backoffice\RentRuleController as BackofficeRentRuleController;
 use App\Http\Controllers\Backoffice\RentRuleSetController as BackofficeRentRuleSetController;
+use App\Http\Controllers\Backoffice\Reporting\AnalyticsController as BackofficeAnalyticsController;
 use App\Http\Controllers\Backoffice\Reporting\DashboardDefinitionController as BackofficeDashboardDefinitionController;
 use App\Http\Controllers\Backoffice\Reporting\DashboardWidgetController as BackofficeDashboardWidgetController;
 use App\Http\Controllers\Backoffice\Reporting\ExecutiveDashboardController as BackofficeExecutiveDashboardController;
@@ -1028,6 +1029,7 @@ Route::middleware('auth')->group(function () {
 
                 Route::prefix('reports')->name('reports.')->group(function () {
                     Route::get('/', BackofficeReportingController::class)->name('index');
+                    Route::get('analytics', BackofficeAnalyticsController::class)->name('analytics');
                     Route::get('dashboard', BackofficeOperationalDashboardController::class)->name('dashboard');
                     Route::get('operational', BackofficeOperationalDashboardController::class)->name('operational');
                     Route::get('executive', BackofficeExecutiveDashboardController::class)->name('executive');
@@ -1063,6 +1065,8 @@ Route::middleware('auth')->group(function () {
                     Route::get('access-logs', [BackofficeReportAuditController::class, 'accessLogs'])->name('access-logs.index');
                     Route::get('download-logs', [BackofficeReportAuditController::class, 'downloadLogs'])->name('download-logs.index');
                 });
+
+                Route::get('analytics', BackofficeAnalyticsController::class)->name('analytics.index');
 
                 Route::prefix('operational')->name('operational.')->group(function () {
                     Route::get('dashboard', [BackofficeSprint24OperationalDashboardController::class, 'index'])
