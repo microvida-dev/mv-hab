@@ -7,24 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 
 class CaseWorkspaceResolver
 {
+    public function __construct(private readonly CaseTypeRegistry $registry) {}
+
     /**
      * @return array<string, array{label: string, model: class-string<Model>|null, implemented: bool}>
      */
     public function supportedTypes(): array
     {
-        return [
-            'application' => ['label' => 'Candidatura', 'model' => Application::class, 'implemented' => true],
-            'contract' => ['label' => 'Contrato', 'model' => null, 'implemented' => false],
-            'maintenance_request' => ['label' => 'Manutenção', 'model' => null, 'implemented' => false],
-            'inspection' => ['label' => 'Vistoria', 'model' => null, 'implemented' => false],
-            'complaint' => ['label' => 'Reclamação', 'model' => null, 'implemented' => false],
-            'support_ticket' => ['label' => 'Ticket', 'model' => null, 'implemented' => false],
-            'contest' => ['label' => 'Concurso', 'model' => null, 'implemented' => false],
-        ];
+        return collect($this->registry->types())
+            ->map(fn (array $type): array => [
+                'label' => $type['label'],
+                'model' => $type['model'],
+                'implemented' => true,
+            ])
+            ->all();
     }
 
     public function typeFor(Model $case): string
     {
-        return $case instanceof Application ? 'application' : 'unknown';
+        return $case instanceof Application ? 'application' : ($this->registry->typeFor($case) ?? 'unknown');
     }
 }

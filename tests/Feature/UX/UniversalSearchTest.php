@@ -27,7 +27,7 @@ class UniversalSearchTest extends TestCase
         $application = Application::factory()->submitted()->create([
             'application_number' => 'CAND-2026-UX05-001',
         ]);
-        Contest::factory()->create([
+        $contest = Contest::factory()->create([
             'code' => 'CONC-UX05',
             'title' => 'Concurso UX Cinco',
         ]);
@@ -44,6 +44,7 @@ class UniversalSearchTest extends TestCase
             ->assertSee('Candidaturas')
             ->assertSee('Candidatura '.$application->application_number)
             ->assertSee('Concurso UX Cinco')
+            ->assertSee(route('backoffice.cases.contests.show', $contest), false)
             ->assertSee('WTK-UX05-001')
             ->assertSee('Centro de Comandos');
     }

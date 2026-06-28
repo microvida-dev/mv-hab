@@ -2,20 +2,33 @@
 
 namespace Tests\Feature\UX;
 
-use App\Models\User;
-use Database\Seeders\SystemAccessSeeder;
+use App\Models\Contract;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\UX\Concerns\CreatesEnterpriseCaseFixtures;
 use Tests\TestCase;
 
 class LegacyScreenNormalizationTest extends TestCase
 {
+    use CreatesEnterpriseCaseFixtures;
     use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seedAccess();
+    }
 
-        $this->seed(SystemAccessSeeder::class);
+    public function test_enterprise_workspace_provides_normalized_entry_point_to_legacy_detail(): void
+    {
+        $contract = Contract::factory()->create();
+
+        $this->actingAs($this->userWithRole())
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('backoffice.cases.contracts.show', $contract))
+            ->assertOk()
+            ->assertSee('Detalhe legado')
+            ->assertSee('Resumo processual')
+            ->assertSee('Documentos e anexos');
     }
 
     public function test_work_task_and_report_legacy_screens_use_portuguese_labels(): void
@@ -37,13 +50,5 @@ class LegacyScreenNormalizationTest extends TestCase
             ->assertSee('Painel executivo')
             ->assertDontSee('Dashboard operacional')
             ->assertDontSee('Dashboard executivo');
-    }
-
-    private function userWithRole(string $role): User
-    {
-        $user = User::factory()->create(['status' => 'active']);
-        $user->assignRole($role);
-
-        return $user;
     }
 }

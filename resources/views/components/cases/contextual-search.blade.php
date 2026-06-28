@@ -15,7 +15,7 @@
     @if ($query)
         <div class="mt-4 space-y-2">
             @forelse ($results as $result)
-                <p class="rounded-md bg-ink-50 px-3 py-2 text-sm text-ink-700">{{ $result['label'] }} · {{ $result['type'] }}</p>
+                <p class="rounded-md bg-ink-50 px-3 py-2 text-sm text-ink-700">{{ $result['label'] }} · {{ $result['type'] ?? $result['section'] ?? 'Processo' }}</p>
             @empty
                 <x-ui.empty-state
                     title="Sem resultados"

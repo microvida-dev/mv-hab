@@ -8,6 +8,7 @@ use App\Services\Search\Contracts\SearchSource;
 use App\Services\Search\SearchResultAuthorizationService;
 use App\Services\Search\Sources\Concerns\BuildsSearchResults;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Route;
 
 class InspectionSearchSource implements SearchSource
 {
@@ -35,7 +36,11 @@ class InspectionSearchSource implements SearchSource
      */
     public function search(User $user, string $term, int $limit): array
     {
-        if (! $this->authorization->canAccess($user, 'backoffice.inspections.show', 'inspections.view')) {
+        $routeName = Route::has('backoffice.cases.inspections.show')
+            ? 'backoffice.cases.inspections.show'
+            : 'backoffice.inspections.show';
+
+        if (! $this->authorization->canAccess($user, $routeName, 'inspections.view')) {
             return [];
         }
 
@@ -58,7 +63,7 @@ class InspectionSearchSource implements SearchSource
                 'group_label' => $this->label(),
                 'label' => 'Vistoria '.$inspection->inspection_number,
                 'subtitle' => 'Estado: '.$this->enumLabel($inspection->status).' · '.($this->relatedDisplayTitle($inspection, 'housingUnit') ?? 'Imóvel associado'),
-                'route_name' => 'backoffice.inspections.show',
+                'route_name' => $routeName,
                 'route_parameters' => [$inspection->getKey()],
                 'score' => 70,
             ])

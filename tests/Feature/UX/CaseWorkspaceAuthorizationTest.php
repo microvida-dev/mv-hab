@@ -3,24 +3,33 @@
 namespace Tests\Feature\UX;
 
 use App\Models\Application;
+use App\Models\Contest;
 use App\Models\DocumentSubmission;
-use App\Models\User;
-use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\UX\Concerns\CreatesEnterpriseCaseFixtures;
 use Tests\TestCase;
 
 class CaseWorkspaceAuthorizationTest extends TestCase
 {
+    use CreatesEnterpriseCaseFixtures;
     use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->seed(SystemAccessSeeder::class);
+        $this->seedAccess();
     }
 
-    public function test_candidate_cannot_access_backoffice_case_workspace(): void
+    public function test_candidate_cannot_access_backoffice_enterprise_case_workspace(): void
+    {
+        $contest = Contest::factory()->open()->create();
+
+        $this->actingAs($this->userWithRole('candidate'))
+            ->get(route('backoffice.cases.contests.show', $contest))
+            ->assertForbidden();
+    }
+
+    public function test_candidate_cannot_access_backoffice_application_case_workspace(): void
     {
         $candidate = $this->userWithRole('candidate');
         $application = Application::factory()->submitted()->create(['user_id' => $candidate->id]);
@@ -42,7 +51,20 @@ class CaseWorkspaceAuthorizationTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_auditor_sees_read_only_case_without_mutable_next_action(): void
+    public function test_auditor_sees_read_only_case_workspace(): void
+    {
+        $contest = Contest::factory()->open()->create();
+
+        $this->actingAs($this->userWithRole('auditor'))
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('backoffice.cases.contests.show', $contest))
+            ->assertOk()
+            ->assertSee('Perfil de consulta sem ações mutáveis')
+            ->assertDontSee('Eliminar')
+            ->assertDontSee('Aprovar');
+    }
+
+    public function test_auditor_sees_read_only_application_case_without_mutable_next_action(): void
     {
         $auditor = $this->userWithRole('auditor');
         $application = Application::factory()->submitted()->create();
@@ -58,13 +80,5 @@ class CaseWorkspaceAuthorizationTest extends TestCase
             ->assertSee('Auditoria')
             ->assertSee('Perfil de auditoria')
             ->assertDontSee('Abrir ação');
-    }
-
-    private function userWithRole(string $role): User
-    {
-        $user = User::factory()->create(['status' => 'active']);
-        $user->assignRole($role);
-
-        return $user;
     }
 }

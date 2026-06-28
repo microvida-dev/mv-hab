@@ -8,6 +8,7 @@ use App\Services\Search\Contracts\SearchSource;
 use App\Services\Search\SearchResultAuthorizationService;
 use App\Services\Search\Sources\Concerns\BuildsSearchResults;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Route;
 
 class MaintenanceRequestSearchSource implements SearchSource
 {
@@ -35,7 +36,11 @@ class MaintenanceRequestSearchSource implements SearchSource
      */
     public function search(User $user, string $term, int $limit): array
     {
-        if (! $this->authorization->canAccess($user, 'backoffice.maintenance.requests.show', 'maintenance_requests.view')) {
+        $routeName = Route::has('backoffice.cases.maintenance.show')
+            ? 'backoffice.cases.maintenance.show'
+            : 'backoffice.maintenance.requests.show';
+
+        if (! $this->authorization->canAccess($user, $routeName, 'maintenance_requests.view')) {
             return [];
         }
 
@@ -59,7 +64,7 @@ class MaintenanceRequestSearchSource implements SearchSource
                 'group_label' => $this->label(),
                 'label' => 'Pedido '.$request->request_number,
                 'subtitle' => 'Estado: '.$this->enumLabel($request->status).' · Urgência: '.$this->enumLabel($request->urgency),
-                'route_name' => 'backoffice.maintenance.requests.show',
+                'route_name' => $routeName,
                 'route_parameters' => [$request->getKey()],
                 'score' => 72,
             ])

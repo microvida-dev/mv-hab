@@ -8,6 +8,7 @@ use App\Services\Search\Contracts\SearchSource;
 use App\Services\Search\SearchResultAuthorizationService;
 use App\Services\Search\Sources\Concerns\BuildsSearchResults;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Route;
 
 class SupportTicketSearchSource implements SearchSource
 {
@@ -35,7 +36,11 @@ class SupportTicketSearchSource implements SearchSource
      */
     public function search(User $user, string $term, int $limit): array
     {
-        if (! $this->authorization->canAccess($user, 'backoffice.support-tickets.show', 'support.view')) {
+        $routeName = Route::has('backoffice.cases.tickets.show')
+            ? 'backoffice.cases.tickets.show'
+            : 'backoffice.support-tickets.show';
+
+        if (! $this->authorization->canAccess($user, $routeName, 'support.view')) {
             return [];
         }
 
@@ -55,7 +60,7 @@ class SupportTicketSearchSource implements SearchSource
                 'group_label' => $this->label(),
                 'label' => 'Ticket '.$ticket->ticket_number,
                 'subtitle' => 'Categoria: '.$this->enumLabel($ticket->category).' · Estado: '.$this->enumLabel($ticket->status),
-                'route_name' => 'backoffice.support-tickets.show',
+                'route_name' => $routeName,
                 'route_parameters' => [$ticket->getRouteKey()],
                 'score' => 74,
             ])

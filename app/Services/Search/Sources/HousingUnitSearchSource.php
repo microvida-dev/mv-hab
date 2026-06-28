@@ -8,6 +8,7 @@ use App\Services\Search\Contracts\SearchSource;
 use App\Services\Search\SearchResultAuthorizationService;
 use App\Services\Search\Sources\Concerns\BuildsSearchResults;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Route;
 
 class HousingUnitSearchSource implements SearchSource
 {
@@ -35,7 +36,11 @@ class HousingUnitSearchSource implements SearchSource
      */
     public function search(User $user, string $term, int $limit): array
     {
-        if (! $this->authorization->canAccess($user, 'housing-units.show', 'housing_units.view')) {
+        $routeName = Route::has('backoffice.cases.housing-units.show')
+            ? 'backoffice.cases.housing-units.show'
+            : 'housing-units.show';
+
+        if (! $this->authorization->canAccess($user, $routeName, 'housing_units.view')) {
             return [];
         }
 
@@ -60,7 +65,7 @@ class HousingUnitSearchSource implements SearchSource
                 'subtitle' => collect([$housingUnit->typology, $housingUnit->parish, $housingUnit->locality])
                     ->filter(fn (mixed $value): bool => is_string($value) && $value !== '')
                     ->join(' · '),
-                'route_name' => 'housing-units.show',
+                'route_name' => $routeName,
                 'route_parameters' => [$housingUnit->getKey()],
                 'score' => 78,
             ])

@@ -1128,6 +1128,26 @@ Route::middleware('auth')->group(function () {
                 Route::prefix('cases')->name('cases.')->group(function () {
                     Route::get('applications/{application}', [BackofficeCaseWorkspaceController::class, 'application'])
                         ->name('applications.show');
+                    Route::get('contests/{contest}', [BackofficeCaseWorkspaceController::class, 'contest'])
+                        ->name('contests.show');
+                    Route::get('contracts/{contract}', [BackofficeCaseWorkspaceController::class, 'contract'])
+                        ->name('contracts.show');
+                    Route::get('maintenance/{maintenanceRequest}', [BackofficeCaseWorkspaceController::class, 'maintenance'])
+                        ->name('maintenance.show');
+                    Route::get('inspections/{propertyInspection}', [BackofficeCaseWorkspaceController::class, 'inspection'])
+                        ->name('inspections.show');
+                    Route::get('complaints/{complaint}', [BackofficeCaseWorkspaceController::class, 'complaint'])
+                        ->name('complaints.show');
+                    Route::get('tickets/{supportTicket}', [BackofficeCaseWorkspaceController::class, 'ticket'])
+                        ->name('tickets.show');
+                    Route::get('housing-units/{housingUnit}', [BackofficeCaseWorkspaceController::class, 'housingUnit'])
+                        ->name('housing-units.show');
+                    Route::get('documents/{documentSubmission}', [BackofficeCaseWorkspaceController::class, 'document'])
+                        ->name('documents.show');
+                    Route::get('rgpd/{dataSubjectRequest}', [BackofficeCaseWorkspaceController::class, 'rgpd'])
+                        ->name('rgpd.show');
+                    Route::get('audit/{auditEvent}', [BackofficeCaseWorkspaceController::class, 'audit'])
+                        ->name('audit.show');
                 });
 
                 Route::get('applications', [BackofficeApplicationController::class, 'index'])

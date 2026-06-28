@@ -8,6 +8,7 @@ use App\Services\Search\Contracts\SearchSource;
 use App\Services\Search\SearchResultAuthorizationService;
 use App\Services\Search\Sources\Concerns\BuildsSearchResults;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Route;
 
 class ContestSearchSource implements SearchSource
 {
@@ -35,7 +36,11 @@ class ContestSearchSource implements SearchSource
      */
     public function search(User $user, string $term, int $limit): array
     {
-        if (! $this->authorization->canAccess($user, 'admin.contests.show', 'contests.view')) {
+        $routeName = Route::has('backoffice.cases.contests.show')
+            ? 'backoffice.cases.contests.show'
+            : 'admin.contests.show';
+
+        if (! $this->authorization->canAccess($user, $routeName, 'contests.view')) {
             return [];
         }
 
@@ -56,7 +61,7 @@ class ContestSearchSource implements SearchSource
                 'group_label' => $this->label(),
                 'label' => $contest->title,
                 'subtitle' => trim(($contest->code ?: 'Sem código').' · Estado: '.$this->enumLabel($contest->status).' · '.($this->relatedAttribute($contest, 'program', 'name') ?? 'Sem programa')),
-                'route_name' => 'admin.contests.show',
+                'route_name' => $routeName,
                 'route_parameters' => [$contest->getKey()],
                 'score' => 82,
             ])

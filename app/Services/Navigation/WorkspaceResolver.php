@@ -21,8 +21,27 @@ class WorkspaceResolver
             return null;
         }
 
-        if (str_starts_with($routeName, 'backoffice.cases.applications.')) {
+        if (str_starts_with($routeName, 'backoffice.cases.applications.')
+            || str_starts_with($routeName, 'backoffice.cases.complaints.')
+            || str_starts_with($routeName, 'backoffice.cases.tickets.')) {
             return $this->workspaces->authorizedWorkspace($user, 'atendimento');
+        }
+
+        if (str_starts_with($routeName, 'backoffice.cases.contests.')) {
+            return $this->workspaces->authorizedWorkspace($user, 'concursos');
+        }
+
+        if (str_starts_with($routeName, 'backoffice.cases.contracts.')
+            || str_starts_with($routeName, 'backoffice.cases.maintenance.')
+            || str_starts_with($routeName, 'backoffice.cases.inspections.')
+            || str_starts_with($routeName, 'backoffice.cases.housing-units.')) {
+            return $this->workspaces->authorizedWorkspace($user, 'patrimonio');
+        }
+
+        if (str_starts_with($routeName, 'backoffice.cases.documents.')
+            || str_starts_with($routeName, 'backoffice.cases.rgpd.')
+            || str_starts_with($routeName, 'backoffice.cases.audit.')) {
+            return $this->workspaces->authorizedWorkspace($user, 'gestao');
         }
 
         $item = $this->workspaces->findVisibleItemByRoute($user, $routeName);

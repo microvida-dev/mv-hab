@@ -48,7 +48,7 @@ class BreadcrumbService
                     'route' => null,
                     'parameters' => [],
                 ];
-            } elseif (str_starts_with($routeName, 'backoffice.cases.applications.')) {
+            } elseif (str_starts_with($routeName, 'backoffice.cases.')) {
                 $breadcrumbs[] = [
                     'label' => 'Processo',
                     'route' => null,

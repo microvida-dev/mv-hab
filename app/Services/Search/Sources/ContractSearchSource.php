@@ -8,6 +8,7 @@ use App\Services\Search\Contracts\SearchSource;
 use App\Services\Search\SearchResultAuthorizationService;
 use App\Services\Search\Sources\Concerns\BuildsSearchResults;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Route;
 
 class ContractSearchSource implements SearchSource
 {
@@ -35,7 +36,11 @@ class ContractSearchSource implements SearchSource
      */
     public function search(User $user, string $term, int $limit): array
     {
-        if (! $this->authorization->canAccess($user, 'backoffice.contracts.leases.show', 'contracts.view')) {
+        $routeName = Route::has('backoffice.cases.contracts.show')
+            ? 'backoffice.cases.contracts.show'
+            : 'backoffice.contracts.leases.show';
+
+        if (! $this->authorization->canAccess($user, $routeName, 'contracts.view')) {
             return [];
         }
 
@@ -58,7 +63,7 @@ class ContractSearchSource implements SearchSource
                 'group_label' => $this->label(),
                 'label' => 'Contrato '.($contract->contract_number ?: '#'.$contract->getKey()),
                 'subtitle' => trim('Estado: '.$this->enumLabel($contract->status).' · '.($this->relatedDisplayTitle($contract, 'housingUnit') ?? $this->relatedAttribute($contract, 'program', 'name') ?? $this->relatedAttribute($contract, 'contest', 'title') ?? 'Sem referência pública')),
-                'route_name' => 'backoffice.contracts.leases.show',
+                'route_name' => $routeName,
                 'route_parameters' => [$contract->getKey()],
                 'score' => 76,
             ])
