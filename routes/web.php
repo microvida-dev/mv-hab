@@ -853,6 +853,8 @@ Route::middleware('auth')->group(function () {
                     ->name('document-reviews.validate');
                 Route::post('document-reviews/{documentSubmission}/reject', [AdminDocumentReviewController::class, 'reject'])
                     ->name('document-reviews.reject');
+                Route::post('document-reviews/{documentSubmission}/document-ai', [AdminDocumentReviewController::class, 'runDocumentAi'])
+                    ->name('document-reviews.document-ai');
                 Route::get('document-reviews/{documentSubmission}/download', [AdminDocumentReviewController::class, 'download'])
                     ->name('document-reviews.download');
             });

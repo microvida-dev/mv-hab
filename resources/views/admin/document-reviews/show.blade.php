@@ -13,36 +13,75 @@
     <div class="py-8">
         <div class="mx-auto max-w-6xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
+            @php
+                $latestAiAnalysis = $submission->latestDocumentAiAnalysis;
+                $latestAiScore = $latestAiAnalysis?->latestScore;
+            @endphp
 
             <section class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
-                <div class="mv-surface p-6">
-                    <h2 class="text-base font-semibold text-ink-900">Detalhe do documento</h2>
-                    <dl class="mt-5 grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <dt class="text-xs font-semibold uppercase text-ink-500">Estado</dt>
-                            <dd class="mt-1 font-semibold text-ink-900">{{ $submission->status->label() }}</dd>
+                <div class="space-y-6">
+                    <div class="mv-surface p-6">
+                        <h2 class="text-base font-semibold text-ink-900">Detalhe do documento</h2>
+                        <dl class="mt-5 grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <dt class="text-xs font-semibold uppercase text-ink-500">Estado</dt>
+                                <dd class="mt-1 font-semibold text-ink-900">{{ $submission->status->label() }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs font-semibold uppercase text-ink-500">Ficheiro</dt>
+                                <dd class="mt-1 font-semibold text-ink-900">{{ $submission->original_filename }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs font-semibold uppercase text-ink-500">Submetido</dt>
+                                <dd class="mt-1 font-semibold text-ink-900">{{ optional($submission->submitted_at)->format('d/m/Y H:i') ?: 'Não indicado' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs font-semibold uppercase text-ink-500">Checksum</dt>
+                                <dd class="mt-1 break-all text-xs font-semibold text-ink-700">{{ $submission->checksum }}</dd>
+                            </div>
+                        </dl>
+                        @if ($submission->rejection_reason)
+                            <p class="mt-5 rounded-md bg-red-50 p-4 text-sm leading-6 text-red-800">{{ $submission->rejection_reason }}</p>
+                        @endif
+                    </div>
+
+                    <div class="mv-surface p-6">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <h2 class="text-base font-semibold text-ink-900">IA documental</h2>
+                                <p class="mt-1 text-sm leading-6 text-ink-600">
+                                    A análise IA é assistiva e não valida nem rejeita documentos automaticamente.
+                                </p>
+                            </div>
+                            @if ($latestAiAnalysis)
+                                <a href="{{ route('backoffice.document-ai.assistant.show', $latestAiAnalysis) }}" class="mv-button-secondary">Ver assistente IA</a>
+                            @endif
                         </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase text-ink-500">Ficheiro</dt>
-                            <dd class="mt-1 font-semibold text-ink-900">{{ $submission->original_filename }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase text-ink-500">Submetido</dt>
-                            <dd class="mt-1 font-semibold text-ink-900">{{ optional($submission->submitted_at)->format('d/m/Y H:i') ?: 'Não indicado' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase text-ink-500">Checksum</dt>
-                            <dd class="mt-1 break-all text-xs font-semibold text-ink-700">{{ $submission->checksum }}</dd>
-                        </div>
-                    </dl>
-                    @if ($submission->rejection_reason)
-                        <p class="mt-5 rounded-md bg-red-50 p-4 text-sm leading-6 text-red-800">{{ $submission->rejection_reason }}</p>
-                    @endif
+                        <dl class="mt-5 grid gap-4 sm:grid-cols-3">
+                            <div>
+                                <dt class="text-xs font-semibold uppercase text-ink-500">Estado IA</dt>
+                                <dd class="mt-1 font-semibold text-ink-900">{{ $latestAiAnalysis?->status->label() ?? 'Sem análise executada' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs font-semibold uppercase text-ink-500">Score</dt>
+                                <dd class="mt-1 font-semibold text-ink-900">{{ $latestAiScore ? $latestAiScore->score.'%' : 'Sem score' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs font-semibold uppercase text-ink-500">Revisão manual</dt>
+                                <dd class="mt-1 font-semibold text-ink-900">{{ $latestAiScore?->requires_manual_review ? 'Recomendada' : 'Não indicada' }}</dd>
+                            </div>
+                        </dl>
+                    </div>
                 </div>
 
                 <aside class="mv-surface p-6">
                     <h2 class="text-base font-semibold text-ink-900">Ações</h2>
                     <div class="mt-4 grid gap-3">
+                        <form method="POST" action="{{ route('admin.document-reviews.document-ai', $submission) }}">
+                            @csrf
+                            <button class="mv-button-primary w-full">Executar IA documental</button>
+                            <p class="mt-2 text-xs leading-5 text-ink-500">Gera score, flags e sugestões para apoio à revisão técnica.</p>
+                        </form>
                         <form method="POST" action="{{ route('admin.document-reviews.under-review', $submission) }}">
                             @csrf
                             <button class="mv-button-secondary w-full">Colocar em análise</button>
