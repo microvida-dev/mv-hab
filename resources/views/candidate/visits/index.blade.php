@@ -15,9 +15,9 @@
             <x-flash-message />
 
             <section class="grid gap-4 md:grid-cols-4">
-                @foreach ($calendar['indicators'] as $label => $value)
+                @foreach ($indicators as $label => $value)
                     <div class="mv-surface p-5">
-                        <p class="text-xs font-semibold uppercase text-ink-500">{{ str_replace('_', ' ', $label) }}</p>
+                        <p class="text-xs font-semibold uppercase text-ink-500">{{ $label }}</p>
                         <p class="mt-2 text-2xl font-semibold text-ink-900">{{ $value }}</p>
                     </div>
                 @endforeach
@@ -43,7 +43,7 @@
                                     <td class="px-5 py-4 text-ink-700">
                                         {{ $visit->housingUnit?->title ?? $visit->contest?->title ?? $visit->application?->application_number ?? 'Contexto processual' }}
                                     </td>
-                                    <td class="px-5 py-4"><span class="rounded-md bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $visit->status->label() }}</span></td>
+                                    <td class="px-5 py-4"><span class="rounded-md bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $visit->status?->label() ?? 'Estado por confirmar' }}</span></td>
                                     <td class="px-5 py-4 text-right">
                                         <a href="{{ route('candidate.visits.show', $visit) }}" class="font-semibold text-civic-700">Consultar</a>
                                     </td>

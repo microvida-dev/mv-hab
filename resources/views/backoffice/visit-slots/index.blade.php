@@ -1,8 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Backoffice</p>
-            <h1 class="mt-1 text-2xl font-semibold text-ink-900">Calendário de visitas</h1>
+            <p class="text-sm font-semibold text-civic-700">Visitas abertas</p>
+            <h1 class="mt-1 text-2xl font-semibold text-ink-900">Horários de visita</h1>
+            <p class="mt-1 text-sm text-ink-500">Consulte, bloqueie ou desbloqueie horários publicados a partir das visitas abertas definidas pelo município.</p>
         </div>
     </x-slot>
 
@@ -31,7 +32,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="px-5 py-8 text-center text-ink-500">Sem slots registados.</td></tr>
+                                <tr><td colspan="5" class="px-5 py-8 text-center text-ink-500">Sem horários de visita registados.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

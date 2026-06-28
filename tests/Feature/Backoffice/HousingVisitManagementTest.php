@@ -5,6 +5,8 @@ namespace Tests\Feature\Backoffice;
 use App\Enums\VisitStatus;
 use App\Models\HousingVisit;
 use App\Models\User;
+use App\Models\VisitAvailability;
+use App\Models\VisitSlot;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -12,6 +14,42 @@ use Tests\TestCase;
 class HousingVisitManagementTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_backoffice_can_access_open_house_visit_pages(): void
+    {
+        $this->seed(SystemAccessSeeder::class);
+        $staff = $this->userWithRole('municipal_technician');
+        $availability = VisitAvailability::factory()->create(['staff_user_id' => $staff->id]);
+        VisitSlot::factory()->create([
+            'visit_availability_id' => $availability->id,
+            'staff_user_id' => $staff->id,
+        ]);
+
+        $this->actingAs($staff)
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('backoffice.visit-availabilities.index'))
+            ->assertOk()
+            ->assertSee('Visitas abertas')
+            ->assertSee('Criar visita aberta');
+
+        $this->actingAs($staff)
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('backoffice.visit-availabilities.create'))
+            ->assertOk()
+            ->assertSee('Criar visita aberta');
+
+        $this->actingAs($staff)
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('backoffice.visit-availabilities.show', $availability))
+            ->assertOk()
+            ->assertSee('Gerar horários');
+
+        $this->actingAs($staff)
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('backoffice.visit-slots.index'))
+            ->assertOk()
+            ->assertSee('Horários de visita');
+    }
 
     public function test_backoffice_completion_requires_internal_note_and_creates_audit(): void
     {

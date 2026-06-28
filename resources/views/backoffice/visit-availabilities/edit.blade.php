@@ -1,8 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Backoffice</p>
-            <h1 class="mt-1 text-2xl font-semibold text-ink-900">Editar disponibilidade</h1>
+            <p class="text-sm font-semibold text-civic-700">Visitas abertas</p>
+            <h1 class="mt-1 text-2xl font-semibold text-ink-900">Editar visita aberta</h1>
+            <p class="mt-1 text-sm text-ink-500">Atualize a janela de visita, o concurso ou fogo associado e a capacidade dos horários.</p>
         </div>
     </x-slot>
 

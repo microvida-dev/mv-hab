@@ -12,6 +12,7 @@ use App\Enums\VisitCancellationReason;
 use App\Enums\VisitStatus;
 use App\Models\Application;
 use App\Models\ApplicationSimulationInconsistency;
+use App\Models\CandidateInteraction;
 use App\Models\Contest;
 use App\Models\ContextualFaq;
 use App\Models\ContextualFaqCategory;
@@ -84,6 +85,42 @@ class Sprint22CandidateSupportTest extends TestCase
             'user_id' => $candidate->id,
             'interaction_type' => InteractionType::VisitCancelled->value,
         ]);
+    }
+
+    public function test_candidate_interactions_index_renders_recorded_interactions(): void
+    {
+        $this->seed(SystemAccessSeeder::class);
+        $candidate = $this->userWithRole('candidate');
+
+        CandidateInteraction::factory()->create([
+            'user_id' => $candidate->id,
+            'interaction_type' => InteractionType::FaqViewed->value,
+            'title' => 'FAQ consultada pelo candidato',
+        ]);
+
+        $this->actingAs($candidate)
+            ->get(route('candidate.interactions.index'))
+            ->assertOk()
+            ->assertSee('FAQ consultada')
+            ->assertSee('FAQ consultada pelo candidato');
+    }
+
+    public function test_candidate_visits_index_renders_indicators_and_visits(): void
+    {
+        $this->seed(SystemAccessSeeder::class);
+        $candidate = $this->userWithRole('candidate');
+        $visit = HousingVisit::factory()->create([
+            'candidate_user_id' => $candidate->id,
+            'status' => VisitStatus::Confirmed->value,
+        ]);
+
+        $this->actingAs($candidate)
+            ->get(route('candidate.visits.index'))
+            ->assertOk()
+            ->assertSee('As minhas visitas')
+            ->assertSee('Total')
+            ->assertSee('Confirmadas')
+            ->assertSee($visit->visit_number);
     }
 
     public function test_backoffice_generates_visit_slots_and_updates_visit_status(): void

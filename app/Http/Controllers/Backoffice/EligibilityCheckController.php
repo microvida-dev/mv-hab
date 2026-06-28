@@ -10,6 +10,7 @@ use App\Http\Requests\RunApplicationEligibilityCheckRequest;
 use App\Models\Application;
 use App\Models\EligibilityCheck;
 use App\Services\Audit\AuditLogger;
+use App\Services\Eligibility\EligibilityCheckPresentationService;
 use App\Services\Eligibility\EligibilityCheckService;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
@@ -22,6 +23,7 @@ class EligibilityCheckController extends Controller
 {
     public function __construct(
         private readonly EligibilityCheckService $checkService,
+        private readonly EligibilityCheckPresentationService $presentationService,
         private readonly AuditLogger $auditLogger,
     ) {}
 
@@ -65,7 +67,10 @@ class EligibilityCheckController extends Controller
             description: 'Resultado técnico de elegibilidade consultado.',
         );
 
-        return view('backoffice.eligibility.checks.show', ['check' => $eligibilityCheck]);
+        return view('backoffice.eligibility.checks.show', [
+            'check' => $eligibilityCheck,
+            'presentation' => $this->presentationService->present($eligibilityCheck),
+        ]);
     }
 
     public function rerun(Request $request, EligibilityCheck $eligibilityCheck): RedirectResponse

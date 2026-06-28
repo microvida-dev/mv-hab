@@ -10,6 +10,7 @@ use App\Models\Contest;
 use App\Models\Program;
 use App\Models\User;
 use App\Services\Administrative\AdministrativeProcessService;
+use App\Services\Administrative\AdministrativeScoringReadinessService;
 use App\Services\Administrative\AdministrativeTimelineService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +22,7 @@ class AdministrativeProcessController extends Controller
     public function __construct(
         private readonly AdministrativeProcessService $processService,
         private readonly AdministrativeTimelineService $timelineService,
+        private readonly AdministrativeScoringReadinessService $scoringReadinessService,
     ) {}
 
     public function index(Request $request): View
@@ -80,6 +82,7 @@ class AdministrativeProcessController extends Controller
 
         return view('backoffice.administrative-processes.show', [
             'process' => $administrativeProcess,
+            'scoringReadiness' => $this->scoringReadinessService->forProcess($administrativeProcess),
             'users' => User::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }

@@ -8,6 +8,7 @@ use App\Models\CandidateInteraction;
 use App\Models\Contest;
 use App\Models\HousingUnit;
 use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
@@ -59,6 +60,18 @@ class CandidateInteractionService
             ->with(['application', 'contest', 'housingUnit'])
             ->latest('occurred_at')
             ->get();
+    }
+
+    /**
+     * @return LengthAwarePaginator<int, CandidateInteraction>
+     */
+    public function paginatedForCandidate(User $user, int $perPage = 15): LengthAwarePaginator
+    {
+        return CandidateInteraction::query()
+            ->forUser($user)
+            ->with(['application', 'contest', 'housingUnit'])
+            ->latest('occurred_at')
+            ->paginate($perPage);
     }
 
     /**

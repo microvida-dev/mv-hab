@@ -24,6 +24,8 @@ use App\Models\SensitiveDataAccessLog;
 use App\Models\SupportTicket;
 use App\Models\TenantFinancialAccount;
 use App\Models\User;
+use App\Models\VisitAvailability;
+use App\Models\VisitSlot;
 use App\Models\WorkTask;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -204,7 +206,9 @@ class WorkspaceService
                     ]),
                     $this->group('Contacto e suporte', [
                         $this->item('Revisão documental', 'admin.document-reviews.index', 'admin.document-reviews.*', 'documents.view', null, DocumentSubmission::class),
-                        $this->item('Visitas', 'backoffice.housing-visits.index', 'backoffice.housing-visits.*', 'visits.view', null, HousingVisit::class),
+                        $this->item('Visitas abertas', 'backoffice.visit-availabilities.index', 'backoffice.visit-availabilities.*', 'visits.view', null, VisitAvailability::class),
+                        $this->item('Horários de visita', 'backoffice.visit-slots.index', 'backoffice.visit-slots.*', 'visits.view', null, VisitSlot::class),
+                        $this->item('Visitas agendadas', 'backoffice.housing-visits.index', 'backoffice.housing-visits.*', 'visits.view', null, HousingVisit::class),
                         $this->item('Tickets', 'backoffice.support-tickets.index', 'backoffice.support-tickets.*', 'support.view', null, SupportTicket::class),
                         $this->item('FAQ', 'backoffice.contextual-faqs.index', 'backoffice.contextual-faqs.*', 'contextual_faqs.view', null, ContextualFaq::class),
                     ]),

@@ -62,7 +62,7 @@ class DashboardQuickActionService
             'housing_manager' => [
                 $this->action('Ver fogos', 'housing-units.index', 'housing_units.view', 'Parque habitacional e disponibilidade.'),
                 $this->action('Ver contratos', 'backoffice.contracts.leases.index', 'contracts.view', 'Contratos operacionais.'),
-                $this->action('Ver visitas', 'backoffice.housing-visits.index', 'visits.view', 'Visitas a fogos publicáveis.'),
+                $this->action('Criar visitas abertas', 'backoffice.visit-availabilities.index', 'visits.view', 'Agendamento municipal de horários para candidatos.'),
             ],
             'maintenance_manager' => [
                 $this->action('Pedidos urgentes', 'backoffice.maintenance.index', 'maintenance_requests.view', 'Pedidos de manutenção prioritários.'),

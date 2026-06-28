@@ -6,11 +6,13 @@ use App\Enums\AdministrativeProcessStatus;
 use App\Enums\ApplicationStatus;
 use App\Enums\CorrectionRequestStatus;
 use App\Enums\CorrectionResponseStatus;
+use App\Enums\EligibilityResult;
 use App\Models\AdhesionRegistration;
 use App\Models\AdministrativeProcess;
 use App\Models\Application;
 use App\Models\Contest;
 use App\Models\CurrentHousingSituation;
+use App\Models\EligibilityCheck;
 use App\Models\Household;
 use App\Models\Program;
 use App\Models\User;
@@ -177,6 +179,13 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
             'decision_result' => 'admitted_for_scoring',
             'status' => 'approved',
         ]);
+
+        $this->actingAs($technician)
+            ->get(route('backoffice.administrative-processes.show', $process))
+            ->assertOk()
+            ->assertSee('Decisões administrativas')
+            ->assertSee('Admissão para classificação')
+            ->assertSee('Abrir decisão');
     }
 
     public function test_internal_notes_are_not_visible_to_candidate(): void
@@ -194,6 +203,37 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
             ->get(route('candidate.processes.timeline', $process))
             ->assertOk()
             ->assertDontSee('Nota interna que não deve aparecer ao candidato.');
+    }
+
+    public function test_process_show_explains_scoring_blockers_when_eligibility_is_not_eligible(): void
+    {
+        [, $application] = $this->submittedApplicationContext();
+        $technician = $this->userWithRole('municipal_technician');
+        $process = $this->processReadyForCorrection($application, $technician);
+
+        EligibilityCheck::factory()->create([
+            'application_id' => $application->id,
+            'adhesion_registration_id' => $application->adhesion_registration_id,
+            'program_id' => $application->program_id,
+            'contest_id' => $application->contest_id,
+            'user_id' => $application->user_id,
+            'result' => EligibilityResult::Ineligible,
+        ]);
+
+        $this->actingAs($technician)
+            ->post(route('backoffice.administrative-decisions.store-admission', $process), [
+                'summary' => 'Candidatura admitida para classificação em teste.',
+                'grounds' => 'Fundamentação administrativa fictícia para teste.',
+            ])
+            ->assertRedirect();
+
+        $this->actingAs($technician)
+            ->get(route('backoffice.administrative-processes.show', $process->refresh()))
+            ->assertOk()
+            ->assertSee('Condições para pontuação')
+            ->assertSee('Bloqueada')
+            ->assertSee('Elegibilidade técnica elegível')
+            ->assertSee('Última verificação: Não elegível. A candidatura não entra no snapshot enquanto não ficar Elegível.');
     }
 
     private function processReadyForCorrection(Application $application, User $technician): AdministrativeProcess

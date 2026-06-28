@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Candidate;
 
 use App\Enums\VisitCancellationReason;
+use App\Enums\VisitStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BookVisitRequest;
 use App\Http\Requests\CancelVisitRequest;
@@ -33,6 +34,7 @@ class VisitController extends Controller
     {
         Gate::authorize('viewAny', HousingVisit::class);
         $user = $this->authenticatedUser($request);
+        $calendar = $this->calendar->candidateCalendar($user);
 
         return view('candidate.visits.index', [
             'visits' => HousingVisit::query()
@@ -40,7 +42,13 @@ class VisitController extends Controller
                 ->with(['application.contest', 'contest', 'housingUnit', 'slot', 'statusHistories.changedBy'])
                 ->latest('starts_at')
                 ->paginate(10),
-            'calendar' => $this->calendar->candidateCalendar($user),
+            'calendar' => $calendar,
+            'indicators' => [
+                'Total' => $calendar->count(),
+                'Ativas' => $calendar->filter(fn (HousingVisit $visit): bool => $visit->isActive())->count(),
+                'Confirmadas' => $calendar->filter(fn (HousingVisit $visit): bool => $visit->getRawOriginal('status') === VisitStatus::Confirmed->value)->count(),
+                'Concluídas' => $calendar->filter(fn (HousingVisit $visit): bool => $visit->getRawOriginal('status') === VisitStatus::Completed->value)->count(),
+            ],
         ]);
     }
 

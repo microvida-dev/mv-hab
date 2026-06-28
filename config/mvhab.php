@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'e2e_user_password' => env('MVHAB_E2E_USER_PASSWORD'),
+
     'permissions' => [
         'dashboard' => ['view', 'export', 'audit'],
         'users' => ['view', 'create', 'update', 'delete', 'deactivate', 'reactivate', 'force_mfa', 'reset_password', 'audit'],

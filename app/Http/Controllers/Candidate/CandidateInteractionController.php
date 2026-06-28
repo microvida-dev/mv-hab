@@ -20,7 +20,7 @@ class CandidateInteractionController extends Controller
         $user = $this->authenticatedUser($request);
 
         return view('candidate.interactions.index', [
-            'interactions' => $this->interactions->forCandidate($user),
+            'interactions' => $this->interactions->paginatedForCandidate($user),
             'inconsistencies' => ApplicationSimulationInconsistency::query()
                 ->forUser($user)
                 ->open()

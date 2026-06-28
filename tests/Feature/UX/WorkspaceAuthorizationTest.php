@@ -55,6 +55,19 @@ class WorkspaceAuthorizationTest extends TestCase
             ->assertDontSee('Manutenção');
     }
 
+    public function test_atendimento_workspace_exposes_open_house_visit_management(): void
+    {
+        $administrator = $this->userWithRole('administrator');
+
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('workspaces.show', 'atendimento'))
+            ->assertOk()
+            ->assertSee('Visitas abertas')
+            ->assertSee('Horários de visita')
+            ->assertSee('Visitas agendadas');
+    }
+
     private function userWithRole(string $role): User
     {
         $user = User::factory()->create(['status' => 'active']);

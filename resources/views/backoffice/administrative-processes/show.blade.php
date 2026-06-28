@@ -58,6 +58,37 @@
 
                 <div class="mv-surface p-6">
                     <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <h2 class="text-lg font-semibold text-ink-900">Condições para pontuação</h2>
+                            <p class="mt-1 text-sm text-ink-500">A candidatura só entra no snapshot quando todas as condições estiverem cumpridas.</p>
+                        </div>
+                        <span class="rounded-md px-2.5 py-1 text-xs font-semibold {{ $scoringReadiness['ready'] ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800' }}">
+                            {{ $scoringReadiness['ready'] ? 'Pronta' : 'Bloqueada' }}
+                        </span>
+                    </div>
+
+                    <div class="mt-4 space-y-3">
+                        @foreach ($scoringReadiness['items'] as $item)
+                            <div class="rounded-md border {{ $item['passed'] ? 'border-emerald-100 bg-emerald-50/60' : 'border-amber-100 bg-amber-50/60' }} p-3">
+                                <div class="flex items-start gap-3">
+                                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold {{ $item['passed'] ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white' }}">
+                                        {{ $item['passed'] ? 'OK' : '!' }}
+                                    </span>
+                                    <div>
+                                        <p class="text-sm font-semibold text-ink-900">{{ $item['label'] }}</p>
+                                        <p class="mt-1 text-xs leading-5 text-ink-600">{{ $item['detail'] }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+            </section>
+
+            <section class="grid gap-6 lg:grid-cols-2">
+                <div class="mv-surface p-6">
+                    <div class="flex items-start justify-between gap-4">
                         <h2 class="text-lg font-semibold text-ink-900">Ações processuais</h2>
                         <a href="{{ route('backoffice.administrative-processes.timeline', $process) }}" class="text-sm font-semibold text-civic-700">Cronologia</a>
                     </div>
@@ -67,6 +98,46 @@
                         <a href="{{ route('backoffice.administrative-decisions.create-admission', $process) }}" class="mv-button-primary">Propor admissão</a>
                         <a href="{{ route('backoffice.administrative-decisions.create-non-admission', $process) }}" class="mv-button-secondary">Propor não admissão</a>
                     </div>
+                </div>
+            </section>
+
+            <section class="mv-surface p-6">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-ink-900">Decisões administrativas</h2>
+                        <p class="mt-1 text-sm text-ink-500">Acompanhe propostas de admissão, não admissão e respetiva aprovação.</p>
+                    </div>
+                    <a href="{{ route('backoffice.administrative-decisions.create-admission', $process) }}" class="mv-button-secondary">Propor admissão</a>
+                </div>
+
+                <div class="mt-4 divide-y divide-ink-100">
+                    @forelse ($process->decisions as $decision)
+                        <div class="flex flex-wrap items-center justify-between gap-4 py-4 text-sm">
+                            <div>
+                                <p class="font-semibold text-ink-900">{{ $decision->decision_type->label() }}</p>
+                                <p class="mt-1 text-ink-600">{{ $decision->decision_result->label() }} · {{ $decision->status->label() }}</p>
+                                <p class="mt-1 text-xs text-ink-500">
+                                    Registada por {{ $decision->decidedBy?->name ?? '—' }}
+                                    em {{ $decision->decided_at?->format('d/m/Y H:i') ?? '—' }}
+                                    @if ($decision->approved_at)
+                                        · aprovada em {{ $decision->approved_at->format('d/m/Y H:i') }}
+                                    @endif
+                                </p>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-3">
+                                @if ($decision->status !== \App\Enums\AdministrativeDecisionStatus::Approved)
+                                    <span class="rounded-md bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">Aprovação pendente</span>
+                                @endif
+
+                                @can('view', $decision)
+                                    <a href="{{ route('backoffice.administrative-decisions.show', $decision) }}" class="mv-button-secondary">Abrir decisão</a>
+                                @endcan
+                            </div>
+                        </div>
+                    @empty
+                        <p class="py-4 text-sm text-ink-500">Ainda não existem decisões administrativas registadas para este processo.</p>
+                    @endforelse
                 </div>
             </section>
 

@@ -14,7 +14,7 @@
                     <h2 class="text-lg font-semibold text-ink-900">Inconsistências por rever</h2>
                     <div class="mt-4 space-y-3">
                         @foreach ($inconsistencies as $item)
-                            <p class="text-sm text-ink-700">{{ $item->message }} <span class="font-semibold text-ink-500">({{ $item->severity->label() }})</span></p>
+                            <p class="text-sm text-ink-700">{{ $item->message }} <span class="font-semibold text-ink-500">({{ $item->severity?->label() ?? 'Severidade por confirmar' }})</span></p>
                         @endforeach
                     </div>
                 </section>
@@ -35,7 +35,7 @@
                             @forelse ($interactions as $interaction)
                                 <tr>
                                     <td class="px-5 py-4 text-ink-600">{{ $interaction->created_at?->format('d/m/Y H:i') }}</td>
-                                    <td class="px-5 py-4 text-ink-700">{{ $interaction->type->label() }}</td>
+                                    <td class="px-5 py-4 text-ink-700">{{ $interaction->interaction_type?->label() ?? 'Interação' }}</td>
                                     <td class="px-5 py-4 font-semibold text-ink-900">{{ $interaction->title }}</td>
                                     <td class="px-5 py-4 text-ink-600">{{ $interaction->contest?->title ?? $interaction->application?->application_number ?? '—' }}</td>
                                 </tr>

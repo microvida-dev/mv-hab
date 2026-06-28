@@ -18,6 +18,7 @@ use App\Models\CurrentHousingSituation;
 use App\Models\DocumentSubmission;
 use App\Models\DocumentType;
 use App\Models\EligibilityCheck;
+use App\Models\EligibilityCheckResult;
 use App\Models\EligibilityCriterion;
 use App\Models\EligibilityRuleSet;
 use App\Models\Household;
@@ -85,6 +86,83 @@ class Sprint7EligibilityEngineTest extends TestCase
             ->assertSee('Condição cumprida')
             ->assertDontSee('valor_atual')
             ->assertDontSee('Mensagem técnica');
+    }
+
+    public function test_backoffice_eligibility_detail_presents_human_readable_conditions_without_raw_codes(): void
+    {
+        [$candidate, $registration, , , , $contest] = $this->completeContext();
+        $technician = $this->userWithRole('municipal_technician');
+        $ruleSet = $this->activeRuleSet($contest->program, $contest);
+        $check = EligibilityCheck::factory()->create([
+            'eligibility_rule_set_id' => $ruleSet->id,
+            'program_id' => $contest->program_id,
+            'contest_id' => $contest->id,
+            'adhesion_registration_id' => $registration->id,
+            'user_id' => $candidate->id,
+            'result' => EligibilityResult::Ineligible->value,
+            'summary' => 'Existem condições mínimas por cumprir.',
+            'missing_data' => ['typology_is_adequate', 'rent_effort_within_35_percent'],
+        ]);
+
+        EligibilityCheckResult::factory()->create([
+            'eligibility_check_id' => $check->id,
+            'eligibility_criterion_id' => null,
+            'code' => 'all_non_dependent_adults_meet_rmmg',
+            'name' => 'Rendimento mínimo dos adultos não dependentes',
+            'category' => EligibilityCriterionCategory::Income->value,
+            'result' => EligibilityCriterionResult::Failed->value,
+            'operator' => EligibilityOperator::IsTrue->value,
+            'actual_value' => ['value' => false],
+            'expected_value' => [
+                'currency' => 'EUR',
+                'reference_year' => 2026,
+                'monthly_minimum' => 920,
+            ],
+            'message' => 'O requisito de acesso não se encontra cumprido.',
+            'technical_message' => 'Critério all_non_dependent_adults_meet_rmmg avaliado com operador is_true: resultado=failed; valor_atual=false; valor_esperado={"monthly_minimum":920}.',
+        ]);
+
+        EligibilityCheckResult::factory()->create([
+            'eligibility_check_id' => $check->id,
+            'eligibility_criterion_id' => null,
+            'code' => 'typology_is_adequate',
+            'name' => 'Composição adequada às tipologias escolhidas',
+            'category' => EligibilityCriterionCategory::Typology->value,
+            'result' => EligibilityCriterionResult::InsufficientData->value,
+            'operator' => EligibilityOperator::IsTrue->value,
+            'actual_value' => null,
+            'expected_value' => [],
+            'message' => 'Não existem dados suficientes para avaliar esta condição.',
+            'technical_message' => 'Critério typology_is_adequate avaliado com operador is_true.',
+        ]);
+
+        EligibilityCheckResult::factory()->create([
+            'eligibility_check_id' => $check->id,
+            'eligibility_criterion_id' => null,
+            'code' => 'rent_effort_within_35_percent',
+            'name' => 'Taxa de esforço máxima de 35%',
+            'category' => EligibilityCriterionCategory::Income->value,
+            'result' => EligibilityCriterionResult::InsufficientData->value,
+            'operator' => EligibilityOperator::IsTrue->value,
+            'actual_value' => null,
+            'expected_value' => ['maximum_percentage' => 35],
+            'message' => 'Não existem dados suficientes para avaliar esta condição.',
+            'technical_message' => 'Critério rent_effort_within_35_percent avaliado com operador is_true; valor_esperado={"maximum_percentage":35}.',
+        ]);
+
+        $this->actingAs($technician)
+            ->get(route('backoffice.eligibility.checks.show', $check))
+            ->assertOk()
+            ->assertSee('Dados a completar')
+            ->assertSee('Composição adequada às tipologias escolhidas')
+            ->assertSee('Taxa de esforço máxima de 35%')
+            ->assertSee('Cada adulto não dependente do agregado deve comprovar rendimento mensal mínimo de 920,00 €')
+            ->assertSee('35%')
+            ->assertDontSee('all_non_dependent_adults_meet_rmmg')
+            ->assertDontSee('typology_is_adequate')
+            ->assertDontSee('rent_effort_within_35_percent')
+            ->assertDontSee('valor_esperado')
+            ->assertDontSee('monthly_minimum');
     }
 
     public function test_admin_can_create_update_activate_and_archive_rule_set_with_audit(): void

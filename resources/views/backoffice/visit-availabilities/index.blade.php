@@ -3,9 +3,10 @@
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
                 <p class="text-sm font-semibold text-civic-700">Backoffice</p>
-                <h1 class="mt-1 text-2xl font-semibold text-ink-900">Disponibilidade de visitas</h1>
+                <h1 class="mt-1 text-2xl font-semibold text-ink-900">Visitas abertas</h1>
+                <p class="mt-1 text-sm text-ink-500">Defina datas e horários em que o município abre fogos ou concursos para visita dos candidatos.</p>
             </div>
-            <a href="{{ route('backoffice.visit-availabilities.create') }}" class="mv-button-primary">Nova disponibilidade</a>
+            <a href="{{ route('backoffice.visit-availabilities.create') }}" class="mv-button-primary">Criar visita aberta</a>
         </div>
     </x-slot>
 
@@ -34,7 +35,7 @@
                                     <td class="px-5 py-4 text-right"><a href="{{ route('backoffice.visit-availabilities.show', $availability) }}" class="font-semibold text-civic-700">Consultar</a></td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="px-5 py-8 text-center text-ink-500">Sem disponibilidades registadas.</td></tr>
+                                <tr><td colspan="5" class="px-5 py-8 text-center text-ink-500">Ainda não existem visitas abertas configuradas.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
