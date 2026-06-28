@@ -15,7 +15,7 @@ use App\Models\DocumentAiSuggestion;
 use App\Policies\DocumentAiAssistantPolicy;
 use App\Services\Audit\AuditLogger;
 use App\Services\DocumentIntelligence\DocumentAiAssistantDashboardService;
-use App\Services\DocumentIntelligence\DocumentAiAssistantPipeline;
+use App\Services\DocumentIntelligence\DocumentAiManualAnalysisService;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -25,7 +25,7 @@ class DocumentAiAssistantController extends Controller
 {
     public function __construct(
         private readonly DocumentAiAssistantDashboardService $dashboardService,
-        private readonly DocumentAiAssistantPipeline $pipeline,
+        private readonly DocumentAiManualAnalysisService $manualAnalysisService,
         private readonly AuditLogger $auditLogger,
     ) {}
 
@@ -81,11 +81,11 @@ class DocumentAiAssistantController extends Controller
 
     public function recalculate(RecalculateDocumentAiScoreRequest $request, DocumentAiAnalysis $analysis): RedirectResponse
     {
-        $this->pipeline->process($analysis, $request->user());
+        $processed = $this->manualAnalysisService->reprocess($analysis, $this->authenticatedUser($request));
 
         return redirect()
-            ->route('backoffice.document-ai.assistant.show', $analysis)
-            ->with('success', 'Score IA recalculado.');
+            ->route('backoffice.document-ai.assistant.show', $processed)
+            ->with('success', 'Análise IA documental reprocessada.');
     }
 
     public function updateSuggestion(UpdateDocumentAiSuggestionRequest $request, DocumentAiSuggestion $suggestion): RedirectResponse

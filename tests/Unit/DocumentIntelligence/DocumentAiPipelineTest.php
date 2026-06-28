@@ -116,6 +116,32 @@ class DocumentAiPipelineTest extends TestCase
         Event::assertDispatched(DocumentAnalysisCompleted::class, fn (DocumentAnalysisCompleted $event): bool => $event->status === DocumentAiStatus::ManualReview);
     }
 
+    public function test_tool_availability_accepts_absolute_executable_paths_without_version_probe(): void
+    {
+        $binary = sys_get_temp_dir().'/mvhab-absolute-poppler-binary-'.uniqid('', true);
+        file_put_contents($binary, "#!/bin/sh\nif [ \"$#\" -gt 0 ]; then exit 42; fi\nexit 0\n");
+        chmod($binary, 0755);
+        config([
+            'document-ai.processing.check_local_tools' => true,
+            'document-ai.ocr.binary' => $binary,
+            'document-ai.pdf.pdftotext_binary' => $binary,
+            'document-ai.pdf.pdfimages_binary' => $binary,
+            'document-ai.pdf.pdftoppm_binary' => $binary,
+            'document-ai.image.magick_binary' => $binary,
+            'document-ai.ollama.enabled' => false,
+        ]);
+
+        $tools = app(DocumentAiPipeline::class)->toolAvailability();
+
+        $this->assertTrue($tools['tesseract']['available']);
+        $this->assertTrue($tools['pdftotext']['available']);
+        $this->assertTrue($tools['pdfimages']['available']);
+        $this->assertTrue($tools['pdftoppm']['available']);
+        $this->assertTrue($tools['magick']['available']);
+
+        @unlink($binary);
+    }
+
     public function test_missing_private_source_marks_analysis_as_failed(): void
     {
         Event::fake();

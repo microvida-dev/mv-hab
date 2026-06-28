@@ -10,7 +10,7 @@
                 <form method="POST" action="{{ route('backoffice.document-ai.assistant.recalculate', $analysis) }}">
                     @csrf
                     <input type="hidden" name="confirm_recalculate" value="1">
-                    <button type="submit" class="mv-button-primary">Recalcular</button>
+                    <button type="submit" class="mv-button-primary">Reprocessar IA</button>
                 </form>
             </div>
         </div>

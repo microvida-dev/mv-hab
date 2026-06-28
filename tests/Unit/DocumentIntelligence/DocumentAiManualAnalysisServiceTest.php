@@ -86,6 +86,61 @@ class DocumentAiManualAnalysisServiceTest extends TestCase
         $this->assertSame(1, DocumentAiScore::query()->where('document_ai_analysis_id', $analysis->id)->count());
     }
 
+    public function test_it_forces_full_reprocess_for_manual_review_analysis(): void
+    {
+        [$submission] = $this->documentSubmission();
+        $actor = User::factory()->create();
+        $analysis = DocumentAiAnalysis::factory()->create([
+            'document_submission_id' => $submission->id,
+            'document_version_id' => $submission->current_version_id,
+            'status' => DocumentAiStatus::ManualReview,
+            'ocr_available' => false,
+            'ocr_quality_score' => '0.00',
+        ]);
+        DocumentAiScore::factory()->create([
+            'document_ai_analysis_id' => $analysis->id,
+            'document_submission_id' => $submission->id,
+            'score' => 10,
+        ]);
+
+        $documentAiPipeline = Mockery::mock(DocumentAiPipeline::class);
+        $documentAiPipeline->shouldReceive('createPendingForDocument')->never();
+        $documentAiPipeline->shouldReceive('process')
+            ->once()
+            ->with(Mockery::on(fn (DocumentAiAnalysis $argument): bool => $argument->is($analysis)))
+            ->andReturnUsing(function (DocumentAiAnalysis $argument): DocumentAiAnalysis {
+                $argument->forceFill([
+                    'status' => DocumentAiStatus::Completed,
+                    'ocr_available' => true,
+                    'ocr_quality_score' => '0.86',
+                ])->save();
+
+                return $argument->fresh() ?? $argument;
+            });
+
+        $assistantPipeline = Mockery::mock(DocumentAiAssistantPipeline::class);
+        $assistantPipeline->shouldReceive('process')
+            ->once()
+            ->with(
+                Mockery::on(fn (DocumentAiAnalysis $argument): bool => $argument->is($analysis)),
+                Mockery::on(fn (User $argument): bool => $argument->is($actor)),
+            )
+            ->andReturnUsing(function (DocumentAiAnalysis $argument): DocumentAiScore {
+                $score = $argument->latestScore;
+                $this->assertInstanceOf(DocumentAiScore::class, $score);
+                $score->forceFill(['score' => 86])->save();
+
+                return $score;
+            });
+
+        $processed = (new DocumentAiManualAnalysisService($documentAiPipeline, $assistantPipeline))
+            ->reprocess($analysis, $actor);
+
+        $this->assertSame(DocumentAiStatus::Completed, $processed->status);
+        $this->assertTrue($processed->ocr_available);
+        $this->assertSame(86, $processed->latestScore?->score);
+    }
+
     /**
      * @return array{0: DocumentSubmission, 1: DocumentVersion}
      */

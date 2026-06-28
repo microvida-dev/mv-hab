@@ -17,18 +17,38 @@ class DocumentAiManualAnalysisService
 
     public function execute(DocumentSubmission $submission, User $actor): DocumentAiAnalysis
     {
+        return $this->executeForSubmission($submission, $actor);
+    }
+
+    public function reprocess(DocumentAiAnalysis $analysis, User $actor): DocumentAiAnalysis
+    {
+        return $this->processAnalysis($analysis, $actor, forceDocumentPipeline: true, forceAssistantPipeline: true);
+    }
+
+    private function executeForSubmission(DocumentSubmission $submission, User $actor): DocumentAiAnalysis
+    {
         $submission->loadMissing('currentVersion');
 
         $analysis = $this->analysisForCurrentVersion($submission)
             ?? $this->documentAiPipeline->createPendingForDocument($submission, $actor);
 
-        if ($this->shouldRunDocumentPipeline($analysis)) {
-            $analysis = $this->documentAiPipeline->process($analysis);
-        }
+        return $this->processAnalysis($analysis, $actor);
+    }
 
+    private function processAnalysis(
+        DocumentAiAnalysis $analysis,
+        User $actor,
+        bool $forceDocumentPipeline = false,
+        bool $forceAssistantPipeline = false,
+    ): DocumentAiAnalysis {
         $analysis = $analysis->fresh(['fields', 'flags', 'validations', 'latestScore', 'documentSubmission']) ?? $analysis;
 
-        if ($this->shouldRunAssistantPipeline($analysis)) {
+        if ($this->shouldRunDocumentPipeline($analysis, $forceDocumentPipeline)) {
+            $analysis = $this->documentAiPipeline->process($analysis);
+            $analysis = $analysis->fresh(['fields', 'flags', 'validations', 'latestScore', 'documentSubmission']) ?? $analysis;
+        }
+
+        if ($this->shouldRunAssistantPipeline($analysis, $forceAssistantPipeline)) {
             $this->assistantPipeline->process($analysis, $actor);
             $analysis = $analysis->fresh(['fields', 'flags', 'validations', 'latestScore', 'documentSubmission']) ?? $analysis;
         }
@@ -50,18 +70,22 @@ class DocumentAiManualAnalysisService
         return $query->first();
     }
 
-    private function shouldRunDocumentPipeline(DocumentAiAnalysis $analysis): bool
+    private function shouldRunDocumentPipeline(DocumentAiAnalysis $analysis, bool $forceDocumentPipeline): bool
     {
+        if ($forceDocumentPipeline) {
+            return $analysis->status !== DocumentAiStatus::Processing;
+        }
+
         return in_array($analysis->status, [
             DocumentAiStatus::Pending,
             DocumentAiStatus::Failed,
         ], true);
     }
 
-    private function shouldRunAssistantPipeline(DocumentAiAnalysis $analysis): bool
+    private function shouldRunAssistantPipeline(DocumentAiAnalysis $analysis, bool $forceAssistantPipeline): bool
     {
         return (bool) config('document-ai-score.enabled', true)
-            && $analysis->latestScore === null
+            && ($forceAssistantPipeline || $analysis->latestScore === null)
             && in_array($analysis->status, [
                 DocumentAiStatus::Completed,
                 DocumentAiStatus::Failed,

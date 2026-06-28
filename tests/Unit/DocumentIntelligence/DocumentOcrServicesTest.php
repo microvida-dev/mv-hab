@@ -57,4 +57,15 @@ class DocumentOcrServicesTest extends TestCase
         $this->assertSame('pdftoppm_unavailable', $prepared['failure_code']);
         $this->assertSame([], $prepared['paths']);
     }
+
+    public function test_ocr_binary_availability_accepts_absolute_executable_paths(): void
+    {
+        $binary = sys_get_temp_dir().'/mvhab-absolute-ocr-binary-'.uniqid('', true);
+        file_put_contents($binary, "#!/bin/sh\nif [ \"$#\" -gt 0 ]; then exit 42; fi\nexit 0\n");
+        chmod($binary, 0755);
+
+        $this->assertTrue(app(DocumentOcrExtractor::class)->binaryAvailable($binary));
+
+        @unlink($binary);
+    }
 }

@@ -67,6 +67,37 @@ class DocumentAiManualReviewExecutionTest extends TestCase
         $this->assertSame(DocumentStatus::Submitted, $submission->fresh()->status);
     }
 
+    public function test_assistant_recalculate_reprocesses_full_document_ai_pipeline(): void
+    {
+        $submission = $this->documentSubmission();
+        $analysis = DocumentAiAnalysis::factory()->create([
+            'document_submission_id' => $submission->id,
+            'document_version_id' => $submission->current_version_id,
+            'status' => DocumentAiStatus::ManualReview,
+            'ocr_available' => false,
+        ]);
+        $administrator = $this->userWithRole('administrator');
+
+        $this->mock(DocumentAiManualAnalysisService::class, function ($mock) use ($analysis, $administrator): void {
+            $mock->shouldReceive('reprocess')
+                ->once()
+                ->with(
+                    Mockery::on(fn (DocumentAiAnalysis $argument): bool => $argument->is($analysis)),
+                    Mockery::on(fn (User $argument): bool => $argument->is($administrator)),
+                )
+                ->andReturn($analysis);
+        });
+
+        $this->actingAs($administrator)
+            ->post(route('backoffice.document-ai.assistant.recalculate', $analysis), [
+                'confirm_recalculate' => '1',
+            ])
+            ->assertRedirect(route('backoffice.document-ai.assistant.show', $analysis))
+            ->assertSessionHas('success', 'Análise IA documental reprocessada.');
+
+        $this->assertSame(DocumentStatus::Submitted, $submission->fresh()->status);
+    }
+
     private function documentSubmission(): DocumentSubmission
     {
         $submission = DocumentSubmission::factory()->create([

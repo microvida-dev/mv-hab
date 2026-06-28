@@ -304,6 +304,7 @@ class DocumentAiPipeline
                 'tesseract' => ['binary' => $this->configString('document-ai.ocr.binary', 'tesseract'), 'available' => true, 'required' => true],
                 'pdftotext' => ['binary' => $this->configString('document-ai.pdf.pdftotext_binary', 'pdftotext'), 'available' => true, 'required' => true],
                 'pdfimages' => ['binary' => $this->configString('document-ai.pdf.pdfimages_binary', 'pdfimages'), 'available' => true, 'required' => true],
+                'pdftoppm' => ['binary' => $this->configString('document-ai.pdf.pdftoppm_binary', 'pdftoppm'), 'available' => true, 'required' => true],
                 'magick' => ['binary' => $this->configString('document-ai.image.magick_binary', 'magick'), 'available' => true, 'required' => true],
                 'ollama' => ['binary' => 'ollama', 'available' => ! (bool) config('document-ai.ollama.enabled', false), 'required' => (bool) config('document-ai.ollama.enabled', false)],
             ];
@@ -313,6 +314,7 @@ class DocumentAiPipeline
             'tesseract' => ['binary' => $this->configString('document-ai.ocr.binary', 'tesseract'), 'available' => $this->binaryAvailable($this->configString('document-ai.ocr.binary', 'tesseract')), 'required' => true],
             'pdftotext' => ['binary' => $this->configString('document-ai.pdf.pdftotext_binary', 'pdftotext'), 'available' => $this->binaryAvailable($this->configString('document-ai.pdf.pdftotext_binary', 'pdftotext')), 'required' => true],
             'pdfimages' => ['binary' => $this->configString('document-ai.pdf.pdfimages_binary', 'pdfimages'), 'available' => $this->binaryAvailable($this->configString('document-ai.pdf.pdfimages_binary', 'pdfimages')), 'required' => true],
+            'pdftoppm' => ['binary' => $this->configString('document-ai.pdf.pdftoppm_binary', 'pdftoppm'), 'available' => $this->binaryAvailable($this->configString('document-ai.pdf.pdftoppm_binary', 'pdftoppm')), 'required' => true],
             'magick' => ['binary' => $this->configString('document-ai.image.magick_binary', 'magick'), 'available' => $this->binaryAvailable($this->configString('document-ai.image.magick_binary', 'magick')), 'required' => true],
             'ollama' => ['binary' => 'ollama', 'available' => ! (bool) config('document-ai.ollama.enabled', false) || $this->binaryAvailable('ollama'), 'required' => (bool) config('document-ai.ollama.enabled', false)],
         ];
@@ -320,8 +322,16 @@ class DocumentAiPipeline
 
     private function binaryAvailable(string $binary): bool
     {
+        if ($binary === '') {
+            return false;
+        }
+
+        if (str_contains($binary, DIRECTORY_SEPARATOR)) {
+            return is_file($binary) && is_executable($binary);
+        }
+
         try {
-            $process = new Process([$binary, '--version']);
+            $process = Process::fromShellCommandline('command -v '.escapeshellarg($binary));
             $process->setTimeout(5);
             $process->run();
 

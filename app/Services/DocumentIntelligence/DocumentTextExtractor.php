@@ -156,8 +156,16 @@ class DocumentTextExtractor
 
     private function binaryAvailable(string $binary): bool
     {
+        if ($binary === '') {
+            return false;
+        }
+
+        if (str_contains($binary, DIRECTORY_SEPARATOR)) {
+            return is_file($binary) && is_executable($binary);
+        }
+
         try {
-            $process = new Process([$binary, '--version']);
+            $process = Process::fromShellCommandline('command -v '.escapeshellarg($binary));
             $process->setTimeout(5);
             $process->run();
 
