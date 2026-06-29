@@ -22,7 +22,7 @@
                 <span class="font-semibold text-ink-900">{{ $item['value'] ?? 0 }}</span>
             </div>
             <div class="h-2.5 rounded-full bg-ink-100" role="img" aria-label="{{ ($item['label'] ?? 'Indicador').' com '.($item['value'] ?? 0).' ocorrências' }}">
-                <div class="h-2.5 rounded-full bg-civic-600" style="width: {{ $width }}%"></div>
+                <div class="h-2.5 rounded-full bg-mvhab-primary" style="width: {{ $width }}%"></div>
             </div>
         </div>
     @empty

@@ -21,7 +21,7 @@
                     <x-ui.status-badge status="neutral" :label="$item['total'].' itens'" />
                 </div>
                 <div class="mt-3 h-2 rounded-full bg-ink-100">
-                    <div class="h-2 rounded-full bg-civic-600" style="width: {{ $item['relative_load'] }}"></div>
+                    <div class="h-2 rounded-full bg-mvhab-primary" style="width: {{ $item['relative_load'] }}"></div>
                 </div>
                 <p class="mt-2 text-xs text-ink-500">
                     {{ $item['overdue'] }} em atraso · {{ $item['due_soon'] }} a vencer

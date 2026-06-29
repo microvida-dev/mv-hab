@@ -21,7 +21,7 @@
             @foreach ($items as $item)
                 @php $height = max(6, (int) round(((float) ($item['value'] ?? 0) / $max) * 100)); @endphp
                 <div class="flex min-w-0 flex-1 flex-col items-center gap-2">
-                    <div class="w-full rounded-t-md bg-civic-600" style="height: {{ $height }}%"></div>
+                    <div class="w-full rounded-t-2xl bg-mvhab-primary" style="height: {{ $height }}%"></div>
                     <span class="max-w-full truncate text-xs text-ink-500">{{ $item['label'] ?? '' }}</span>
                 </div>
             @endforeach
