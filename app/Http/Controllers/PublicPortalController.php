@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contest;
+use App\Models\HousingUnit;
 use App\Models\Program;
 use Illuminate\Contracts\View\View;
 
@@ -24,6 +25,12 @@ class PublicPortalController extends Controller
             ->take(6)
             ->get();
 
-        return view('public.portal', compact('programs', 'contests'));
+        $portalStats = [
+            'publishedContests' => $contests->count(),
+            'publishedPrograms' => $programs->count(),
+            'availableHousingUnits' => HousingUnit::query()->publiclyVisible()->count(),
+        ];
+
+        return view('public.portal', compact('programs', 'contests', 'portalStats'));
     }
 }

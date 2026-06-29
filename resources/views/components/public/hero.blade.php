@@ -1,3 +1,5 @@
+@props(['stats'])
+
 <section class="relative overflow-hidden bg-civic-950 text-white">
     <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_34rem)]"></div>
     <div class="absolute inset-y-0 right-0 hidden w-1/2 bg-civic-900/40 lg:block"></div>
@@ -39,12 +41,17 @@
             <dl class="mt-5 grid gap-4">
                 <div class="rounded-xl bg-white p-4 text-ink-900">
                     <dt class="text-sm font-medium text-ink-500">Concursos publicados</dt>
-                    <dd class="mt-1 text-3xl font-semibold">{{ $contests->count() }}</dd>
+                    <dd class="mt-1 text-3xl font-semibold">{{ $stats['publishedContests'] }}</dd>
                 </div>
 
                 <div class="rounded-xl bg-white p-4 text-ink-900">
                     <dt class="text-sm font-medium text-ink-500">Programas disponíveis</dt>
-                    <dd class="mt-1 text-3xl font-semibold">{{ $programs->count() }}</dd>
+                    <dd class="mt-1 text-3xl font-semibold">{{ $stats['publishedPrograms'] }}</dd>
+                </div>
+
+                <div class="rounded-xl bg-white p-4 text-ink-900">
+                    <dt class="text-sm font-medium text-ink-500">Habitações disponíveis</dt>
+                    <dd class="mt-1 text-3xl font-semibold">{{ $stats['availableHousingUnits'] }}</dd>
                 </div>
 
                 <div class="rounded-xl bg-white p-4 text-ink-900">
