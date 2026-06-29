@@ -61,3 +61,9 @@ Thumbs.db
 
 # PHPStan cache
 /storage/phpstan/
+
+# QA
+storage/qa/
+
+# Testes locais
+document-ai-test.png
