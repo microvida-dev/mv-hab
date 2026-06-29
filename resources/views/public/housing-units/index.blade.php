@@ -14,16 +14,16 @@
     </section>
 
     <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <form method="GET" action="{{ route('public.housing-units.index') }}" class="mb-8 rounded-md border border-ink-100 bg-white p-5">
+        <form method="GET" action="{{ route('public.housing-units.index') }}" class="mb-8 mv-surface p-5">
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <label class="block">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Pesquisar</span>
-                    <input type="search" name="q" value="{{ $filters['q'] ?? '' }}" class="mt-1 w-full rounded-md border-ink-200 text-sm" placeholder="Referência, localidade ou descrição">
+                    <input type="search" name="q" value="{{ $filters['q'] ?? '' }}" class="mt-1 w-full mv-input text-sm" placeholder="Referência, localidade ou descrição">
                 </label>
 
                 <label class="block">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Tipologia</span>
-                    <select name="typology" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                    <select name="typology" class="mt-1 w-full mv-input text-sm">
                         <option value="">Todas</option>
                         @foreach ($filterOptions['typologies'] as $typology)
                             <option value="{{ $typology }}" @selected(($filters['typology'] ?? '') === $typology)>{{ $typology }}</option>
@@ -33,7 +33,7 @@
 
                 <label class="block">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Freguesia</span>
-                    <select name="parish" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                    <select name="parish" class="mt-1 w-full mv-input text-sm">
                         <option value="">Todas</option>
                         @foreach ($filterOptions['parishes'] as $parish)
                             <option value="{{ $parish }}" @selected(($filters['parish'] ?? '') === $parish)>{{ $parish }}</option>
@@ -43,7 +43,7 @@
 
                 <label class="block">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Localidade</span>
-                    <select name="locality" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                    <select name="locality" class="mt-1 w-full mv-input text-sm">
                         <option value="">Todas</option>
                         @foreach ($filterOptions['localities'] as $locality)
                             <option value="{{ $locality }}" @selected(($filters['locality'] ?? '') === $locality)>{{ $locality }}</option>
@@ -53,7 +53,7 @@
 
                 <label class="block">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Estado</span>
-                    <select name="public_status" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                    <select name="public_status" class="mt-1 w-full mv-input text-sm">
                         <option value="">Todos</option>
                         @foreach ($filterOptions['statuses'] as $value => $label)
                             <option value="{{ $value }}" @selected(($filters['public_status'] ?? '') === $value)>{{ $label }}</option>
@@ -63,12 +63,12 @@
 
                 <label class="block">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Zona</span>
-                    <input type="search" name="zone" value="{{ $filters['zone'] ?? '' }}" class="mt-1 w-full rounded-md border-ink-200 text-sm" placeholder="Zona pública aproximada">
+                    <input type="search" name="zone" value="{{ $filters['zone'] ?? '' }}" class="mt-1 w-full mv-input text-sm" placeholder="Zona pública aproximada">
                 </label>
 
                 <label class="block">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Eficiência energética</span>
-                    <select name="energy_rating" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                    <select name="energy_rating" class="mt-1 w-full mv-input text-sm">
                         <option value="">Todas</option>
                         @foreach ($filterOptions['energy_ratings'] as $rating)
                             <option value="{{ $rating }}" @selected(($filters['energy_rating'] ?? '') === $rating)>{{ $rating }}</option>
@@ -78,17 +78,17 @@
 
                 <label class="block">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Renda mínima</span>
-                    <input type="number" min="0" step="1" name="rent_min" value="{{ $filters['rent_min'] ?? '' }}" class="mt-1 w-full rounded-md border-ink-200 text-sm" placeholder="{{ $filterOptions['rent_min'] ? floor((float) $filterOptions['rent_min']) : '0' }}">
+                    <input type="number" min="0" step="1" name="rent_min" value="{{ $filters['rent_min'] ?? '' }}" class="mt-1 w-full mv-input text-sm" placeholder="{{ $filterOptions['rent_min'] ? floor((float) $filterOptions['rent_min']) : '0' }}">
                 </label>
 
                 <label class="block">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Renda máxima</span>
-                    <input type="number" min="0" step="1" name="rent_max" value="{{ $filters['rent_max'] ?? '' }}" class="mt-1 w-full rounded-md border-ink-200 text-sm" placeholder="{{ $filterOptions['rent_max'] ? ceil((float) $filterOptions['rent_max']) : '0' }}">
+                    <input type="number" min="0" step="1" name="rent_max" value="{{ $filters['rent_max'] ?? '' }}" class="mt-1 w-full mv-input text-sm" placeholder="{{ $filterOptions['rent_max'] ? ceil((float) $filterOptions['rent_max']) : '0' }}">
                 </label>
 
                 <label class="block">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Ordenação</span>
-                    <select name="sort" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                    <select name="sort" class="mt-1 w-full mv-input text-sm">
                         <option value="published_desc" @selected(($filters['sort'] ?? 'published_desc') === 'published_desc')>Mais recentes</option>
                         <option value="rent_asc" @selected(($filters['sort'] ?? '') === 'rent_asc')>Renda crescente</option>
                         <option value="rent_desc" @selected(($filters['sort'] ?? '') === 'rent_desc')>Renda decrescente</option>
@@ -96,12 +96,12 @@
                     </select>
                 </label>
 
-                <label class="flex items-end gap-2 rounded-md border border-ink-100 bg-ink-50 px-3 py-2 text-sm font-semibold text-ink-700">
+                <label class="flex items-end gap-2 rounded-2xl border border-ink-100 bg-mvhab-surface px-3 py-2 text-sm font-semibold text-ink-700">
                     <input type="checkbox" name="accessible" value="1" @checked((bool) ($filters['accessible'] ?? false)) class="rounded border-ink-300 text-mvhab-primary">
                     Acessível
                 </label>
 
-                <label class="flex items-end gap-2 rounded-md border border-ink-100 bg-ink-50 px-3 py-2 text-sm font-semibold text-ink-700">
+                <label class="flex items-end gap-2 rounded-2xl border border-ink-100 bg-mvhab-surface px-3 py-2 text-sm font-semibold text-ink-700">
                     <input type="checkbox" name="visit_available" value="1" @checked((bool) ($filters['visit_available'] ?? false)) class="rounded border-ink-300 text-mvhab-primary">
                     Visitas disponíveis
                 </label>
@@ -117,7 +117,7 @@
             @forelse ($housingUnits as $housingUnit)
                 <x-public-housing-unit-card :housing-unit="$housingUnit" />
             @empty
-                <div class="rounded-md border border-ink-100 bg-white p-8 text-center text-sm text-ink-500 md:col-span-2 xl:col-span-3">Não existem habitações públicas com estes filtros.</div>
+                <div class="mv-surface p-8 text-center text-sm text-ink-500 md:col-span-2 xl:col-span-3">Não existem habitações públicas com estes filtros.</div>
             @endforelse
         </div>
 

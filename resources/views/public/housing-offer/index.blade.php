@@ -15,7 +15,7 @@
                     <h1 class="max-w-4xl text-3xl font-semibold text-ink-900 sm:text-4xl">{{ $settings['portal_title'] ?? 'Oferta Habitacional' }}</h1>
                     <p class="mt-4 max-w-3xl text-base leading-7 text-ink-600">{{ $settings['portal_description'] ?? 'Consulte concursos e habitações municipais publicadas.' }}</p>
                 </div>
-                <div class="rounded-md border border-mvhab-support/30 bg-white p-5">
+                <div class="mv-surface p-5">
                     <p class="text-sm font-semibold text-ink-900">Consulta pública</p>
                     <p class="mt-2 text-sm leading-6 text-ink-500">As fichas públicas não apresentam dados pessoais de candidatos nem documentos reservados.</p>
                 </div>
@@ -28,12 +28,12 @@
             <form method="GET" action="{{ route('public.housing-offer.index') }}" class="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                 <label class="lg:col-span-2">
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Pesquisa</span>
-                    <input type="search" name="q" value="{{ $filters['q'] ?? '' }}" class="mt-1 w-full rounded-md border-ink-200 text-sm" placeholder="Código, freguesia ou descrição">
+                    <input type="search" name="q" value="{{ $filters['q'] ?? '' }}" class="mt-1 w-full mv-input text-sm" placeholder="Código, freguesia ou descrição">
                 </label>
 
                 <label>
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Tipologia</span>
-                    <select name="typology" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                    <select name="typology" class="mt-1 w-full mv-input text-sm">
                         <option value="">Todas</option>
                         @foreach ($filterOptions['typologies'] as $typology)
                             <option value="{{ $typology }}" @selected(($filters['typology'] ?? '') === $typology)>{{ $typology }}</option>
@@ -43,7 +43,7 @@
 
                 <label>
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Freguesia</span>
-                    <select name="parish" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                    <select name="parish" class="mt-1 w-full mv-input text-sm">
                         <option value="">Todas</option>
                         @foreach ($filterOptions['parishes'] as $parish)
                             <option value="{{ $parish }}" @selected(($filters['parish'] ?? '') === $parish)>{{ $parish }}</option>
@@ -53,7 +53,7 @@
 
                 <label>
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Localidade</span>
-                    <select name="locality" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                    <select name="locality" class="mt-1 w-full mv-input text-sm">
                         <option value="">Todas</option>
                         @foreach ($filterOptions['localities'] as $locality)
                             <option value="{{ $locality }}" @selected(($filters['locality'] ?? '') === $locality)>{{ $locality }}</option>
@@ -63,7 +63,7 @@
 
                 <label>
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Estado</span>
-                    <select name="public_status" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                    <select name="public_status" class="mt-1 w-full mv-input text-sm">
                         <option value="">Todos</option>
                         @foreach ($filterOptions['statuses'] as $value => $label)
                             <option value="{{ $value }}" @selected(($filters['public_status'] ?? '') === $value)>{{ $label }}</option>
@@ -73,7 +73,7 @@
 
                 <label>
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Eficiência</span>
-                    <select name="energy_rating" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                    <select name="energy_rating" class="mt-1 w-full mv-input text-sm">
                         <option value="">Todas</option>
                         @foreach ($filterOptions['energy_ratings'] as $rating)
                             <option value="{{ $rating }}" @selected(($filters['energy_rating'] ?? '') === $rating)>{{ $rating }}</option>
@@ -83,7 +83,7 @@
 
                 <label>
                     <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Ordenar</span>
-                    <select name="sort" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                    <select name="sort" class="mt-1 w-full mv-input text-sm">
                         <option value="published_desc" @selected(($filters['sort'] ?? '') === 'published_desc')>Publicação</option>
                         <option value="rent_asc" @selected(($filters['sort'] ?? '') === 'rent_asc')>Renda crescente</option>
                         <option value="rent_desc" @selected(($filters['sort'] ?? '') === 'rent_desc')>Renda decrescente</option>
@@ -91,7 +91,7 @@
                     </select>
                 </label>
 
-                <label class="flex items-end gap-2 rounded-md border border-ink-100 bg-ink-50 px-3 py-2 text-sm font-semibold text-ink-700">
+                <label class="flex items-end gap-2 rounded-2xl border border-ink-100 bg-mvhab-surface px-3 py-2 text-sm font-semibold text-ink-700">
                     <input type="checkbox" name="visit_available" value="1" @checked((bool) ($filters['visit_available'] ?? false)) class="rounded border-ink-300 text-mvhab-primary">
                     Visitas disponíveis
                 </label>
@@ -120,7 +120,7 @@
                     @forelse ($housingUnits as $housingUnit)
                         <x-public-housing-unit-card :housing-unit="$housingUnit" />
                     @empty
-                        <div class="rounded-md border border-ink-100 bg-white p-8 text-center text-sm text-ink-500 md:col-span-2">Não existem habitações públicas com estes filtros.</div>
+                        <div class="mv-surface p-8 text-center text-sm text-ink-500 md:col-span-2">Não existem habitações públicas com estes filtros.</div>
                     @endforelse
                 </div>
 
@@ -140,14 +140,14 @@
                     @forelse ($contests as $contest)
                         <x-public-contest-card :contest="$contest" />
                     @empty
-                        <div class="rounded-md border border-ink-100 bg-white p-6 text-sm text-ink-500 md:col-span-2">Não existem concursos abertos neste momento.</div>
+                        <div class="mv-surface p-6 text-sm text-ink-500 md:col-span-2">Não existem concursos abertos neste momento.</div>
                     @endforelse
                 </div>
             </section>
         </div>
 
         <aside class="space-y-6">
-            <section class="rounded-md border border-ink-100 bg-white p-5">
+            <section class="mv-surface p-5">
                 <div class="flex items-center justify-between gap-4">
                     <div>
                         <h2 class="font-semibold text-ink-900">Mapa da oferta</h2>
@@ -156,9 +156,9 @@
                     <a href="{{ route('public.housing-map.index', request()->query()) }}" class="text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary">JSON</a>
                 </div>
 
-                <div class="mt-4 rounded-md border border-mvhab-support/30 bg-mvhab-surface p-4">
+                <div class="mt-4 rounded-2xl border border-mvhab-support/30 bg-mvhab-surface p-4">
                     @forelse ($markers as $marker)
-                        <a href="{{ $marker['url'] }}" class="mb-3 block rounded-md bg-white p-3 text-sm shadow-sm last:mb-0">
+                        <a href="{{ $marker['url'] }}" class="mb-3 block rounded-2xl bg-white p-3 text-sm shadow-sm last:mb-0">
                             <span class="font-semibold text-ink-900">{{ $marker['title'] }}</span>
                             <span class="mt-1 block text-ink-500">{{ $marker['location'] }} · {{ $marker['typology'] }}</span>
                         </a>
@@ -168,7 +168,7 @@
                 </div>
             </section>
 
-            <section class="rounded-md border border-ink-100 bg-white p-5">
+            <section class="mv-surface p-5">
                 <h2 class="font-semibold text-ink-900">Ligações úteis</h2>
                 <div class="mt-4 grid gap-3 text-sm">
                     @forelse ($links as $link)

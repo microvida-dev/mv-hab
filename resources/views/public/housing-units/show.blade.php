@@ -27,15 +27,15 @@
                     <span>{{ $housingUnit->displayTitle() }}</span>
                 </nav>
                 <div class="mt-5 flex flex-wrap items-center gap-3">
-                    <span class="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-ink-700 ring-1 ring-ink-100">{{ $housingUnit->public_reference ?: $housingUnit->code }}</span>
-                    <span class="rounded-md bg-mvhab-surface px-2.5 py-1 text-xs font-semibold text-mvhab-primary">{{ $housingUnit->public_status?->label() }}</span>
-                    <span class="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-ink-700 ring-1 ring-ink-100">{{ $housingUnit->typology }}</span>
+                    <span class="rounded-2xl bg-white px-2.5 py-1 text-xs font-semibold text-ink-700 ring-1 ring-ink-100">{{ $housingUnit->public_reference ?: $housingUnit->code }}</span>
+                    <span class="rounded-full bg-mvhab-surface px-3 py-1 text-xs font-semibold text-mvhab-primary">{{ $housingUnit->public_status?->label() }}</span>
+                    <span class="rounded-2xl bg-white px-2.5 py-1 text-xs font-semibold text-ink-700 ring-1 ring-ink-100">{{ $housingUnit->typology }}</span>
                 </div>
                 <h1 class="mt-4 max-w-4xl text-3xl font-semibold text-ink-900">{{ $housingUnit->displayTitle() }}</h1>
                 <p class="mt-4 max-w-3xl text-lg leading-8 text-ink-600">{{ $housingUnit->public_summary ?: 'Ficha pública de habitação municipal.' }}</p>
             </div>
 
-            <div class="overflow-hidden rounded-md border border-ink-100 bg-white">
+            <div class="overflow-hidden rounded-2xl border border-ink-100 bg-white">
                 @if ($coverUrl)
                     <img src="{{ $coverUrl }}" alt="{{ $cover->alt_text ?: $housingUnit->displayTitle() }}" class="h-72 w-full object-cover">
                 @else
@@ -55,23 +55,23 @@
             <section>
                 <h2 class="text-xl font-semibold text-ink-900">Características públicas</h2>
                 <dl class="mt-4 grid gap-4 sm:grid-cols-2">
-                    <div class="rounded-md border border-ink-100 bg-white p-4">
+                    <div class="mv-surface p-4">
                         <dt class="text-sm text-ink-500">Localização</dt>
                         <dd class="mt-1 font-semibold text-ink-900">{{ $housingUnit->publicLocationLabel() }}</dd>
                     </div>
-                    <div class="rounded-md border border-ink-100 bg-white p-4">
+                    <div class="mv-surface p-4">
                         <dt class="text-sm text-ink-500">Renda mensal</dt>
                         <dd class="mt-1 font-semibold text-ink-900">{{ $housingUnit->monthly_rent ? number_format((float) $housingUnit->monthly_rent, 2, ',', ' ') . ' €' : 'A confirmar' }}</dd>
                     </div>
-                    <div class="rounded-md border border-ink-100 bg-white p-4">
+                    <div class="mv-surface p-4">
                         <dt class="text-sm text-ink-500">Área útil</dt>
                         <dd class="mt-1 font-semibold text-ink-900">{{ $housingUnit->usable_area_sqm ? number_format((float) $housingUnit->usable_area_sqm, 2, ',', ' ') . ' m²' : 'A confirmar' }}</dd>
                     </div>
-                    <div class="rounded-md border border-ink-100 bg-white p-4">
+                    <div class="mv-surface p-4">
                         <dt class="text-sm text-ink-500">Área bruta</dt>
                         <dd class="mt-1 font-semibold text-ink-900">{{ $housingUnit->gross_area_sqm ? number_format((float) $housingUnit->gross_area_sqm, 2, ',', ' ') . ' m²' : 'A confirmar' }}</dd>
                     </div>
-                    <div class="rounded-md border border-ink-100 bg-white p-4">
+                    <div class="mv-surface p-4">
                         <dt class="text-sm text-ink-500">Eficiência energética</dt>
                         <dd class="mt-1 font-semibold text-ink-900">{{ $housingUnit->energy_rating ?: 'A confirmar' }}</dd>
                     </div>
@@ -80,7 +80,7 @@
                 @if ($housingUnit->publicFeatures->isNotEmpty())
                     <div class="mt-5 grid gap-3 sm:grid-cols-2">
                         @foreach ($housingUnit->publicFeatures as $feature)
-                            <div class="rounded-md bg-ink-50 p-4 text-sm">
+                            <div class="rounded-2xl bg-mvhab-surface p-4 text-sm">
                                 <p class="font-semibold text-ink-900">{{ $feature->label }}</p>
                                 <p class="mt-1 text-ink-600">{{ $feature->value ?: 'Disponível' }}</p>
                             </div>
@@ -94,7 +94,7 @@
                     <h2 class="text-xl font-semibold text-ink-900">Galeria</h2>
                     <div class="mt-4 grid gap-4 sm:grid-cols-2">
                         @foreach ($housingUnit->publicImages as $image)
-                            <img src="{{ \Illuminate\Support\Facades\Storage::disk($image->disk)->url($image->path) }}" alt="{{ $image->alt_text ?: $housingUnit->displayTitle() }}" class="h-56 w-full rounded-md object-cover">
+                            <img src="{{ \Illuminate\Support\Facades\Storage::disk($image->disk)->url($image->path) }}" alt="{{ $image->alt_text ?: $housingUnit->displayTitle() }}" class="h-56 w-full rounded-2xl object-cover">
                         @endforeach
                     </div>
                 </section>
@@ -103,7 +103,7 @@
             @if ($housingUnit->publicDocuments->isNotEmpty())
                 <section>
                     <h2 class="text-xl font-semibold text-ink-900">Documentos públicos</h2>
-                    <div class="mt-4 divide-y divide-ink-100 rounded-md border border-ink-100 bg-white">
+                    <div class="mt-4 divide-y divide-ink-100 rounded-2xl border border-ink-100 bg-white">
                         @foreach ($housingUnit->publicDocuments as $document)
                             <div class="flex flex-wrap items-center justify-between gap-3 p-4">
                                 <div>
@@ -119,7 +119,7 @@
         </div>
 
         <aside class="space-y-5">
-            <section class="rounded-md border border-ink-100 bg-white p-5">
+            <section class="mv-surface p-5">
                 <h2 class="font-semibold text-ink-900">Preparar candidatura</h2>
                 <p class="mt-2 text-sm leading-6 text-ink-600">Consulte a brochura simples e confirme os prazos do concurso antes de avançar para a área reservada.</p>
                 <div class="mt-4 grid gap-3">
@@ -129,7 +129,7 @@
                 </div>
             </section>
 
-            <section class="rounded-md border border-ink-100 bg-white p-5">
+            <section class="mv-surface p-5">
                 <h2 class="font-semibold text-ink-900">Localização pública</h2>
                 <p class="mt-2 text-sm leading-6 text-ink-600">{{ $housingUnit->publicLocationLabel() }}</p>
                 @if ($housingUnit->publicAddressForDisplay())
@@ -138,7 +138,7 @@
                     <p class="mt-2 text-xs leading-5 text-ink-500">A morada completa não é apresentada publicamente.</p>
                 @endif
                 @if ($housingUnit->hasPublicCoordinates())
-                    <div class="mt-4 rounded-md bg-mvhab-surface p-4 text-sm text-mvhab-primary">
+                    <div class="mt-4 rounded-2xl bg-mvhab-surface p-4 text-sm text-mvhab-primary">
                         Coordenadas públicas {{ $housingUnit->public_location_precision === \App\Enums\HousingLocationPrecision::Exact ? 'de referência' : 'aproximadas' }}:
                         {{ number_format(round((float) $housingUnit->public_latitude, $coordinateDecimals), $coordinateDecimals, ',', ' ') }},
                         {{ number_format(round((float) $housingUnit->public_longitude, $coordinateDecimals), $coordinateDecimals, ',', ' ') }}
@@ -146,12 +146,12 @@
                 @endif
             </section>
 
-            <section class="rounded-md border border-ink-100 bg-white p-5">
+            <section class="mv-surface p-5">
                 <h2 class="font-semibold text-ink-900">Concursos associados</h2>
                 <div class="mt-4 space-y-3">
                     @forelse ($housingUnit->contestHousingUnits as $contestHousingUnit)
                         @if ($contestHousingUnit->contest)
-                            <a href="{{ route('public.contests.show', $contestHousingUnit->contest->slug) }}" class="block rounded-md bg-ink-50 p-3 text-sm">
+                            <a href="{{ route('public.contests.show', $contestHousingUnit->contest->slug) }}" class="block rounded-2xl bg-mvhab-surface p-3 text-sm">
                                 <span class="font-semibold text-mvhab-primary">{{ $contestHousingUnit->contest->title }}</span>
                                 <span class="mt-1 block text-ink-500">{{ $contestHousingUnit->contest->isOpenForApplications() ? 'Candidaturas abertas' : 'Consultar prazos' }}</span>
                             </a>
