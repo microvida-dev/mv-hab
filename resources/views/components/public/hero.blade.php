@@ -10,7 +10,7 @@
                 Portal municipal de habitação
             </p>
 
-            <h1 class="mt-4 text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
+            <h1 class="mt-4 text-4xl font-bold tracking-tight leading-tight sm:text-5xl lg:text-6xl">
                 Habitação Municipal Acessível
             </h1>
 
@@ -19,42 +19,42 @@
             </p>
 
             <div class="mt-8 flex flex-wrap gap-3">
-                <a href="{{ route('public.contests.index') }}" class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mvhab-primary shadow-sm transition hover:bg-mvhab-surface hover:text-mvhab-primary">
+                <a href="{{ route('public.contests.index') }}" class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mvhab-primary ring-1 ring-white/20 transition hover:bg-mvhab-surface hover:text-mvhab-primary">
                     Ver concursos
                 </a>
 
-                <a href="{{ route('public.simulator.show') }}" class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-mvhab-secondary px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-white hover:text-mvhab-primary">
+                <a href="{{ route('public.simulator.show') }}" class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-mvhab-secondary px-5 py-3 text-sm font-semibold text-white ring-1 ring-white/20 transition hover:bg-white hover:text-mvhab-primary">
                     Simular elegibilidade
                 </a>
 
-                <a href="{{ route('public.housing-offer.index') }}" class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/40 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-white/10">
+                <a href="{{ route('public.housing-offer.index') }}" class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/40 px-5 py-3 text-sm font-semibold text-white ring-1 ring-white/20 transition hover:bg-white/10">
                     Oferta habitacional
                 </a>
             </div>
         </div>
 
-        <aside class="rounded-2xl border border-white/15 bg-white/20 p-6 shadow-2xl backdrop-blur-xl">
+        <aside class="rounded-3xl border border-white/20 bg-white/15 p-6 backdrop-blur-2xl">
             <p class="text-sm font-semibold text-white/90">
                 Estado atual
             </p>
 
             <dl class="mt-5 grid gap-4">
-                <div class="rounded-xl bg-white p-4 text-ink-900">
+                <div class="rounded-2xl bg-white p-4 text-ink-900">
                     <dt class="text-sm font-medium text-ink-500">Concursos publicados</dt>
                     <dd class="mt-1 text-3xl font-semibold">{{ $stats['publishedContests'] }}</dd>
                 </div>
 
-                <div class="rounded-xl bg-white p-4 text-ink-900">
+                <div class="rounded-2xl bg-white p-4 text-ink-900">
                     <dt class="text-sm font-medium text-ink-500">Programas disponíveis</dt>
                     <dd class="mt-1 text-3xl font-semibold">{{ $stats['publishedPrograms'] }}</dd>
                 </div>
 
-                <div class="rounded-xl bg-white p-4 text-ink-900">
+                <div class="rounded-2xl bg-white p-4 text-ink-900">
                     <dt class="text-sm font-medium text-ink-500">Habitações disponíveis</dt>
                     <dd class="mt-1 text-3xl font-semibold">{{ $stats['availableHousingUnits'] }}</dd>
                 </div>
 
-                <div class="rounded-xl bg-white p-4 text-ink-900">
+                <div class="rounded-2xl bg-white p-4 text-ink-900">
                     <dt class="text-sm font-medium text-ink-500">Próximo passo recomendado</dt>
                     <dd class="mt-2 text-sm font-semibold text-mvhab-primary">
                         Simular elegibilidade antes de iniciar candidatura
