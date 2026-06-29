@@ -25,9 +25,68 @@
 }
 
 @layer components {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Layout
+    |--------------------------------------------------------------------------
+    */
+
+    .mv-container {
+        @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+    }
+
     .mv-page-shell {
         @apply mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8;
     }
+
+    .mv-section {
+        @apply py-16 sm:py-20 lg:py-24;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Typography
+    |--------------------------------------------------------------------------
+    */
+
+    .mv-page-title {
+        @apply text-3xl font-bold tracking-tight text-ink-900 sm:text-4xl;
+    }
+
+    .mv-heading {
+        @apply text-3xl font-bold tracking-tight text-ink-900 sm:text-4xl;
+    }
+
+    .mv-section-title {
+        @apply text-base font-semibold text-ink-900;
+    }
+
+    .mv-card-title {
+        @apply text-lg font-semibold text-ink-900;
+    }
+
+    .mv-section-description {
+        @apply mt-1 text-sm leading-6 text-ink-500;
+    }
+
+    .mv-description {
+        @apply text-base leading-7 text-ink-600;
+    }
+
+    .mv-caption {
+        @apply text-sm font-semibold uppercase tracking-wide text-mvhab-primary;
+    }
+
+    .mv-link {
+        @apply font-semibold text-mvhab-primary transition hover:text-mvhab-primaryLight;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Surfaces
+    |--------------------------------------------------------------------------
+    */
 
     .mv-surface {
         @apply rounded-2xl border border-ink-100 bg-white shadow-surface;
@@ -42,35 +101,67 @@
     }
 
     .mv-card-interactive {
-        @apply rounded-2xl border border-ink-100 bg-white shadow-surface transition hover:-translate-y-0.5 hover:border-mvhab-support hover:bg-mvhab-surface hover:shadow-md;
+        @apply rounded-2xl border border-ink-100 bg-white shadow-surface transition duration-200 hover:-translate-y-0.5 hover:border-mvhab-support hover:bg-mvhab-surface hover:shadow-md;
     }
 
-    .mv-section-title {
-        @apply text-base font-semibold text-ink-900;
-    }
-
-    .mv-section-description {
-        @apply mt-1 text-sm leading-5 text-ink-500;
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Buttons
+    |--------------------------------------------------------------------------
+    */
 
     .mv-button-primary {
-        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-transparent bg-mvhab-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-mvhab-primaryLight disabled:opacity-50;
+        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-transparent bg-mvhab-primary px-4 py-2 text-sm font-semibold text-white transition duration-200 hover:bg-mvhab-primaryLight disabled:opacity-50;
     }
 
     .mv-button-secondary {
-        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-mvhab-support/40 bg-white px-4 py-2 text-sm font-semibold text-mvhab-primary transition hover:bg-mvhab-surface disabled:opacity-50;
+        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-mvhab-support/40 bg-white px-4 py-2 text-sm font-semibold text-mvhab-primary transition duration-200 hover:bg-mvhab-surface disabled:opacity-50;
     }
 
     .mv-button-danger {
-        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-transparent bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800 disabled:opacity-50;
+        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-transparent bg-red-700 px-4 py-2 text-sm font-semibold text-white transition duration-200 hover:bg-red-800 disabled:opacity-50;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Forms
+    |--------------------------------------------------------------------------
+    */
+
+    .mv-input {
+        @apply w-full rounded-2xl border-ink-200 text-sm shadow-sm focus:border-mvhab-primary focus:ring-mvhab-primary;
+    }
+
+    .mv-select {
+        @apply w-full rounded-2xl border-ink-200 text-sm shadow-sm focus:border-mvhab-primary focus:ring-mvhab-primary;
+    }
+
+    .mv-textarea {
+        @apply w-full rounded-2xl border-ink-200 text-sm shadow-sm focus:border-mvhab-primary focus:ring-mvhab-primary;
+    }
+
+    .mv-checkbox {
+        @apply rounded border-ink-300 text-mvhab-primary focus:ring-mvhab-primary;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Focus
+    |--------------------------------------------------------------------------
+    */
 
     .mv-focus-ring {
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-offset-2;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Badges
+    |--------------------------------------------------------------------------
+    */
+
     .mv-badge {
-        @apply inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold;
+        @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold;
     }
 
     .mv-badge-neutral {
@@ -101,21 +192,39 @@
         @apply bg-mvhab-surface text-mvhab-primary;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Tabs
+    |--------------------------------------------------------------------------
+    */
+
     .mv-tab {
-        @apply rounded-2xl px-3 py-2 text-sm font-semibold text-ink-600 transition hover:bg-mvhab-surface hover:text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-offset-2;
+        @apply rounded-2xl px-3 py-2 text-sm font-semibold text-ink-600 transition duration-200 hover:bg-mvhab-surface hover:text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-offset-2;
     }
 
     .mv-tab-active {
         @apply bg-mvhab-surface text-mvhab-primary;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Data
+    |--------------------------------------------------------------------------
+    */
+
     .mv-data-label {
-        @apply text-xs font-semibold uppercase text-ink-500;
+        @apply text-xs font-semibold uppercase tracking-wide text-ink-500;
     }
 
     .mv-data-value {
         @apply mt-1 text-sm font-semibold text-ink-900;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tables
+    |--------------------------------------------------------------------------
+    */
 
     .mv-table {
         @apply min-w-full divide-y divide-ink-100 text-sm;
@@ -126,10 +235,11 @@
     }
 
     .mv-table th {
-        @apply px-4 py-3 text-left text-xs font-semibold uppercase text-ink-500;
+        @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-500;
     }
 
     .mv-table td {
         @apply px-4 py-3 text-ink-700;
     }
+
 }
