@@ -112,7 +112,19 @@
                             <div class="mt-5 rounded-md border border-signal-200 bg-signal-50 p-4 text-sm leading-6 text-signal-900">
                                 Está autenticado com um perfil interno. Para testar uma candidatura, termine esta sessão e entre ou crie uma conta de candidato.
                             </div>
-                            <a href="{{ route('dashboard') }}" class="mv-button-secondary mt-3 w-full">Abrir backoffice</a>
+                                @if (Auth::user()->hasRole('candidate'))
+                                    <a href="{{ route('candidate.dashboard') }}" class="mv-button-secondary mt-3 w-full">
+                                        Área do candidato
+                                    </a>
+                                @elseif (Auth::user()->hasRole('tenant'))
+                                    <a href="{{ route('tenant.dashboard') }}" class="mv-button-secondary mt-3 w-full">
+                                        Área do inquilino
+                                    </a>
+                                @else
+                                    <a href="{{ route('dashboard') }}" class="mv-button-secondary mt-3 w-full">
+                                        Área reservada
+                                    </a>
+                                @endif
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="mv-button-primary mt-2 w-full">Terminar sessão</button>

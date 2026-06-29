@@ -117,9 +117,20 @@
             </div>
             <div class="flex flex-wrap gap-3">
                 @auth
-                    <a href="{{ route('dashboard') }}" class="mv-button-primary">
-                        {{ Auth::user()->hasRole('candidate') ? 'Abrir área do candidato' : 'Abrir backoffice' }}
-                    </a>
+                    @if (Auth::user()->hasRole('candidate'))
+                        <a href="{{ route('candidate.dashboard') }}" class="mv-button-primary">
+                            Abrir área do candidato
+                        </a>
+                    @elseif (Auth::user()->hasRole('tenant'))
+                        <a href="{{ route('tenant.dashboard') }}" class="mv-button-primary">
+                            Abrir área do inquilino
+                        </a>
+                    @else
+                        <a href="{{ route('dashboard') }}" class="mv-button-primary">
+                            Abrir área reservada
+                        </a>
+                    @endif
+
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="mv-button-secondary">Terminar sessão</button>

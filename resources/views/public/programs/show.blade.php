@@ -72,7 +72,13 @@
             <div class="mt-6 border-t border-ink-100 pt-5">
                 @auth
                     <a href="{{ route('dashboard') }}" class="mv-button-primary w-full">
-                        {{ Auth::user()->hasRole('candidate') ? 'Área do candidato' : 'Abrir backoffice' }}
+                        @if (Auth::user()->hasRole('candidate'))
+                            Área do candidato
+                        @elseif (Auth::user()->hasRole('tenant'))
+                            Área do inquilino
+                        @else
+                            Área reservada
+                        @endif
                     </a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

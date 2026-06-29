@@ -68,16 +68,34 @@
 
                 <div class="flex items-center gap-2">
                     @auth
-                        <a href="{{ route('dashboard') }}" class="mv-button-secondary">
-                            {{ Auth::user()->hasRole('candidate') ? 'Área do candidato' : 'Backoffice' }}
-                        </a>
-                        <form method="POST" action="{{ route('logout') }}">
+                        @if (Auth::user()->hasRole('candidate'))
+                            <a href="{{ route('candidate.dashboard') }}" class="mv-button-secondary">
+                                Área do candidato
+                            </a>
+                        @elseif (Auth::user()->hasRole('tenant'))
+                            <a href="{{ route('tenant.dashboard') }}" class="mv-button-secondary">
+                                Área do inquilino
+                            </a>
+                        @else
+                            <a href="{{ route('dashboard') }}" class="mv-button-secondary">
+                                Área reservada
+                            </a>
+                        @endif
+
+                        <form method="POST" action="{{ route('logout') }}" class="inline">
                             @csrf
-                            <button type="submit" class="mv-button-secondary">Sair</button>
+                            <button type="submit" class="mv-button-secondary">
+                                Sair
+                            </button>
                         </form>
                     @else
-                        <a href="{{ route('login') }}" class="mv-button-secondary">Entrar</a>
-                        <a href="{{ route('register') }}" class="mv-button-primary hidden sm:inline-flex">Criar conta</a>
+                        <a href="{{ route('login') }}" class="mv-button-secondary">
+                            Entrar
+                        </a>
+
+                        <a href="{{ route('register') }}" class="mv-button-primary hidden sm:inline-flex">
+                            Criar conta
+                        </a>
                     @endauth
                 </div>
             </div>
