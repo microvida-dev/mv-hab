@@ -1,19 +1,42 @@
 <x-app-layout>
-    <x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Nova comunicação</h1></x-slot>
+    <x-slot name="header">
+        <h1 class="text-xl font-semibold text-ink-900">
+            Nova comunicação
+        </h1>
+    </x-slot>
+
     <div class="mx-auto max-w-3xl px-4 py-6 sm:px-6 lg:px-8">
-        <form class="mv-card grid gap-4" method="POST" action="{{ route('tenant.communications.store') }}">
+        <form
+            method="POST"
+            action="{{ route('tenant.communications.store') }}"
+            class="mv-card grid gap-5"
+        >
             @csrf
-            <label class="grid gap-1 text-sm font-medium">Contrato
-                <select class="mv-input" name="lease_contract_id">
+
+            <x-ui.field label="Contrato" for="lease_contract_id" name="lease_contract_id">
+                <x-ui.select id="lease_contract_id" name="lease_contract_id">
                     <option value="">Sem contrato associado</option>
                     @foreach ($contracts as $contract)
-                        <option value="{{ $contract->id }}">{{ $contract->contract_number }} · {{ $contract->housingUnit?->address }}</option>
+                        <option value="{{ $contract->id }}">
+                            {{ $contract->contract_number }} · {{ $contract->housingUnit?->address }}
+                        </option>
                     @endforeach
-                </select>
-            </label>
-            <label class="grid gap-1 text-sm font-medium">Assunto <input class="mv-input" name="subject" required maxlength="255"></label>
-            <label class="grid gap-1 text-sm font-medium">Mensagem <textarea class="mv-input" name="body" rows="6" required></textarea></label>
-            <button class="mv-button-primary" type="submit">Enviar</button>
+                </x-ui.select>
+            </x-ui.field>
+
+            <x-ui.field label="Assunto" for="subject" name="subject" required>
+                <x-ui.input id="subject" name="subject" required maxlength="255" />
+            </x-ui.field>
+
+            <x-ui.field label="Mensagem" for="body" name="body" required>
+                <x-ui.textarea id="body" name="body" rows="6" required />
+            </x-ui.field>
+
+            <div class="flex justify-end">
+                <button class="mv-button-primary" type="submit">
+                    Enviar
+                </button>
+            </div>
         </form>
     </div>
 </x-app-layout>
