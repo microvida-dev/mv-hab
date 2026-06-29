@@ -1,7 +1,7 @@
 <div class="grid gap-6 md:grid-cols-2">
     <div>
         <x-input-label for="housing_unit_id" value="Habitação" />
-        <select id="housing_unit_id" name="housing_unit_id" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" required>
+        <select id="housing_unit_id" name="housing_unit_id" class="mv-input mt-1" required>
             <option value="">Selecione</option>
             @foreach ($housingUnits as $housingUnit)
                 <option value="{{ $housingUnit->id }}" @selected(old('housing_unit_id', $maintenanceRequest->housing_unit_id ?? '') == $housingUnit->id)>
@@ -14,7 +14,7 @@
 
     <div>
         <x-input-label for="citizen_id" value="Munícipe" />
-        <select id="citizen_id" name="citizen_id" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
+        <select id="citizen_id" name="citizen_id" class="mv-input mt-1">
             <option value="">Sem munícipe associado</option>
             @foreach ($citizens as $citizen)
                 <option value="{{ $citizen->id }}" @selected(old('citizen_id', $maintenanceRequest->citizen_id ?? '') == $citizen->id)>
@@ -33,7 +33,7 @@
 
     <div>
         <x-input-label for="priority" value="Prioridade" />
-        <select id="priority" name="priority" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" required>
+        <select id="priority" name="priority" class="mv-input mt-1" required>
             @foreach ($priorities as $value => $label)
                 <option value="{{ $value }}" @selected(old('priority', isset($maintenanceRequest) ? $maintenanceRequest->priority->value : '') == $value)>
                     {{ $label }}
@@ -45,7 +45,7 @@
 
     <div>
         <x-input-label for="status" value="Estado" />
-        <select id="status" name="status" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" required>
+        <select id="status" name="status" class="mv-input mt-1" required>
             @foreach ($statuses as $value => $label)
                 <option value="{{ $value }}" @selected(old('status', isset($maintenanceRequest) ? $maintenanceRequest->status->value : '') == $value)>
                     {{ $label }}
@@ -69,7 +69,7 @@
 
     <div class="md:col-span-2">
         <x-input-label for="description" value="Descrição" />
-        <textarea id="description" name="description" rows="5" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" required>{{ old('description', $maintenanceRequest->description ?? '') }}</textarea>
+        <textarea id="description" name="description" rows="5" class="mv-input mt-1" required>{{ old('description', $maintenanceRequest->description ?? '') }}</textarea>
         <x-input-error :messages="$errors->get('description')" class="mt-2" />
     </div>
 </div>

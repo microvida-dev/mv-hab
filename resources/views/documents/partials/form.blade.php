@@ -50,7 +50,7 @@
         <x-input-error :messages="$errors->get('file')" class="mt-2" />
 
         @isset($document)
-            <p class="mt-2 text-sm text-slate-500">Atual: {{ $document->path }}</p>
+            <p class="mt-2 text-sm text-ink-500">Atual: {{ $document->path }}</p>
         @endisset
     </div>
 </div>

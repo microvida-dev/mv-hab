@@ -1,7 +1,7 @@
 <div class="grid gap-6 md:grid-cols-2">
     <div class="md:col-span-2">
         <x-input-label for="citizen_id" value="Munícipe responsável" />
-        <select id="citizen_id" name="citizen_id" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" required>
+        <select id="citizen_id" name="citizen_id" class="mv-input mt-1" required>
             <option value="">Selecione</option>
             @foreach ($citizens as $citizen)
                 <option value="{{ $citizen->id }}" @selected(old('citizen_id', $household->citizen_id ?? '') == $citizen->id)>
@@ -32,7 +32,7 @@
 
     <div class="md:col-span-2">
         <x-input-label for="notes" value="Notas" />
-        <textarea id="notes" name="notes" rows="4" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">{{ old('notes', $household->notes ?? '') }}</textarea>
+        <textarea id="notes" name="notes" rows="4" class="mv-input mt-1">{{ old('notes', $household->notes ?? '') }}</textarea>
         <x-input-error :messages="$errors->get('notes')" class="mt-2" />
     </div>
 </div>
