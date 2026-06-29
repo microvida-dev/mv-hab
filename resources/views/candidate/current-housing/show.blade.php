@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Etapa 4 de 4</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Etapa 4 de 4</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">Habitação atual</h1>
                 <p class="mt-1 text-sm text-ink-500">Descreva a situação habitacional atual do agregado.</p>
             </div>
@@ -64,7 +64,7 @@
                                 [$situation->has_high_rent_burden, 'Encargo habitacional elevado'],
                             ] as [$active, $label])
                                 @if ($active)
-                                    <li class="flex gap-2"><x-ui-icon name="check" class="h-4 w-4 shrink-0 text-civic-700" />{{ $label }}</li>
+                                    <li class="flex gap-2"><x-ui-icon name="check" class="h-4 w-4 shrink-0 text-mvhab-primary" />{{ $label }}</li>
                                 @endif
                             @endforeach
                         </ul>

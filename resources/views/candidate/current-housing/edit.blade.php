@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Habitação atual</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Habitação atual</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $situation ? 'Editar situação' : 'Preencher situação' }}</h1>
         </div>
     </x-slot>
