@@ -22,7 +22,7 @@
                 </div>
 
                 @if ($task['route'])
-                    <a href="{{ route($task['route'], $task['parameters'] ?? []) }}" class="mt-3 inline-flex text-sm font-semibold text-civic-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-offset-2">
+                    <a href="{{ route($task['route'], $task['parameters'] ?? []) }}" class="mt-3 inline-flex text-sm font-semibold text-mvhab-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-offset-2">
                         Abrir tarefa
                     </a>
                 @endif

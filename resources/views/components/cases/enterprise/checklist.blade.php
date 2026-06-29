@@ -9,7 +9,7 @@
 
     <div class="grid gap-3 p-5 md:grid-cols-2">
         @forelse ($items as $item)
-            <div class="rounded-lg border border-ink-100 p-4">
+            <div class="rounded-2xl border border-ink-100 p-4">
                 <x-ui.status-badge :status="$item['status']" />
                 <p class="mt-3 text-sm font-semibold text-ink-900">{{ $item['label'] }}</p>
                 <p class="mt-1 text-sm text-ink-500">{{ $item['description'] }}</p>

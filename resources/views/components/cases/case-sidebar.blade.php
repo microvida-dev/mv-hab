@@ -37,7 +37,7 @@
                 <p class="text-xs font-semibold uppercase text-ink-500">Links rápidos</p>
                 <div class="mt-2 space-y-2">
                     @foreach ($sidebar['quick_links'] as $link)
-                        <a href="{{ route($link['route'], $link['parameters'] ?? []) }}" class="block rounded-md bg-ink-50 px-3 py-2 font-semibold text-civic-700 transition hover:bg-civic-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-offset-2">
+                        <a href="{{ route($link['route'], $link['parameters'] ?? []) }}" class="block rounded-2xl bg-ink-50 px-3 py-2 font-semibold text-mvhab-primary transition hover:bg-mvhab-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-offset-2">
                             {{ $link['label'] }}
                         </a>
                     @endforeach

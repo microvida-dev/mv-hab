@@ -9,7 +9,7 @@
 
     <div class="grid gap-3 p-5 md:grid-cols-2">
         @forelse ($relations as $relation)
-            <div class="rounded-lg border border-ink-100 p-4">
+            <div class="rounded-2xl border border-ink-100 p-4">
                 <div class="flex items-start justify-between gap-3">
                     <div>
                         <p class="text-sm font-semibold text-ink-900">{{ $relation['label'] }}</p>
@@ -19,7 +19,7 @@
                 </div>
 
                 @if ($relation['route'])
-                    <a href="{{ route($relation['route'], $relation['parameters'] ?? []) }}" class="mt-3 inline-flex text-sm font-semibold text-civic-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-offset-2">
+                    <a href="{{ route($relation['route'], $relation['parameters'] ?? []) }}" class="mt-3 inline-flex text-sm font-semibold text-mvhab-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-offset-2">
                         Abrir relação
                     </a>
                 @endif

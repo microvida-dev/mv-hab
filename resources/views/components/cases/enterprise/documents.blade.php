@@ -19,7 +19,7 @@
                 </div>
 
                 @if ($document['route'] && $document['route_parameter'])
-                    <a href="{{ route($document['route'], $document['route_parameter']) }}" class="mt-3 inline-flex text-sm font-semibold text-civic-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-offset-2">
+                    <a href="{{ route($document['route'], $document['route_parameter']) }}" class="mt-3 inline-flex text-sm font-semibold text-mvhab-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-offset-2">
                         Abrir documento
                     </a>
                 @endif
