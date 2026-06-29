@@ -4,26 +4,7 @@
         :programs="$programs"
     />
 
-    <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div class="flex items-end justify-between gap-4">
-            <div>
-                <p class="text-sm font-semibold text-civic-700">Concursos</p>
-                <h2 class="mt-1 text-2xl font-semibold text-ink-900">Oportunidades publicadas</h2>
-            </div>
-            <a href="{{ route('public.contests.index') }}" class="hidden text-sm font-semibold text-civic-700 hover:text-civic-900 sm:block">Ver todos</a>
-        </div>
-
-        <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            @forelse ($contests as $contest)
-                <x-public-contest-card :contest="$contest" />
-            @empty
-                <div class="mv-surface col-span-full p-8 text-center">
-                    <p class="font-semibold text-ink-900">Não existem concursos publicados neste momento.</p>
-                    <p class="mt-2 text-sm text-ink-500">Consulte novamente esta página para acompanhar novas oportunidades.</p>
-                </div>
-            @endforelse
-        </div>
-    </section>
+    <x-public.featured-contests :contests="$contests" />
 
     <section class="border-y border-ink-100 bg-ink-50">
         <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -51,27 +32,7 @@
         </div>
     </section>
 
-    <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div class="max-w-2xl">
-            <p class="text-sm font-semibold text-civic-700">Como funciona</p>
-            <h2 class="mt-1 text-2xl font-semibold text-ink-900">Prepare o seu percurso</h2>
-        </div>
-
-        <ol class="mt-7 grid gap-px overflow-hidden rounded-md border border-ink-100 bg-ink-100 md:grid-cols-2 xl:grid-cols-4">
-            @foreach ([
-                ['Consulte a oferta', 'Veja habitações publicadas, localização pública, tipologia e renda indicativa.'],
-                ['Consulte os concursos', 'Veja avisos, estados e prazos oficiais das oportunidades disponíveis.'],
-                ['Prepare os seus dados', 'Reúna informação de identificação, agregado, rendimentos e situação habitacional.'],
-                ['Acompanhe o processo', 'A área reservada suportará o acompanhamento nas próximas etapas da plataforma.'],
-            ] as $index => [$heading, $copy])
-                <li class="bg-white p-5">
-                    <span class="text-sm font-semibold text-civic-700">{{ $index + 1 }}</span>
-                    <h3 class="mt-3 font-semibold text-ink-900">{{ $heading }}</h3>
-                    <p class="mt-2 text-sm leading-6 text-ink-500">{{ $copy }}</p>
-                </li>
-            @endforeach
-        </ol>
-    </section>
+    <x-public.application-journey />
 
     <section class="border-y border-ink-100 bg-ink-50">
         <div class="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:px-8">
