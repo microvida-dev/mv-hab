@@ -7,7 +7,7 @@
         <div class="mx-auto max-w-4xl space-y-6 sm:px-6 lg:px-8">
             <x-flash-message />
 
-            <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="mv-surface p-6">
                 <form method="POST" action="{{ route('contracts.update', $contract) }}" class="space-y-6">
                     @csrf
                     @method('PUT')
@@ -15,7 +15,7 @@
                     @include('contracts.partials.form')
 
                     <div class="flex justify-end gap-3">
-                        <a href="{{ route('contracts.show', $contract) }}" class="inline-flex items-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                        <a href="{{ route('contracts.show', $contract) }}" class="mv-button-secondary">
                             Cancelar
                         </a>
                         <x-primary-button>Atualizar</x-primary-button>

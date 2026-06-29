@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-4">
             <h2 class="text-xl font-semibold leading-tight text-slate-800">Candidaturas</h2>
-            <a href="{{ route('applications.create') }}" class="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800">
+            <a href="{{ route('applications.create') }}" class="mv-button-primary">
                 Nova candidatura
             </a>
         </div>
@@ -12,7 +12,7 @@
         <div class="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
             <x-flash-message />
 
-            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="overflow-hidden mv-surface">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50">
@@ -35,12 +35,12 @@
                                     <td class="px-4 py-3 text-slate-600">{{ $application->submitted_at?->format('d/m/Y H:i') ?: 'Por submeter' }}</td>
                                     <td class="px-4 py-3">
                                         <div class="flex justify-end gap-2">
-                                            <a href="{{ route('applications.show', $application) }}" class="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">Ver</a>
-                                            <a href="{{ route('applications.edit', $application) }}" class="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">Editar</a>
+                                            <a href="{{ route('applications.show', $application) }}" class="rounded-2xl border border-mvhab-support/40 px-3 py-1.5 text-xs font-semibold text-mvhab-primary hover:bg-mvhab-surface">Ver</a>
+                                            <a href="{{ route('applications.edit', $application) }}" class="rounded-2xl border border-mvhab-support/40 px-3 py-1.5 text-xs font-semibold text-mvhab-primary hover:bg-mvhab-surface">Editar</a>
                                             <form method="POST" action="{{ route('applications.destroy', $application) }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50" onclick="return confirm('Eliminar esta candidatura?')">
+                                                <button type="submit" class="rounded-2xl border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50" onclick="return confirm('Eliminar esta candidatura?')">
                                                     Eliminar
                                                 </button>
                                             </form>

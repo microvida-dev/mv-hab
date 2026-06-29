@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-4">
             <h2 class="text-xl font-semibold leading-tight text-slate-800">Contrato #{{ $contract->id }}</h2>
-            <a href="{{ route('contracts.edit', $contract) }}" class="inline-flex items-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            <a href="{{ route('contracts.edit', $contract) }}" class="mv-button-secondary">
                 Editar
             </a>
         </div>
@@ -13,7 +13,7 @@
             <x-flash-message />
 
             <div class="grid gap-6 lg:grid-cols-3">
-                <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
+                <div class="mv-surface p-6 lg:col-span-2">
                     <h3 class="text-lg font-semibold text-slate-900">Dados do contrato</h3>
                     <dl class="mt-6 grid gap-6 md:grid-cols-2">
                         <div>
@@ -43,11 +43,11 @@
                     </dl>
                 </div>
 
-                <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="mv-surface p-6">
                     <h3 class="text-lg font-semibold text-slate-900">Documentos</h3>
                     <div class="mt-4 space-y-3">
                         @forelse ($contract->documents as $document)
-                            <a href="{{ route('documents.show', $document) }}" class="block rounded-lg border border-slate-200 p-4 hover:bg-slate-50">
+                            <a href="{{ route('documents.show', $document) }}" class="block rounded-2xl border border-ink-100 p-4 hover:bg-mvhab-surface">
                                 <p class="font-medium text-slate-900">{{ $document->name }}</p>
                                 <p class="mt-1 text-sm text-slate-500">{{ $document->mime_type }}</p>
                             </a>
@@ -58,11 +58,11 @@
                 </div>
             </div>
 
-            <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="mv-surface p-6">
                 <h3 class="text-lg font-semibold text-slate-900">Pagamentos</h3>
                 <div class="mt-4 space-y-3">
                     @forelse ($contract->payments as $payment)
-                        <a href="{{ route('payments.show', $payment) }}" class="block rounded-lg border border-slate-200 p-4 hover:bg-slate-50">
+                        <a href="{{ route('payments.show', $payment) }}" class="block rounded-2xl border border-ink-100 p-4 hover:bg-mvhab-surface">
                             <p class="font-medium text-slate-900">{{ $payment->reference }}</p>
                             <p class="mt-1 text-sm text-slate-500">{{ number_format((float) $payment->amount, 2, ',', '.') }} € - {{ $payment->status->label() }}</p>
                         </a>

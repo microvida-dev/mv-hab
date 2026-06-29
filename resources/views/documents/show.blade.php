@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-4">
             <h2 class="text-xl font-semibold leading-tight text-slate-800">{{ $document->name }}</h2>
-            <a href="{{ route('documents.edit', $document) }}" class="inline-flex items-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            <a href="{{ route('documents.edit', $document) }}" class="mv-button-secondary">
                 Editar
             </a>
         </div>
@@ -12,7 +12,7 @@
         <div class="mx-auto max-w-5xl space-y-6 sm:px-6 lg:px-8">
             <x-flash-message />
 
-            <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="mv-surface p-6">
                 <h3 class="text-lg font-semibold text-slate-900">Dados do documento</h3>
                 <dl class="mt-6 grid gap-6 md:grid-cols-2">
                     <div>

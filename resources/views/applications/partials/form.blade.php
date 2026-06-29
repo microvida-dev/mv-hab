@@ -1,7 +1,7 @@
 <div class="grid gap-6 md:grid-cols-2">
     <div>
         <x-input-label for="citizen_id" value="Munícipe" />
-        <select id="citizen_id" name="citizen_id" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" required>
+        <select id="citizen_id" name="citizen_id" class="mv-input mt-1" required>
             <option value="">Selecione</option>
             @foreach ($citizens as $citizen)
                 <option value="{{ $citizen->id }}" @selected(old('citizen_id', $application->citizen_id ?? '') == $citizen->id)>
@@ -14,7 +14,7 @@
 
     <div>
         <x-input-label for="household_id" value="Agregado familiar" />
-        <select id="household_id" name="household_id" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
+        <select id="household_id" name="household_id" class="mv-input mt-1">
             <option value="">Sem agregado associado</option>
             @foreach ($households as $household)
                 <option value="{{ $household->id }}" @selected(old('household_id', $application->household_id ?? '') == $household->id)>
@@ -27,7 +27,7 @@
 
     <div>
         <x-input-label for="status" value="Estado" />
-        <select id="status" name="status" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" required>
+        <select id="status" name="status" class="mv-input mt-1" required>
             @foreach ($statuses as $value => $label)
                 <option value="{{ $value }}" @selected(old('status', isset($application) ? $application->status->value : '') == $value)>
                     {{ $label }}
@@ -51,7 +51,7 @@
 
     <div class="md:col-span-2">
         <x-input-label for="notes" value="Notas" />
-        <textarea id="notes" name="notes" rows="4" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">{{ old('notes', $application->notes ?? '') }}</textarea>
+        <textarea id="notes" name="notes" rows="4" class="mv-input mt-1">{{ old('notes', $application->notes ?? '') }}</textarea>
         <x-input-error :messages="$errors->get('notes')" class="mt-2" />
     </div>
 </div>

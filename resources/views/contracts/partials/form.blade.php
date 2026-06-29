@@ -3,7 +3,7 @@
 <div class="grid gap-6 md:grid-cols-2">
     <div>
         <x-input-label for="citizen_id" value="Munícipe" />
-        <select id="citizen_id" name="citizen_id" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" required>
+        <select id="citizen_id" name="citizen_id" class="mv-input mt-1" required>
             <option value="">Selecione</option>
             @foreach ($citizens as $citizen)
                 <option value="{{ $citizen->id }}" @selected(old('citizen_id', $contract->citizen_id ?? '') == $citizen->id)>
@@ -16,7 +16,7 @@
 
     <div>
         <x-input-label for="housing_unit_id" value="Habitação" />
-        <select id="housing_unit_id" name="housing_unit_id" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" required>
+        <select id="housing_unit_id" name="housing_unit_id" class="mv-input mt-1" required>
             <option value="">Selecione</option>
             @foreach ($housingUnits as $housingUnit)
                 <option value="{{ $housingUnit->id }}" @selected(old('housing_unit_id', $contract->housing_unit_id ?? '') == $housingUnit->id)>
@@ -47,7 +47,7 @@
 
     <div>
         <x-input-label for="status" value="Estado" />
-        <select id="status" name="status" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" required>
+        <select id="status" name="status" class="mv-input mt-1" required>
             @foreach ($contractStatuses as $value => $label)
                 <option value="{{ $value }}" @selected(old('status', isset($contract) ? $contract->status->value : '') == $value)>
                     {{ $label }}

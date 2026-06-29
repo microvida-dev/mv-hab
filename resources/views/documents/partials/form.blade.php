@@ -7,7 +7,7 @@
 
     <div>
         <x-input-label for="citizen_id" value="Munícipe" />
-        <select id="citizen_id" name="citizen_id" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
+        <select id="citizen_id" name="citizen_id" class="mv-input mt-1">
             <option value="">Sem associação</option>
             @foreach ($citizens as $citizen)
                 <option value="{{ $citizen->id }}" @selected(old('citizen_id', $document->citizen_id ?? '') == $citizen->id)>
@@ -20,7 +20,7 @@
 
     <div>
         <x-input-label for="housing_application_id" value="Candidatura" />
-        <select id="housing_application_id" name="housing_application_id" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
+        <select id="housing_application_id" name="housing_application_id" class="mv-input mt-1">
             <option value="">Sem associação</option>
             @foreach ($applications as $applicationOption)
                 <option value="{{ $applicationOption->id }}" @selected(old('housing_application_id', $document->housing_application_id ?? '') == $applicationOption->id)>
@@ -33,7 +33,7 @@
 
     <div class="md:col-span-2">
         <x-input-label for="contract_id" value="Contrato" />
-        <select id="contract_id" name="contract_id" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
+        <select id="contract_id" name="contract_id" class="mv-input mt-1">
             <option value="">Sem associação</option>
             @foreach ($contracts as $contractOption)
                 <option value="{{ $contractOption->id }}" @selected(old('contract_id', $document->contract_id ?? '') == $contractOption->id)>
@@ -46,7 +46,7 @@
 
     <div class="md:col-span-2">
         <x-input-label for="file" value="Ficheiro" />
-        <input id="file" name="file" type="file" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-slate-500">
+        <input id="file" name="file" type="file" class="mv-input mt-1 block w-full">
         <x-input-error :messages="$errors->get('file')" class="mt-2" />
 
         @isset($document)
