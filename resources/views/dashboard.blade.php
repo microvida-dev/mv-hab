@@ -29,9 +29,14 @@
                     <x-ui.card>
                         <div class="flex h-full flex-col justify-between gap-4">
                             <div>
-                                <p class="text-sm font-semibold text-ink-900">{{ $productivity['notification_summary']['label'] ?? 'Caixa de Entrada Municipal' }}</p>
-                                <p class="mt-2 text-sm leading-6 text-ink-500">{{ $productivity['notification_summary']['description'] ?? 'Sem notificações operacionais autorizadas.' }}</p>
+                                <p class="mv-card-title">
+                                    {{ $productivity['notification_summary']['label'] ?? 'Caixa de Entrada Municipal' }}
+                                </p>
+                                <p class="mv-section-description">
+                                    {{ $productivity['notification_summary']['description'] ?? 'Sem notificações operacionais autorizadas.' }}
+                                </p>
                             </div>
+
                             <x-ui.action-button :href="route('backoffice.productivity.index')">
                                 <x-ui-icon name="bolt" class="h-4 w-4" />
                                 <span>Abrir produtividade</span>
@@ -80,6 +85,7 @@
                         <div class="border-b border-ink-100 px-5 py-4">
                             <x-ui.section-header title="Ações rápidas" />
                         </div>
+
                         <div class="grid gap-0 divide-y divide-ink-100 md:grid-cols-2 md:divide-x md:divide-y-0">
                             @forelse ($quickActions as $action)
                                 <x-dashboard.quick-action :action="$action" />
@@ -98,6 +104,7 @@
                         <div class="border-b border-ink-100 px-5 py-4">
                             <x-ui.section-header title="Alertas e prazos" />
                         </div>
+
                         <div class="divide-y divide-ink-100">
                             @forelse (($dashboard['deadlines'] ?? []) as $alert)
                                 <x-dashboard.deadline-alert :alert="$alert" />
@@ -114,12 +121,15 @@
 
                     <x-ui.card>
                         <div class="flex items-start gap-3">
-                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-ink-50 text-ink-700">
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
                                 <x-ui-icon name="alert" class="h-4 w-4" />
                             </span>
+
                             <div>
-                                <h2 class="text-base font-semibold text-ink-900">{{ $dashboard['notifications_summary']['label'] ?? 'Notificações' }}</h2>
-                                <p class="mt-1 text-sm text-ink-500">
+                                <h2 class="mv-card-title">
+                                    {{ $dashboard['notifications_summary']['label'] ?? 'Notificações' }}
+                                </h2>
+                                <p class="mv-section-description">
                                     {{ $dashboard['notifications_summary']['description'] ?? 'As notificações operacionais continuam nos módulos existentes.' }}
                                 </p>
                             </div>
