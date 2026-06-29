@@ -1,6 +1,6 @@
 @php
     $statusClasses = match ($registration?->status) {
-        \App\Enums\AdhesionRegistrationStatus::Registered => 'bg-civic-50 text-civic-900',
+        \App\Enums\AdhesionRegistrationStatus::Registered => 'bg-mvhab-surface text-mvhab-primary',
         \App\Enums\AdhesionRegistrationStatus::Cancelled,
         \App\Enums\AdhesionRegistrationStatus::Removed,
         \App\Enums\AdhesionRegistrationStatus::Expired => 'bg-ink-100 text-ink-700',
@@ -13,12 +13,13 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Espaço reservado</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Espaço reservado</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">Área do Candidato</h1>
                 <p class="mt-1 text-sm text-ink-500">Complete os dados preparatórios do seu Registo de Adesão.</p>
             </div>
+
             @if ($registration)
-                <span class="rounded-md px-2.5 py-1 text-xs font-semibold {{ $statusClasses }}">
+                <span class="rounded-2xl px-2.5 py-1 text-xs font-semibold {{ $statusClasses }}">
                     {{ $registration->status->label() }}
                 </span>
             @endif
@@ -45,24 +46,25 @@
                     <div class="mv-surface p-6">
                         <div class="flex items-end justify-between gap-4">
                             <div>
-                                <p class="text-sm font-semibold text-civic-700">Progresso geral</p>
+                                <p class="text-sm font-semibold text-mvhab-primary">Progresso geral</p>
                                 <p class="mt-1 text-3xl font-semibold text-ink-900">{{ $progress['overall'] }}%</p>
                             </div>
                             <p class="max-w-sm text-right text-sm text-ink-500">{{ $progress['next_step'] }}</p>
                         </div>
-                        <div class="mt-4 h-2 overflow-hidden rounded bg-ink-100">
-                            <div class="h-full bg-civic-700" style="width: {{ $progress['overall'] }}%"></div>
+
+                        <div class="mt-4 h-2 overflow-hidden rounded-2xl bg-ink-100">
+                            <div class="h-full bg-mvhab-primary" style="width: {{ $progress['overall'] }}%"></div>
                         </div>
 
                         <div class="mt-6 grid gap-3 sm:grid-cols-2">
                             @foreach ($progress['sections'] as $section)
-                                <a href="{{ route($section['route']) }}" class="rounded-md border border-ink-100 p-4 transition hover:bg-ink-50">
+                                <a href="{{ route($section['route']) }}" class="rounded-2xl border border-ink-100 p-4 transition hover:bg-mvhab-surface">
                                     <div class="flex items-center justify-between gap-4">
                                         <span class="font-semibold text-ink-900">{{ $section['label'] }}</span>
-                                        <span class="text-sm font-semibold text-civic-700">{{ $section['percentage'] }}%</span>
+                                        <span class="text-sm font-semibold text-mvhab-primary">{{ $section['percentage'] }}%</span>
                                     </div>
-                                    <div class="mt-2 h-1.5 overflow-hidden rounded bg-ink-100">
-                                        <div class="h-full bg-civic-700" style="width: {{ $section['percentage'] }}%"></div>
+                                    <div class="mt-2 h-1.5 overflow-hidden rounded-2xl bg-ink-100">
+                                        <div class="h-full bg-mvhab-primary" style="width: {{ $section['percentage'] }}%"></div>
                                     </div>
                                 </a>
                             @endforeach
@@ -113,7 +115,7 @@
                     <section class="mv-surface p-6">
                         <div class="flex flex-wrap items-start justify-between gap-4">
                             <div>
-                                <p class="text-sm font-semibold text-civic-700">Resumo documental</p>
+                                <p class="text-sm font-semibold text-mvhab-primary">Resumo documental</p>
                                 <h2 class="mt-1 text-xl font-semibold text-ink-900">{{ $documentProgress['percentage'] }}% concluído</h2>
                                 <p class="mt-2 max-w-2xl text-sm leading-6 text-ink-600">
                                     A submissão de documentos nesta área prepara o seu processo para futuras candidaturas. A validação final dependerá das regras do programa e do concurso a que se candidatar.
@@ -126,19 +128,19 @@
                         </div>
 
                         <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                            <div class="rounded-md border border-ink-100 p-4">
+                            <div class="rounded-2xl border border-ink-100 p-4">
                                 <p class="text-xs font-semibold uppercase text-ink-500">Obrigatórios</p>
                                 <p class="mt-2 text-2xl font-semibold text-ink-900">{{ $documentProgress['total_required'] }}</p>
                             </div>
-                            <div class="rounded-md border border-ink-100 p-4">
+                            <div class="rounded-2xl border border-ink-100 p-4">
                                 <p class="text-xs font-semibold uppercase text-ink-500">Em falta</p>
                                 <p class="mt-2 text-2xl font-semibold text-ink-900">{{ $documentProgress['missing'] }}</p>
                             </div>
-                            <div class="rounded-md border border-ink-100 p-4">
+                            <div class="rounded-2xl border border-ink-100 p-4">
                                 <p class="text-xs font-semibold uppercase text-ink-500">Submetidos</p>
                                 <p class="mt-2 text-2xl font-semibold text-ink-900">{{ $documentProgress['submitted'] }}</p>
                             </div>
-                            <div class="rounded-md border border-ink-100 p-4">
+                            <div class="rounded-2xl border border-ink-100 p-4">
                                 <p class="text-xs font-semibold uppercase text-ink-500">Validados</p>
                                 <p class="mt-2 text-2xl font-semibold text-ink-900">{{ $documentProgress['validated'] }}</p>
                             </div>
