@@ -17,7 +17,7 @@
                     @endif
 
                     @if ($breadcrumb['route'] !== null && ! $loop->last)
-                        <a href="{{ route($breadcrumb['route'], $breadcrumb['parameters']) }}" class="rounded-sm font-medium text-ink-500 transition hover:text-civic-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-offset-2">
+                        <a href="{{ route($breadcrumb['route'], $breadcrumb['parameters']) }}" class="rounded-sm font-medium text-ink-500 transition hover:text-mvhab-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-offset-2">
                             {{ $breadcrumb['label'] }}
                         </a>
                     @else

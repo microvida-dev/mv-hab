@@ -31,8 +31,8 @@
                             </div>
                             <div class="grid divide-y divide-ink-100 md:grid-cols-2 md:divide-x md:divide-y-0">
                                 @foreach ($group['items'] as $item)
-                                    <a href="{{ route($item['route'], $item['parameters'] ?? []) }}" class="flex min-h-24 items-start gap-3 px-5 py-4 transition hover:bg-ink-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-inset">
-                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-civic-50 text-civic-700">
+                                    <a href="{{ route($item['route'], $item['parameters'] ?? []) }}" class="flex min-h-24 items-start gap-3 px-5 py-4 transition hover:bg-ink-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-inset">
+                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
                                             <x-ui-icon :name="$item['icon'] ?? 'dashboard'" class="h-4 w-4" />
                                         </span>
                                         <span>

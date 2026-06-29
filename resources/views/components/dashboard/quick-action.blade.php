@@ -2,8 +2,8 @@
     'action',
 ])
 
-<a href="{{ route($action['route'], $action['parameters'] ?? []) }}" class="flex min-h-24 items-start gap-3 px-5 py-4 transition hover:bg-ink-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-inset">
-    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-civic-50 text-civic-700">
+<a href="{{ route($action['route'], $action['parameters'] ?? []) }}" class="flex min-h-24 items-start gap-3 px-5 py-4 transition hover:bg-ink-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-inset">
+    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
         <x-ui-icon name="arrow" class="h-4 w-4" />
     </span>
     <span>
