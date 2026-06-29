@@ -4,6 +4,10 @@
         :programs="$programs"
     />
 
+    <x-public.housing-search />
+
+    <x-public.application-journey />
+
     <x-public.featured-contests :contests="$contests" />
 
     <section class="border-y border-ink-100 bg-ink-50">
