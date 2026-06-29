@@ -3,14 +3,14 @@
     <div><x-input-label for="date_to" value="Até" /><x-text-input id="date_to" name="date_to" type="date" class="mt-1 block w-full" :value="$filters['date_to'] ?? ''" /></div>
     <div>
         <x-input-label for="program_id" value="Programa" />
-        <select id="program_id" name="program_id" class="mt-1 block w-full rounded-md border-ink-200 text-sm">
+        <select id="program_id" name="program_id" class="mt-1 block w-full rounded-2xl border-ink-200 text-sm">
             <option value="">Todos</option>
             @foreach ($programs as $program)<option value="{{ $program->id }}" @selected(($filters['program_id'] ?? null) == $program->id)>{{ $program->name }}</option>@endforeach
         </select>
     </div>
     <div>
         <x-input-label for="contest_id" value="Concurso" />
-        <select id="contest_id" name="contest_id" class="mt-1 block w-full rounded-md border-ink-200 text-sm">
+        <select id="contest_id" name="contest_id" class="mt-1 block w-full rounded-2xl border-ink-200 text-sm">
             <option value="">Todos</option>
             @foreach ($contests as $contest)<option value="{{ $contest->id }}" @selected(($filters['contest_id'] ?? null) == $contest->id)>{{ $contest->title }}</option>@endforeach
         </select>

@@ -11,8 +11,8 @@
             <form method="POST" action="{{ route('backoffice.reports.exports.store', $report) }}" class="space-y-4 border-t border-ink-100 pt-6">@csrf
                 <h2 class="text-lg font-semibold text-ink-900">Exportar</h2>
                 <div class="grid gap-3 md:grid-cols-4">
-                    <select name="format" class="rounded-md border-ink-200">@foreach($report->available_formats as $format)<option value="{{ $format }}">{{ strtoupper($format) }}</option>@endforeach</select>
-                    <select name="scope" class="rounded-md border-ink-200">@foreach($report->available_scopes as $scope)<option value="{{ $scope }}">{{ \App\Enums\ExportScope::from($scope)->label() }}</option>@endforeach</select>
+                    <select name="format" class="rounded-2xl border-ink-200">@foreach($report->available_formats as $format)<option value="{{ $format }}">{{ strtoupper($format) }}</option>@endforeach</select>
+                    <select name="scope" class="rounded-2xl border-ink-200">@foreach($report->available_scopes as $scope)<option value="{{ $scope }}">{{ \App\Enums\ExportScope::from($scope)->label() }}</option>@endforeach</select>
                     <x-text-input name="date_from" type="date" /><x-text-input name="date_to" type="date" />
                 </div>
                 @if($report->sensitivity_level->requiresConfirmation())<label class="flex items-start gap-3 text-sm text-ink-700"><input type="checkbox" name="confirmed" value="1" required>Confirma a exportação deste relatório? A operação ficará registada com os filtros aplicados, data, utilizador e formato exportado.</label>@endif

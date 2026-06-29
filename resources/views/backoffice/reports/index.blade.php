@@ -13,7 +13,7 @@
             <h2 class="text-lg font-semibold text-ink-900">Catálogo disponível</h2>
             <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 @forelse ($reports as $report)
-                    <a href="{{ route('backoffice.reports.definitions.show', $report) }}" class="mv-card block transition hover:border-civic-300">
+                    <a href="{{ route('backoffice.reports.definitions.show', $report) }}" class="mv-card block transition hover:border-mvhab-support">
                         <div class="flex items-start justify-between gap-3"><h3 class="font-semibold text-ink-900">{{ $report->name }}</h3><span class="mv-badge">{{ $report->report_type->label() }}</span></div>
                         <p class="mt-2 text-sm text-ink-600">{{ $report->description }}</p>
                         <p class="mt-4 text-xs font-medium text-ink-500">{{ $report->sensitivity_level->label() }}</p>
