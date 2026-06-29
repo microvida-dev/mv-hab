@@ -14,7 +14,7 @@
 
             <div class="overflow-hidden mv-surface">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <table class="min-w-full divide-y divide-ink-100 text-sm">
                         <thead class="bg-mvhab-surface">
                             <tr>
                                 <th class="px-4 py-3 text-left font-semibold text-ink-600">Munícipe</th>
@@ -25,7 +25,7 @@
                                 <th class="px-4 py-3 text-right font-semibold text-ink-600">Ações</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-ink-100">
                             @forelse ($applications as $application)
                                 <tr>
                                     <td class="px-4 py-3 font-medium text-ink-900">{{ $application->citizen->name }}</td>
