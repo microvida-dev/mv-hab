@@ -4,7 +4,7 @@
 
 <x-ui.card>
     <div class="flex items-start gap-3">
-        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-civic-50 text-civic-700">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
             <x-ui-icon name="bolt" class="h-5 w-5" />
         </span>
         <div>

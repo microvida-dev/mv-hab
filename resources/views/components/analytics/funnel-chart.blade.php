@@ -15,7 +15,7 @@
 
     @forelse ($steps as $step)
         @php $width = max(12, (int) round(((float) ($step['value'] ?? 0) / $max) * 100)); @endphp
-        <div class="rounded-lg border border-ink-100 p-3">
+        <div class="rounded-2xl border border-ink-100 p-3">
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <p class="font-medium text-ink-900">{{ $step['label'] ?? 'Fase' }}</p>

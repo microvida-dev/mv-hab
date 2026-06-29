@@ -23,7 +23,7 @@
 
                 <div class="mt-4 space-y-2">
                     @foreach (($queue['items'] ?? []) as $item)
-                        <a href="{{ $item['url'] }}" class="block truncate rounded-md border border-ink-100 px-3 py-2 text-sm font-medium text-ink-800 hover:border-civic-200 hover:bg-civic-50 focus:outline-none focus:ring-2 focus:ring-civic-500">
+                        <a href="{{ $item['url'] }}" class="block truncate rounded-2xl border border-ink-100 px-3 py-2 text-sm font-medium text-ink-800 hover:border-civic-200 hover:bg-mvhab-surface focus:outline-none focus:ring-2 focus:ring-civic-500">
                             {{ $item['title'] }}
                         </a>
                     @endforeach

@@ -16,7 +16,7 @@
                 <h3 class="text-sm font-semibold text-ink-900">{{ $group['title'] }}</h3>
                 <div class="mt-3 space-y-2">
                     @foreach (($group['items'] ?? []) as $item)
-                        <a href="{{ $item['url'] }}" class="flex items-center justify-between gap-3 rounded-md border border-ink-100 px-3 py-2 text-sm hover:border-civic-200 hover:bg-civic-50 focus:outline-none focus:ring-2 focus:ring-civic-500">
+                        <a href="{{ $item['url'] }}" class="flex items-center justify-between gap-3 rounded-2xl border border-ink-100 px-3 py-2 text-sm hover:border-civic-200 hover:bg-mvhab-surface focus:outline-none focus:ring-2 focus:ring-civic-500">
                             <span class="min-w-0 truncate font-medium text-ink-800">{{ $item['title'] }}</span>
                             <span class="flex shrink-0 items-center gap-2">
                                 <x-ui.status-badge :status="$item['priority']" :label="$item['priority_label']" />

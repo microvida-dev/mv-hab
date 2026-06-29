@@ -16,7 +16,7 @@
 
     <div class="grid gap-3 sm:grid-cols-2">
         @forelse (($sla['buckets'] ?? []) as $bucket)
-            <div class="rounded-lg border border-ink-100 p-3">
+            <div class="rounded-2xl border border-ink-100 p-3">
                 <div class="flex items-center justify-between gap-3">
                     <x-ui.status-badge :status="$bucket['status'] ?? 'neutral'" :label="$bucket['label'] ?? 'SLA'" />
                     <span class="text-lg font-semibold text-ink-900">{{ $bucket['value'] ?? 0 }}</span>

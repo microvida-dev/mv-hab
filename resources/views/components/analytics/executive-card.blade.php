@@ -4,7 +4,7 @@
 
 <x-ui.card {{ $attributes->merge(['class' => 'space-y-4']) }}>
     <div>
-        <p class="text-sm font-semibold text-civic-700">Resumo executivo</p>
+        <p class="text-sm font-semibold text-mvhab-primary">Resumo executivo</p>
         <h2 class="mt-1 text-xl font-semibold text-ink-900">{{ $summary['title'] ?? 'Leitura executiva municipal' }}</h2>
         <p class="mt-2 text-sm leading-6 text-ink-600">{{ $summary['description'] ?? '' }}</p>
     </div>

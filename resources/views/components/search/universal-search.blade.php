@@ -14,7 +14,7 @@
                     name="q"
                     value="{{ $term }}"
                     type="search"
-                    class="w-full rounded-md border-ink-200 text-sm shadow-sm focus:border-civic-600 focus:ring-civic-600"
+                    class="w-full rounded-2xl border-ink-200 text-sm shadow-sm focus:border-civic-600 focus:ring-civic-600"
                     placeholder="Pesquisar candidatura, concurso, contrato, tarefa, espaço de trabalho ou comando..."
                     aria-describedby="universal-search-help"
                     autocomplete="off"

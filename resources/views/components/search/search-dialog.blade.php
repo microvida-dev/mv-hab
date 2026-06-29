@@ -3,7 +3,7 @@
 ])
 
 <div
-    {{ $attributes->merge(['class' => 'rounded-lg border border-ink-200 bg-white shadow-lg']) }}
+    {{ $attributes->merge(['class' => 'rounded-2xl border border-ink-200 bg-white shadow-lg']) }}
     role="dialog"
     aria-label="{{ $title }}"
 >
