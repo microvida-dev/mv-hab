@@ -1,1 +1,25 @@
-<x-app-layout><x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Execuções de relatórios</h1></x-slot><div class="overflow-x-auto"><table class="mv-table"><thead><tr><th>Relatório</th><th>Utilizador</th><th>Estado</th><th>Linhas</th><th>Início</th></tr></thead><tbody>@foreach($runs as $run)<tr><td><a class="font-semibold text-mvhab-primary" href="{{ route('backoffice.reports.runs.show', $run) }}">{{ $run->definition->name }}</a></td><td>{{ $run->user->name }}</td><td>{{ $run->status->label() }}</td><td>{{ $run->row_count ?? '—' }}</td><td>{{ $run->started_at->format('d/m/Y H:i') }}</td></tr>@endforeach</tbody></table></div><div class="mt-6">{{ $runs->links() }}</div></x-app-layout>
+<x-app-layout>
+    <x-slot name="header">
+        <h1 class="text-xl font-semibold text-ink-900">Execuções de relatórios</h1>
+    </x-slot>
+
+    <x-ui.table :headers="['Relatório', 'Utilizador', 'Estado', 'Linhas', 'Início']">
+        @forelse ($runs as $run)
+            <tr>
+                <td>
+                    <a class="font-semibold text-mvhab-primary" href="{{ route('backoffice.reports.runs.show', $run) }}">
+                        {{ $run->definition->name }}
+                    </a>
+                </td>
+                <td>{{ $run->user->name }}</td>
+                <td>{{ $run->status->label() }}</td>
+                <td>{{ $run->row_count ?? '—' }}</td>
+                <td>{{ $run->started_at->format('d/m/Y H:i') }}</td>
+            </tr>
+        @empty
+            <x-ui.table-empty :colspan="5" message="Sem execuções registadas." />
+        @endforelse
+    </x-ui.table>
+
+    <div class="mt-6">{{ $runs->links() }}</div>
+</x-app-layout>
