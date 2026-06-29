@@ -1,10 +1,10 @@
 <x-public-layout :title="$program->name">
     <section class="border-b border-ink-100 bg-ink-50">
         <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-            <a href="{{ route('public.programs.index') }}" class="text-sm font-semibold text-civic-700 hover:text-civic-900">Programas</a>
+            <a href="{{ route('public.programs.index') }}" class="text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary">Programas</a>
             <div class="mt-5 flex flex-wrap items-center gap-3">
                 <p class="text-sm font-semibold text-ink-500">{{ $program->municipality->name }}</p>
-                <span class="rounded-md bg-civic-50 px-2.5 py-1 text-xs font-semibold text-civic-900">Publicado</span>
+                <span class="rounded-md bg-mvhab-surface px-2.5 py-1 text-xs font-semibold text-mvhab-primary">Publicado</span>
             </div>
             <h1 class="mt-2 max-w-4xl text-3xl font-semibold text-ink-900">{{ $program->name }}</h1>
             <p class="mt-4 max-w-3xl text-lg leading-8 text-ink-600">{{ $program->summary }}</p>
@@ -35,7 +35,7 @@
             <section>
                 <div class="flex items-end justify-between gap-4">
                     <h2 class="text-xl font-semibold text-ink-900">Concursos deste programa</h2>
-                    <a href="{{ route('public.contests.index') }}" class="text-sm font-semibold text-civic-700">Todos os concursos</a>
+                    <a href="{{ route('public.contests.index') }}" class="text-sm font-semibold text-mvhab-primary">Todos os concursos</a>
                 </div>
                 <div class="mt-4 grid gap-4 md:grid-cols-2">
                     @forelse ($program->contests as $contest)

@@ -14,7 +14,7 @@
     <section class="border-y border-ink-100 bg-ink-50">
         <div class="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:px-8">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Antes de se candidatar</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Antes de se candidatar</p>
                 <h2 class="mt-1 text-2xl font-semibold text-ink-900">Organize a informação necessária</h2>
                 <p class="mt-4 max-w-3xl text-base leading-7 text-ink-600">Confirme se tem consigo os dados de identificação, informação do agregado familiar, comprovativos de rendimentos e documentos habitacionais que possam vir a ser solicitados no aviso de concurso.</p>
                 <p class="mt-3 text-sm leading-6 text-ink-500">A lista definitiva de documentos dependerá sempre das regras e do aviso de cada concurso.</p>
@@ -23,7 +23,7 @@
             <div class="border-l-4 border-signal-400 bg-white p-5">
                 <h2 class="font-semibold text-ink-900">Precisa de ajuda?</h2>
                 <p class="mt-2 text-sm leading-6 text-ink-500">Consulte as respostas institucionais sobre programas, concursos e preparação da futura candidatura.</p>
-                <a href="{{ route('public.faq') }}" class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-civic-700 hover:text-civic-900">
+                <a href="{{ route('public.faq') }}" class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary">
                     Ver perguntas frequentes
                     <x-ui-icon name="arrow" class="h-4 w-4" />
                 </a>

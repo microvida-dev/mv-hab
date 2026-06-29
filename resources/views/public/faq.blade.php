@@ -4,7 +4,7 @@
 >
     <section class="border-b border-ink-100 bg-ink-50">
         <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-            <p class="text-sm font-semibold text-civic-700">Apoio ao cidadão</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Apoio ao cidadão</p>
             <h1 class="mt-2 text-3xl font-semibold text-ink-900">Perguntas Frequentes</h1>
             <p class="mt-3 max-w-3xl text-base leading-7 text-ink-500">Informação geral e não vinculativa para compreender a plataforma e preparar as próximas etapas.</p>
         </div>
@@ -19,7 +19,7 @@
                     name="q"
                     value="{{ $search ?? '' }}"
                     type="search"
-                    class="mt-2 w-full rounded-md border border-ink-200 px-3 py-2 text-sm text-ink-900 focus:border-civic-500 focus:outline-none focus:ring-2 focus:ring-civic-100"
+                    class="mt-2 w-full rounded-md border border-ink-200 px-3 py-2 text-sm text-ink-900 focus:border-mvhab-primary focus:outline-none focus:ring-2 focus:ring-mvhab-primary/20"
                     placeholder="Candidatura, visitas, documentos..."
                 >
             </div>
@@ -46,7 +46,7 @@
                 <details class="group py-5">
                     <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-ink-900">
                         {{ $faq->question }}
-                        <span class="text-xl font-normal text-civic-700" aria-hidden="true">+</span>
+                        <span class="text-xl font-normal text-mvhab-primary" aria-hidden="true">+</span>
                     </summary>
                     <p class="mt-3 max-w-3xl text-sm leading-6 text-ink-600">{{ $faq->answer }}</p>
                 </details>
@@ -58,7 +58,7 @@
                     <details class="group py-5">
                         <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-ink-900">
                             {{ $question }}
-                            <span class="text-xl font-normal text-civic-700" aria-hidden="true">+</span>
+                            <span class="text-xl font-normal text-mvhab-primary" aria-hidden="true">+</span>
                         </summary>
                         <p class="mt-3 max-w-3xl text-sm leading-6 text-ink-600">{{ $answer }}</p>
                     </details>
