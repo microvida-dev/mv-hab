@@ -121,14 +121,14 @@
 <div class="lg:hidden">
     <div class="flex h-16 items-center justify-between border-b border-ink-100 bg-white px-4">
         <a href="{{ route($homeRoute) }}" class="flex items-center gap-3">
-            <x-application-logo class="block h-9 w-auto fill-current text-civic-700" />
+            <x-application-logo class="block h-9 w-auto fill-current text-mvhab-primary" />
             <div>
                 <p class="text-sm font-bold text-ink-900">MV HAB</p>
                 <p class="text-xs font-medium text-ink-500">Habitação municipal</p>
             </div>
         </a>
 
-        <button type="button" class="rounded-md border border-ink-100 bg-white p-2 text-ink-700" @click="sidebarOpen = true" aria-label="Abrir navegação">
+        <button type="button" class="rounded-2xl border border-ink-100 bg-white p-2 text-ink-700" @click="sidebarOpen = true" aria-label="Abrir navegação">
             <x-ui-icon name="menu" class="h-5 w-5" />
         </button>
     </div>
@@ -140,14 +140,14 @@
     <aside class="fixed inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col border-r border-ink-100 bg-white">
         <div class="flex h-16 items-center justify-between border-b border-ink-100 px-4">
             <a href="{{ route($homeRoute) }}" class="flex items-center gap-3">
-                <x-application-logo class="block h-9 w-auto fill-current text-civic-700" />
+                <x-application-logo class="block h-9 w-auto fill-current text-mvhab-primary" />
                 <div>
                     <p class="text-sm font-bold text-ink-900">MV HAB</p>
                     <p class="text-xs font-medium text-ink-500">Habitação municipal</p>
                 </div>
             </a>
 
-            <button type="button" class="rounded-md border border-ink-100 bg-white p-2 text-ink-700" @click="sidebarOpen = false" aria-label="Fechar navegação">
+            <button type="button" class="rounded-2xl border border-ink-100 bg-white p-2 text-ink-700" @click="sidebarOpen = false" aria-label="Fechar navegação">
                 <x-ui-icon name="close" class="h-5 w-5" />
             </button>
         </div>
@@ -158,7 +158,7 @@
 
         <div class="border-t border-ink-100 p-4">
             <div class="flex items-center gap-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-md bg-civic-50 text-civic-700">
+                <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
                     <x-ui-icon name="user" class="h-5 w-5" />
                 </div>
                 <div class="min-w-0">
@@ -170,7 +170,7 @@
             @if ($isCandidate)
                 <div class="mt-4 space-y-1">
                     @foreach ($navigationFooterLinks as $link)
-                        <a href="{{ route($link['route']) }}" class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink-600 transition hover:bg-ink-50 hover:text-ink-900">
+                        <a href="{{ route($link['route']) }}" class="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-ink-600 transition hover:bg-mvhab-surface hover:text-ink-900">
                             <x-ui-icon :name="$link['icon']" class="h-4 w-4 shrink-0" />
                             <span>{{ $link['label'] }}</span>
                         </a>
@@ -178,7 +178,7 @@
 
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-ink-600 transition hover:bg-ink-50 hover:text-ink-900">
+                        <button type="submit" class="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm font-medium text-ink-600 transition hover:bg-mvhab-surface hover:text-ink-900">
                             <x-ui-icon name="alert" class="h-4 w-4 shrink-0" />
                             <span>Terminar sessão</span>
                         </button>
@@ -201,7 +201,7 @@
 <aside class="fixed inset-y-0 left-0 hidden w-72 flex-col border-r border-ink-100 bg-white lg:flex">
     <div class="flex h-20 items-center border-b border-ink-100 px-6">
         <a href="{{ route($homeRoute) }}" class="flex items-center gap-3">
-            <x-application-logo class="block h-10 w-auto fill-current text-civic-700" />
+            <x-application-logo class="block h-10 w-auto fill-current text-mvhab-primary" />
             <div>
                 <p class="text-base font-bold text-ink-900">MV HAB</p>
                 <p class="text-xs font-medium text-ink-500">Plataforma municipal</p>
@@ -215,8 +215,8 @@
 
     <div class="border-t border-ink-100 p-4">
         @if ($isCandidate)
-            <div class="flex items-center gap-3 rounded-md border border-ink-100 bg-white px-3 py-3">
-                <span class="flex h-10 w-10 items-center justify-center rounded-md bg-civic-50 text-civic-700">
+            <div class="flex items-center gap-3 rounded-2xl border border-ink-100 bg-white px-3 py-3">
+                <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
                     <x-ui-icon name="user" class="h-5 w-5" />
                 </span>
                 <span class="min-w-0 flex-1">
@@ -227,7 +227,7 @@
 
             <div class="mt-4 space-y-1">
                 @foreach ($navigationFooterLinks as $link)
-                    <a href="{{ route($link['route']) }}" class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink-600 transition hover:bg-ink-50 hover:text-ink-900">
+                    <a href="{{ route($link['route']) }}" class="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-ink-600 transition hover:bg-mvhab-surface hover:text-ink-900">
                         <x-ui-icon :name="$link['icon']" class="h-4 w-4 shrink-0" />
                         <span>{{ $link['label'] }}</span>
                     </a>
@@ -235,7 +235,7 @@
 
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-ink-600 transition hover:bg-ink-50 hover:text-ink-900">
+                    <button type="submit" class="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm font-medium text-ink-600 transition hover:bg-mvhab-surface hover:text-ink-900">
                         <x-ui-icon name="alert" class="h-4 w-4 shrink-0" />
                         <span>Terminar sessão</span>
                     </button>
@@ -244,8 +244,8 @@
         @else
             <x-dropdown align="right" width="48">
                 <x-slot name="trigger">
-                    <button class="flex w-full items-center gap-3 rounded-md border border-ink-100 bg-white px-3 py-3 text-left transition hover:bg-ink-50">
-                    <span class="flex h-10 w-10 items-center justify-center rounded-md bg-civic-50 text-civic-700">
+                    <button class="flex w-full items-center gap-3 rounded-2xl border border-ink-100 bg-white px-3 py-3 text-left transition hover:bg-mvhab-surface">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
                         <x-ui-icon name="user" class="h-5 w-5" />
                     </span>
                     <span class="min-w-0 flex-1">
