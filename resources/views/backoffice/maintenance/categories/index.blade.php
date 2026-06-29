@@ -1,5 +1,55 @@
 <x-app-layout>
-    <x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Categorias de manutenção</h1></x-slot>
-    <a class="mv-button-primary" href="{{ route('backoffice.maintenance.categories.create') }}">Criar categoria</a>
-    <div class="mv-card mt-4 overflow-x-auto"><table class="min-w-full text-sm"><thead><tr class="text-left text-ink-500"><th>Código</th><th>Nome</th><th>Urgência</th><th></th></tr></thead><tbody>@foreach ($categories as $category)<tr class="border-t border-ink-100"><td class="py-2">{{ $category->code }}</td><td>{{ $category->name }}</td><td>{{ $category->default_urgency?->label() ?? '-' }}</td><td><a class="text-civic-700" href="{{ route('backoffice.maintenance.categories.edit', $category) }}">Editar</a></td></tr>@endforeach</tbody></table>{{ $categories->links() }}</div>
+    <x-slot name="header">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <h1 class="text-xl font-semibold text-ink-900">
+                Categorias de manutenção
+            </h1>
+
+            <a
+                href="{{ route('backoffice.maintenance.categories.create') }}"
+                class="mv-button-primary"
+            >
+                Criar categoria
+            </a>
+        </div>
+    </x-slot>
+
+    <div class="space-y-6">
+        <x-ui.table
+            :headers="[
+                'Código',
+                'Nome',
+                'Urgência',
+                '',
+            ]"
+        >
+            @forelse ($categories as $category)
+                <tr>
+                    <td>{{ $category->code }}</td>
+
+                    <td>{{ $category->name }}</td>
+
+                    <td>{{ $category->default_urgency?->label() ?? '-' }}</td>
+
+                    <x-ui.table-actions>
+                        <a
+                            href="{{ route('backoffice.maintenance.categories.edit', $category) }}"
+                            class="font-semibold text-mvhab-primary"
+                        >
+                            Editar
+                        </a>
+                    </x-ui.table-actions>
+                </tr>
+            @empty
+                <x-ui.table-empty
+                    :colspan="4"
+                    message="Sem categorias de manutenção."
+                />
+            @endforelse
+        </x-ui.table>
+
+        <div>
+            {{ $categories->links() }}
+        </div>
+    </div>
 </x-app-layout>

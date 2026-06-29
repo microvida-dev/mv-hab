@@ -1,5 +1,58 @@
 <x-app-layout>
-    <x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Vistorias</h1></x-slot>
-    <a class="mv-button-primary" href="{{ route('backoffice.inspections.create') }}">Criar vistoria</a>
-    <div class="mv-card mt-4 overflow-x-auto"><table class="min-w-full text-sm"><thead><tr class="text-left text-ink-500"><th>Número</th><th>Tipo</th><th>Habitação</th><th>Estado</th><th>Data</th></tr></thead><tbody>@foreach ($inspections as $inspection)<tr class="border-t border-ink-100"><td class="py-2"><a class="text-civic-700" href="{{ route('backoffice.inspections.show', $inspection) }}">{{ $inspection->inspection_number }}</a></td><td>{{ $inspection->inspection_type->label() }}</td><td>{{ $inspection->housingUnit?->code }}</td><td>{{ $inspection->status->label() }}</td><td>{{ $inspection->scheduled_for?->format('d/m/Y H:i') }}</td></tr>@endforeach</tbody></table>{{ $inspections->links() }}</div>
+    <x-slot name="header">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <h1 class="text-xl font-semibold text-ink-900">
+                Vistorias
+            </h1>
+
+            <a
+                href="{{ route('backoffice.inspections.create') }}"
+                class="mv-button-primary"
+            >
+                Criar vistoria
+            </a>
+        </div>
+    </x-slot>
+
+    <div class="space-y-6">
+        <x-ui.table
+            :headers="[
+                'Número',
+                'Tipo',
+                'Habitação',
+                'Estado',
+                'Data',
+            ]"
+        >
+            @forelse ($inspections as $inspection)
+                <tr>
+                    <td>
+                        <a
+                            href="{{ route('backoffice.inspections.show', $inspection) }}"
+                            class="font-semibold text-mvhab-primary"
+                        >
+                            {{ $inspection->inspection_number }}
+                        </a>
+                    </td>
+
+                    <td>{{ $inspection->inspection_type->label() }}</td>
+
+                    <td>{{ $inspection->housingUnit?->code }}</td>
+
+                    <td>{{ $inspection->status->label() }}</td>
+
+                    <td>{{ $inspection->scheduled_for?->format('d/m/Y H:i') }}</td>
+                </tr>
+            @empty
+                <x-ui.table-empty
+                    :colspan="5"
+                    message="Sem vistorias."
+                />
+            @endforelse
+        </x-ui.table>
+
+        <div>
+            {{ $inspections->links() }}
+        </div>
+    </div>
 </x-app-layout>

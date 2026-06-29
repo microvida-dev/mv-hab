@@ -1,5 +1,52 @@
 <x-app-layout>
-    <x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Fornecedores de manutenção</h1></x-slot>
-    <a class="mv-button-primary" href="{{ route('backoffice.maintenance.suppliers.create') }}">Criar fornecedor</a>
-    <div class="mv-card mt-4 overflow-x-auto"><table class="min-w-full text-sm"><tbody>@foreach ($suppliers as $supplier)<tr class="border-t border-ink-100"><td class="py-2"><a class="text-civic-700" href="{{ route('backoffice.maintenance.suppliers.show', $supplier) }}">{{ $supplier->name }}</a></td><td>{{ $supplier->status }}</td><td>{{ $supplier->service_scope }}</td></tr>@endforeach</tbody></table>{{ $suppliers->links() }}</div>
+    <x-slot name="header">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <h1 class="text-xl font-semibold text-ink-900">
+                Fornecedores de manutenção
+            </h1>
+
+            <a
+                href="{{ route('backoffice.maintenance.suppliers.create') }}"
+                class="mv-button-primary"
+            >
+                Criar fornecedor
+            </a>
+        </div>
+    </x-slot>
+
+    <div class="space-y-6">
+        <x-ui.table
+            :headers="[
+                'Fornecedor',
+                'Estado',
+                'Âmbito',
+            ]"
+        >
+            @forelse ($suppliers as $supplier)
+                <tr>
+                    <td>
+                        <a
+                            href="{{ route('backoffice.maintenance.suppliers.show', $supplier) }}"
+                            class="font-semibold text-mvhab-primary"
+                        >
+                            {{ $supplier->name }}
+                        </a>
+                    </td>
+
+                    <td>{{ $supplier->status }}</td>
+
+                    <td>{{ $supplier->service_scope }}</td>
+                </tr>
+            @empty
+                <x-ui.table-empty
+                    :colspan="3"
+                    message="Sem fornecedores de manutenção."
+                />
+            @endforelse
+        </x-ui.table>
+
+        <div>
+            {{ $suppliers->links() }}
+        </div>
+    </div>
 </x-app-layout>
