@@ -3,7 +3,7 @@
 <section class="border-y border-ink-100 bg-ink-50">
     <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div>
-            <p class="text-sm font-semibold uppercase tracking-wide text-civic-700">Programas</p>
+            <p class="text-sm font-semibold uppercase tracking-wide text-mvhab-primary">Programas</p>
             <h2 class="mt-2 text-3xl font-bold text-ink-900">Enquadramento municipal</h2>
         </div>
 
@@ -16,7 +16,7 @@
                     <p class="mt-5 text-sm font-semibold text-ink-700">
                         {{ $program->contests_count }} concurso(s) publicado(s)
                     </p>
-                    <a href="{{ route('public.programs.show', $program->slug) }}" class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-civic-700 hover:text-civic-900">
+                    <a href="{{ route('public.programs.show', $program->slug) }}" class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary">
                         Consultar programa
                         <x-ui-icon name="arrow" class="h-4 w-4" />
                     </a>

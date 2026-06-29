@@ -2,7 +2,7 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         <div class="max-w-3xl">
-            <p class="text-sm font-semibold uppercase tracking-wide text-civic-700">
+            <p class="text-sm font-semibold uppercase tracking-wide text-mvhab-primary">
                 Encontrar Habitação
             </p>
 

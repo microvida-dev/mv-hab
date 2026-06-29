@@ -2,7 +2,7 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         <div class="mx-auto max-w-3xl text-center">
-            <p class="text-sm font-semibold uppercase tracking-wide text-civic-700">
+            <p class="text-sm font-semibold uppercase tracking-wide text-mvhab-primary">
                 Como funciona
             </p>
 
@@ -30,9 +30,9 @@
 
             @foreach($steps as [$number, $title, $description])
 
-                <div class="group rounded-2xl border border-ink-100 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-civic-300 hover:shadow-lg">
+                <div class="group rounded-2xl border border-ink-100 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-mvhab-support hover:shadow-lg">
 
-                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-civic-700 text-lg font-bold text-white">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-mvhab-primary text-lg font-bold text-white">
                         {{ $number }}
                     </div>
 

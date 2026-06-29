@@ -14,7 +14,7 @@
                 Habitação Municipal Acessível
             </h1>
 
-            <p class="mt-6 max-w-2xl text-lg leading-8 text-civic-100">
+            <p class="mt-6 max-w-2xl text-lg leading-8 text-white/90">
                 Consulte concursos, descubra habitações disponíveis, simule a sua elegibilidade e acompanhe o processo online.
             </p>
 
@@ -34,7 +34,7 @@
         </div>
 
         <aside class="rounded-2xl border border-white/15 bg-white/20 p-6 shadow-2xl backdrop-blur-xl">
-            <p class="text-sm font-semibold text-civic-100">
+            <p class="text-sm font-semibold text-white/90">
                 Estado atual
             </p>
 
@@ -56,7 +56,7 @@
 
                 <div class="rounded-xl bg-white p-4 text-ink-900">
                     <dt class="text-sm font-medium text-ink-500">Próximo passo recomendado</dt>
-                    <dd class="mt-2 text-sm font-semibold text-civic-800">
+                    <dd class="mt-2 text-sm font-semibold text-mvhab-primary">
                         Simular elegibilidade antes de iniciar candidatura
                     </dd>
                 </div>

@@ -3,14 +3,14 @@
 <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
     <div class="flex items-end justify-between gap-4">
         <div>
-            <p class="text-sm font-semibold uppercase tracking-wide text-civic-700">Concursos</p>
+            <p class="text-sm font-semibold uppercase tracking-wide text-mvhab-primary">Concursos</p>
             <h2 class="mt-2 text-3xl font-bold text-ink-900">Oportunidades publicadas</h2>
             <p class="mt-3 max-w-2xl text-base leading-7 text-ink-600">
                 Consulte concursos municipais publicados, prazos oficiais e habitações associadas.
             </p>
         </div>
 
-        <a href="{{ route('public.contests.index') }}" class="hidden text-sm font-semibold text-civic-700 hover:text-civic-900 sm:block">
+        <a href="{{ route('public.contests.index') }}" class="hidden text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary sm:block">
             Ver todos
         </a>
     </div>
