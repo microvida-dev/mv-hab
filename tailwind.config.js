@@ -12,6 +12,13 @@ export default {
     theme: {
         extend: {
             colors: {
+                mvhab: {
+                    primary: '#0597F2',
+                    primaryLight: '#27A4F2',
+                    secondary: '#9196F2',
+                    support: '#59A8D9',
+                    surface: '#F2F2F2',
+                },
                 civic: {
                     50: '#eefaf8',
                     100: '#d4f1ec',

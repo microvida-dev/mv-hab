@@ -1,12 +1,12 @@
 @props(['stats'])
 
-<section class="relative overflow-hidden bg-civic-950 text-white">
+<section class="relative overflow-hidden bg-gradient-to-br from-mvhab-primary via-mvhab-primaryLight to-mvhab-secondary text-white">
     <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_34rem)]"></div>
-    <div class="absolute inset-y-0 right-0 hidden w-1/2 bg-civic-900/40 lg:block"></div>
+    <div class="absolute inset-y-0 right-0 hidden w-1/2 bg-gradient-to-l from-black/10 to-transparent lg:block"></div>
 
-    <div class="relative mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:py-24 lg:grid-cols-[minmax(0,1fr)_24rem] lg:px-8">
+    <div class="relative mx-auto grid max-w-7xl gap-10 px-4 py-24 sm:px-6 md:py-32 lg:grid-cols-[minmax(0,1fr)_24rem] lg:px-8">
         <div class="max-w-3xl">
-            <p class="text-sm font-semibold uppercase tracking-wide text-civic-100">
+            <p class="text-sm font-semibold uppercase tracking-wide text-white/80">
                 Portal municipal de habitação
             </p>
 
@@ -19,21 +19,21 @@
             </p>
 
             <div class="mt-8 flex flex-wrap gap-3">
-                <a href="{{ route('public.contests.index') }}" class="inline-flex min-h-12 items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-semibold text-civic-950 shadow-sm hover:bg-civic-50">
+                <a href="{{ route('public.contests.index') }}" class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-mvhab-primary shadow-sm transition hover:bg-mvhab-surface hover:text-mvhab-primary">
                     Ver concursos
                 </a>
 
-                <a href="{{ route('public.simulator.show') }}" class="inline-flex min-h-12 items-center justify-center rounded-md bg-signal-400 px-5 py-3 text-sm font-semibold text-ink-950 shadow-sm hover:bg-signal-300">
+                <a href="{{ route('public.simulator.show') }}" class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-mvhab-secondary px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-white hover:text-mvhab-primary">
                     Simular elegibilidade
                 </a>
 
-                <a href="{{ route('public.housing-offer.index') }}" class="inline-flex min-h-12 items-center justify-center rounded-md border border-white/30 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10">
+                <a href="{{ route('public.housing-offer.index') }}" class="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/40 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-white/10">
                     Oferta habitacional
                 </a>
             </div>
         </div>
 
-        <aside class="rounded-2xl border border-white/15 bg-white/10 p-6 shadow-2xl backdrop-blur">
+        <aside class="rounded-2xl border border-white/15 bg-white/20 p-6 shadow-2xl backdrop-blur-xl">
             <p class="text-sm font-semibold text-civic-100">
                 Estado atual
             </p>

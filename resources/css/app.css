@@ -20,7 +20,7 @@
     input,
     select,
     textarea {
-        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-offset-2;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-offset-2;
     }
 }
 
@@ -30,19 +30,19 @@
     }
 
     .mv-surface {
-        @apply rounded-lg border border-ink-100 bg-white shadow-surface;
+        @apply rounded-2xl border border-ink-100 bg-white shadow-surface;
     }
 
     .mv-card {
-        @apply rounded-lg border border-ink-100 bg-white shadow-surface;
+        @apply rounded-2xl border border-ink-100 bg-white shadow-surface;
     }
 
     .mv-card-muted {
-        @apply rounded-lg border border-ink-100 bg-ink-50 shadow-surface;
+        @apply rounded-2xl border border-ink-100 bg-mvhab-surface shadow-surface;
     }
 
     .mv-card-interactive {
-        @apply rounded-lg border border-ink-100 bg-white shadow-surface transition hover:border-civic-200 hover:bg-ink-50 hover:shadow-md;
+        @apply rounded-2xl border border-ink-100 bg-white shadow-surface transition hover:-translate-y-0.5 hover:border-mvhab-support hover:bg-mvhab-surface hover:shadow-md;
     }
 
     .mv-section-title {
@@ -54,11 +54,11 @@
     }
 
     .mv-button-primary {
-        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-transparent bg-civic-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-civic-900 disabled:opacity-50;
+        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-transparent bg-mvhab-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-mvhab-primaryLight disabled:opacity-50;
     }
 
     .mv-button-secondary {
-        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-ink-100 bg-white px-4 py-2 text-sm font-semibold text-ink-700 transition hover:bg-ink-50 disabled:opacity-50;
+        @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-mvhab-support/40 bg-white px-4 py-2 text-sm font-semibold text-mvhab-primary transition hover:bg-mvhab-surface disabled:opacity-50;
     }
 
     .mv-button-danger {
@@ -66,7 +66,7 @@
     }
 
     .mv-focus-ring {
-        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-offset-2;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-offset-2;
     }
 
     .mv-badge {
@@ -98,15 +98,15 @@
     }
 
     .mv-badge-civic {
-        @apply bg-civic-50 text-civic-800;
+        @apply bg-mvhab-surface text-mvhab-primary;
     }
 
     .mv-tab {
-        @apply rounded-md px-3 py-2 text-sm font-semibold text-ink-600 transition hover:bg-ink-50 hover:text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-offset-2;
+        @apply rounded-2xl px-3 py-2 text-sm font-semibold text-ink-600 transition hover:bg-mvhab-surface hover:text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-offset-2;
     }
 
     .mv-tab-active {
-        @apply bg-civic-50 text-civic-800;
+        @apply bg-mvhab-surface text-mvhab-primary;
     }
 
     .mv-data-label {
