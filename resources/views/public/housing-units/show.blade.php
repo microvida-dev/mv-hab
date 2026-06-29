@@ -19,16 +19,16 @@
     <section class="border-b border-ink-100 bg-ink-50">
         <div class="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_28rem] lg:px-8">
             <div>
-                <nav aria-label="Breadcrumb" class="text-sm font-semibold text-civic-700">
-                    <a href="{{ route('public.portal') }}" class="hover:text-civic-900">Início</a>
+                <nav aria-label="Breadcrumb" class="text-sm font-semibold text-mvhab-primary">
+                    <a href="{{ route('public.portal') }}" class="hover:text-mvhab-primary">Início</a>
                     <span aria-hidden="true" class="mx-2 text-ink-400">/</span>
-                    <a href="{{ route('public.housing-offer.index') }}" class="hover:text-civic-900">Oferta habitacional</a>
+                    <a href="{{ route('public.housing-offer.index') }}" class="hover:text-mvhab-primary">Oferta habitacional</a>
                     <span aria-hidden="true" class="mx-2 text-ink-400">/</span>
                     <span>{{ $housingUnit->displayTitle() }}</span>
                 </nav>
                 <div class="mt-5 flex flex-wrap items-center gap-3">
                     <span class="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-ink-700 ring-1 ring-ink-100">{{ $housingUnit->public_reference ?: $housingUnit->code }}</span>
-                    <span class="rounded-md bg-civic-50 px-2.5 py-1 text-xs font-semibold text-civic-900">{{ $housingUnit->public_status?->label() }}</span>
+                    <span class="rounded-md bg-mvhab-surface px-2.5 py-1 text-xs font-semibold text-mvhab-primary">{{ $housingUnit->public_status?->label() }}</span>
                     <span class="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-ink-700 ring-1 ring-ink-100">{{ $housingUnit->typology }}</span>
                 </div>
                 <h1 class="mt-4 max-w-4xl text-3xl font-semibold text-ink-900">{{ $housingUnit->displayTitle() }}</h1>
@@ -39,7 +39,7 @@
                 @if ($coverUrl)
                     <img src="{{ $coverUrl }}" alt="{{ $cover->alt_text ?: $housingUnit->displayTitle() }}" class="h-72 w-full object-cover">
                 @else
-                    <div class="flex h-72 w-full items-center justify-center bg-civic-50 text-lg font-semibold text-civic-800">{{ $housingUnit->typology }}</div>
+                    <div class="flex h-72 w-full items-center justify-center bg-mvhab-surface text-lg font-semibold text-mvhab-primary">{{ $housingUnit->typology }}</div>
                 @endif
             </div>
         </div>
@@ -138,7 +138,7 @@
                     <p class="mt-2 text-xs leading-5 text-ink-500">A morada completa não é apresentada publicamente.</p>
                 @endif
                 @if ($housingUnit->hasPublicCoordinates())
-                    <div class="mt-4 rounded-md bg-civic-50 p-4 text-sm text-civic-900">
+                    <div class="mt-4 rounded-md bg-mvhab-surface p-4 text-sm text-mvhab-primary">
                         Coordenadas públicas {{ $housingUnit->public_location_precision === \App\Enums\HousingLocationPrecision::Exact ? 'de referência' : 'aproximadas' }}:
                         {{ number_format(round((float) $housingUnit->public_latitude, $coordinateDecimals), $coordinateDecimals, ',', ' ') }},
                         {{ number_format(round((float) $housingUnit->public_longitude, $coordinateDecimals), $coordinateDecimals, ',', ' ') }}
@@ -152,7 +152,7 @@
                     @forelse ($housingUnit->contestHousingUnits as $contestHousingUnit)
                         @if ($contestHousingUnit->contest)
                             <a href="{{ route('public.contests.show', $contestHousingUnit->contest->slug) }}" class="block rounded-md bg-ink-50 p-3 text-sm">
-                                <span class="font-semibold text-civic-800">{{ $contestHousingUnit->contest->title }}</span>
+                                <span class="font-semibold text-mvhab-primary">{{ $contestHousingUnit->contest->title }}</span>
                                 <span class="mt-1 block text-ink-500">{{ $contestHousingUnit->contest->isOpenForApplications() ? 'Candidaturas abertas' : 'Consultar prazos' }}</span>
                             </a>
                         @endif

@@ -14,12 +14,12 @@
     <section class="border-b border-ink-100 bg-white print:border-none">
         <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
             <div class="flex flex-wrap items-center justify-between gap-4 print:hidden">
-                <a href="{{ route('public.housing-units.show', $housingUnit->public_slug) }}" class="text-sm font-semibold text-civic-700 hover:text-civic-900">Voltar à ficha</a>
+                <a href="{{ route('public.housing-units.show', $housingUnit->public_slug) }}" class="text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary">Voltar à ficha</a>
                 <button type="button" onclick="window.print()" class="mv-button-secondary">Imprimir / guardar PDF</button>
             </div>
 
             <div class="mt-8 rounded-md border border-ink-100 bg-white p-8 print:mt-0 print:border-none print:p-0">
-                <p class="text-sm font-semibold uppercase tracking-wide text-civic-700">{{ $municipality?->name ?? 'Município' }}</p>
+                <p class="text-sm font-semibold uppercase tracking-wide text-mvhab-primary">{{ $municipality?->name ?? 'Município' }}</p>
                 <h1 class="mt-3 text-3xl font-semibold text-ink-900">Brochura informativa</h1>
                 <p class="mt-2 text-lg text-ink-600">{{ $housingUnit->displayTitle() }}</p>
 

@@ -5,8 +5,8 @@
 >
     <section class="border-b border-ink-100 bg-ink-50">
         <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-            <nav aria-label="Breadcrumb" class="text-sm font-semibold text-civic-700">
-                <a href="{{ route('public.portal') }}" class="hover:text-civic-900">Início</a>
+            <nav aria-label="Breadcrumb" class="text-sm font-semibold text-mvhab-primary">
+                <a href="{{ route('public.portal') }}" class="hover:text-mvhab-primary">Início</a>
                 <span aria-hidden="true" class="mx-2 text-ink-400">/</span>
                 <span>Oferta habitacional</span>
             </nav>
@@ -15,7 +15,7 @@
                     <h1 class="max-w-4xl text-3xl font-semibold text-ink-900 sm:text-4xl">{{ $settings['portal_title'] ?? 'Oferta Habitacional' }}</h1>
                     <p class="mt-4 max-w-3xl text-base leading-7 text-ink-600">{{ $settings['portal_description'] ?? 'Consulte concursos e habitações municipais publicadas.' }}</p>
                 </div>
-                <div class="rounded-md border border-civic-100 bg-white p-5">
+                <div class="rounded-md border border-mvhab-support/30 bg-white p-5">
                     <p class="text-sm font-semibold text-ink-900">Consulta pública</p>
                     <p class="mt-2 text-sm leading-6 text-ink-500">As fichas públicas não apresentam dados pessoais de candidatos nem documentos reservados.</p>
                 </div>
@@ -92,7 +92,7 @@
                 </label>
 
                 <label class="flex items-end gap-2 rounded-md border border-ink-100 bg-ink-50 px-3 py-2 text-sm font-semibold text-ink-700">
-                    <input type="checkbox" name="visit_available" value="1" @checked((bool) ($filters['visit_available'] ?? false)) class="rounded border-ink-300 text-civic-700">
+                    <input type="checkbox" name="visit_available" value="1" @checked((bool) ($filters['visit_available'] ?? false)) class="rounded border-ink-300 text-mvhab-primary">
                     Visitas disponíveis
                 </label>
 
@@ -113,7 +113,7 @@
                         <h2 class="text-xl font-semibold text-ink-900">Habitações publicadas</h2>
                         <p class="mt-1 text-sm text-ink-500">{{ $housingUnits->total() }} resultados disponíveis para consulta.</p>
                     </div>
-                    <a href="{{ route('public.housing-units.index', request()->query()) }}" class="hidden text-sm font-semibold text-civic-700 hover:text-civic-900 sm:block">Abrir lista completa</a>
+                    <a href="{{ route('public.housing-units.index', request()->query()) }}" class="hidden text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary sm:block">Abrir lista completa</a>
                 </div>
 
                 <div class="mt-5 grid gap-5 md:grid-cols-2">
@@ -133,7 +133,7 @@
                         <h2 class="text-xl font-semibold text-ink-900">Concursos com oferta habitacional</h2>
                         <p class="mt-1 text-sm text-ink-500">Consulte prazos, condições públicas e habitações associadas.</p>
                     </div>
-                    <a href="{{ route('public.contests.index') }}" class="text-sm font-semibold text-civic-700 hover:text-civic-900">Todos os concursos</a>
+                    <a href="{{ route('public.contests.index') }}" class="text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary">Todos os concursos</a>
                 </div>
 
                 <div class="mt-5 grid gap-4 md:grid-cols-2">
@@ -153,10 +153,10 @@
                         <h2 class="font-semibold text-ink-900">Mapa da oferta</h2>
                         <p class="mt-1 text-sm text-ink-500">{{ count($markers) }} localizações públicas.</p>
                     </div>
-                    <a href="{{ route('public.housing-map.index', request()->query()) }}" class="text-sm font-semibold text-civic-700 hover:text-civic-900">JSON</a>
+                    <a href="{{ route('public.housing-map.index', request()->query()) }}" class="text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary">JSON</a>
                 </div>
 
-                <div class="mt-4 rounded-md border border-civic-100 bg-civic-50 p-4">
+                <div class="mt-4 rounded-md border border-mvhab-support/30 bg-mvhab-surface p-4">
                     @forelse ($markers as $marker)
                         <a href="{{ $marker['url'] }}" class="mb-3 block rounded-md bg-white p-3 text-sm shadow-sm last:mb-0">
                             <span class="font-semibold text-ink-900">{{ $marker['title'] }}</span>
@@ -172,7 +172,7 @@
                 <h2 class="font-semibold text-ink-900">Ligações úteis</h2>
                 <div class="mt-4 grid gap-3 text-sm">
                     @forelse ($links as $link)
-                        <a href="{{ $link->url }}" @if ($link->opens_new_tab) target="_blank" rel="noopener noreferrer" @endif class="font-semibold text-civic-700 hover:text-civic-900">
+                        <a href="{{ $link->url }}" @if ($link->opens_new_tab) target="_blank" rel="noopener noreferrer" @endif class="font-semibold text-mvhab-primary hover:text-mvhab-primary">
                             {{ $link->label }}
                             @if ($link->description)
                                 <span class="mt-1 block font-normal leading-5 text-ink-500">{{ $link->description }}</span>

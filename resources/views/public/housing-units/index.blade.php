@@ -1,10 +1,10 @@
 <x-public-layout title="Habitações" description="Lista pública de habitações municipais disponíveis para consulta.">
     <section class="border-b border-ink-100 bg-ink-50">
         <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-            <nav aria-label="Breadcrumb" class="text-sm font-semibold text-civic-700">
-                <a href="{{ route('public.portal') }}" class="hover:text-civic-900">Início</a>
+            <nav aria-label="Breadcrumb" class="text-sm font-semibold text-mvhab-primary">
+                <a href="{{ route('public.portal') }}" class="hover:text-mvhab-primary">Início</a>
                 <span aria-hidden="true" class="mx-2 text-ink-400">/</span>
-                <a href="{{ route('public.housing-offer.index') }}" class="hover:text-civic-900">Oferta habitacional</a>
+                <a href="{{ route('public.housing-offer.index') }}" class="hover:text-mvhab-primary">Oferta habitacional</a>
                 <span aria-hidden="true" class="mx-2 text-ink-400">/</span>
                 <span>Habitações</span>
             </nav>
@@ -97,12 +97,12 @@
                 </label>
 
                 <label class="flex items-end gap-2 rounded-md border border-ink-100 bg-ink-50 px-3 py-2 text-sm font-semibold text-ink-700">
-                    <input type="checkbox" name="accessible" value="1" @checked((bool) ($filters['accessible'] ?? false)) class="rounded border-ink-300 text-civic-700">
+                    <input type="checkbox" name="accessible" value="1" @checked((bool) ($filters['accessible'] ?? false)) class="rounded border-ink-300 text-mvhab-primary">
                     Acessível
                 </label>
 
                 <label class="flex items-end gap-2 rounded-md border border-ink-100 bg-ink-50 px-3 py-2 text-sm font-semibold text-ink-700">
-                    <input type="checkbox" name="visit_available" value="1" @checked((bool) ($filters['visit_available'] ?? false)) class="rounded border-ink-300 text-civic-700">
+                    <input type="checkbox" name="visit_available" value="1" @checked((bool) ($filters['visit_available'] ?? false)) class="rounded border-ink-300 text-mvhab-primary">
                     Visitas disponíveis
                 </label>
 
