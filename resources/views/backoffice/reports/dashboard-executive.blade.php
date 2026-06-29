@@ -30,7 +30,31 @@
             <x-analytics.funnel-chart :steps="$analytics['funnel'] ?? []" class="xl:col-span-2" />
         </section>
 
-        <section><h2 class="text-lg font-semibold text-ink-900">Candidaturas por estado</h2><div class="mt-3 overflow-x-auto"><table class="mv-table"><thead><tr><th>Estado</th><th>Total</th></tr></thead><tbody>@foreach ($by_status as $status => $total)<tr><td>{{ \App\Enums\ApplicationStatus::tryFrom($status)?->label() ?? $status }}</td><td>{{ $total }}</td></tr>@endforeach</tbody></table></div></section>
-        <section><h2 class="text-lg font-semibold text-ink-900">Resumo por concurso</h2><div class="mt-3 overflow-x-auto"><table class="mv-table"><thead><tr><th>Programa</th><th>Concurso</th><th>Estado</th><th>Total</th></tr></thead><tbody>@foreach ($by_contest as $row)<tr>@foreach ($row as $value)<td>{{ $value }}</td>@endforeach</tr>@endforeach</tbody></table></div></section>
+        <section>
+            <h2 class="text-lg font-semibold text-ink-900">Candidaturas por estado</h2>
+
+            <x-ui.table class="mt-3" :headers="['Estado', 'Total']">
+                @foreach ($by_status as $status => $total)
+                    <tr>
+                        <td>{{ \App\Enums\ApplicationStatus::tryFrom($status)?->label() ?? $status }}</td>
+                        <td>{{ $total }}</td>
+                    </tr>
+                @endforeach
+            </x-ui.table>
+        </section>
+
+        <section>
+            <h2 class="text-lg font-semibold text-ink-900">Resumo por concurso</h2>
+
+            <x-ui.table class="mt-3" :headers="['Programa', 'Concurso', 'Estado', 'Total']">
+                @foreach ($by_contest as $row)
+                    <tr>
+                        @foreach ($row as $value)
+                            <td>{{ $value }}</td>
+                        @endforeach
+                    </tr>
+                @endforeach
+            </x-ui.table>
+        </section>
     </div>
 </x-app-layout>
