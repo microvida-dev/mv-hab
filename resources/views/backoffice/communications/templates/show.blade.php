@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex flex-wrap items-end justify-between gap-4">
-            <div><p class="font-mono text-xs text-civic-700">{{ $notificationTemplate->code }}</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $notificationTemplate->name }}</h1></div>
+            <div><p class="font-mono text-xs text-mvhab-primary">{{ $notificationTemplate->code }}</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $notificationTemplate->name }}</h1></div>
             <div class="flex flex-wrap gap-2"><a href="{{ route('backoffice.communications.templates.preview', $notificationTemplate) }}" class="mv-button-secondary">Pré-visualizar</a>@can('update', $notificationTemplate)<a href="{{ route('backoffice.communications.templates.edit', $notificationTemplate) }}" class="mv-button-primary">Editar</a><form method="POST" action="{{ route('backoffice.communications.templates.archive', $notificationTemplate) }}">@csrf<x-danger-button>Arquivar</x-danger-button></form>@endcan</div>
         </div>
     </x-slot>
@@ -14,7 +14,7 @@
         <section><h2 class="text-lg font-semibold text-ink-900">Conteúdo atual</h2><p class="mt-4 whitespace-pre-line text-sm leading-6 text-ink-700">{{ $notificationTemplate->activeVersion?->body ?? $notificationTemplate->body }}</p></section>
         <section>
             <h2 class="text-lg font-semibold text-ink-900">Versões</h2>
-            <div class="mt-4 overflow-hidden rounded-md border border-ink-100 bg-white">
+            <div class="mt-4 overflow-hidden rounded-2xl mv-surface">
                 @forelse ($notificationTemplate->versions as $version)
                     <a href="{{ route('backoffice.communications.template-versions.show', $version) }}" class="flex items-center justify-between border-b border-ink-100 px-4 py-3 text-sm"><span class="font-semibold">Versão {{ $version->version_number }}</span><span>{{ $version->status->label() }}</span></a>
                 @empty
@@ -23,13 +23,13 @@
             </div>
         </section>
         @can('update', $notificationTemplate)
-            <section class="rounded-md border border-ink-100 bg-white p-6">
+            <section class="rounded-2xl mv-surface p-6">
                 <h2 class="text-lg font-semibold text-ink-900">Criar nova versão</h2>
                 <form method="POST" action="{{ route('backoffice.communications.template-versions.store', $notificationTemplate) }}" class="mt-5 space-y-4">@csrf
                     <x-text-input name="subject" class="w-full" :value="$notificationTemplate->subject" placeholder="Assunto" />
                     <x-text-input name="title" class="w-full" :value="$notificationTemplate->title" placeholder="Título" />
-                    <textarea name="body" rows="8" class="w-full rounded-md border-ink-200" required>{{ $notificationTemplate->body }}</textarea>
-                    <textarea name="change_summary" rows="2" class="w-full rounded-md border-ink-200" placeholder="Resumo da alteração"></textarea>
+                    <textarea name="body" rows="8" class="w-full mv-input" required>{{ $notificationTemplate->body }}</textarea>
+                    <textarea name="change_summary" rows="2" class="w-full mv-input" placeholder="Resumo da alteração"></textarea>
                     <x-primary-button>Criar versão</x-primary-button>
                 </form>
             </section>
