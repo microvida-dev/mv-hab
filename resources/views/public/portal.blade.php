@@ -1,24 +1,8 @@
 <x-public-layout title="Portal público">
-    <section class="bg-civic-900 text-white">
-        <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:py-20 lg:px-8">
-            <div class="max-w-3xl">
-                <p class="text-sm font-semibold text-civic-100">Portal municipal</p>
-                <h1 class="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">Arrendamento Acessível</h1>
-                <p class="mt-5 max-w-2xl text-lg leading-8 text-civic-100">Consulte a oferta habitacional, programas, concursos publicados, condições gerais e prazos oficiais antes de iniciar o seu percurso de candidatura.</p>
-                <div class="mt-7 flex flex-wrap gap-3">
-                    <a href="{{ route('public.housing-offer.index') }}" class="inline-flex min-h-11 items-center justify-center rounded-md bg-white px-5 py-2.5 text-sm font-semibold text-civic-900 hover:bg-civic-50">
-                        Ver oferta habitacional
-                    </a>
-                    <a href="{{ route('public.contests.index') }}" class="inline-flex min-h-11 items-center justify-center rounded-md bg-white px-5 py-2.5 text-sm font-semibold text-civic-900 hover:bg-civic-50">
-                        Ver concursos
-                    </a>
-                    <a href="{{ route('public.programs.index') }}" class="inline-flex min-h-11 items-center justify-center rounded-md border border-civic-100/40 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10">
-                        Consultar programas
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
+    <x-public.hero
+        :contests="$contests"
+        :programs="$programs"
+    />
 
     <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div class="flex items-end justify-between gap-4">
