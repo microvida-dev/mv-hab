@@ -1,1 +1,13 @@
-<x-app-layout><x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Configurar {{ $dashboard->name }}</h1></x-slot><div class="space-y-10"><form method="POST" action="{{ route('backoffice.reports.dashboards.update', $dashboard) }}" class="max-w-4xl">@include('backoffice.reports.dashboards._form')</form><section><h2 class="text-lg font-semibold text-ink-900">Widgets</h2><div class="mt-4 overflow-x-auto"><table class="mv-table"><thead><tr><th>Título</th><th>Indicador</th><th>Ordem</th></tr></thead><tbody>@foreach($dashboard->widgets as $widget)<tr><td>{{ $widget->title }}</td><td>{{ $widget->indicator?->name ?? '—' }}</td><td>{{ $widget->sort_order }}</td></tr>@endforeach</tbody></table></div><form method="POST" action="{{ route('backoffice.reports.widgets.store') }}" class="mt-5 grid gap-3 md:grid-cols-5">@csrf<input type="hidden" name="dashboard_definition_id" value="{{ $dashboard->id }}"><x-text-input name="code" placeholder="Código" required /><x-text-input name="title" placeholder="Título" required /><select name="indicator_definition_id" class="rounded-2xl border-ink-200">@foreach($indicators as $indicator)<option value="{{ $indicator->id }}">{{ $indicator->name }}</option>@endforeach</select><select name="widget_type" class="rounded-2xl border-ink-200"><option value="metric_card">Métrica</option><option value="table">Tabela</option></select><button class="mv-button-primary">Adicionar</button></form></section></div></x-app-layout>
+<x-ui.table :headers="['Título','Indicador','Ordem']">
+    @forelse ($dashboard->widgets as $widget)
+        <tr>
+            <td>{{ $widget->title }}</td>
+
+            <td>{{ $widget->indicator?->name ?? '—' }}</td>
+
+            <td>{{ $widget->sort_order }}</td>
+        </tr>
+    @empty
+        <x-ui.table-empty :colspan="3" message="Sem widgets." />
+    @endforelse
+</x-ui.table>

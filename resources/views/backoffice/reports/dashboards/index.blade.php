@@ -1,1 +1,20 @@
-<x-app-layout><x-slot name="header"><div class="flex justify-between"><h1 class="text-xl font-semibold text-ink-900">Configuração de painéis</h1>@can('create', \App\Models\DashboardDefinition::class)<a class="mv-button-primary" href="{{ route('backoffice.reports.dashboards.create') }}">Novo painel</a>@endcan</div></x-slot><div class="overflow-x-auto"><table class="mv-table"><thead><tr><th>Painel</th><th>Tipo</th><th>Widgets</th><th>Estado</th></tr></thead><tbody>@foreach($dashboards as $dashboard)<tr><td><a class="font-semibold text-mvhab-primary" href="{{ route('backoffice.reports.dashboards.edit', $dashboard) }}">{{ $dashboard->name }}</a></td><td>{{ $dashboard->dashboard_type->label() }}</td><td>{{ $dashboard->widgets_count }}</td><td>{{ $dashboard->is_active ? 'Ativo' : 'Inativo' }}</td></tr>@endforeach</tbody></table></div></x-app-layout>
+<x-ui.table :headers="['Painel','Tipo','Widgets','Estado']">
+    @forelse ($dashboards as $dashboard)
+        <tr>
+            <td>
+                <a class="font-semibold text-mvhab-primary"
+                   href="{{ route('backoffice.reports.dashboards.edit',$dashboard) }}">
+                    {{ $dashboard->name }}
+                </a>
+            </td>
+
+            <td>{{ $dashboard->dashboard_type->label() }}</td>
+
+            <td>{{ $dashboard->widgets_count }}</td>
+
+            <td>{{ $dashboard->is_active ? 'Ativo' : 'Inativo' }}</td>
+        </tr>
+    @empty
+        <x-ui.table-empty :colspan="4" message="Sem painéis." />
+    @endforelse
+</x-ui.table>
