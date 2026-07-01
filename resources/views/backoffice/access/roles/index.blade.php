@@ -5,7 +5,7 @@
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
             @error('access')
-                <div class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">{{ $message }}</div>
+                <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{{ $message }}</div>
             @enderror
 
             <section class="mv-surface overflow-hidden">
@@ -34,7 +34,7 @@
                         @csrf
                         <label class="grid gap-1 text-sm">
                             <span class="font-medium text-ink-700">Utilizador</span>
-                            <select name="user_id" class="rounded-md border-ink-200" required>
+                            <select name="user_id" class="mv-input" required>
                                 @foreach ($users as $user)
                                     <option value="{{ $user->id }}">{{ $user->name }}</option>
                                 @endforeach
@@ -42,13 +42,13 @@
                         </label>
                         <label class="grid gap-1 text-sm">
                             <span class="font-medium text-ink-700">Role</span>
-                            <select name="role" class="rounded-md border-ink-200" required>
+                            <select name="role" class="mv-input" required>
                                 @foreach ($roles as $role)
                                     <option value="{{ $role->name }}">{{ $role->label }}</option>
                                 @endforeach
                             </select>
                         </label>
-                        <input name="justification" class="rounded-md border-ink-200 text-sm" placeholder="Justificação" required>
+                        <input name="justification" class="rounded-2xl border-ink-200 text-sm" placeholder="Justificação" required>
                         <button class="mv-button-primary">Atribuir</button>
                         </form>
 
@@ -56,7 +56,7 @@
                         @csrf
                         <label class="grid gap-1 text-sm">
                             <span class="font-medium text-ink-700">Utilizador</span>
-                            <select name="user_id" class="rounded-md border-ink-200" required>
+                            <select name="user_id" class="mv-input" required>
                                 @foreach ($users as $user)
                                     <option value="{{ $user->id }}">{{ $user->name }}</option>
                                 @endforeach
@@ -64,13 +64,13 @@
                         </label>
                         <label class="grid gap-1 text-sm">
                             <span class="font-medium text-ink-700">Role</span>
-                            <select name="role" class="rounded-md border-ink-200" required>
+                            <select name="role" class="mv-input" required>
                                 @foreach ($roles as $role)
                                     <option value="{{ $role->name }}">{{ $role->label }}</option>
                                 @endforeach
                             </select>
                         </label>
-                        <input name="justification" class="rounded-md border-ink-200 text-sm" placeholder="Justificação" required>
+                        <input name="justification" class="rounded-2xl border-ink-200 text-sm" placeholder="Justificação" required>
                         <button class="mv-button-danger">Remover</button>
                         </form>
                     </div>
