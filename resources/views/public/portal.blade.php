@@ -9,8 +9,6 @@
 
     <x-public.featured-programs :programs="$programs" />
 
-    <x-public.application-journey />
-
     <section class="border-y border-ink-100 bg-ink-50">
         <div class="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:px-8">
             <div>
