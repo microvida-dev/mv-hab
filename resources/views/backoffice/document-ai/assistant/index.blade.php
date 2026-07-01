@@ -13,7 +13,7 @@
 
     <div class="py-8">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                 O score IA e as flags são auxiliares à análise técnica e não produzem decisão automática sobre a candidatura.
             </div>
 
@@ -32,14 +32,14 @@
                 </div>
                 <div class="mv-surface p-5">
                     <p class="text-xs font-semibold uppercase text-ink-500">Sugestões abertas</p>
-                    <p class="mt-2 text-2xl font-semibold text-civic-700">{{ $totals['open_suggestions'] }}</p>
+                    <p class="mt-2 text-2xl font-semibold text-mvhab-primary">{{ $totals['open_suggestions'] }}</p>
                 </div>
             </div>
 
             <form method="GET" action="{{ route('backoffice.document-ai.assistant.index') }}" class="mv-surface mb-6 grid gap-4 p-5 md:grid-cols-3 xl:grid-cols-7">
                 <label class="space-y-1 text-sm">
                     <span class="font-semibold text-ink-700">Score</span>
-                    <select name="label" class="w-full rounded-md border-ink-200 text-sm">
+                    <select name="label" class="mv-input w-full">
                         <option value="">Todos</option>
                         @foreach (DocumentAiScoreLabel::cases() as $label)
                             <option value="{{ $label->value }}" @selected(($filters['label'] ?? null) === $label->value)>{{ $label->label() }}</option>
@@ -49,7 +49,7 @@
 
                 <label class="space-y-1 text-sm">
                     <span class="font-semibold text-ink-700">Flag</span>
-                    <select name="flag" class="w-full rounded-md border-ink-200 text-sm">
+                    <select name="flag" class="mv-input w-full">
                         <option value="">Todas</option>
                         @foreach (DocumentAiRiskFlagCode::cases() as $flag)
                             <option value="{{ $flag->value }}" @selected(($filters['flag'] ?? null) === $flag->value)>{{ $flag->label() }}</option>
@@ -59,7 +59,7 @@
 
                 <label class="space-y-1 text-sm">
                     <span class="font-semibold text-ink-700">Revisão</span>
-                    <select name="requires_review" class="w-full rounded-md border-ink-200 text-sm">
+                    <select name="requires_review" class="mv-input w-full">
                         <option value="">Todas</option>
                         <option value="1" @selected((string) ($filters['requires_review'] ?? '') === '1')>Requer revisão</option>
                         <option value="0" @selected((string) ($filters['requires_review'] ?? '') === '0')>Sem revisão</option>
@@ -68,7 +68,7 @@
 
                 <label class="space-y-1 text-sm xl:col-span-2">
                     <span class="font-semibold text-ink-700">Candidatura</span>
-                    <input type="text" name="application" value="{{ $filters['application'] ?? '' }}" class="w-full rounded-md border-ink-200 text-sm" placeholder="Número ou referência">
+                    <input type="text" name="application" value="{{ $filters['application'] ?? '' }}" class="mv-input w-full" placeholder="Número ou referência">
                 </label>
 
                 <div class="flex items-end gap-2 xl:col-span-2">
@@ -102,13 +102,13 @@
                                     <span class="ml-2 text-xs text-ink-500">{{ $score->label->label() }}</span>
                                 </td>
                                 <td class="px-5 py-4">
-                                    <span class="{{ $score->requires_manual_review ? 'text-amber-700' : 'text-civic-700' }}">
+                                    <span class="{{ $score->requires_manual_review ? 'text-amber-700' : 'text-mvhab-primary' }}">
                                         {{ $score->requires_manual_review ? 'Rever manualmente' : 'Fluxo normal' }}
                                     </span>
                                 </td>
                                 <td class="px-5 py-4 text-ink-700">{{ $score->calculated_at?->format('d/m/Y H:i') ?? '-' }}</td>
                                 <td class="px-5 py-4 text-right">
-                                    <a class="font-semibold text-civic-700" href="{{ route('backoffice.document-ai.assistant.score', $score) }}">Ver assistente</a>
+                                    <a class="font-semibold text-mvhab-primary" href="{{ route('backoffice.document-ai.assistant.score', $score) }}">Ver assistente</a>
                                 </td>
                             </tr>
                         @empty
