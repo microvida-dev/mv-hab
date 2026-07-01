@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Gestão de acessos</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Gestão de acessos</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $user->name }}</h1>
             </div>
             <a href="{{ route('backoffice.users.edit', $user) }}" class="mv-button-secondary">Editar</a>
@@ -41,24 +41,24 @@
                     <div class="mt-4 grid gap-3">
                         <form method="POST" action="{{ route('backoffice.users.force-mfa', $user) }}" class="grid gap-2">
                             @csrf
-                            <input name="justification" class="rounded-md border-ink-200 text-sm" placeholder="Justificação" required>
+                            <input name="justification" class="mv-input" placeholder="Justificação" required>
                             <button class="mv-button-secondary">Forçar MFA</button>
                         </form>
                         <form method="POST" action="{{ route('backoffice.users.reset-password', $user) }}" class="grid gap-2">
                             @csrf
-                            <input name="justification" class="rounded-md border-ink-200 text-sm" placeholder="Justificação" required>
+                            <input name="justification" class="mv-input" placeholder="Justificação" required>
                             <button class="mv-button-secondary">Enviar reset seguro</button>
                         </form>
                         @if ($user->status === 'active')
                             <form method="POST" action="{{ route('backoffice.users.deactivate', $user) }}" class="grid gap-2">
                                 @csrf
-                                <input name="justification" class="rounded-md border-ink-200 text-sm" placeholder="Justificação" required>
+                                <input name="justification" class="mv-input" placeholder="Justificação" required>
                                 <button class="mv-button-danger">Desativar</button>
                             </form>
                         @else
                             <form method="POST" action="{{ route('backoffice.users.reactivate', $user) }}" class="grid gap-2">
                                 @csrf
-                                <input name="justification" class="rounded-md border-ink-200 text-sm" placeholder="Justificação" required>
+                                <input name="justification" class="mv-input" placeholder="Justificação" required>
                                 <button class="mv-button-primary">Reativar</button>
                             </form>
                         @endif
@@ -69,22 +69,22 @@
                     <h2 class="text-lg font-semibold text-ink-900">Alterar roles</h2>
                     <form method="POST" action="{{ route('backoffice.users.roles.assign', $user) }}" class="mt-4 grid gap-3">
                         @csrf
-                        <select name="role" class="rounded-md border-ink-200" required>
+                        <select name="role" class="mv-input" required>
                             @foreach ($roles as $role)
                                 <option value="{{ $role->name }}">{{ $role->label }}</option>
                             @endforeach
                         </select>
-                        <input name="justification" class="rounded-md border-ink-200 text-sm" placeholder="Justificação" required>
+                        <input name="justification" class="mv-input" placeholder="Justificação" required>
                         <button class="mv-button-primary">Atribuir role</button>
                     </form>
                     <form method="POST" action="{{ route('backoffice.users.roles.remove', $user) }}" class="mt-4 grid gap-3">
                         @csrf
-                        <select name="role" class="rounded-md border-ink-200" required>
+                        <select name="role" class="mv-input" required>
                             @foreach ($user->roles as $role)
                                 <option value="{{ $role->name }}">{{ $role->label }}</option>
                             @endforeach
                         </select>
-                        <input name="justification" class="rounded-md border-ink-200 text-sm" placeholder="Justificação" required>
+                        <input name="justification" class="mv-input" placeholder="Justificação" required>
                         <button class="mv-button-danger">Remover role</button>
                     </form>
                 </div>
