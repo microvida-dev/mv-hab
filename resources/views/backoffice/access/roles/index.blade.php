@@ -48,7 +48,7 @@
                                 @endforeach
                             </select>
                         </label>
-                        <input name="justification" class="rounded-2xl border-ink-200 text-sm" placeholder="Justificação" required>
+                        <input name="justification" class="mv-input" placeholder="Justificação" required>
                         <button class="mv-button-primary">Atribuir</button>
                         </form>
 
@@ -70,7 +70,7 @@
                                 @endforeach
                             </select>
                         </label>
-                        <input name="justification" class="rounded-2xl border-ink-200 text-sm" placeholder="Justificação" required>
+                        <input name="justification" class="mv-input" placeholder="Justificação" required>
                         <button class="mv-button-danger">Remover</button>
                         </form>
                     </div>
