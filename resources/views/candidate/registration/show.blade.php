@@ -1,6 +1,6 @@
 @php
     $statusClasses = match ($registration->status) {
-        \App\Enums\AdhesionRegistrationStatus::Registered => 'bg-civic-50 text-civic-900',
+        \App\Enums\AdhesionRegistrationStatus::Registered => 'bg-mvhab-surface text-mvhab-primary',
         \App\Enums\AdhesionRegistrationStatus::Blocked => 'bg-red-50 text-red-800',
         \App\Enums\AdhesionRegistrationStatus::Incomplete => 'bg-signal-50 text-signal-700',
         default => 'bg-ink-100 text-ink-700',
@@ -11,11 +11,11 @@
     <x-slot name="header">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Área do Candidato</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Área do Candidato</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">Registo de Adesão</h1>
                 <p class="mt-1 text-sm text-ink-500">Atualizado em {{ $registration->updated_at->format('d/m/Y H:i') }}</p>
             </div>
-            <span class="w-fit rounded-md px-2.5 py-1 text-xs font-semibold {{ $statusClasses }}">{{ $registration->status->label() }}</span>
+            <span class="w-fit rounded-2xl px-2.5 py-1 text-xs font-semibold {{ $statusClasses }}">{{ $registration->status->label() }}</span>
         </div>
     </x-slot>
 
@@ -28,14 +28,14 @@
                     <div class="mv-surface p-6">
                         <div class="flex items-center justify-between gap-4 text-sm">
                             <h2 class="font-semibold text-ink-900">Progresso do preenchimento</h2>
-                            <span class="font-semibold text-civic-700">{{ $registration->completionPercentage() }}%</span>
+                            <span class="font-semibold text-mvhab-primary">{{ $registration->completionPercentage() }}%</span>
                         </div>
                         <div class="mt-3 h-2 overflow-hidden rounded bg-ink-100">
-                            <div class="h-full bg-civic-700" style="width: {{ $registration->completionPercentage() }}%"></div>
+                            <div class="h-full bg-mvhab-primary" style="width: {{ $registration->completionPercentage() }}%"></div>
                         </div>
 
                         @if ($registration->missingRequiredFields())
-                            <div class="mt-5 rounded-md border border-signal-500 bg-signal-50 p-4">
+                            <div class="mt-5 rounded-2xl border border-signal-500 bg-signal-50 p-4">
                                 <p class="text-sm font-semibold text-signal-700">Campos necessários para finalizar</p>
                                 <ul class="mt-2 grid gap-1 text-sm text-signal-700 sm:grid-cols-2">
                                     @foreach ($registration->missingRequiredFields() as $field)
@@ -44,7 +44,7 @@
                                 </ul>
                             </div>
                         @elseif (! $registration->isAdult())
-                            <div class="mt-5 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">É necessário ter pelo menos 18 anos para finalizar o registo.</div>
+                            <div class="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">É necessário ter pelo menos 18 anos para finalizar o registo.</div>
                         @endif
                     </div>
 
@@ -127,14 +127,14 @@
                             <form method="POST" action="{{ route('candidate.registration.cancel') }}" class="mt-4">
                                 @csrf
                                 <label for="cancel_reason" class="text-xs font-semibold text-ink-600">Motivo opcional</label>
-                                <textarea id="cancel_reason" name="reason" rows="2" class="mt-1 block w-full rounded-md border-ink-100 text-sm focus:border-civic-500 focus:ring-civic-500"></textarea>
+                                <textarea id="cancel_reason" name="reason" rows="2" class="mv-input mt-1 block w-full"></textarea>
                                 <button class="mv-button-secondary mt-3 w-full">Cancelar registo</button>
                             </form>
                         </section>
                     @endcan
 
                     @can('delete', $registration)
-                        <section class="rounded-lg border border-red-200 bg-red-50 p-5">
+                        <section class="rounded-2xl border border-red-200 bg-red-50 p-5">
                             <h2 class="font-semibold text-red-900">Remover registo</h2>
                             <p class="mt-2 text-sm leading-6 text-red-800">Esta ação retira o registo da área ativa e preserva apenas o histórico necessário.</p>
                             <form method="POST" action="{{ route('candidate.registration.remove') }}" class="mt-4">
