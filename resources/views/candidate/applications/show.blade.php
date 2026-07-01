@@ -2,11 +2,11 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Candidatura</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Candidatura</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $application->application_number ?? 'Rascunho' }}</h1>
                 <p class="mt-1 text-sm text-ink-500">{{ $application->contest->title }}</p>
             </div>
-            <span class="rounded-md bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $application->status->label() }}</span>
+            <span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $application->status->label() }}</span>
         </div>
     </x-slot>
 
@@ -57,21 +57,21 @@
 
             @if ($application->latestEligibilityCheck)
                 <section class="mv-surface p-6">
-                    <p class="text-sm font-semibold text-civic-700">Última verificação de elegibilidade</p>
+                    <p class="text-sm font-semibold text-mvhab-primary">Última verificação de elegibilidade</p>
                     <h2 class="mt-1 text-lg font-semibold text-ink-900">{{ $application->latestEligibilityCheck->result->label() }}</h2>
                     <p class="mt-2 text-sm leading-6 text-ink-600">{{ $application->latestEligibilityCheck->summary }}</p>
                     <p class="mt-3 text-xs leading-5 text-ink-500">Esta informação é indicativa e não substitui a decisão dos serviços municipais.</p>
-                    <a href="{{ route('candidate.eligibility.show', $application->latestEligibilityCheck) }}" class="mt-4 inline-flex text-sm font-semibold text-civic-700">Consultar condições verificadas</a>
+                    <a href="{{ route('candidate.eligibility.show', $application->latestEligibilityCheck) }}" class="mt-4 inline-flex text-sm font-semibold text-mvhab-primary">Consultar condições verificadas</a>
                 </section>
             @endif
 
             @if ($application->simulationInconsistencies->isNotEmpty())
                 <section class="mv-surface p-6">
-                    <p class="text-sm font-semibold text-civic-700">Simulação e candidatura</p>
+                    <p class="text-sm font-semibold text-mvhab-primary">Simulação e candidatura</p>
                     <h2 class="mt-1 text-lg font-semibold text-ink-900">Dados a rever</h2>
                     <div class="mt-4 space-y-3">
                         @foreach ($application->simulationInconsistencies as $inconsistency)
-                            <div class="border-l-2 border-civic-600 pl-4 text-sm">
+                            <div class="border-l-2 border-mvhab-primary pl-4 text-sm">
                                 <p class="font-semibold text-ink-900">{{ $inconsistency->type->label() }}</p>
                                 <p class="mt-1 text-ink-600">{{ $inconsistency->message }}</p>
                             </div>
@@ -82,7 +82,7 @@
 
             @if ($application->submitted_at)
                 <section class="mv-surface p-6">
-                    <p class="text-sm font-semibold text-civic-700">Classificação</p>
+                    <p class="text-sm font-semibold text-mvhab-primary">Classificação</p>
                     <h2 class="mt-1 text-lg font-semibold text-ink-900">Fase interna do procedimento</h2>
                     <p class="mt-2 text-sm leading-6 text-ink-600">A candidatura será classificada de acordo com os critérios definidos no aviso de concurso. Os resultados provisórios serão disponibilizados em fase própria do procedimento.</p>
                 </section>
@@ -119,7 +119,7 @@
                 @can('withdraw', $application)
                     <form method="POST" action="{{ route('candidate.applications.withdraw', $application) }}" class="flex flex-wrap items-center gap-2">
                         @csrf
-                        <input type="text" name="reason" maxlength="2000" placeholder="Motivo opcional" class="rounded-md border-ink-300 text-sm shadow-sm focus:border-civic-700 focus:ring-civic-700">
+                        <input type="text" name="reason" maxlength="2000" placeholder="Motivo opcional" class="mv-input">
                         <button type="submit" class="mv-button-secondary">Desistir</button>
                     </form>
                 @endcan
