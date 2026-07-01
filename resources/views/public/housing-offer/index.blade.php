@@ -3,37 +3,56 @@
     :description="$seo['description'] ?? 'Oferta habitacional municipal publicada.'"
     :canonical="$seo['canonical'] ?? null"
 >
-    <section class="border-b border-ink-100 bg-ink-50">
-        <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <section class="mv-section border-b border-ink-100 bg-white">
+        <div class="mv-container">
             <nav aria-label="Breadcrumb" class="text-sm font-semibold text-mvhab-primary">
                 <a href="{{ route('public.portal') }}" class="hover:text-mvhab-primary">Início</a>
                 <span aria-hidden="true" class="mx-2 text-ink-400">/</span>
                 <span>Oferta habitacional</span>
             </nav>
-            <div class="mt-3 grid gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-end">
+
+            <div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-end">
                 <div>
-                    <h1 class="max-w-4xl text-3xl font-semibold text-ink-900 sm:text-4xl">{{ $settings['portal_title'] ?? 'Oferta Habitacional' }}</h1>
-                    <p class="mt-4 max-w-3xl text-base leading-7 text-ink-600">{{ $settings['portal_description'] ?? 'Consulte concursos e habitações municipais publicadas.' }}</p>
+                    <p class="mv-caption">Oferta habitacional</p>
+
+                    <h1 class="mv-heading mt-3">
+                        {{ $settings['portal_title'] ?? 'Oferta Habitacional' }}
+                    </h1>
+
+                    <p class="mv-description mt-6">
+                        {{ $settings['portal_description'] ?? 'Consulte concursos e habitações municipais publicadas.' }}
+                    </p>
                 </div>
-                <div class="mv-surface p-5">
-                    <p class="text-sm font-semibold text-ink-900">Consulta pública</p>
-                    <p class="mt-2 text-sm leading-6 text-ink-500">As fichas públicas não apresentam dados pessoais de candidatos nem documentos reservados.</p>
+
+                <div class="mv-card p-6">
+                    <div class="flex items-start gap-4">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
+                            <x-mv-icon name="security" size="lg" />
+                        </div>
+
+                        <div>
+                            <h2 class="mv-card-title">Consulta pública</h2>
+                            <p class="mv-section-description mt-2">
+                                As fichas públicas não apresentam dados pessoais de candidatos nem documentos reservados.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="border-b border-ink-100 bg-white">
-        <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-            <form method="GET" action="{{ route('public.housing-offer.index') }}" class="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+    <section class="border-b border-ink-100 bg-mvhab-surface">
+        <div class="mv-container py-8">
+            <form method="GET" action="{{ route('public.housing-offer.index') }}" class="mv-card grid gap-4 p-6 md:grid-cols-2 lg:grid-cols-6">
                 <label class="lg:col-span-2">
-                    <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Pesquisa</span>
-                    <input type="search" name="q" value="{{ $filters['q'] ?? '' }}" class="mt-1 w-full mv-input text-sm" placeholder="Código, freguesia ou descrição">
+                    <span class="mv-data-label">Pesquisa</span>
+                    <input type="search" name="q" value="{{ $filters['q'] ?? '' }}" class="mv-input mt-1" placeholder="Código, freguesia ou descrição">
                 </label>
 
                 <label>
-                    <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Tipologia</span>
-                    <select name="typology" class="mt-1 w-full mv-input text-sm">
+                    <span class="mv-data-label">Tipologia</span>
+                    <select name="typology" class="mv-select mt-1">
                         <option value="">Todas</option>
                         @foreach ($filterOptions['typologies'] as $typology)
                             <option value="{{ $typology }}" @selected(($filters['typology'] ?? '') === $typology)>{{ $typology }}</option>
@@ -42,8 +61,8 @@
                 </label>
 
                 <label>
-                    <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Freguesia</span>
-                    <select name="parish" class="mt-1 w-full mv-input text-sm">
+                    <span class="mv-data-label">Freguesia</span>
+                    <select name="parish" class="mv-select mt-1">
                         <option value="">Todas</option>
                         @foreach ($filterOptions['parishes'] as $parish)
                             <option value="{{ $parish }}" @selected(($filters['parish'] ?? '') === $parish)>{{ $parish }}</option>
@@ -52,8 +71,8 @@
                 </label>
 
                 <label>
-                    <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Localidade</span>
-                    <select name="locality" class="mt-1 w-full mv-input text-sm">
+                    <span class="mv-data-label">Localidade</span>
+                    <select name="locality" class="mv-select mt-1">
                         <option value="">Todas</option>
                         @foreach ($filterOptions['localities'] as $locality)
                             <option value="{{ $locality }}" @selected(($filters['locality'] ?? '') === $locality)>{{ $locality }}</option>
@@ -62,8 +81,8 @@
                 </label>
 
                 <label>
-                    <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Estado</span>
-                    <select name="public_status" class="mt-1 w-full mv-input text-sm">
+                    <span class="mv-data-label">Estado</span>
+                    <select name="public_status" class="mv-select mt-1">
                         <option value="">Todos</option>
                         @foreach ($filterOptions['statuses'] as $value => $label)
                             <option value="{{ $value }}" @selected(($filters['public_status'] ?? '') === $value)>{{ $label }}</option>
@@ -72,8 +91,8 @@
                 </label>
 
                 <label>
-                    <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Eficiência</span>
-                    <select name="energy_rating" class="mt-1 w-full mv-input text-sm">
+                    <span class="mv-data-label">Eficiência</span>
+                    <select name="energy_rating" class="mv-select mt-1">
                         <option value="">Todas</option>
                         @foreach ($filterOptions['energy_ratings'] as $rating)
                             <option value="{{ $rating }}" @selected(($filters['energy_rating'] ?? '') === $rating)>{{ $rating }}</option>
@@ -82,8 +101,8 @@
                 </label>
 
                 <label>
-                    <span class="text-xs font-semibold uppercase tracking-wide text-ink-500">Ordenar</span>
-                    <select name="sort" class="mt-1 w-full mv-input text-sm">
+                    <span class="mv-data-label">Ordenar</span>
+                    <select name="sort" class="mv-select mt-1">
                         <option value="published_desc" @selected(($filters['sort'] ?? '') === 'published_desc')>Publicação</option>
                         <option value="rent_asc" @selected(($filters['sort'] ?? '') === 'rent_asc')>Renda crescente</option>
                         <option value="rent_desc" @selected(($filters['sort'] ?? '') === 'rent_desc')>Renda decrescente</option>
@@ -91,36 +110,53 @@
                     </select>
                 </label>
 
-                <label class="flex items-end gap-2 rounded-2xl border border-ink-100 bg-mvhab-surface px-3 py-2 text-sm font-semibold text-ink-700">
-                    <input type="checkbox" name="visit_available" value="1" @checked((bool) ($filters['visit_available'] ?? false)) class="rounded border-ink-300 text-mvhab-primary">
+                <label class="flex items-end gap-2 rounded-2xl border border-ink-100 bg-mvhab-surface px-4 py-3 text-sm font-semibold text-ink-700">
+                    <input type="checkbox" name="visit_available" value="1" @checked((bool) ($filters['visit_available'] ?? false)) class="mv-checkbox">
                     Visitas disponíveis
                 </label>
 
-                <div class="flex items-end gap-2 lg:col-span-6">
-                    <button type="submit" class="mv-button-primary">Filtrar oferta</button>
-                    <a href="{{ route('public.housing-offer.index') }}" class="mv-button-secondary">Limpar</a>
-                    <a href="{{ route('public.contests.index') }}" class="mv-button-secondary">Ver concursos</a>
+                <div class="flex flex-wrap items-end gap-2 lg:col-span-6">
+                    <button type="submit" class="mv-button-primary">
+                        Filtrar oferta
+                    </button>
+
+                    <a href="{{ route('public.housing-offer.index') }}" class="mv-button-secondary">
+                        Limpar
+                    </a>
+
+                    <a href="{{ route('public.contests.index') }}" class="mv-button-secondary">
+                        Ver concursos
+                    </a>
                 </div>
             </form>
         </div>
     </section>
 
-    <div class="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:px-8">
-        <div class="space-y-10">
+    <div class="mv-container grid gap-8 py-12 lg:grid-cols-[minmax(0,1fr)_24rem]">
+        <div class="space-y-12">
             <section>
                 <div class="flex items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-semibold text-ink-900">Habitações publicadas</h2>
-                        <p class="mt-1 text-sm text-ink-500">{{ $housingUnits->total() }} resultados disponíveis para consulta.</p>
+                        <p class="mv-caption">Habitações</p>
+                        <h2 class="mv-section-title mt-2 text-xl">Habitações publicadas</h2>
+                        <p class="mv-section-description">
+                            {{ $housingUnits->total() }} resultados disponíveis para consulta.
+                        </p>
                     </div>
-                    <a href="{{ route('public.housing-units.index', request()->query()) }}" class="hidden text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary sm:block">Abrir lista completa</a>
+
+                    <a href="{{ route('public.housing-units.index', request()->query()) }}" class="mv-link hidden sm:block">
+                        Abrir lista completa
+                    </a>
                 </div>
 
-                <div class="mt-5 grid gap-5 md:grid-cols-2">
+                <div class="mt-6 grid gap-6 md:grid-cols-2">
                     @forelse ($housingUnits as $housingUnit)
                         <x-public-housing-unit-card :housing-unit="$housingUnit" />
                     @empty
-                        <div class="mv-surface p-8 text-center text-sm text-ink-500 md:col-span-2">Não existem habitações públicas com estes filtros.</div>
+                        <div class="mv-card p-10 text-center md:col-span-2">
+                            <p class="font-semibold text-ink-900">Não existem habitações públicas com estes filtros.</p>
+                            <p class="mv-section-description mt-2">Ajuste os critérios de pesquisa ou consulte novamente mais tarde.</p>
+                        </div>
                     @endforelse
                 </div>
 
@@ -130,56 +166,77 @@
             <section>
                 <div class="flex items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-semibold text-ink-900">Concursos com oferta habitacional</h2>
-                        <p class="mt-1 text-sm text-ink-500">Consulte prazos, condições públicas e habitações associadas.</p>
+                        <p class="mv-caption">Concursos</p>
+                        <h2 class="mv-section-title mt-2 text-xl">Concursos com oferta habitacional</h2>
+                        <p class="mv-section-description">
+                            Consulte prazos, condições públicas e habitações associadas.
+                        </p>
                     </div>
-                    <a href="{{ route('public.contests.index') }}" class="text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary">Todos os concursos</a>
+
+                    <a href="{{ route('public.contests.index') }}" class="mv-link">
+                        Todos os concursos
+                    </a>
                 </div>
 
-                <div class="mt-5 grid gap-4 md:grid-cols-2">
+                <div class="mt-6 grid gap-6 md:grid-cols-2">
                     @forelse ($contests as $contest)
                         <x-public-contest-card :contest="$contest" />
                     @empty
-                        <div class="mv-surface p-6 text-sm text-ink-500 md:col-span-2">Não existem concursos abertos neste momento.</div>
+                        <div class="mv-card p-8 text-sm text-ink-500 md:col-span-2">
+                            Não existem concursos abertos neste momento.
+                        </div>
                     @endforelse
                 </div>
             </section>
         </div>
 
         <aside class="space-y-6">
-            <section class="mv-surface p-5">
-                <div class="flex items-center justify-between gap-4">
+            <section class="mv-card p-6">
+                <div class="flex items-start justify-between gap-4">
                     <div>
-                        <h2 class="font-semibold text-ink-900">Mapa da oferta</h2>
-                        <p class="mt-1 text-sm text-ink-500">{{ count($markers) }} localizações públicas.</p>
+                        <h2 class="mv-card-title">Mapa da oferta</h2>
+                        <p class="mv-section-description">
+                            {{ count($markers) }} localizações públicas.
+                        </p>
                     </div>
-                    <a href="{{ route('public.housing-map.index', request()->query()) }}" class="text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary">JSON</a>
+
+                    <a href="{{ route('public.housing-map.index', request()->query()) }}" class="mv-link text-sm">
+                        JSON
+                    </a>
                 </div>
 
-                <div class="mt-4 rounded-2xl border border-mvhab-support/30 bg-mvhab-surface p-4">
+                <div class="mt-5 rounded-2xl border border-mvhab-support/30 bg-mvhab-surface p-4">
                     @forelse ($markers as $marker)
-                        <a href="{{ $marker['url'] }}" class="mb-3 block rounded-2xl bg-white p-3 text-sm shadow-sm last:mb-0">
+                        <a href="{{ $marker['url'] }}" class="mb-3 block rounded-2xl bg-white p-4 text-sm shadow-surface last:mb-0 hover:text-mvhab-primary">
                             <span class="font-semibold text-ink-900">{{ $marker['title'] }}</span>
                             <span class="mt-1 block text-ink-500">{{ $marker['location'] }} · {{ $marker['typology'] }}</span>
                         </a>
                     @empty
-                        <p class="text-sm leading-6 text-ink-600">O mapa será apresentado quando existirem habitações publicadas com coordenadas públicas.</p>
+                        <p class="text-sm leading-6 text-ink-600">
+                            O mapa será apresentado quando existirem habitações publicadas com coordenadas públicas.
+                        </p>
                     @endforelse
                 </div>
             </section>
 
-            <section class="mv-surface p-5">
-                <h2 class="font-semibold text-ink-900">Ligações úteis</h2>
+            <section class="mv-card p-6">
+                <h2 class="mv-card-title">Ligações úteis</h2>
+
                 <div class="mt-4 grid gap-3 text-sm">
                     @forelse ($links as $link)
-                        <a href="{{ $link->url }}" @if ($link->opens_new_tab) target="_blank" rel="noopener noreferrer" @endif class="font-semibold text-mvhab-primary hover:text-mvhab-primary">
+                        <a href="{{ $link->url }}" @if ($link->opens_new_tab) target="_blank" rel="noopener noreferrer" @endif class="mv-link">
                             {{ $link->label }}
+
                             @if ($link->description)
-                                <span class="mt-1 block font-normal leading-5 text-ink-500">{{ $link->description }}</span>
+                                <span class="mt-1 block font-normal leading-5 text-ink-500">
+                                    {{ $link->description }}
+                                </span>
                             @endif
                         </a>
                     @empty
-                        <p class="text-sm leading-6 text-ink-500">Sem ligações institucionais configuradas.</p>
+                        <p class="text-sm leading-6 text-ink-500">
+                            Sem ligações institucionais configuradas.
+                        </p>
                     @endforelse
                 </div>
             </section>
