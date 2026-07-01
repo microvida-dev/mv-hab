@@ -1,28 +1,81 @@
 @props(['contests'])
 
-<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-    <div class="flex items-end justify-between gap-4">
-        <div>
-            <p class="text-sm font-semibold uppercase tracking-wide text-mvhab-primary">Concursos</p>
-            <h2 class="mt-2 text-3xl font-bold text-ink-900">Oportunidades publicadas</h2>
-            <p class="mt-3 max-w-2xl text-base leading-7 text-ink-600">
-                Consulte concursos municipais publicados, prazos oficiais e habitações associadas.
-            </p>
+<section class="mv-section bg-mvhab-surface">
+    <div class="mv-container">
+
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+
+            <div class="max-w-3xl">
+
+                <p class="mv-caption">
+                    Concursos
+                </p>
+
+                <h2 class="mv-heading mt-3">
+                    Oportunidades publicadas
+                </h2>
+
+                <p class="mv-description mt-6">
+                    Consulte os concursos municipais atualmente publicados, conheça os respetivos prazos, programas associados e acompanhe todas as oportunidades de acesso à habitação municipal.
+                </p>
+
+            </div>
+
+            <div class="flex items-center">
+
+                <a
+                    href="{{ route('public.contests.index') }}"
+                    class="mv-button-secondary"
+                >
+                    Ver todos os concursos
+
+                    <x-mv-icon
+                        name="external"
+                        size="sm"
+                        class="ml-2"
+                    />
+
+                </a>
+
+            </div>
+
         </div>
 
-        <a href="{{ route('public.contests.index') }}" class="hidden text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary sm:block">
-            Ver todos
-        </a>
-    </div>
+        <div class="mt-12 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
 
-    <div class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        @forelse ($contests as $contest)
-            <x-public-contest-card :contest="$contest" />
-        @empty
-            <div class="mv-surface col-span-full p-10 text-center">
-                <p class="font-semibold text-ink-900">Não existem concursos publicados neste momento.</p>
-                <p class="mt-2 text-sm text-ink-500">Consulte novamente esta página para acompanhar novas oportunidades.</p>
-            </div>
-        @endforelse
+            @forelse ($contests as $contest)
+
+                <x-public-contest-card
+                    :contest="$contest"
+                />
+
+            @empty
+
+                <div class="mv-card col-span-full py-16 text-center">
+
+                    <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-mvhab-surface">
+
+                        <x-mv-icon
+                            name="contest"
+                            size="xl"
+                            class="text-mvhab-primary"
+                        />
+
+                    </div>
+
+                    <h3 class="mt-8 text-xl font-semibold text-ink-900">
+                        Não existem concursos publicados
+                    </h3>
+
+                    <p class="mv-description mx-auto mt-4 max-w-xl">
+                        Neste momento não existem concursos municipais disponíveis. Assim que forem publicados novos procedimentos, passarão a estar visíveis nesta página.
+                    </p>
+
+                </div>
+
+            @endforelse
+
+        </div>
+
     </div>
 </section>

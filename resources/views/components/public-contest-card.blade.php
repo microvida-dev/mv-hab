@@ -2,41 +2,88 @@
 
 @php
     $phase = $contest->publicPhase();
+
     $phaseLabel = match ($phase) {
-        'open' => 'Candidaturas abertas',
-        'upcoming' => 'Abertura futura',
-        'closed' => 'Prazo encerrado',
+        'open' => 'Aberto',
+        'upcoming' => 'Brevemente',
+        'closed' => 'Encerrado',
         'cancelled' => 'Cancelado',
         default => 'Publicado',
     };
-    $phaseClasses = match ($phase) {
-        'open' => 'bg-mvhab-surface text-mvhab-primary',
-        'upcoming' => 'bg-sky-50 text-sky-800',
-        'closed' => 'bg-ink-100 text-ink-700',
-        'cancelled' => 'bg-red-50 text-red-800',
-        default => 'bg-ink-100 text-ink-700',
+
+    $phaseBadge = match ($phase) {
+        'open' => 'mv-badge-success',
+        'upcoming' => 'mv-badge-info',
+        'closed' => 'mv-badge-neutral',
+        'cancelled' => 'mv-badge-danger',
+        default => 'mv-badge-neutral',
     };
 @endphp
 
-<article class="mv-surface flex h-full flex-col p-5">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <span class="rounded-2xl px-2.5 py-1 text-xs font-semibold {{ $phaseClasses }}">{{ $phaseLabel }}</span>
-        <span class="text-xs font-semibold text-ink-500">{{ $contest->code }}</span>
+<article class="mv-card-interactive flex h-full flex-col overflow-hidden p-6">
+    <div class="flex items-start justify-between gap-4">
+        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
+            <x-mv-icon name="contest" size="lg" />
+        </div>
+
+        <div class="flex flex-col items-end gap-2">
+            <span class="mv-badge {{ $phaseBadge }}">
+                {{ $phaseLabel }}
+            </span>
+
+            <span class="text-xs font-semibold text-ink-400">
+                {{ $contest->code }}
+            </span>
+        </div>
     </div>
 
-    <h3 class="mt-4 text-lg font-semibold text-ink-900">
-        <a href="{{ route('public.contests.show', $contest->slug) }}" class="hover:text-mvhab-primary">{{ $contest->title }}</a>
-    </h3>
-    <p class="mt-2 text-sm leading-6 text-ink-500">{{ $contest->summary }}</p>
+    <div class="mt-6 flex-1">
+        <h3 class="mv-card-title">
+            <a href="{{ route('public.contests.show', $contest->slug) }}" class="hover:text-mvhab-primary">
+                {{ $contest->title }}
+            </a>
+        </h3>
 
-    <div class="mt-5 border-t border-ink-100 pt-4 text-sm text-ink-600">
-        <p><span class="font-semibold text-ink-900">Programa:</span> {{ $contest->program->name }}</p>
-        <p class="mt-1"><span class="font-semibold text-ink-900">Município:</span> {{ $contest->program->municipality->name }}</p>
-        <p class="mt-1"><span class="font-semibold text-ink-900">Prazo:</span> {{ $contest->opens_at->format('d/m/Y') }} a {{ $contest->closes_at->format('d/m/Y') }}</p>
+        <p class="mv-section-description mt-3">
+            {{ $contest->summary }}
+        </p>
+
+        <div class="mt-6 grid gap-3 border-t border-ink-100 pt-5">
+            <div class="flex items-start gap-3">
+                <x-mv-icon name="program" size="sm" class="mt-0.5 text-mvhab-primary" />
+                <div>
+                    <p class="mv-data-label">Programa</p>
+                    <p class="mv-data-value">{{ $contest->program->name }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+                <x-mv-icon name="location" size="sm" class="mt-0.5 text-mvhab-primary" />
+                <div>
+                    <p class="mv-data-label">Município</p>
+                    <p class="mv-data-value">{{ $contest->program->municipality->name }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+                <x-mv-icon name="calendar" size="sm" class="mt-0.5 text-mvhab-primary" />
+                <div>
+                    <p class="mv-data-label">Prazo</p>
+                    <p class="mv-data-value">
+                        {{ $contest->opens_at->format('d/m/Y') }}
+                        —
+                        {{ $contest->closes_at->format('d/m/Y') }}
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <a href="{{ route('public.contests.show', $contest->slug) }}" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary">
+    <a
+        href="{{ route('public.contests.show', $contest->slug) }}"
+        class="mv-button-secondary mt-6 justify-center"
+    >
         Consultar concurso
-        <x-ui-icon name="arrow" class="h-4 w-4" />
+        <x-mv-icon name="arrow-right" size="sm" />
     </a>
 </article>
