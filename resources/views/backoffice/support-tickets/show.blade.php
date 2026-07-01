@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Ticket {{ $ticket->ticket_number }}</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Ticket {{ $ticket->ticket_number }}</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $ticket->subject }}</h1>
             <p class="mt-1 text-sm text-ink-500">{{ $ticket->user?->name }} · {{ $ticket->status->label() }}</p>
         </div>
@@ -25,11 +25,11 @@
                     <form method="POST" action="{{ route('backoffice.support-ticket-messages.store', $ticket) }}" class="mv-surface space-y-4 p-6">
                         @csrf
                         <h2 class="text-lg font-semibold text-ink-900">Nova mensagem</h2>
-                        <select name="visibility" class="w-full rounded-md border-ink-300 text-sm">
+                        <select name="visibility" class="mv-input w-full text-sm">
                             <option value="candidate_visible">Visível ao candidato</option>
                             <option value="internal_only">Apenas interno</option>
                         </select>
-                        <textarea name="message" rows="5" class="w-full rounded-md border-ink-300 text-sm" required></textarea>
+                        <textarea name="message" rows="5" class="mv-input w-full text-sm" required></textarea>
                         <button type="submit" class="mv-button-primary">Registar mensagem</button>
                     </form>
                 </div>
@@ -38,7 +38,7 @@
                     <form method="POST" action="{{ route('backoffice.support-tickets.assign', $ticket) }}" class="mv-surface space-y-3 p-5">
                         @csrf
                         <h2 class="font-semibold text-ink-900">Atribuição</h2>
-                        <select name="assigned_to" class="w-full rounded-md border-ink-300 text-sm" required>
+                        <select name="assigned_to" class="mv-input w-full text-sm" required>
                             @foreach ($staffUsers as $staff)
                                 <option value="{{ $staff->id }}" @selected($ticket->assigned_to === $staff->id)>{{ $staff->name }}</option>
                             @endforeach
@@ -48,12 +48,12 @@
                     <form method="POST" action="{{ route('backoffice.support-tickets.status', $ticket) }}" class="mv-surface space-y-3 p-5">
                         @csrf
                         <h2 class="font-semibold text-ink-900">Estado</h2>
-                        <select name="status" class="w-full rounded-md border-ink-300 text-sm" required>
+                        <select name="status" class="mv-input w-full text-sm" required>
                             @foreach ($statuses as $value => $label)
                                 <option value="{{ $value }}" @selected($ticket->status->value === $value)>{{ $label }}</option>
                             @endforeach
                         </select>
-                        <textarea name="message" rows="3" class="w-full rounded-md border-ink-300 text-sm" placeholder="Nota opcional"></textarea>
+                        <textarea name="message" rows="3" class="mv-input w-full text-sm" placeholder="Nota opcional"></textarea>
                         <button class="mv-button-secondary w-full">Atualizar</button>
                     </form>
                     @if ($ticket->attachments->isNotEmpty())
@@ -61,7 +61,7 @@
                             <h2 class="font-semibold text-ink-900">Anexos</h2>
                             <div class="mt-3 space-y-2">
                                 @foreach ($ticket->attachments as $attachment)
-                                    <a href="{{ route('backoffice.support-ticket-attachments.download', $attachment) }}" class="block text-sm font-semibold text-civic-700">{{ $attachment->original_filename }}</a>
+                                    <a href="{{ route('backoffice.support-ticket-attachments.download', $attachment) }}" class="block text-sm font-semibold text-mvhab-primary">{{ $attachment->original_filename }}</a>
                                 @endforeach
                             </div>
                         </section>

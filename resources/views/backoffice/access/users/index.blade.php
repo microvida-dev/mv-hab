@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <p class="text-sm font-semibold text-civic-700">QA-30</p>
+                <p class="text-sm font-semibold text-mvhab-primary">QA-30</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">Utilizadores</h1>
             </div>
             <a href="{{ route('backoffice.users.create') }}" class="mv-button-primary">Criar utilizador</a>
@@ -13,17 +13,17 @@
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
             @error('access')
-                <div class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">{{ $message }}</div>
+                <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{{ $message }}</div>
             @enderror
 
             <form method="GET" action="{{ route('backoffice.users.index') }}" class="mv-surface grid gap-4 p-5 md:grid-cols-4">
                 <label class="grid gap-1 text-sm">
                     <span class="font-medium text-ink-700">Pesquisa</span>
-                    <input name="q" value="{{ request('q') }}" class="mv-input rounded-md border-ink-200">
+                    <input name="q" value="{{ request('q') }}" class="mv-input rounded-2xl border-ink-200">
                 </label>
                 <label class="grid gap-1 text-sm">
                     <span class="font-medium text-ink-700">Role</span>
-                    <select name="role" class="mv-input rounded-md border-ink-200">
+                    <select name="role" class="mv-input rounded-2xl border-ink-200">
                         <option value="">Todas</option>
                         @foreach ($roles as $role)
                             <option value="{{ $role->name }}" @selected(request('role') === $role->name)>{{ $role->label }}</option>
@@ -32,7 +32,7 @@
                 </label>
                 <label class="grid gap-1 text-sm">
                     <span class="font-medium text-ink-700">Equipa</span>
-                    <select name="team" class="mv-input rounded-md border-ink-200">
+                    <select name="team" class="mv-input rounded-2xl border-ink-200">
                         <option value="">Todas</option>
                         @foreach ($teams as $team)
                             <option value="{{ $team->id }}" @selected((string) request('team') === (string) $team->id)>{{ $team->name }}</option>
@@ -41,7 +41,7 @@
                 </label>
                 <label class="grid gap-1 text-sm">
                     <span class="font-medium text-ink-700">Estado</span>
-                    <select name="status" class="mv-input rounded-md border-ink-200">
+                    <select name="status" class="mv-input rounded-2xl border-ink-200">
                         <option value="">Todos</option>
                         <option value="active" @selected(request('status') === 'active')>Ativo</option>
                         <option value="inactive" @selected(request('status') === 'inactive')>Inativo</option>

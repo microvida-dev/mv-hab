@@ -2,11 +2,11 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Candidatura formal</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Candidatura formal</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $application->application_number ?? 'Rascunho' }}</h1>
                 <p class="mt-1 text-sm text-ink-500">{{ $application->contest->title }}</p>
             </div>
-            <span class="rounded-md bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $application->status->label() }}</span>
+            <span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $application->status->label() }}</span>
         </div>
     </x-slot>
 
@@ -22,7 +22,7 @@
             <section class="mv-surface p-6">
                 <div class="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                        <p class="text-sm font-semibold text-civic-700">Elegibilidade</p>
+                        <p class="text-sm font-semibold text-mvhab-primary">Elegibilidade</p>
                         <h2 class="mt-1 text-lg font-semibold text-ink-900">
                             {{ $application->latestEligibilityCheck?->result?->label() ?? 'Sem verificação formal' }}
                         </h2>
@@ -55,7 +55,7 @@
                                 <p class="font-semibold text-ink-900">{{ $document->documentType->name }}</p>
                                 <p class="mt-1 text-xs text-ink-500">{{ $document->status_at_submission->label() }}</p>
                             </div>
-                            <a href="{{ route('admin.document-reviews.show', $document->documentSubmission) }}" class="text-sm font-semibold text-civic-700">Consultar documento</a>
+                            <a href="{{ route('admin.document-reviews.show', $document->documentSubmission) }}" class="text-sm font-semibold text-mvhab-primary">Consultar documento</a>
                         </div>
                     @empty
                         <p class="py-4 text-sm text-ink-500">Sem documentos associados.</p>
@@ -68,7 +68,7 @@
                     <h2 class="text-lg font-semibold text-ink-900">Declarações</h2>
                     <div class="mt-4 space-y-3">
                         @foreach ($application->declarations as $declaration)
-                            <div class="rounded-md border border-ink-100 p-4 text-sm">
+                            <div class="rounded-2xl border border-ink-100 p-4 text-sm">
                                 <p class="font-semibold text-ink-900">{{ $declaration->declaration_type->label() }}</p>
                                 <p class="mt-1 text-ink-500">Aceite em {{ $declaration->accepted_at?->format('d/m/Y H:i') }} · versão {{ $declaration->text_version }}</p>
                             </div>
@@ -93,7 +93,7 @@
                 <h2 class="text-lg font-semibold text-ink-900">Snapshots preservados</h2>
                 <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($application->snapshots as $snapshot)
-                        <details class="rounded-md border border-ink-100 p-4">
+                        <details class="rounded-2xl border border-ink-100 p-4">
                             <summary class="cursor-pointer text-sm font-semibold text-ink-900">{{ $snapshot->snapshot_type->label() }}</summary>
                             <pre class="mt-3 max-h-80 overflow-auto whitespace-pre-wrap text-xs text-ink-600">{{ json_encode($snapshot->data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
                         </details>
