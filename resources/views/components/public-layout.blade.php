@@ -56,7 +56,10 @@
             Saltar para o conteúdo principal
         </a>
 
-        <header class="sticky top-0 z-50 border-b border-ink-100 bg-white/95 backdrop-blur-md">
+        <header
+            x-data="{ mobileMenuOpen: false }"
+            class="sticky top-0 z-50 border-b border-ink-100 bg-white/95 backdrop-blur-md"
+        >
             <div class="mx-auto flex min-h-24 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
                 <a href="{{ route('public.portal') }}" class="flex shrink-0 items-center">
                     <img
@@ -66,45 +69,130 @@
                     >
                 </a>
 
-                <nav class="hidden items-center gap-6 md:flex" aria-label="Navegação pública">
-                    <a href="{{ route('public.housing-offer.index') }}" class="text-sm font-semibold text-ink-600 transition hover:text-mvhab-primary">Oferta habitacional</a>
-                    <a href="{{ route('public.programs.index') }}" class="text-sm font-semibold text-ink-600 transition hover:text-mvhab-primary">Programas</a>
-                    <a href="{{ route('public.contests.index') }}" class="text-sm font-semibold text-ink-600 transition hover:text-mvhab-primary">Concursos</a>
-                    <a href="{{ route('public.simulator.show') }}" class="text-sm font-semibold text-ink-600 transition hover:text-mvhab-primary">Simulador</a>
-                    <a href="{{ route('public.faq') }}" class="text-sm font-semibold text-ink-600 transition hover:text-mvhab-primary">Perguntas frequentes</a>
+                @php
+                    $publicNavItems = [
+                        ['label' => 'Oferta habitacional', 'route' => 'public.housing-offer.index', 'active' => request()->routeIs('public.housing-offer.*') || request()->routeIs('public.housing-units.*')],
+                        ['label' => 'Programas', 'route' => 'public.programs.index', 'active' => request()->routeIs('public.programs.*')],
+                        ['label' => 'Concursos', 'route' => 'public.contests.index', 'active' => request()->routeIs('public.contests.*')],
+                        ['label' => 'Simulador', 'route' => 'public.simulator.show', 'active' => request()->routeIs('public.simulator.*')],
+                        ['label' => 'Perguntas frequentes', 'route' => 'public.faq', 'active' => request()->routeIs('public.faq')],
+                    ];
+                @endphp
+
+                <nav class="hidden items-center gap-2 lg:flex" aria-label="Navegação pública">
+                    @foreach ($publicNavItems as $item)
+                        <a
+                            href="{{ route($item['route']) }}"
+                            @class([
+                                'rounded-2xl px-3 py-2 text-sm font-semibold transition duration-200',
+                                'bg-mvhab-surface text-mvhab-primary' => $item['active'],
+                                'text-ink-600 hover:bg-mvhab-surface hover:text-mvhab-primary' => ! $item['active'],
+                            ])
+                        >
+                            {{ $item['label'] }}
+                        </a>
+                    @endforeach
                 </nav>
 
                 <div class="flex items-center gap-2">
-                    @auth
-                        @if (Auth::user()->hasRole('candidate'))
-                            <a href="{{ route('candidate.dashboard') }}" class="mv-button-secondary">
-                                Área do candidato
-                            </a>
-                        @elseif (Auth::user()->hasRole('tenant'))
-                            <a href="{{ route('tenant.dashboard') }}" class="mv-button-secondary">
-                                Área do inquilino
-                            </a>
+                    <div class="hidden items-center gap-2 sm:flex">
+                        @auth
+                            @if (Auth::user()->hasRole('candidate'))
+                                <a href="{{ route('candidate.dashboard') }}" class="mv-button-secondary">
+                                    Área do candidato
+                                </a>
+                            @elseif (Auth::user()->hasRole('tenant'))
+                                <a href="{{ route('tenant.dashboard') }}" class="mv-button-secondary">
+                                    Área do inquilino
+                                </a>
+                            @else
+                                <a href="{{ route('dashboard') }}" class="mv-button-secondary">
+                                    Área reservada
+                                </a>
+                            @endif
+
+                            <form method="POST" action="{{ route('logout') }}" class="inline">
+                                @csrf
+                                <button type="submit" class="mv-button-secondary">
+                                    Sair
+                                </button>
+                            </form>
                         @else
-                            <a href="{{ route('dashboard') }}" class="mv-button-secondary">
-                                Área reservada
+                            <a href="{{ route('login') }}" class="mv-button-secondary">
+                                Entrar
                             </a>
-                        @endif
 
-                        <form method="POST" action="{{ route('logout') }}" class="inline">
-                            @csrf
-                            <button type="submit" class="mv-button-secondary">
-                                Sair
-                            </button>
-                        </form>
-                    @else
-                        <a href="{{ route('login') }}" class="mv-button-secondary">
-                            Entrar
-                        </a>
+                            <a href="{{ route('register') }}" class="mv-button-primary">
+                                Criar conta
+                            </a>
+                        @endauth
+                    </div>
 
-                        <a href="{{ route('register') }}" class="mv-button-primary hidden sm:inline-flex">
-                            Criar conta
+                    <button
+                        type="button"
+                        class="mv-button-secondary lg:hidden"
+                        aria-controls="mobile-public-menu"
+                        :aria-expanded="mobileMenuOpen.toString()"
+                        @click="mobileMenuOpen = ! mobileMenuOpen"
+                    >
+                        Menu
+                    </button>
+                </div>
+            </div>
+
+            <div
+                id="mobile-public-menu"
+                x-cloak
+                x-show="mobileMenuOpen"
+                x-transition
+                class="border-t border-ink-100 bg-white lg:hidden"
+            >
+                <div class="mv-container grid gap-2 py-4">
+                    @foreach ($publicNavItems as $item)
+                        <a
+                            href="{{ route($item['route']) }}"
+                            @class([
+                                'rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200',
+                                'bg-mvhab-surface text-mvhab-primary' => $item['active'],
+                                'text-ink-600 hover:bg-mvhab-surface hover:text-mvhab-primary' => ! $item['active'],
+                            ])
+                        >
+                            {{ $item['label'] }}
                         </a>
-                    @endauth
+                    @endforeach
+
+                    <div class="mt-3 grid gap-2 border-t border-ink-100 pt-3">
+                        @auth
+                            @if (Auth::user()->hasRole('candidate'))
+                                <a href="{{ route('candidate.dashboard') }}" class="mv-button-secondary justify-center">
+                                    Área do candidato
+                                </a>
+                            @elseif (Auth::user()->hasRole('tenant'))
+                                <a href="{{ route('tenant.dashboard') }}" class="mv-button-secondary justify-center">
+                                    Área do inquilino
+                                </a>
+                            @else
+                                <a href="{{ route('dashboard') }}" class="mv-button-secondary justify-center">
+                                    Área reservada
+                                </a>
+                            @endif
+
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="mv-button-secondary w-full justify-center">
+                                    Sair
+                                </button>
+                            </form>
+                        @else
+                            <a href="{{ route('login') }}" class="mv-button-secondary justify-center">
+                                Entrar
+                            </a>
+
+                            <a href="{{ route('register') }}" class="mv-button-primary justify-center">
+                                Criar conta
+                            </a>
+                        @endauth
+                    </div>
                 </div>
             </div>
         </header>
