@@ -15,9 +15,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="description" content="{{ $description }}">
+
         <meta property="og:title" content="{{ $title }} · MV HAB">
         <meta property="og:description" content="{{ $description }}">
         <meta property="og:type" content="{{ $ogType }}">
+
         <meta name="twitter:card" content="{{ $twitterCard }}">
         <meta name="twitter:title" content="{{ $title }} · MV HAB">
         <meta name="twitter:description" content="{{ $description }}">
@@ -33,6 +35,9 @@
         @endif
 
         <title>{{ $title }} · MV HAB</title>
+
+        <link rel="icon" type="image/png" href="{{ asset('images/brand/logo-mvhab-semfundo-comp.png') }}">
+        <link rel="apple-touch-icon" href="{{ asset('images/brand/logo-mvhab-semfundo-comp.png') }}">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
@@ -51,23 +56,22 @@
             Saltar para o conteúdo principal
         </a>
 
-        <header class="border-b border-ink-100 bg-white">
-            <div class="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-                <a href="{{ route('public.portal') }}" class="flex items-center gap-3">
-                    <x-application-logo class="h-10 w-auto fill-current text-mvhab-primary" />
-
-                    <div>
-                        <p class="text-base font-bold text-ink-900">MV HAB</p>
-                        <p class="text-xs font-medium text-ink-500">Arrendamento Acessível</p>
-                    </div>
+        <header class="sticky top-0 z-50 border-b border-ink-100 bg-white/95 backdrop-blur-md">
+            <div class="mx-auto flex min-h-24 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+                <a href="{{ route('public.portal') }}" class="flex shrink-0 items-center">
+                    <img
+                        src="{{ asset('images/brand/logo-mvhab-semfundo-comp.png') }}"
+                        alt="MV HAB — Arrendamento Acessível"
+                        class="h-16 w-auto"
+                    >
                 </a>
 
                 <nav class="hidden items-center gap-6 md:flex" aria-label="Navegação pública">
-                    <a href="{{ route('public.housing-offer.index') }}" class="text-sm font-semibold text-ink-600 hover:text-mvhab-primary">Oferta habitacional</a>
-                    <a href="{{ route('public.programs.index') }}" class="text-sm font-semibold text-ink-600 hover:text-mvhab-primary">Programas</a>
-                    <a href="{{ route('public.contests.index') }}" class="text-sm font-semibold text-ink-600 hover:text-mvhab-primary">Concursos</a>
-                    <a href="{{ route('public.simulator.show') }}" class="text-sm font-semibold text-ink-600 hover:text-mvhab-primary">Simulador</a>
-                    <a href="{{ route('public.faq') }}" class="text-sm font-semibold text-ink-600 hover:text-mvhab-primary">Perguntas frequentes</a>
+                    <a href="{{ route('public.housing-offer.index') }}" class="text-sm font-semibold text-ink-600 transition hover:text-mvhab-primary">Oferta habitacional</a>
+                    <a href="{{ route('public.programs.index') }}" class="text-sm font-semibold text-ink-600 transition hover:text-mvhab-primary">Programas</a>
+                    <a href="{{ route('public.contests.index') }}" class="text-sm font-semibold text-ink-600 transition hover:text-mvhab-primary">Concursos</a>
+                    <a href="{{ route('public.simulator.show') }}" class="text-sm font-semibold text-ink-600 transition hover:text-mvhab-primary">Simulador</a>
+                    <a href="{{ route('public.faq') }}" class="text-sm font-semibold text-ink-600 transition hover:text-mvhab-primary">Perguntas frequentes</a>
                 </nav>
 
                 <div class="flex items-center gap-2">
