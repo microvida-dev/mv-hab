@@ -15,7 +15,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Backoffice operacional</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Backoffice operacional</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">Painel operacional</h1>
             <p class="mt-1 text-sm text-ink-500">Acompanhamento diário de prazos, candidaturas, documentos, alertas e visitas.</p>
         </div>
@@ -24,7 +24,7 @@
     <div class="py-8">
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             @if (session('success'))
-                <div class="rounded-md border border-civic-200 bg-civic-50 px-4 py-3 text-sm font-semibold text-civic-800">{{ session('success') }}</div>
+                <div class="mv-surface px-4 py-3 text-sm font-semibold text-mvhab-primary">{{ session('success') }}</div>
             @endif
 
             <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -43,7 +43,7 @@
                 <div class="mv-surface p-6">
                     <div class="flex items-center justify-between gap-3">
                         <h2 class="text-lg font-semibold text-ink-900">Prazos críticos</h2>
-                        <a href="{{ route('backoffice.internal-alerts.index') }}" class="text-sm font-semibold text-civic-700">Ver alertas</a>
+                        <a href="{{ route('backoffice.internal-alerts.index') }}" class="text-sm font-semibold text-mvhab-primary">Ver alertas</a>
                     </div>
                     <div class="mt-4 divide-y divide-ink-100">
                         @forelse ($deadlines as $key => $deadline)
@@ -87,7 +87,7 @@
                         @forelse ($alerts as $alert)
                             <a href="{{ route('backoffice.internal-alerts.show', $alert) }}" class="block py-3 text-sm">
                                 <span class="font-semibold text-ink-900">{{ $alert->title }}</span>
-                                <span class="ml-2 rounded-md bg-ink-100 px-2 py-0.5 text-xs text-ink-600">{{ $alert->severity->label() }}</span>
+                                <span class="ml-2 rounded-2xl bg-ink-100 px-2 py-0.5 text-xs text-ink-600">{{ $alert->severity->label() }}</span>
                                 <p class="mt-1 text-ink-500">{{ $alert->message }}</p>
                             </a>
                         @empty
@@ -100,7 +100,7 @@
                     <h2 class="text-lg font-semibold text-ink-900">Visitas e atendimento</h2>
                     <div class="mt-4 grid gap-3 sm:grid-cols-2">
                         @foreach ($visits as $label => $value)
-                            <div class="rounded-md border border-ink-100 p-4">
+                            <div class="mv-surface p-4">
                                 <p class="text-sm text-ink-500">{{ $label }}</p>
                                 <p class="mt-2 text-2xl font-semibold text-ink-900">{{ $value }}</p>
                             </div>
