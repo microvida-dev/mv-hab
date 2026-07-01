@@ -8,7 +8,7 @@
 @endphp
 
 @if (count($breadcrumbs) > 1)
-    <nav class="border-b border-ink-100 bg-white/90 shadow-surface" aria-label="Breadcrumb">
+    <nav class="border-b border-ink-100 bg-mvhab-card/90 shadow-surface" aria-label="Breadcrumb">
         <ol class="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-3 text-sm sm:px-6 lg:px-8">
             @foreach ($breadcrumbs as $breadcrumb)
                 <li class="flex items-center gap-2">

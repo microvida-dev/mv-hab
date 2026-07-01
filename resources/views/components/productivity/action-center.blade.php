@@ -24,7 +24,7 @@
 
                 <div class="mt-4 space-y-3">
                     @foreach (($section['items'] ?? []) as $item)
-                        <a href="{{ $item['url'] }}" class="block rounded-2xl border border-ink-100 bg-white p-3 transition hover:border-mvhab-support hover:bg-mvhab-surface focus:outline-none focus:ring-2 focus:ring-mvhab-primary">
+                        <a href="{{ $item['url'] }}" class="block rounded-2xl border border-ink-100 bg-mvhab-card p-3 transition hover:border-mvhab-support hover:bg-mvhab-surface focus:outline-none focus:ring-2 focus:ring-mvhab-primary">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0">
                                     <p class="truncate text-sm font-semibold text-ink-900">{{ $item['title'] }}</p>

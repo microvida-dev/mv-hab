@@ -20,13 +20,13 @@
             @if ($teamNames !== [])
                 <div class="mt-3 flex flex-wrap gap-2">
                     @foreach ($teamNames as $teamName)
-                        <x-ui.status-badge status="neutral" :label="$teamName" class="bg-white" />
+                        <x-ui.status-badge status="neutral" :label="$teamName" class="bg-mvhab-card" />
                     @endforeach
                 </div>
             @endif
         </div>
 
-        <div class="rounded-2xl border border-mvhab-support/30 bg-white px-4 py-3 text-sm shadow-surface">
+        <div class="rounded-2xl border border-mvhab-support/30 bg-mvhab-card px-4 py-3 text-sm shadow-surface">
             <p class="font-semibold text-ink-900">{{ count($metrics) }} indicadores</p>
             <p class="mt-1 text-ink-500">{{ count($deadlines) }} alertas autorizados</p>
         </div>

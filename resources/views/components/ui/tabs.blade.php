@@ -4,7 +4,7 @@
     'ariaLabel' => 'Separadores',
 ])
 
-<nav {{ $attributes->merge(['class' => 'overflow-x-auto rounded-lg border border-ink-100 bg-white shadow-surface']) }} aria-label="{{ $ariaLabel }}">
+<nav {{ $attributes->merge(['class' => 'overflow-x-auto rounded-2xl border border-ink-100 bg-mvhab-card shadow-surface']) }} aria-label="{{ $ariaLabel }}">
     <div class="flex min-w-max gap-1 p-2" role="tablist">
         @foreach ($tabs as $tab)
             @php

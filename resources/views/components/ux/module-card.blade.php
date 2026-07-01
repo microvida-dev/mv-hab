@@ -17,7 +17,7 @@
 
 <article {{ $attributes->merge(['class' => $cardClasses]) }}>
     <div class="flex items-start gap-4">
-        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-civic-50 text-civic-800">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
             @if ($icon)
                 <x-ui-icon :name="$icon" class="h-5 w-5" />
             @else
@@ -39,7 +39,7 @@
                     @endif
 
                     @if ($metric)
-                        <span class="rounded-md bg-ink-50 px-2 py-1 text-xs font-semibold text-ink-700">{{ $metric }}</span>
+                        <span class="rounded-2xl bg-ink-50 px-2 py-1 text-xs font-semibold text-ink-700">{{ $metric }}</span>
                     @endif
                 </div>
             @endif
@@ -56,7 +56,7 @@
         @endisset
 
         @if ($authorized && $href)
-            <a href="{{ $href }}" class="inline-flex items-center gap-2 rounded-md text-sm font-semibold text-civic-700 transition hover:text-civic-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-civic-500 focus-visible:ring-offset-2">
+            <a href="{{ $href }}" class="inline-flex items-center gap-2 rounded-2xl text-sm font-semibold text-mvhab-primary transition hover:text-mvhab-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-offset-2">
                 <span>{{ $actionLabel }}</span>
                 <x-ui-icon name="arrow" class="h-4 w-4" />
             </a>
