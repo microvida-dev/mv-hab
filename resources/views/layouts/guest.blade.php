@@ -15,7 +15,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-gray-900 antialiased">
-        <a href="#conteudo-principal" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-civic-700 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white">
+        <a href="#conteudo-principal" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-2xl focus:bg-mvhab-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white">
             Saltar para o conteúdo principal
         </a>
 

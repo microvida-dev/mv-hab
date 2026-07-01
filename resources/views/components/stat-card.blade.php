@@ -20,7 +20,7 @@
         </div>
 
         @if ($icon)
-            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-civic-50 text-civic-700">
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
                 <x-ui-icon :name="$icon" class="h-5 w-5" />
             </span>
         @endif
