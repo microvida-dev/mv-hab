@@ -22,7 +22,7 @@
                     <h2 class="text-lg font-semibold text-ink-900">Códigos de recuperação</h2>
                     <div class="mt-3 grid gap-2 sm:grid-cols-2">
                         @foreach ($recoveryCodes as $code)
-                            <code class="rounded-md bg-ink-100 px-3 py-2 text-sm">{{ $code }}</code>
+                            <code class="rounded-2xl bg-ink-100 px-3 py-2 text-sm">{{ $code }}</code>
                         @endforeach
                     </div>
                 </section>

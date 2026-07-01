@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Sprint 18</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Sprint 18</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">RGPD, segurança e auditoria</h1>
         </div>
     </x-slot>
