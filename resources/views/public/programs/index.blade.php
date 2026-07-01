@@ -13,7 +13,7 @@
                 <article class="mv-surface flex flex-col p-5">
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <p class="text-xs font-semibold text-ink-500">{{ $program->municipality->name }}</p>
-                        <span class="rounded-md bg-mvhab-surface px-2.5 py-1 text-xs font-semibold text-mvhab-primary">Publicado</span>
+                        <span class="rounded-2xl bg-mvhab-surface px-2.5 py-1 text-xs font-semibold text-mvhab-primary">Publicado</span>
                     </div>
                     <h2 class="mt-2 text-xl font-semibold text-ink-900">{{ $program->name }}</h2>
                     <p class="mt-3 flex-1 text-sm leading-6 text-ink-500">{{ $program->summary }}</p>

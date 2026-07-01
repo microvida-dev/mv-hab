@@ -4,7 +4,7 @@
             <a href="{{ route('public.programs.index') }}" class="text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary">Programas</a>
             <div class="mt-5 flex flex-wrap items-center gap-3">
                 <p class="text-sm font-semibold text-ink-500">{{ $program->municipality->name }}</p>
-                <span class="rounded-md bg-mvhab-surface px-2.5 py-1 text-xs font-semibold text-mvhab-primary">Publicado</span>
+                <span class="rounded-2xl bg-mvhab-surface px-2.5 py-1 text-xs font-semibold text-mvhab-primary">Publicado</span>
             </div>
             <h1 class="mt-2 max-w-4xl text-3xl font-semibold text-ink-900">{{ $program->name }}</h1>
             <p class="mt-4 max-w-3xl text-lg leading-8 text-ink-600">{{ $program->summary }}</p>

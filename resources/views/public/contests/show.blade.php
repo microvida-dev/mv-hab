@@ -11,16 +11,16 @@
 
     <section class="border-b border-ink-100 bg-ink-50">
         <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-            <nav aria-label="Breadcrumb" class="text-sm font-semibold text-civic-700">
-                <a href="{{ route('public.portal') }}" class="hover:text-civic-900">Início</a>
+            <nav aria-label="Breadcrumb" class="text-sm font-semibold text-mvhab-primary">
+                <a href="{{ route('public.portal') }}" class="hover:text-mvhab-primary">Início</a>
                 <span aria-hidden="true" class="mx-2 text-ink-400">/</span>
-                <a href="{{ route('public.contests.index') }}" class="hover:text-civic-900">Concursos</a>
+                <a href="{{ route('public.contests.index') }}" class="hover:text-mvhab-primary">Concursos</a>
                 <span aria-hidden="true" class="mx-2 text-ink-400">/</span>
                 <span>{{ $contest->title }}</span>
             </nav>
             <div class="mt-5 flex flex-wrap items-center gap-3">
-                <span class="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-ink-700 ring-1 ring-ink-100">{{ $contest->code }}</span>
-                <span class="rounded-md px-2.5 py-1 text-xs font-semibold {{ $isOpen ? 'bg-civic-50 text-civic-900' : 'bg-ink-100 text-ink-700' }}">
+                <span class="rounded-2xl bg-white px-2.5 py-1 text-xs font-semibold text-ink-700 ring-1 ring-ink-100">{{ $contest->code }}</span>
+                <span class="rounded-2xl px-2.5 py-1 text-xs font-semibold {{ $isOpen ? 'bg-mvhab-surface text-mvhab-primary' : 'bg-ink-100 text-ink-700' }}">
                     {{ $isOpen ? 'Candidaturas abertas' : ($contest->publicPhase() === 'upcoming' ? 'Abertura futura' : 'Prazo encerrado') }}
                 </span>
             </div>
@@ -75,7 +75,7 @@
                             <h2 class="text-xl font-semibold text-ink-900">Habitações deste concurso</h2>
                             <p class="mt-1 text-sm text-ink-500">Fichas públicas associadas ao aviso publicado.</p>
                         </div>
-                        <a href="{{ route('public.housing-units.index', ['contest' => $contest->slug]) }}" class="text-sm font-semibold text-civic-700 hover:text-civic-900">Ver lista</a>
+                        <a href="{{ route('public.housing-units.index', ['contest' => $contest->slug]) }}" class="text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary">Ver lista</a>
                     </div>
                     <div class="mt-5 grid gap-5 md:grid-cols-2">
                         @foreach ($housingUnits as $housingUnit)
@@ -109,7 +109,7 @@
                         @if (Auth::user()->hasRole('candidate'))
                             <a href="{{ route('candidate.applications.create', $contest) }}" class="mv-button-primary mt-5 w-full">Iniciar candidatura</a>
                         @else
-                            <div class="mt-5 rounded-md border border-signal-200 bg-signal-50 p-4 text-sm leading-6 text-signal-900">
+                            <div class="mt-5 rounded-2xl border border-signal-200 bg-signal-50 p-4 text-sm leading-6 text-signal-900">
                                 Está autenticado com um perfil interno. Para testar uma candidatura, termine esta sessão e entre ou crie uma conta de candidato.
                             </div>
                                 @if (Auth::user()->hasRole('candidate'))
@@ -136,13 +136,13 @@
                     @endauth
                     <p class="mt-3 text-xs leading-5 text-ink-500">A candidatura exige Registo de Adesão finalizado, agregado, rendimentos, situação habitacional e documentação obrigatória.</p>
                 @else
-                    <p class="mt-5 rounded-md bg-ink-50 px-3 py-3 text-sm text-ink-600">A candidatura não está disponível neste momento.</p>
+                    <p class="mt-5 rounded-2xl bg-ink-50 px-3 py-3 text-sm text-ink-600">A candidatura não está disponível neste momento.</p>
             @endif
             </section>
 
             <section class="mv-surface p-5">
                 <p class="text-sm text-ink-500">Programa</p>
-                <a href="{{ route('public.programs.show', $contest->program->slug) }}" class="mt-1 block font-semibold text-civic-700 hover:text-civic-900">{{ $contest->program->name }}</a>
+                <a href="{{ route('public.programs.show', $contest->program->slug) }}" class="mt-1 block font-semibold text-mvhab-primary hover:text-mvhab-primary">{{ $contest->program->name }}</a>
                 <p class="mt-3 text-sm text-ink-500">{{ $contest->program->municipality->name }}</p>
             </section>
         </aside>

@@ -19,7 +19,7 @@
                     name="q"
                     value="{{ $search ?? '' }}"
                     type="search"
-                    class="mt-2 w-full rounded-md border border-ink-200 px-3 py-2 text-sm text-ink-900 focus:border-mvhab-primary focus:outline-none focus:ring-2 focus:ring-mvhab-primary/20"
+                    class="mv-input mt-2 w-full"
                     placeholder="Candidatura, visitas, documentos..."
                 >
             </div>

@@ -1,7 +1,7 @@
 <x-public-layout title="Resultado da simulação" description="Resultado indicativo do simulador de candidatura.">
     <section class="bg-ink-50 py-10">
         <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <p class="text-sm font-semibold text-civic-700">Resultado indicativo</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Resultado indicativo</p>
             <h1 class="mt-2 text-3xl font-semibold text-ink-900">{{ $session->result?->result_status?->label() ?? 'Simulação' }}</h1>
             <p class="mt-3 max-w-3xl text-sm leading-6 text-ink-600">{{ $notices['public'] }}</p>
         </div>
@@ -39,11 +39,11 @@
                     <h2 class="text-lg font-semibold text-ink-900">Alertas</h2>
                     <div class="mt-4 space-y-3">
                         @forelse ($session->result?->impediments ?? [] as $impediment)
-                            <div class="rounded-md border border-ink-100 p-4">
+                            <div class="mv-surface p-4">
                                 <p class="font-semibold text-ink-900">{{ $impediment->title }}</p>
                                 <p class="mt-1 text-sm text-ink-600">{{ $impediment->message }}</p>
                                 @if ($impediment->recommendation)
-                                    <p class="mt-2 text-xs font-medium text-civic-700">{{ $impediment->recommendation }}</p>
+                                    <p class="mt-2 text-xs font-medium text-mvhab-primary">{{ $impediment->recommendation }}</p>
                                 @endif
                             </div>
                         @empty
@@ -58,7 +58,7 @@
                     <h2 class="text-lg font-semibold text-ink-900">Concursos recomendados</h2>
                     <div class="mt-4 space-y-3">
                         @forelse ($session->result?->recommendedContests ?? [] as $recommendation)
-                            <a href="{{ $recommendation->cta_url }}" class="block rounded-md border border-ink-100 p-4 hover:border-civic-300">
+                            <a href="{{ $recommendation->cta_url }}" class="block rounded-2xl border border-ink-100 p-4 hover:border-mvhab-support">
                                 <p class="font-semibold text-ink-900">{{ $recommendation->contest->title }}</p>
                                 <p class="mt-1 text-xs text-ink-500">{{ number_format((float) $recommendation->match_score, 0) }}% compatível</p>
                             </a>
