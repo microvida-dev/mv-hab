@@ -5,48 +5,92 @@
     $imageUrl = $cover ? \Illuminate\Support\Facades\Storage::disk($cover->disk)->url($cover->path) : null;
 @endphp
 
-<article class="mv-surface overflow-hidden">
+<article class="mv-card-interactive h-full overflow-hidden">
     <a href="{{ route('public.housing-units.show', $housingUnit->public_slug) }}" class="block">
         @if ($imageUrl)
-            <img src="{{ $imageUrl }}" alt="{{ $cover->alt_text ?: $housingUnit->displayTitle() }}" class="h-48 w-full object-cover">
+            <img
+                src="{{ $imageUrl }}"
+                alt="{{ $cover->alt_text ?: $housingUnit->displayTitle() }}"
+                class="h-56 w-full object-cover"
+            >
         @else
-            <div class="flex h-48 w-full items-center justify-center bg-mvhab-surface text-sm font-semibold text-mvhab-primary">
-                {{ $housingUnit->typology ?? 'Habitação' }}
+            <div class="relative flex h-56 w-full items-center justify-center overflow-hidden bg-gradient-to-br from-mvhab-surface via-white to-sky-50">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,0.14),transparent_18rem)]"></div>
+
+                <div class="relative flex flex-col items-center gap-3">
+                    <div class="flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-surface">
+                        <x-mv-icon name="housing" size="xl" class="text-mvhab-primary" />
+                    </div>
+
+                    <span class="text-xs font-semibold uppercase tracking-wide text-ink-400">
+                        Imagem a publicar
+                    </span>
+                </div>
             </div>
         @endif
     </a>
 
-    <div class="p-5">
+    <div class="flex h-full flex-col p-6">
         <div class="flex flex-wrap items-center gap-2">
-            <span class="rounded-2xl bg-mvhab-surface px-2.5 py-1 text-xs font-semibold text-mvhab-primary">{{ $housingUnit->typology ?? 'Tipologia a confirmar' }}</span>
-            <span class="rounded-2xl bg-ink-50 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $housingUnit->public_status?->label() ?? 'Estado público' }}</span>
+            <span class="mv-badge mv-badge-civic">
+                {{ $housingUnit->typology ?? 'Tipologia a confirmar' }}
+            </span>
+
+            <span class="mv-badge mv-badge-neutral">
+                {{ $housingUnit->public_status?->label() ?? 'Estado público' }}
+            </span>
         </div>
 
-        <h3 class="mt-3 text-lg font-semibold text-ink-900">
-            <a href="{{ route('public.housing-units.show', $housingUnit->public_slug) }}" class="hover:text-mvhab-primary">{{ $housingUnit->displayTitle() }}</a>
+        <h3 class="mv-card-title mt-5">
+            <a href="{{ route('public.housing-units.show', $housingUnit->public_slug) }}" class="hover:text-mvhab-primary">
+                {{ $housingUnit->displayTitle() }}
+            </a>
         </h3>
 
-        <p class="mt-2 text-sm leading-6 text-ink-500">{{ $housingUnit->public_summary ?: 'Ficha pública de habitação municipal.' }}</p>
+        <p class="mv-section-description mt-3">
+            {{ $housingUnit->public_summary ?: 'Ficha pública de habitação municipal.' }}
+        </p>
 
-        <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
-            <div>
-                <dt class="text-ink-500">Localização</dt>
-                <dd class="mt-1 font-semibold text-ink-800">{{ $housingUnit->publicLocationLabel() }}</dd>
+        <dl class="mt-6 grid grid-cols-2 gap-4 border-t border-ink-100 pt-5">
+            <div class="flex gap-3">
+                <x-mv-icon name="location" size="sm" class="mt-1 text-mvhab-primary" />
+
+                <div>
+                    <dt class="mv-data-label">Localização</dt>
+                    <dd class="mv-data-value">
+                        {{ $housingUnit->publicLocationLabel() }}
+                    </dd>
+                </div>
             </div>
+
             <div>
-                <dt class="text-ink-500">Renda</dt>
-                <dd class="mt-1 font-semibold text-ink-800">{{ $housingUnit->monthly_rent ? number_format((float) $housingUnit->monthly_rent, 2, ',', ' ') . ' €' : 'A confirmar' }}</dd>
+                <dt class="mv-data-label">Renda</dt>
+                <dd class="mt-1 text-lg font-bold text-mvhab-primary">
+                    {{ $housingUnit->monthly_rent ? number_format((float) $housingUnit->monthly_rent, 2, ',', ' ') . ' €' : 'A confirmar' }}
+                </dd>
             </div>
+
             <div>
-                <dt class="text-ink-500">Área útil</dt>
-                <dd class="mt-1 font-semibold text-ink-800">{{ $housingUnit->usable_area_sqm ? number_format((float) $housingUnit->usable_area_sqm, 2, ',', ' ') . ' m²' : 'A confirmar' }}</dd>
+                <dt class="mv-data-label">Área útil</dt>
+                <dd class="mv-data-value">
+                    {{ $housingUnit->usable_area_sqm ? number_format((float) $housingUnit->usable_area_sqm, 2, ',', ' ') . ' m²' : 'A confirmar' }}
+                </dd>
             </div>
+
             <div>
-                <dt class="text-ink-500">Quartos</dt>
-                <dd class="mt-1 font-semibold text-ink-800">{{ $housingUnit->bedrooms ?? '-' }}</dd>
+                <dt class="mv-data-label">Quartos</dt>
+                <dd class="mv-data-value">
+                    {{ $housingUnit->bedrooms ?? '-' }}
+                </dd>
             </div>
         </dl>
 
-        <a href="{{ route('public.housing-units.show', $housingUnit->public_slug) }}" class="mt-5 inline-flex text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary">Ver ficha pública</a>
+        <a
+            href="{{ route('public.housing-units.show', $housingUnit->public_slug) }}"
+            class="mv-button-secondary mt-6 justify-center"
+        >
+            Ver ficha pública
+            <x-mv-icon name="arrow-right" size="sm" />
+        </a>
     </div>
 </article>
