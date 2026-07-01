@@ -201,30 +201,41 @@
             {{ $slot }}
         </main>
 
-        <footer class="mt-16 border-t border-ink-100 bg-ink-50">
-            <div class="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-3 lg:px-8">
+       <footer class="border-t border-ink-100 bg-white">
+            <div class="mv-container grid gap-10 py-12 md:grid-cols-[minmax(0,1.5fr)_1fr_1fr]">
                 <div>
-                    <p class="font-semibold text-ink-900">MV HAB</p>
-                    <p class="mt-2 text-sm leading-6 text-ink-500">
-                        Informação pública sobre programas municipais e concursos de Arrendamento Acessível.
+                    <img
+                        src="{{ asset('images/brand/logo-mvhab-semfundo-comp.png') }}"
+                        alt="MV HAB"
+                        class="h-14 w-auto"
+                    >
+
+                    <p class="mv-section-description mt-5 max-w-md">
+                        Plataforma municipal para consulta de programas, concursos, habitações e acompanhamento dos processos de Arrendamento Acessível.
                     </p>
                 </div>
 
                 <div>
                     <p class="text-sm font-semibold text-ink-900">Consultar</p>
-                    <div class="mt-3 grid gap-2 text-sm text-ink-500">
-                        <a href="{{ route('public.programs.index') }}" class="hover:text-mvhab-primary">Programas</a>
-                        <a href="{{ route('public.contests.index') }}" class="hover:text-mvhab-primary">Concursos</a>
-                        <a href="{{ route('public.housing-units.index') }}" class="hover:text-mvhab-primary">Habitações</a>
-                        <a href="{{ route('public.simulator.show') }}" class="hover:text-mvhab-primary">Simulador</a>
-                        <a href="{{ route('public.faq') }}" class="hover:text-mvhab-primary">Perguntas frequentes</a>
+
+                    <div class="mt-4 grid gap-3 text-sm">
+                        <a href="{{ route('public.housing-offer.index') }}" class="mv-link">Oferta habitacional</a>
+                        <a href="{{ route('public.programs.index') }}" class="mv-link">Programas</a>
+                        <a href="{{ route('public.contests.index') }}" class="mv-link">Concursos</a>
+                        <a href="{{ route('public.simulator.show') }}" class="mv-link">Simulador</a>
+                        <a href="{{ route('public.faq') }}" class="mv-link">Perguntas frequentes</a>
                     </div>
                 </div>
 
                 <div>
                     <p class="text-sm font-semibold text-ink-900">Privacidade</p>
-                    <p class="mt-3 text-sm leading-6 text-ink-500">
-                        As páginas públicas não apresentam dados pessoais de candidatos.
+
+                    <p class="mv-section-description mt-4">
+                        As páginas públicas não apresentam dados pessoais de candidatos nem documentos reservados.
+                    </p>
+
+                    <p class="mt-4 text-xs leading-5 text-ink-400">
+                        © {{ now()->year }} MV HAB. Plataforma municipal de habitação.
                     </p>
                 </div>
             </div>
