@@ -87,7 +87,7 @@
     </div>
 
     <div class="flex flex-wrap gap-3">
-        <button class="rounded-2xl bg-mvhab-primary px-4 py-2 text-sm font-semibold text-white hover:bg-mvhab-primary">Guardar</button>
+        <button class="mv-button-primary">Guardar</button>
         <a href="{{ route('backoffice.scoring.criteria.index', $ruleSet) }}" class="mv-button-secondary">Cancelar</a>
     </div>
 </form>

@@ -2,18 +2,18 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Classificação</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Classificação</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">Matrizes de classificação</h1>
             </div>
             @can('create', \App\Models\ScoringRuleSet::class)
-                <a href="{{ route('backoffice.scoring.rule-sets.create') }}" class="rounded-md bg-civic-700 px-4 py-2 text-sm font-semibold text-white hover:bg-civic-800">Nova matriz</a>
+                <a href="{{ route('backoffice.scoring.rule-sets.create') }}" class="mv-button-primary">Nova matriz</a>
             @endcan
         </div>
     </x-slot>
 
     <div class="py-8">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="overflow-hidden rounded-md border border-ink-100 bg-white">
+            <div class="mv-surface overflow-hidden">
                 <table class="min-w-full divide-y divide-ink-100 text-sm">
                     <thead class="bg-ink-50 text-left text-xs font-semibold uppercase text-ink-500">
                         <tr>
@@ -34,7 +34,7 @@
                                 <td class="px-4 py-3 text-ink-600">{{ $ruleSet->criteria_count }}</td>
                                 <td class="px-4 py-3 text-ink-600">{{ $ruleSet->runs_count }}</td>
                                 <td class="px-4 py-3 text-right">
-                                    <a href="{{ route('backoffice.scoring.rule-sets.show', $ruleSet) }}" class="font-semibold text-civic-700 hover:text-civic-900">Abrir</a>
+                                    <a href="{{ route('backoffice.scoring.rule-sets.show', $ruleSet) }}" class="font-semibold text-mvhab-primary hover:text-mvhab-primary">Abrir</a>
                                 </td>
                             </tr>
                         @empty
