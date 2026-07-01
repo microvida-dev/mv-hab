@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Confirmação de desistência</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Confirmação de desistência</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $withdrawal->application->application_number ?? 'Candidatura' }}</h1>
         </div>
     </x-slot>
@@ -19,11 +19,11 @@
                             <input type="checkbox" name="confirm_withdrawal" value="1" class="mt-1 rounded border-ink-300">
                             <span>Confirmo definitivamente a desistência da candidatura.</span>
                         </label>
-                        <button class="rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white">Confirmar desistência</button>
+                        <button class="mv-button-danger">Confirmar desistência</button>
                     </form>
                     <form method="POST" action="{{ route('candidate.withdrawals.cancel', $withdrawal) }}" class="mt-3">
                         @csrf
-                        <button class="rounded-md border border-ink-200 px-4 py-2 text-sm font-semibold text-ink-700">Cancelar pedido</button>
+                        <button class="mv-button-secondary">Cancelar pedido</button>
                     </form>
                 @endif
             </section>

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Revisão final</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Revisão final</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">Rever e submeter candidatura</h1>
             <p class="mt-1 text-sm text-ink-500">{{ $application->contest->title }}</p>
         </div>
@@ -11,7 +11,7 @@
         <div class="mx-auto max-w-5xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
 
-            <section class="rounded-md border border-signal-200 bg-signal-50 p-5 text-sm leading-6 text-signal-900">
+            <section class="rounded-2xl border border-signal-200 bg-signal-50 p-5 text-sm leading-6 text-signal-900">
                 Antes de submeter, confirme cuidadosamente todos os dados. Após a submissão, a candidatura ficará bloqueada para edição direta e será analisada pelos serviços municipais.
             </section>
 
@@ -20,7 +20,7 @@
                 <div class="mt-4 divide-y divide-ink-100">
                     @foreach ($readiness['checks'] as $check)
                         <div class="flex items-start gap-3 py-4">
-                            <span class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-md {{ $check['passed'] ? 'bg-civic-50 text-civic-700' : 'bg-red-50 text-red-700' }}">
+                            <span class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-2xl {{ $check['passed'] ? 'bg-mvhab-surface text-mvhab-primary' : 'bg-red-50 text-red-700' }}">
                                 <x-ui-icon :name="$check['passed'] ? 'check' : 'alert'" class="h-3.5 w-3.5" />
                             </span>
                             <p class="text-sm text-ink-700">{{ $check['passed'] ? $check['successMessage'] : $check['message'] }}</p>
@@ -60,7 +60,7 @@
                                 <p class="mt-1 text-xs text-ink-500">{{ $item['target_label'] }} · {{ $item['status']->label() }}</p>
                             </div>
                             @if ($item['submission'])
-                                <a href="{{ route('candidate.documents.show', $item['submission']) }}" class="text-sm font-semibold text-civic-700">Consultar</a>
+                                <a href="{{ route('candidate.documents.show', $item['submission']) }}" class="text-sm font-semibold text-mvhab-primary">Consultar</a>
                             @else
                                 <a href="{{ route('candidate.documents.create', [
                                     'application' => $application->public_id,
@@ -86,8 +86,8 @@
                     'truthfulness_accepted' => 'Confirmo a veracidade da informação e dos documentos apresentados.',
                     'data_current_confirmed' => 'Confirmo que os dados do registo, agregado, rendimentos, situação habitacional e documentos estão corretos e atualizados.',
                 ] as $field => $label)
-                    <label class="flex items-start gap-3 rounded-md border border-ink-100 p-4">
-                        <input type="checkbox" name="{{ $field }}" value="1" class="mt-1 rounded border-ink-300 text-civic-700 focus:ring-civic-700" {{ old($field) ? 'checked' : '' }}>
+                    <label class="flex items-start gap-3 rounded-2xl border border-ink-100 p-4">
+                        <input type="checkbox" name="{{ $field }}" value="1" class="mt-1 rounded border-ink-300 text-mvhab-primary focus:ring-mvhab-primary" {{ old($field) ? 'checked' : '' }}>
                         <span class="text-sm leading-6 text-ink-700">{{ $label }}</span>
                     </label>
                 @endforeach

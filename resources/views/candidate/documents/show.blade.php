@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Documentos</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Documentos</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $submission->documentType->name }}</h1>
                 <p class="mt-1 text-sm text-ink-500">{{ $submission->original_filename }}</p>
             </div>
@@ -44,7 +44,7 @@
                 </div>
 
                 @if ($submission->rejection_reason)
-                    <div class="mt-5 rounded-md bg-red-50 p-4 text-sm leading-6 text-red-800">
+                    <div class="mt-5 rounded-2xl bg-red-50 p-4 text-sm leading-6 text-red-800">
                         {{ $submission->rejection_reason }}
                     </div>
                 @endif
@@ -59,7 +59,7 @@
                                 <p class="font-semibold text-ink-900">Versão {{ $version->version_number }}</p>
                                 <p class="text-sm text-ink-500">{{ $version->original_filename }} · {{ number_format($version->file_size / 1024, 1, ',', '.') }} KB</p>
                             </div>
-                            <span class="rounded-md bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $version->status_at_upload->label() }}</span>
+                            <span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $version->status_at_upload->label() }}</span>
                         </div>
                     @endforeach
                 </div>

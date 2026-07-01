@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Documentos</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Documentos</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">Submeter documento</h1>
             <p class="mt-1 text-sm text-ink-500">{{ $item['document_type']->name }} · {{ $item['target_label'] }}</p>
         </div>
@@ -26,7 +26,7 @@
                     <input type="hidden" name="current_housing_situation_id" value="{{ $item['target_id'] }}">
                 @endif
 
-                <div class="rounded-md bg-civic-50 p-4 text-sm leading-6 text-civic-900">
+                <div class="rounded-2xl bg-mvhab-surface p-4 text-sm leading-6 text-mvhab-primary">
                     Submeta apenas documentos legíveis e correspondentes ao tipo solicitado. Documentos ilegíveis, incompletos ou incorretos poderão ser rejeitados pelos serviços.
                 </div>
 
@@ -51,14 +51,14 @@
 
                 <div>
                     <x-input-label for="file" value="Ficheiro" />
-                    <input id="file" name="file" type="file" class="mt-1 block w-full rounded-md border border-ink-200 px-3 py-2 text-sm" required>
+                    <input id="file" name="file" type="file" class="mt-1 block w-full rounded-2xl border border-ink-200 px-3 py-2 text-sm" required>
                     <p class="mt-2 text-xs text-ink-500">Formatos permitidos: PDF, JPG, PNG ou WEBP. Tamanho máximo: {{ $item['document_type']->max_file_size_mb }} MB.</p>
                     <x-input-error class="mt-2" :messages="$errors->get('file')" />
                 </div>
 
                 <div>
                     <x-input-label for="notes" value="Notas opcionais" />
-                    <textarea id="notes" name="notes" rows="4" class="mt-1 block w-full rounded-md border-ink-300 shadow-sm focus:border-civic-700 focus:ring-civic-700">{{ old('notes') }}</textarea>
+                    <textarea id="notes" name="notes" rows="4" class="mv-input mt-1 block w-full">{{ old('notes') }}</textarea>
                     <x-input-error class="mt-2" :messages="$errors->get('notes')" />
                 </div>
 

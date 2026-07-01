@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Candidaturas</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Candidaturas</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">As minhas candidaturas</h1>
                 <p class="mt-1 text-sm text-ink-500">Consulte rascunhos, submissões e comprovativos.</p>
             </div>
@@ -37,7 +37,7 @@
                                     <th class="px-5 py-3 text-right">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-ink-100 bg-white">
+                            <tbody class="divide-y divide-ink-100 bg-mvhab-card">
                                 @foreach ($applications as $application)
                                     <tr>
                                         <td class="px-5 py-4 font-semibold text-ink-900">{{ $application->application_number ?? 'Rascunho' }}</td>
@@ -46,12 +46,12 @@
                                             <p class="mt-1 text-xs text-ink-500">{{ $application->program->name }}</p>
                                         </td>
                                         <td class="px-5 py-4">
-                                            <span class="rounded-md bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $application->status->label() }}</span>
+                                            <span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $application->status->label() }}</span>
                                         </td>
                                         <td class="px-5 py-4 text-ink-600">{{ $application->created_at->format('d/m/Y H:i') }}</td>
                                         <td class="px-5 py-4 text-ink-600">{{ $application->submitted_at?->format('d/m/Y H:i') ?? '—' }}</td>
                                         <td class="px-5 py-4 text-right">
-                                            <a href="{{ route('candidate.applications.show', $application) }}" class="font-semibold text-civic-700 hover:text-civic-900">Consultar</a>
+                                            <a href="{{ route('candidate.applications.show', $application) }}" class="font-semibold text-mvhab-primary hover:text-mvhab-primary">Consultar</a>
                                         </td>
                                     </tr>
                                 @endforeach

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Nova candidatura</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Nova candidatura</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $contest->title }}</h1>
             <p class="mt-1 text-sm text-ink-500">{{ $contest->program->name }} · {{ $contest->code }}</p>
         </div>
@@ -19,13 +19,13 @@
                     @foreach ($readiness['checks'] as $check)
                         <div class="flex flex-wrap items-center justify-between gap-3 py-4">
                             <div class="flex items-start gap-3">
-                                <span class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-md {{ $check['passed'] ? 'bg-civic-50 text-civic-700' : 'bg-red-50 text-red-700' }}">
+                                <span class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-2xl {{ $check['passed'] ? 'bg-mvhab-surface text-mvhab-primary' : 'bg-red-50 text-red-700' }}">
                                     <x-ui-icon :name="$check['passed'] ? 'check' : 'alert'" class="h-3.5 w-3.5" />
                                 </span>
                                     <p class="text-sm text-ink-700">{{ $check['passed'] ? $check['successMessage'] : $check['message'] }}</p>
                             </div>
                             @if (! $check['passed'] && $check['route'])
-                                <a href="{{ route($check['route'], $check['routeParameters']) }}" class="text-sm font-semibold text-civic-700 hover:text-civic-900">Corrigir</a>
+                                <a href="{{ route($check['route'], $check['routeParameters']) }}" class="text-sm font-semibold text-mvhab-primary hover:text-mvhab-primary">Corrigir</a>
                             @endif
                         </div>
                     @endforeach
@@ -39,11 +39,11 @@
 
                     <div>
                         <x-input-label for="candidate_notes" value="Notas opcionais para preparação" />
-                        <textarea id="candidate_notes" name="candidate_notes" rows="4" class="mt-1 block w-full rounded-md border-ink-300 shadow-sm focus:border-civic-700 focus:ring-civic-700">{{ old('candidate_notes') }}</textarea>
+                        <textarea id="candidate_notes" name="candidate_notes" rows="4" class="mv-input mt-1 block w-full">{{ old('candidate_notes') }}</textarea>
                         <x-input-error class="mt-2" :messages="$errors->get('candidate_notes')" />
                     </div>
 
-                    <div class="rounded-md bg-civic-50 p-4 text-sm leading-6 text-civic-900">
+                    <div class="rounded-2xl bg-mvhab-surface p-4 text-sm leading-6 text-mvhab-primary">
                         A criação do rascunho não submete a candidatura. Poderá rever a documentação e aceitar as declarações no passo seguinte.
                     </div>
 

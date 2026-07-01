@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Rastreabilidade</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Rastreabilidade</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">Histórico de elegibilidade</h1>
         </div>
     </x-slot>
@@ -19,7 +19,7 @@
                                     <td>{{ $check->check_type->label() }}</td>
                                     <td class="font-semibold">{{ $check->result?->label() ?? 'Em preparação' }}</td>
                                     <td>{{ $check->executed_at?->format('d/m/Y H:i') }}</td>
-                                    <td class="text-right"><a href="{{ route('candidate.eligibility.show', $check) }}" class="font-semibold text-civic-700">Consultar</a></td>
+                                    <td class="text-right"><a href="{{ route('candidate.eligibility.show', $check) }}" class="font-semibold text-mvhab-primary">Consultar</a></td>
                                 </tr>
                             @empty
                                 <tr><td colspan="5" class="text-center text-ink-500">Ainda não realizou verificações.</td></tr>

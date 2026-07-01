@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Condições mínimas de acesso</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Condições mínimas de acesso</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">Elegibilidade</h1>
                 <p class="mt-1 text-sm text-ink-500">Faça uma verificação indicativa com os dados atualmente declarados.</p>
             </div>
@@ -14,7 +14,7 @@
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
 
-            <section class="border-l-4 border-civic-700 bg-civic-50 p-5 text-sm leading-6 text-civic-900">
+            <section class="border-l-4 border-mvhab-primary bg-mvhab-surface p-5 text-sm leading-6 text-mvhab-primary">
                 Esta verificação é indicativa e baseia-se nos dados atualmente declarados. A decisão final depende da análise dos serviços municipais e das regras do programa ou concurso.
             </section>
 
@@ -22,7 +22,7 @@
                 <section class="mv-surface p-6">
                     <div class="flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <p class="text-sm font-semibold text-civic-700">Última verificação</p>
+                            <p class="text-sm font-semibold text-mvhab-primary">Última verificação</p>
                             <h2 class="mt-1 text-xl font-semibold text-ink-900">{{ $latestCheck->result->label() }}</h2>
                             <p class="mt-2 max-w-3xl text-sm leading-6 text-ink-600">{{ $latestCheck->summary }}</p>
                         </div>
@@ -59,7 +59,7 @@
                     @empty
                         <div class="mv-surface p-6 lg:col-span-2">
                             <p class="text-sm text-ink-600">Ainda não existem regras de elegibilidade ativas para pré-verificação.</p>
-                            <a href="{{ route('public.contests.index') }}" class="mt-4 inline-flex text-sm font-semibold text-civic-700">Ver concursos</a>
+                            <a href="{{ route('public.contests.index') }}" class="mt-4 inline-flex text-sm font-semibold text-mvhab-primary">Ver concursos</a>
                         </div>
                     @endforelse
                 </div>

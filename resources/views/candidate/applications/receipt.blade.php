@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Comprovativo</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Comprovativo</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">Comprovativo de Submissão de Candidatura</h1>
             <p class="mt-1 text-sm text-ink-500">{{ $application->application_number }}</p>
         </div>
@@ -11,7 +11,7 @@
         <div class="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
 
-            <section class="rounded-md border border-civic-100 bg-civic-50 p-5 text-sm leading-6 text-civic-900">
+            <section class="rounded-2xl border border-mvhab-support/30 bg-mvhab-surface p-5 text-sm leading-6 text-mvhab-primary">
                 A sua candidatura foi submetida com sucesso. Guarde este comprovativo para referência futura. Poderá acompanhar o estado da candidatura na sua área pessoal.
             </section>
 

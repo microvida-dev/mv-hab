@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Apoio</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Apoio</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">Pedidos de apoio</h1>
                 <p class="mt-1 text-sm text-ink-500">Acompanhe pedidos e respostas dos serviços municipais.</p>
             </div>
@@ -32,9 +32,9 @@
                                     <td class="px-5 py-4 font-semibold text-ink-900">{{ $ticket->ticket_number }}</td>
                                     <td class="px-5 py-4 text-ink-700">{{ $ticket->subject }}</td>
                                     <td class="px-5 py-4 text-ink-600">{{ $ticket->category->label() }}</td>
-                                    <td class="px-5 py-4"><span class="rounded-md bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $ticket->status->label() }}</span></td>
+                                    <td class="px-5 py-4"><span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $ticket->status->label() }}</span></td>
                                     <td class="px-5 py-4 text-ink-600">{{ $ticket->last_message_at?->format('d/m/Y H:i') ?? '—' }}</td>
-                                    <td class="px-5 py-4 text-right"><a href="{{ route('candidate.support-tickets.show', $ticket) }}" class="font-semibold text-civic-700">Abrir</a></td>
+                                    <td class="px-5 py-4 text-right"><a href="{{ route('candidate.support-tickets.show', $ticket) }}" class="font-semibold text-mvhab-primary">Abrir</a></td>
                                 </tr>
                             @empty
                                 <tr><td colspan="6" class="px-5 py-8 text-center text-ink-500">Ainda não existem pedidos de apoio.</td></tr>

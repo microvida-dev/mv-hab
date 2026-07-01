@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Desistência controlada</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Desistência controlada</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $application->application_number ?? 'Candidatura' }}</h1>
         </div>
     </x-slot>
@@ -15,7 +15,7 @@
                     <input type="hidden" name="application_id" value="{{ $application->id }}">
                     <div>
                         <x-input-label for="reason" value="Motivo da desistência" />
-                        <textarea id="reason" name="reason" rows="5" required class="mt-1 block w-full rounded-md border-ink-200"></textarea>
+                        <textarea id="reason" name="reason" rows="5" required class="mt-1 block w-full rounded-2xl border-ink-200"></textarea>
                         <x-input-error :messages="$errors->get('reason')" class="mt-2" />
                     </div>
                     <label class="flex gap-3 text-sm text-ink-700">
@@ -24,8 +24,8 @@
                     </label>
                     <x-input-error :messages="$errors->get('consequence_acknowledged')" class="mt-2" />
                     <div class="flex flex-wrap gap-3">
-                        <a href="{{ route('candidate.applications.show', $application) }}" class="rounded-md border border-ink-200 px-4 py-2 text-sm font-semibold text-ink-700">Cancelar</a>
-                        <button class="rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white">Registar pedido</button>
+                        <a href="{{ route('candidate.applications.show', $application) }}" class="mv-button-secondary">Cancelar</a>
+                        <button class="mv-button-danger">Registar pedido</button>
                     </div>
                 </form>
             </section>

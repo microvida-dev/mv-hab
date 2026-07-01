@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Documentos</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Documentos</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">Documentos submetidos</h1>
                 <p class="mt-1 text-sm text-ink-500">Consulte os documentos já enviados e acompanhe o estado de análise.</p>
             </div>
@@ -49,7 +49,7 @@
                                     <p class="mt-1 text-sm text-ink-500">{{ $submission->original_filename ?: 'Sem ficheiro atual' }}</p>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <span class="rounded-md bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $submission->status->label() }}</span>
+                                    <span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $submission->status->label() }}</span>
                                     <a href="{{ route('candidate.documents.show', $submission) }}" class="mv-button-secondary">
                                         Ver detalhe
                                     </a>
