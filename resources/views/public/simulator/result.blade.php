@@ -1,26 +1,46 @@
 <x-public-layout title="Resultado da simulação" description="Resultado indicativo do simulador de candidatura.">
-    <section class="bg-ink-50 py-10">
-        <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <p class="text-sm font-semibold text-mvhab-primary">Resultado indicativo</p>
-            <h1 class="mt-2 text-3xl font-semibold text-ink-900">{{ $session->result?->result_status?->label() ?? 'Simulação' }}</h1>
-            <p class="mt-3 max-w-3xl text-sm leading-6 text-ink-600">{{ $notices['public'] }}</p>
+    <section class="mv-section border-b border-ink-100 bg-white">
+        <div class="mv-container">
+            <p class="mv-caption">Resultado indicativo</p>
+
+            <h1 class="mv-heading mt-3">
+                {{ $session->result?->result_status?->label() ?? 'Simulação' }}
+            </h1>
+
+            <p class="mv-description mt-6 max-w-3xl">
+                {{ $notices['public'] }}
+            </p>
         </div>
     </section>
 
-    <section class="py-8">
-        <div class="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_22rem] lg:px-8">
+    <section class="mv-section bg-mvhab-surface">
+        <div class="mv-container grid gap-8 lg:grid-cols-[minmax(0,1fr)_24rem]">
             <div class="space-y-6">
-                <div class="mv-surface p-6">
-                    <h2 class="text-lg font-semibold text-ink-900">Síntese</h2>
-                    <p class="mt-2 text-sm leading-6 text-ink-600">{{ $session->result?->eligibility_summary }}</p>
-                    <dl class="mt-5 grid gap-4 sm:grid-cols-3">
-                        <div>
-                            <dt class="text-xs font-semibold uppercase text-ink-500">Tipologia</dt>
-                            <dd class="mt-1 font-semibold text-ink-900">{{ $session->result?->recommended_typology ?? 'A validar' }}</dd>
+                <section class="mv-card p-6">
+                    <div class="flex items-start gap-4">
+                        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
+                            <x-mv-icon name="simulator" size="lg" />
                         </div>
+
                         <div>
-                            <dt class="text-xs font-semibold uppercase text-ink-500">Renda estimada</dt>
-                            <dd class="mt-1 font-semibold text-ink-900">
+                            <h2 class="mv-card-title">Síntese</h2>
+                            <p class="mv-section-description mt-2">
+                                {{ $session->result?->eligibility_summary }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <dl class="mt-6 grid gap-4 sm:grid-cols-3">
+                        <div class="mv-card-muted p-4">
+                            <dt class="mv-data-label">Tipologia</dt>
+                            <dd class="mv-data-value">
+                                {{ $session->result?->recommended_typology ?? 'A validar' }}
+                            </dd>
+                        </div>
+
+                        <div class="mv-card-muted p-4">
+                            <dt class="mv-data-label">Renda estimada</dt>
+                            <dd class="mv-data-value">
                                 @if ($session->result?->estimated_rent_max)
                                     até {{ number_format((float) $session->result->estimated_rent_max, 2, ',', ' ') }} €
                                 @else
@@ -28,46 +48,80 @@
                                 @endif
                             </dd>
                         </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase text-ink-500">Dados mínimos</dt>
-                            <dd class="mt-1 font-semibold text-ink-900">{{ number_format((float) ($session->inputSnapshot?->completeness_score ?? 0), 0) }}%</dd>
+
+                        <div class="mv-card-muted p-4">
+                            <dt class="mv-data-label">Dados mínimos</dt>
+                            <dd class="mv-data-value">
+                                {{ number_format((float) ($session->inputSnapshot?->completeness_score ?? 0), 0) }}%
+                            </dd>
                         </div>
                     </dl>
-                </div>
+                </section>
 
-                <div class="mv-surface p-6">
-                    <h2 class="text-lg font-semibold text-ink-900">Alertas</h2>
-                    <div class="mt-4 space-y-3">
+                <section class="mv-card p-6">
+                    <h2 class="mv-card-title">Alertas</h2>
+
+                    <div class="mt-5 space-y-3">
                         @forelse ($session->result?->impediments ?? [] as $impediment)
-                            <div class="mv-surface p-4">
-                                <p class="font-semibold text-ink-900">{{ $impediment->title }}</p>
-                                <p class="mt-1 text-sm text-ink-600">{{ $impediment->message }}</p>
+                            <div class="mv-card-muted p-4">
+                                <p class="font-semibold text-ink-900">
+                                    {{ $impediment->title }}
+                                </p>
+
+                                <p class="mv-section-description mt-1">
+                                    {{ $impediment->message }}
+                                </p>
+
                                 @if ($impediment->recommendation)
-                                    <p class="mt-2 text-xs font-medium text-mvhab-primary">{{ $impediment->recommendation }}</p>
+                                    <p class="mt-2 text-xs font-semibold text-mvhab-primary">
+                                        {{ $impediment->recommendation }}
+                                    </p>
                                 @endif
                             </div>
                         @empty
-                            <p class="text-sm text-ink-500">Não foram encontrados impedimentos com os dados indicados.</p>
+                            <p class="text-sm text-ink-500">
+                                Não foram encontrados impedimentos com os dados indicados.
+                            </p>
                         @endforelse
                     </div>
-                </div>
+                </section>
             </div>
 
-            <aside class="space-y-4">
-                <div class="mv-surface p-6">
-                    <h2 class="text-lg font-semibold text-ink-900">Concursos recomendados</h2>
-                    <div class="mt-4 space-y-3">
+            <aside class="space-y-6">
+                <section class="mv-card p-6">
+                    <h2 class="mv-card-title">Concursos recomendados</h2>
+
+                    <div class="mt-5 space-y-3">
                         @forelse ($session->result?->recommendedContests ?? [] as $recommendation)
-                            <a href="{{ $recommendation->cta_url }}" class="block rounded-2xl border border-ink-100 p-4 hover:border-mvhab-support">
-                                <p class="font-semibold text-ink-900">{{ $recommendation->contest->title }}</p>
-                                <p class="mt-1 text-xs text-ink-500">{{ number_format((float) $recommendation->match_score, 0) }}% compatível</p>
+                            <a
+                                href="{{ $recommendation->cta_url }}"
+                                class="block rounded-2xl border border-ink-100 bg-white p-4 transition hover:border-mvhab-support hover:bg-mvhab-surface"
+                            >
+                                <p class="font-semibold text-ink-900">
+                                    {{ $recommendation->contest->title }}
+                                </p>
+
+                                <p class="mv-section-description mt-1">
+                                    {{ number_format((float) $recommendation->match_score, 0) }}% compatível
+                                </p>
                             </a>
                         @empty
-                            <p class="text-sm text-ink-500">Sem concursos recomendados.</p>
+                            <p class="text-sm text-ink-500">
+                                Sem concursos recomendados.
+                            </p>
                         @endforelse
                     </div>
-                    <a href="{{ route('register') }}" class="mv-button-primary mt-5 w-full justify-center">Criar conta</a>
-                </div>
+
+                    <div class="mt-6 grid gap-3">
+                        <a href="{{ route('register') }}" class="mv-button-primary justify-center">
+                            Criar conta
+                        </a>
+
+                        <a href="{{ route('public.simulator.show') }}" class="mv-button-secondary justify-center">
+                            Nova simulação
+                        </a>
+                    </div>
+                </section>
             </aside>
         </div>
     </section>

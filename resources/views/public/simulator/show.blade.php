@@ -1,21 +1,50 @@
 <x-public-layout title="Simulador de candidatura" description="Simulação indicativa de elegibilidade, tipologia, renda e concursos compatíveis.">
-    <section class="bg-ink-50 py-10">
-        <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-            <p class="mv-caption">Simulador</p>
-            <h1 class="mt-2 text-3xl font-semibold text-ink-900">Simular antes de candidatar</h1>
-            <p class="mt-3 max-w-3xl text-sm leading-6 text-ink-600">{{ $notices['public'] }}</p>
+    <section class="mv-section border-b border-ink-100 bg-white">
+        <div class="mv-container grid gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-end">
+            <div>
+                <p class="mv-caption">Simulador</p>
+
+                <h1 class="mv-heading mt-3">
+                    Simular antes de candidatar
+                </h1>
+
+                <p class="mv-description mt-6">
+                    {{ $notices['public'] }}
+                </p>
+            </div>
+
+            <div class="mv-card p-6">
+                <div class="flex items-start gap-4">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
+                        <x-mv-icon name="simulator" size="lg" />
+                    </div>
+
+                    <div>
+                        <h2 class="mv-card-title">Simulação indicativa</h2>
+                        <p class="mv-section-description mt-2">
+                            Este resultado não substitui a análise formal da candidatura pelos serviços municipais.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
-    <section class="py-8">
-        <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-            <form method="POST" action="{{ route('public.simulator.simulate') }}" class="mv-surface space-y-6 p-6">
+    <section class="mv-section bg-mvhab-surface">
+        <div class="mv-container max-w-5xl">
+            <form method="POST" action="{{ route('public.simulator.simulate') }}" class="mv-card space-y-8 p-6">
                 @csrf
+
+                <div>
+                    <h2 class="mv-card-title">Dados para simulação</h2>
+                    <p class="mv-section-description">
+                        Preencha os principais dados do agregado para obter uma estimativa inicial.
+                    </p>
+                </div>
 
                 <div class="grid gap-4 md:grid-cols-2">
                     <div>
                         <x-ui.label for="contest_id">Concurso</x-ui.label>
-
                         <x-ui.select id="contest_id" name="contest_id" class="mt-1">
                             <option value="">Sem concurso específico</option>
                             @foreach ($contests as $contest)
@@ -24,13 +53,11 @@
                                 </option>
                             @endforeach
                         </x-ui.select>
-
                         <x-ui.field-error name="contest_id" />
                     </div>
 
                     <div>
                         <x-ui.label for="housing_status">Situação habitacional</x-ui.label>
-
                         <x-ui.select id="housing_status" name="housing_status" class="mt-1" required>
                             <option value="">Selecione</option>
                             <option value="rented" @selected(old('housing_status') === 'rented')>Arrendamento</option>
@@ -38,7 +65,6 @@
                             <option value="temporary" @selected(old('housing_status') === 'temporary')>Alojamento temporário</option>
                             <option value="other" @selected(old('housing_status') === 'other')>Outra situação</option>
                         </x-ui.select>
-
                         <x-ui.field-error name="housing_status" />
                     </div>
 
@@ -79,29 +105,37 @@
                     </div>
                 </div>
 
-                <div class="grid gap-3 md:grid-cols-2">
-                    @foreach ([
-                        'has_accessibility_needs' => 'Necessidades de acessibilidade',
-                        'has_property' => 'Titularidade de imóvel habitacional',
-                        'receives_housing_support' => 'Apoio público habitacional ativo',
-                        'has_municipal_debt' => 'Dívida municipal sem acordo',
-                    ] as $name => $label)
-                        <label class="flex items-center gap-2 rounded-2xl border border-ink-100 bg-mvhab-surface px-3 py-2 text-sm text-ink-700">
-                            <x-ui.checkbox :name="$name" />
-                            <span>{{ $label }}</span>
-                        </label>
-                    @endforeach
+                <div>
+                    <h2 class="mv-card-title">Condições e impedimentos</h2>
+
+                    <div class="mt-4 grid gap-3 md:grid-cols-2">
+                        @foreach ([
+                            'has_accessibility_needs' => 'Necessidades de acessibilidade',
+                            'has_property' => 'Titularidade de imóvel habitacional',
+                            'receives_housing_support' => 'Apoio público habitacional ativo',
+                            'has_municipal_debt' => 'Dívida municipal sem acordo',
+                        ] as $name => $label)
+                            <label class="flex items-center gap-3 rounded-2xl border border-ink-100 bg-mvhab-surface px-4 py-3 text-sm font-semibold text-ink-700">
+                                <x-ui.checkbox :name="$name" />
+                                <span>{{ $label }}</span>
+                            </label>
+                        @endforeach
+                    </div>
                 </div>
 
-                <label class="flex items-start gap-2 rounded-2xl border border-ink-100 bg-mvhab-surface px-3 py-3 text-sm text-ink-700">
+                <label class="flex items-start gap-3 rounded-2xl border border-ink-100 bg-mvhab-surface px-4 py-4 text-sm text-ink-700">
                     <x-ui.checkbox name="privacy_notice_accepted" class="mt-1" required />
-                    <span>Confirmo que compreendo o caráter indicativo da simulação e que não estou a submeter uma candidatura formal.</span>
+                    <span>
+                        Confirmo que compreendo o caráter indicativo da simulação e que não estou a submeter uma candidatura formal.
+                    </span>
                 </label>
 
                 <x-ui.field-error name="privacy_notice_accepted" />
 
                 <div class="flex justify-end">
-                    <button type="submit" class="mv-button-primary">Simular</button>
+                    <button type="submit" class="mv-button-primary">
+                        Simular elegibilidade
+                    </button>
                 </div>
             </form>
         </div>
