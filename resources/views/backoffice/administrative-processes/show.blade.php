@@ -2,11 +2,11 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Processo administrativo</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Processo administrativo</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $process->process_number }}</h1>
                 <p class="mt-1 text-sm text-ink-500">{{ $process->application->application_number }} · {{ $process->contest?->title }}</p>
             </div>
-            <span class="rounded-md bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $process->status->label() }}</span>
+            <span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $process->status->label() }}</span>
         </div>
     </x-slot>
 
@@ -27,7 +27,7 @@
                         @csrf
                         <label class="text-sm font-semibold text-ink-700" for="assigned_to">Atribuir técnico</label>
                         <div class="flex gap-3">
-                            <select id="assigned_to" name="assigned_to" class="w-full rounded-md border-ink-300 text-sm">
+                            <select id="assigned_to" name="assigned_to" class="mv-input w-full">
                                 @foreach ($users as $user)
                                     <option value="{{ $user->id }}" @selected($process->assigned_to === $user->id)>{{ $user->name }}</option>
                                 @endforeach
@@ -47,7 +47,7 @@
                 <div class="mv-surface p-6">
                     <div class="flex items-start justify-between gap-4">
                         <h2 class="text-lg font-semibold text-ink-900">Candidatura e elegibilidade</h2>
-                        <a href="{{ route('backoffice.applications.show', $process->application) }}" class="text-sm font-semibold text-civic-700">Ver candidatura</a>
+                        <a href="{{ route('backoffice.applications.show', $process->application) }}" class="text-sm font-semibold text-mvhab-primary">Ver candidatura</a>
                     </div>
                     <dl class="mt-4 space-y-3 text-sm">
                         <div><dt class="text-ink-500">Agregado</dt><dd class="font-semibold text-ink-900">{{ $process->application->household->members->count() }} membro(s)</dd></div>
@@ -62,14 +62,14 @@
                             <h2 class="text-lg font-semibold text-ink-900">Condições para pontuação</h2>
                             <p class="mt-1 text-sm text-ink-500">A candidatura só entra no snapshot quando todas as condições estiverem cumpridas.</p>
                         </div>
-                        <span class="rounded-md px-2.5 py-1 text-xs font-semibold {{ $scoringReadiness['ready'] ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800' }}">
+                        <span class="rounded-2xl px-2.5 py-1 text-xs font-semibold {{ $scoringReadiness['ready'] ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800' }}">
                             {{ $scoringReadiness['ready'] ? 'Pronta' : 'Bloqueada' }}
                         </span>
                     </div>
 
                     <div class="mt-4 space-y-3">
                         @foreach ($scoringReadiness['items'] as $item)
-                            <div class="rounded-md border {{ $item['passed'] ? 'border-emerald-100 bg-emerald-50/60' : 'border-amber-100 bg-amber-50/60' }} p-3">
+                            <div class="rounded-2xl border {{ $item['passed'] ? 'border-emerald-100 bg-emerald-50/60' : 'border-amber-100 bg-amber-50/60' }} p-3">
                                 <div class="flex items-start gap-3">
                                     <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold {{ $item['passed'] ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white' }}">
                                         {{ $item['passed'] ? 'OK' : '!' }}
@@ -90,7 +90,7 @@
                 <div class="mv-surface p-6">
                     <div class="flex items-start justify-between gap-4">
                         <h2 class="text-lg font-semibold text-ink-900">Ações processuais</h2>
-                        <a href="{{ route('backoffice.administrative-processes.timeline', $process) }}" class="text-sm font-semibold text-civic-700">Cronologia</a>
+                        <a href="{{ route('backoffice.administrative-processes.timeline', $process) }}" class="text-sm font-semibold text-mvhab-primary">Cronologia</a>
                     </div>
                     <div class="mt-4 flex flex-wrap gap-3">
                         <a href="{{ route('backoffice.application-reviews.create', $process) }}" class="mv-button-secondary">Nova análise</a>
@@ -127,7 +127,7 @@
 
                             <div class="flex flex-wrap items-center gap-3">
                                 @if ($decision->status !== \App\Enums\AdministrativeDecisionStatus::Approved)
-                                    <span class="rounded-md bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">Aprovação pendente</span>
+                                    <span class="rounded-2xl bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">Aprovação pendente</span>
                                 @endif
 
                                 @can('view', $decision)
@@ -147,7 +147,7 @@
                     <div class="mt-4 divide-y divide-ink-100">
                         @forelse ($process->correctionRequests as $request)
                             <div class="py-4 text-sm">
-                                <a href="{{ route('backoffice.correction-requests.show', $request) }}" class="font-semibold text-civic-700">{{ $request->request_number }}</a>
+                                <a href="{{ route('backoffice.correction-requests.show', $request) }}" class="font-semibold text-mvhab-primary">{{ $request->request_number }}</a>
                                 <p class="mt-1 text-ink-700">{{ $request->subject }}</p>
                                 <p class="mt-1 text-xs text-ink-500">{{ $request->status->label() }} · prazo {{ $request->response_deadline_at?->format('d/m/Y H:i') ?? '—' }}</p>
                             </div>
@@ -161,7 +161,7 @@
                     <h2 class="text-lg font-semibold text-ink-900">Notas internas</h2>
                     <form method="POST" action="{{ route('backoffice.administrative-notes.store', $process) }}" class="mt-4 space-y-3">
                         @csrf
-                        <textarea name="body" rows="3" class="w-full rounded-md border-ink-300 text-sm" placeholder="Nota interna"></textarea>
+                        <textarea name="body" rows="3" class="mv-input w-full" placeholder="Nota interna"></textarea>
                         <button class="mv-button-primary">Registar nota</button>
                     </form>
                     <div class="mt-4 divide-y divide-ink-100">
@@ -176,9 +176,9 @@
                 <h2 class="text-lg font-semibold text-ink-900">Tarefas administrativas</h2>
                 <form method="POST" action="{{ route('backoffice.administrative-tasks.store', $process) }}" class="mt-4 grid gap-3 lg:grid-cols-4">
                     @csrf
-                    <input name="title" class="rounded-md border-ink-300 text-sm" placeholder="Título">
-                    <select name="priority" class="rounded-md border-ink-300 text-sm"><option value="normal">Normal</option><option value="high">Alta</option><option value="urgent">Urgente</option></select>
-                    <input type="datetime-local" name="due_at" class="rounded-md border-ink-300 text-sm">
+                    <input name="title" class="mv-input" placeholder="Título">
+                    <select name="priority" class="mv-input"><option value="normal">Normal</option><option value="high">Alta</option><option value="urgent">Urgente</option></select>
+                    <input type="datetime-local" name="due_at" class="mv-input">
                     <button class="mv-button-secondary">Criar tarefa</button>
                 </form>
                 <div class="mt-4 divide-y divide-ink-100">
