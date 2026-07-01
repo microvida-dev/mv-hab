@@ -36,7 +36,7 @@
             <form method="GET" action="{{ route('backoffice.document-ai.validations.index') }}" class="mv-surface mb-6 grid gap-4 p-5 md:grid-cols-3 xl:grid-cols-7">
                 <label class="space-y-1 text-sm">
                     <span class="font-semibold text-ink-700">Estado</span>
-                    <select name="status" class="w-full rounded-md border-ink-200 text-sm">
+                    <select name="status" class="mv-input w-full">
                         <option value="">Todos</option>
                         @foreach (DocumentAiValidationStatus::cases() as $status)
                             <option value="{{ $status->value }}" @selected(($filters['status'] ?? null) === $status->value)>{{ $status->label() }}</option>
@@ -46,7 +46,7 @@
 
                 <label class="space-y-1 text-sm">
                     <span class="font-semibold text-ink-700">Severidade</span>
-                    <select name="severity" class="w-full rounded-md border-ink-200 text-sm">
+                    <select name="severity" class="mv-input w-full">
                         <option value="">Todas</option>
                         @foreach (DocumentAiValidationSeverity::cases() as $severity)
                             <option value="{{ $severity->value }}" @selected(($filters['severity'] ?? null) === $severity->value)>{{ $severity->label() }}</option>
@@ -56,7 +56,7 @@
 
                 <label class="space-y-1 text-sm">
                     <span class="font-semibold text-ink-700">Grupo</span>
-                    <select name="group" class="w-full rounded-md border-ink-200 text-sm">
+                    <select name="group" class="mv-input w-full">
                         <option value="">Todos</option>
                         @foreach (DocumentAiValidationGroup::cases() as $group)
                             <option value="{{ $group->value }}" @selected(($filters['group'] ?? null) === $group->value)>{{ $group->label() }}</option>
@@ -66,7 +66,7 @@
 
                 <label class="space-y-1 text-sm">
                     <span class="font-semibold text-ink-700">Revisão</span>
-                    <select name="requires_review" class="w-full rounded-md border-ink-200 text-sm">
+                    <select name="requires_review" class="mv-input w-full">
                         <option value="">Todas</option>
                         <option value="1" @selected(($filters['requires_review'] ?? null) === '1')>Requer revisão</option>
                         <option value="0" @selected(($filters['requires_review'] ?? null) === '0')>Sem revisão</option>
@@ -75,7 +75,7 @@
 
                 <label class="space-y-1 text-sm xl:col-span-2">
                     <span class="font-semibold text-ink-700">Candidatura</span>
-                    <input type="text" name="application" value="{{ $filters['application'] ?? '' }}" class="w-full rounded-md border-ink-200 text-sm" placeholder="Número, public ID ou nome">
+                    <input type="text" name="application" value="{{ $filters['application'] ?? '' }}" class="mv-input w-full" placeholder="Número, public ID ou nome">
                 </label>
 
                 <div class="flex items-end gap-2">
@@ -113,13 +113,13 @@
                                     <span class="font-semibold text-amber-700">{{ $run->light_count }}</span>
                                 </td>
                                 <td class="px-5 py-4">
-                                    <span class="{{ $run->requires_manual_review ? 'text-amber-700' : 'text-civic-700' }}">
+                                    <span class="{{ $run->requires_manual_review ? 'text-amber-700' : 'text-mvhab-primary' }}">
                                         {{ $run->requires_manual_review ? 'Requer revisão' : 'Sem revisão' }}
                                     </span>
                                 </td>
                                 <td class="px-5 py-4 text-right">
                                     @if ($run->application)
-                                        <a class="font-semibold text-civic-700" href="{{ route('backoffice.document-ai.validations.show', $run->application) }}">Ver validação</a>
+                                        <a class="font-semibold text-mvhab-primary" href="{{ route('backoffice.document-ai.validations.show', $run->application) }}">Ver validação</a>
                                     @endif
                                 </td>
                             </tr>
