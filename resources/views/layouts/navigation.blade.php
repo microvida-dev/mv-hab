@@ -120,16 +120,16 @@
 
 <div class="lg:hidden">
     <div class="flex h-16 items-center justify-between border-b border-ink-100 bg-white px-4">
-        <a href="{{ route($homeRoute) }}" class="flex items-center gap-3">
-            <x-application-logo class="block h-9 w-auto fill-current text-mvhab-primary" />
-            <div>
-                <p class="text-sm font-bold text-ink-900">MV HAB</p>
-                <p class="text-xs font-medium text-ink-500">Habitação municipal</p>
-            </div>
+        <a href="{{ route($homeRoute) }}" class="flex items-center">
+            <img
+                src="{{ asset('images/brand/logo-mvhab-semfundo-comp.png') }}"
+                alt="MV HAB"
+                class="h-11 w-auto"
+            >
         </a>
 
         <button type="button" class="rounded-2xl border border-ink-100 bg-white p-2 text-ink-700" @click="sidebarOpen = true" aria-label="Abrir navegação">
-            <x-ui-icon name="menu" class="h-5 w-5" />
+            <x-mv-icon name="menu" size="sm" />
         </button>
     </div>
 </div>
@@ -139,16 +139,16 @@
 
     <aside class="fixed inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col border-r border-ink-100 bg-white">
         <div class="flex h-16 items-center justify-between border-b border-ink-100 px-4">
-            <a href="{{ route($homeRoute) }}" class="flex items-center gap-3">
-                <x-application-logo class="block h-9 w-auto fill-current text-mvhab-primary" />
-                <div>
-                    <p class="text-sm font-bold text-ink-900">MV HAB</p>
-                    <p class="text-xs font-medium text-ink-500">Habitação municipal</p>
-                </div>
+            <a href="{{ route($homeRoute) }}" class="flex items-center">
+                <img
+                    src="{{ asset('images/brand/logo-mvhab-semfundo-comp.png') }}"
+                    alt="MV HAB"
+                    class="h-11 w-auto"
+                >
             </a>
 
             <button type="button" class="rounded-2xl border border-ink-100 bg-white p-2 text-ink-700" @click="sidebarOpen = false" aria-label="Fechar navegação">
-                <x-ui-icon name="close" class="h-5 w-5" />
+                <x-mv-icon name="close" size="sm" />
             </button>
         </div>
 
@@ -159,7 +159,7 @@
         <div class="border-t border-ink-100 p-4">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
-                    <x-ui-icon name="user" class="h-5 w-5" />
+                    <x-mv-icon name="profile" size="sm" />
                 </div>
                 <div class="min-w-0">
                     <p class="truncate text-sm font-semibold text-ink-900">{{ $user->name }}</p>
@@ -171,7 +171,7 @@
                 <div class="mt-4 space-y-1">
                     @foreach ($navigationFooterLinks as $link)
                         <a href="{{ route($link['route']) }}" class="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-ink-600 transition hover:bg-mvhab-surface hover:text-ink-900">
-                            <x-ui-icon :name="$link['icon']" class="h-4 w-4 shrink-0" />
+                            <x-mv-icon :name="$link['icon'] ?? 'dashboard'" size="sm" />
                             <span>{{ $link['label'] }}</span>
                         </a>
                     @endforeach
@@ -179,7 +179,7 @@
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm font-medium text-ink-600 transition hover:bg-mvhab-surface hover:text-ink-900">
-                            <x-ui-icon name="alert" class="h-4 w-4 shrink-0" />
+                            <x-mv-icon name="logout" size="sm" />
                             <span>Terminar sessão</span>
                         </button>
                     </form>
@@ -198,28 +198,61 @@
     </aside>
 </div>
 
-<aside class="fixed inset-y-0 left-0 hidden w-72 flex-col border-r border-ink-100 bg-white lg:flex">
-    <div class="flex h-20 items-center border-b border-ink-100 px-6">
-        <a href="{{ route($homeRoute) }}" class="flex items-center gap-3">
-            <x-application-logo class="block h-10 w-auto fill-current text-mvhab-primary" />
-            <div>
-                <p class="text-base font-bold text-ink-900">MV HAB</p>
-                <p class="text-xs font-medium text-ink-500">Plataforma municipal</p>
-            </div>
+<aside
+    x-data="{
+        collapsed: JSON.parse(localStorage.getItem('mvhab-sidebar') ?? 'false'),
+        toggle() {
+            this.collapsed = ! this.collapsed;
+            localStorage.setItem('mvhab-sidebar', JSON.stringify(this.collapsed));
+        }
+    }"
+    :class="collapsed ? 'w-28' : 'w-72'"
+    class="fixed inset-y-0 left-0 hidden flex-col border-r border-ink-100 bg-white transition-all duration-300 lg:flex"
+>
+    <div
+        class="relative flex h-20 items-center border-b border-ink-100 px-4"
+        :class="collapsed ? 'justify-center' : 'justify-between'"
+    >
+        <a href="{{ route($homeRoute) }}" class="flex min-w-0 items-center overflow-hidden">
+            <img
+                src="{{ asset('images/brand/logo-mvhab-semfundo-comp.png') }}"
+                alt="MV HAB"
+                class="h-12 w-auto shrink-0"
+            >
         </a>
+
+        <button
+            type="button"
+            @click="toggle()"
+            class="rounded-xl border border-ink-100 bg-white p-2 text-ink-600 transition hover:bg-mvhab-surface hover:text-mvhab-primary"
+            :aria-label="collapsed ? 'Expandir navegação' : 'Recolher navegação'"
+        >
+            <span x-show="!collapsed">
+                <x-mv-icon name="arrow-left" size="sm" />
+            </span>
+            <span x-show="collapsed" x-cloak>
+                <x-mv-icon name="arrow-right" size="sm" />
+            </span>
+        </button>
     </div>
 
-    <div class="flex-1 overflow-y-auto px-4 py-6">
-        <x-navigation.context-sidebar :groups="$navigationGroups" />
+    <div class="flex-1 overflow-y-auto py-6" :class="collapsed ? 'px-3' : 'px-4'">
+        <div x-bind:data-sidebar-collapsed="collapsed">
+            <x-navigation.context-sidebar :groups="$navigationGroups" />
+        </div>
     </div>
 
     <div class="border-t border-ink-100 p-4">
         @if ($isCandidate)
-            <div class="flex items-center gap-3 rounded-2xl border border-ink-100 bg-white px-3 py-3">
-                <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
-                    <x-ui-icon name="user" class="h-5 w-5" />
+            <div
+                class="flex items-center rounded-2xl border border-ink-100 bg-white px-3 py-3"
+                :class="collapsed ? 'justify-center' : 'gap-3'"
+            >
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
+                    <x-mv-icon name="profile" size="sm" />
                 </span>
-                <span class="min-w-0 flex-1">
+
+                <span x-show="!collapsed" x-transition.opacity class="min-w-0 flex-1">
                     <span class="block truncate text-sm font-semibold text-ink-900">{{ $user->name }}</span>
                     <span class="block truncate text-xs text-ink-500">{{ $user->email }}</span>
                 </span>
@@ -227,32 +260,55 @@
 
             <div class="mt-4 space-y-1">
                 @foreach ($navigationFooterLinks as $link)
-                    <a href="{{ route($link['route']) }}" class="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-ink-600 transition hover:bg-mvhab-surface hover:text-ink-900">
-                        <x-ui-icon :name="$link['icon']" class="h-4 w-4 shrink-0" />
-                        <span>{{ $link['label'] }}</span>
+                    <a
+                        href="{{ route($link['route']) }}"
+                        title="{{ $link['label'] }}"
+                        class="flex w-full items-center rounded-2xl px-3 py-2 text-sm font-medium text-ink-600 transition hover:bg-mvhab-surface hover:text-ink-900"
+                        :class="collapsed ? 'justify-center' : 'gap-3'"
+                    >
+                        <x-mv-icon :name="$link['icon'] ?? 'dashboard'" size="sm" />
+
+                        <span x-show="!collapsed" x-transition.opacity>
+                            {{ $link['label'] }}
+                        </span>
                     </a>
                 @endforeach
 
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm font-medium text-ink-600 transition hover:bg-mvhab-surface hover:text-ink-900">
-                        <x-ui-icon name="alert" class="h-4 w-4 shrink-0" />
-                        <span>Terminar sessão</span>
+                    <button
+                        type="submit"
+                        title="Terminar sessão"
+                        class="flex w-full items-center rounded-2xl px-3 py-2 text-left text-sm font-medium text-ink-600 transition hover:bg-mvhab-surface hover:text-ink-900"
+                        :class="collapsed ? 'justify-center' : 'gap-3'"
+                    >
+                        <x-mv-icon name="logout" size="sm" />
+
+                        <span x-show="!collapsed" x-transition.opacity>
+                            Terminar sessão
+                        </span>
                     </button>
                 </form>
             </div>
         @else
             <x-dropdown align="right" width="48">
                 <x-slot name="trigger">
-                    <button class="flex w-full items-center gap-3 rounded-2xl border border-ink-100 bg-white px-3 py-3 text-left transition hover:bg-mvhab-surface">
-                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
-                        <x-ui-icon name="user" class="h-5 w-5" />
-                    </span>
-                    <span class="min-w-0 flex-1">
-                        <span class="block truncate text-sm font-semibold text-ink-900">{{ $user->name }}</span>
-                        <span class="block truncate text-xs text-ink-500">{{ $user->email }}</span>
-                    </span>
-                    <x-ui-icon name="arrow" class="h-4 w-4 text-ink-500" />
+                    <button
+                        class="flex w-full items-center rounded-2xl border border-ink-100 bg-white px-3 py-3 text-left transition hover:bg-mvhab-surface"
+                        :class="collapsed ? 'justify-center' : 'gap-3'"
+                    >
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
+                            <x-mv-icon name="profile" size="sm" />
+                        </span>
+
+                        <span x-show="!collapsed" x-transition.opacity class="min-w-0 flex-1">
+                            <span class="block truncate text-sm font-semibold text-ink-900">{{ $user->name }}</span>
+                            <span class="block truncate text-xs text-ink-500">{{ $user->email }}</span>
+                        </span>
+
+                        <span x-show="!collapsed" x-transition.opacity>
+                            <x-mv-icon name="arrow-right" size="sm" class="text-ink-500" />
+                        </span>
                     </button>
                 </x-slot>
 
