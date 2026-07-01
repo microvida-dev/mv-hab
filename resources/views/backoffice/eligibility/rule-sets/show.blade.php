@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
-            <div><p class="text-sm font-semibold text-civic-700">Conjunto de regras</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $ruleSet->name }}</h1><p class="mt-1 text-sm text-ink-500">{{ $ruleSet->contest?->title ?? $ruleSet->program?->name }}</p></div>
-            <span class="rounded-md bg-ink-100 px-3 py-1 text-sm font-semibold text-ink-700">{{ $ruleSet->status->label() }}</span>
+            <div><p class="text-sm font-semibold text-mvhab-primary">Conjunto de regras</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $ruleSet->name }}</h1><p class="mt-1 text-sm text-ink-500">{{ $ruleSet->contest?->title ?? $ruleSet->program?->name }}</p></div>
+            <span class="rounded-2xl bg-ink-100 px-3 py-1 text-sm font-semibold text-ink-700">{{ $ruleSet->status->label() }}</span>
         </div>
     </x-slot>
     <div class="py-8"><div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">

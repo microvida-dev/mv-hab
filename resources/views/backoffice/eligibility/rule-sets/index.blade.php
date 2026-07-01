@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex flex-wrap items-center justify-between gap-4">
-            <div><p class="text-sm font-semibold text-civic-700">Configuração</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">Regras de elegibilidade</h1></div>
+            <div><p class="text-sm font-semibold text-mvhab-primary">Configuração</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">Regras de elegibilidade</h1></div>
             @can('create', \App\Models\EligibilityRuleSet::class)
                 <a href="{{ route('backoffice.eligibility.rule-sets.create') }}" class="mv-button-primary"><x-ui-icon name="plus" class="h-4 w-4" />Novo conjunto</a>
             @endcan
@@ -18,7 +18,7 @@
                         <td>{{ $ruleSet->contest?->title ?? $ruleSet->program?->name }}</td>
                         <td>{{ $ruleSet->status->label() }}</td>
                         <td>{{ $ruleSet->criteria_count }}</td><td>{{ $ruleSet->checks_count }}</td>
-                        <td class="text-right"><a class="font-semibold text-civic-700" href="{{ route('backoffice.eligibility.rule-sets.show', $ruleSet) }}">Abrir</a></td>
+                        <td class="text-right"><a class="font-semibold text-mvhab-primary" href="{{ route('backoffice.eligibility.rule-sets.show', $ruleSet) }}">Abrir</a></td>
                     </tr>
                 @empty
                     <tr><td colspan="6" class="text-center text-ink-500">Sem conjuntos configurados.</td></tr>

@@ -8,7 +8,7 @@
     </div>
     <div>
         <x-input-label for="status" value="Estado" />
-        <select id="status" name="status" class="mt-1 block w-full rounded-md border-ink-200">
+        <select id="status" name="status" class="mv-input mt-1 block w-full">
             @foreach ($statuses as $value => $label)
                 <option value="{{ $value }}" @selected(old('status', isset($ruleSet) ? $ruleSet->status->value : 'draft') === $value)>{{ $label }}</option>
             @endforeach
@@ -17,7 +17,7 @@
     </div>
     <div>
         <x-input-label for="program_id" value="Programa" />
-        <select id="program_id" name="program_id" class="mt-1 block w-full rounded-md border-ink-200">
+        <select id="program_id" name="program_id" class="mv-input mt-1 block w-full">
             <option value="">Selecionar</option>
             @foreach ($programs as $program)
                 <option value="{{ $program->id }}" @selected((string) old('program_id', $ruleSet->program_id ?? '') === (string) $program->id)>{{ $program->name }}</option>
@@ -27,7 +27,7 @@
     </div>
     <div>
         <x-input-label for="contest_id" value="Concurso específico (opcional)" />
-        <select id="contest_id" name="contest_id" class="mt-1 block w-full rounded-md border-ink-200">
+        <select id="contest_id" name="contest_id" class="mv-input mt-1 block w-full">
             <option value="">Aplicar ao programa</option>
             @foreach ($contests as $contest)
                 <option value="{{ $contest->id }}" @selected((string) old('contest_id', $ruleSet->contest_id ?? '') === (string) $contest->id)>{{ $contest->title }}</option>
@@ -46,10 +46,10 @@
     </div>
     <div class="lg:col-span-2">
         <x-input-label for="description" value="Descrição" />
-        <textarea id="description" name="description" rows="4" class="mt-1 block w-full rounded-md border-ink-200">{{ old('description', $ruleSet->description ?? '') }}</textarea>
+        <textarea id="description" name="description" rows="4" class="mv-input mt-1 block w-full">{{ old('description', $ruleSet->description ?? '') }}</textarea>
     </div>
     <label class="flex items-center gap-3 text-sm text-ink-700 lg:col-span-2">
-        <input type="checkbox" name="is_default" value="1" class="rounded border-ink-300 text-civic-700" @checked(old('is_default', $ruleSet->is_default ?? false))>
+        <input type="checkbox" name="is_default" value="1" class="mv-checkbox" @checked(old('is_default', $ruleSet->is_default ?? false))>
         Usar como conjunto padrão do programa
     </label>
 </div>

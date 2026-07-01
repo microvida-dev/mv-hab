@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Verificação #{{ $check->id }}</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Verificação #{{ $check->id }}</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $check->result->label() }}</h1>
                 <p class="mt-1 text-sm text-ink-500">
                     {{ $check->contest?->title ?? $check->program?->name ?? 'Sem regras aplicáveis' }}
@@ -55,7 +55,7 @@
                         <p class="text-xs font-semibold uppercase tracking-wide text-ink-500">Dados a completar</p>
                         <div class="mt-3 grid gap-3 md:grid-cols-2">
                             @foreach ($presentation['missingData'] as $item)
-                                <div class="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
                                     <p class="font-semibold text-amber-900">{{ $item['label'] }}</p>
                                     <p class="mt-1 text-sm leading-6 text-amber-800">{{ $item['guidance'] }}</p>
                                 </div>
@@ -89,7 +89,7 @@
 
                     <div class="mt-5 grid gap-4 lg:grid-cols-2">
                         @foreach ($presentation['attentionResults'] as $result)
-                            <article class="rounded-lg border border-ink-100 bg-white p-4 shadow-sm">
+                            <article class="mv-surface p-4">
                                 <div class="flex flex-wrap items-start justify-between gap-3">
                                     <div>
                                         <p class="text-xs font-semibold uppercase tracking-wide text-ink-500">{{ $result['category'] }}</p>
