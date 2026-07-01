@@ -15,7 +15,7 @@
             </p>
         </div>
 
-        <div class="mt-10 rounded-2xl bg-white p-6 shadow-sm border border-ink-100">
+        <div class="mv-surface mt-10 p-6">
 
             <div class="grid gap-4 lg:grid-cols-4">
 

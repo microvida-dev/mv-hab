@@ -1,4 +1,4 @@
-<section class="bg-white py-20">
+<section class="bg-mvhab-card py-20">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         <div class="mx-auto max-w-3xl text-center">
@@ -30,7 +30,7 @@
 
             @foreach($steps as [$number, $title, $description])
 
-                <div class="group rounded-2xl border border-ink-100 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-mvhab-support hover:shadow-lg">
+                <div class="group rounded-2xl border border-ink-100 bg-mvhab-card p-8 shadow-surface transition-all duration-300 hover:-translate-y-1 hover:border-mvhab-support hover:shadow-lg">
 
                     <div class="flex h-12 w-12 items-center justify-center rounded-full bg-mvhab-primary text-lg font-bold text-white">
                         {{ $number }}
