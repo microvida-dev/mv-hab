@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Equipa municipal</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Equipa municipal</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $team->name }}</h1>
             </div>
             <a href="{{ route('backoffice.teams.edit', $team) }}" class="mv-button-secondary">Editar</a>
@@ -13,7 +13,7 @@
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
             @error('access')
-                <div class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">{{ $message }}</div>
+                <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{{ $message }}</div>
             @enderror
 
             <section class="grid gap-6 xl:grid-cols-3">
@@ -47,7 +47,7 @@
                                         <form method="POST" action="{{ route('backoffice.teams.members.remove', $team) }}" class="flex gap-2">
                                             @csrf
                                             <input type="hidden" name="user_id" value="{{ $member->id }}">
-                                            <input name="justification" class="w-48 rounded-md border-ink-200 text-sm" placeholder="Justificação" required>
+                                            <input name="justification" class="w-48 mv-input" placeholder="Justificação" required>
                                             <button class="mv-button-danger">Remover</button>
                                         </form>
                                     </td>
@@ -64,7 +64,7 @@
                     <h2 class="text-lg font-semibold text-ink-900">Adicionar membro</h2>
                     <label class="grid gap-1 text-sm">
                         <span class="font-medium text-ink-700">Utilizador</span>
-                        <select name="user_id" class="rounded-md border-ink-200" required>
+                        <select name="user_id" class="mv-input" required>
                             @foreach ($users as $user)
                                 <option value="{{ $user->id }}">{{ $user->name }}</option>
                             @endforeach
@@ -72,11 +72,11 @@
                     </label>
                     <label class="grid gap-1 text-sm">
                         <span class="font-medium text-ink-700">Função na equipa</span>
-                        <input name="role_in_team" class="rounded-md border-ink-200">
+                        <input name="role_in_team" class="mv-input">
                     </label>
                     <label class="grid gap-1 text-sm">
                         <span class="font-medium text-ink-700">Justificação</span>
-                        <textarea name="justification" rows="3" class="rounded-md border-ink-200" required></textarea>
+                        <textarea name="justification" rows="3" class="mv-input" required></textarea>
                     </label>
                     <button class="mv-button-primary">Adicionar</button>
                 </form>
