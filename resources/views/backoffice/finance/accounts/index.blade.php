@@ -12,7 +12,7 @@
                 <tbody>
                     @foreach ($accounts as $account)
                         <tr class="border-t border-ink-100">
-                            <td class="py-3"><a class="font-semibold text-civic-700" href="{{ route('backoffice.finance.accounts.show', $account) }}">{{ $account->account_number }}</a></td>
+                            <td class="py-3"><a class="font-semibold text-mvhab-primary" href="{{ route('backoffice.finance.accounts.show', $account) }}">{{ $account->account_number }}</a></td>
                             <td>{{ $account->tenant?->name }}</td>
                             <td>{{ number_format((float) $account->current_balance, 2, ',', '.') }} EUR</td>
                             <td>{{ $account->status->label() }}</td>
