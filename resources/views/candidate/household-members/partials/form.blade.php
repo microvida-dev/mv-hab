@@ -18,7 +18,7 @@
             </div>
             <div>
                 <x-input-label for="relationship" value="Relação com o requerente *" />
-                <select id="relationship" name="relationship" class="mt-1 w-full rounded-md border-gray-300 shadow-sm" required>
+                <select id="relationship" name="relationship" class="mv-input mt-1 w-full" required>
                     <option value="">Selecione</option>
                     @foreach ($relationships as $value => $label)
                         <option value="{{ $value }}" @selected(old('relationship', $member?->relationship?->value) === $value)>{{ $label }}</option>
@@ -28,7 +28,7 @@
             </div>
             <div>
                 <x-input-label for="gender" value="Género" />
-                <select id="gender" name="gender" class="mt-1 w-full rounded-md border-gray-300 shadow-sm">
+                <select id="gender" name="gender" class="mv-input mt-1 w-full">
                     <option value="">Prefiro não indicar</option>
                     @foreach (['female' => 'Feminino', 'male' => 'Masculino', 'non_binary' => 'Não binário', 'other' => 'Outro'] as $value => $label)
                         <option value="{{ $value }}" @selected(old('gender', $member?->gender) === $value)>{{ $label }}</option>
@@ -56,7 +56,7 @@
         <div class="mt-4 grid gap-5 md:grid-cols-2">
             <div>
                 <x-input-label for="professional_status" value="Situação profissional" />
-                <select id="professional_status" name="professional_status" class="mt-1 w-full rounded-md border-gray-300 shadow-sm">
+                <select id="professional_status" name="professional_status" class="mv-input mt-1 w-full">
                     <option value="">Selecione</option>
                     @foreach ($professionalStatuses as $value => $label)
                         <option value="{{ $value }}" @selected(old('professional_status', $member?->professional_status?->value) === $value)>{{ $label }}</option>
@@ -65,7 +65,7 @@
             </div>
             <div>
                 <x-input-label for="qualification_level" value="Nível de qualificação (QNQ)" />
-                <select id="qualification_level" name="qualification_level" class="mt-1 w-full rounded-md border-gray-300 shadow-sm">
+                <select id="qualification_level" name="qualification_level" class="mv-input mt-1 w-full">
                     <option value="">Selecione</option>
                     @foreach (range(1, 8) as $level)
                         <option value="{{ $level }}" @selected((string) old('qualification_level', $member?->qualification_level) === (string) $level)>
@@ -105,8 +105,8 @@
                 'has_no_income' => 'Não possui rendimentos',
                 'is_exempt_from_irs' => 'Dispensado de entregar IRS',
             ] as $field => $label)
-                <label class="flex items-start gap-3 rounded-md border border-ink-100 p-3 text-sm text-ink-700">
-                    <input type="checkbox" name="{{ $field }}" value="1" class="mt-0.5 rounded border-gray-300 text-civic-700" @checked(old($field, $member?->{$field} ?? false))>
+                <label class="flex items-start gap-3 rounded-2xl border border-ink-100 p-3 text-sm text-ink-700">
+                    <input type="checkbox" name="{{ $field }}" value="1" class="mv-checkbox mt-0.5" @checked(old($field, $member?->{$field} ?? false))>
                     <span>{{ $label }}</span>
                 </label>
             @endforeach
@@ -128,7 +128,7 @@
 
     <section class="border-t border-ink-100 pt-7">
         <x-input-label for="notes" value="Observações" />
-        <textarea id="notes" name="notes" rows="4" class="mt-1 w-full rounded-md border-gray-300 shadow-sm">{{ old('notes', $member?->notes) }}</textarea>
+        <textarea id="notes" name="notes" rows="4" class="mv-input mt-1 w-full">{{ old('notes', $member?->notes) }}</textarea>
         <x-input-error :messages="$errors->get('notes')" class="mt-2" />
     </section>
 </div>
