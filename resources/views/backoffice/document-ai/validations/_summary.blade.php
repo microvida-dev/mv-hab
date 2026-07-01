@@ -7,7 +7,7 @@
             </div>
             <div>
                 <p class="text-xs font-semibold uppercase text-ink-500">Coincidem</p>
-                <p class="mt-1 text-xl font-semibold text-civic-700">{{ $summary['matches'] }}</p>
+                <p class="mt-1 text-xl font-semibold text-mvhab-primary">{{ $summary['matches'] }}</p>
             </div>
             <div>
                 <p class="text-xs font-semibold uppercase text-ink-500">Críticas</p>

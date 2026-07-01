@@ -19,7 +19,7 @@
     <div class="py-8">
         <div class="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_360px] lg:px-8">
             <div class="space-y-6">
-                <div class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                     O score IA e as flags são auxiliares à análise técnica e não produzem decisão automática sobre a candidatura.
                 </div>
 
@@ -42,7 +42,7 @@
                         </div>
                         <div>
                             <dt class="font-semibold text-ink-500">OCR</dt>
-                            <dd class="{{ $analysis->ocr_available ? 'text-civic-700' : 'text-amber-700' }}">
+                            <dd class="{{ $analysis->ocr_available ? 'text-mvhab-primary' : 'text-amber-700' }}">
                                 {{ $analysis->ocr_available ? 'Disponível' : 'Indisponível' }}
                             </dd>
                         </div>

@@ -7,7 +7,7 @@
         @if ($score)
             <div class="text-left sm:text-right">
                 <p class="text-4xl font-semibold text-ink-900">{{ $score->score }}%</p>
-                <p class="mt-1 text-sm font-semibold text-civic-700">{{ $score->label->label() }}</p>
+                <p class="mt-1 text-sm font-semibold text-mvhab-primary">{{ $score->label->label() }}</p>
             </div>
         @endif
     </div>
@@ -15,7 +15,7 @@
     @if ($score)
         <div class="mt-6 grid gap-3 md:grid-cols-5">
             @foreach (($score->components ?? []) as $component => $value)
-                <div class="rounded-md border border-ink-100 p-3">
+                <div class="mv-surface p-3">
                     <p class="text-xs font-semibold uppercase text-ink-500">{{ str_replace('_', ' ', $component) }}</p>
                     <p class="mt-1 text-xl font-semibold text-ink-900">{{ $value }}</p>
                 </div>
@@ -25,7 +25,7 @@
         <div class="mt-6 grid gap-4 md:grid-cols-3">
             <div>
                 <h3 class="text-sm font-semibold text-ink-800">Sinais positivos</h3>
-                <ul class="mt-2 space-y-1 text-sm text-civic-700">
+                <ul class="mt-2 space-y-1 text-sm text-mvhab-primary">
                     @forelse (($score->explanation['positives'] ?? []) as $item)
                         <li>{{ $item }}</li>
                     @empty

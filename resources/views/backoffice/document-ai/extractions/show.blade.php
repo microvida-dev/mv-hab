@@ -28,7 +28,7 @@
                         </div>
                         <div>
                             <p class="text-xs font-semibold uppercase text-ink-500">Revisão</p>
-                            <p class="mt-1 text-lg font-semibold {{ $analysis->extraction_requires_manual_review ? 'text-amber-700' : 'text-civic-700' }}">
+                            <p class="mt-1 text-lg font-semibold {{ $analysis->extraction_requires_manual_review ? 'text-amber-700' : 'text-mvhab-primary' }}">
                                 {{ $analysis->extraction_requires_manual_review ? 'Requer revisão' : 'Sem revisão' }}
                             </p>
                         </div>
@@ -79,7 +79,7 @@
                     <h2 class="text-lg font-semibold text-ink-900">Flags</h2>
                     <div class="mt-4 space-y-3">
                         @forelse ($analysis->flags as $flag)
-                            <div class="rounded-md border border-ink-100 p-3">
+                            <div class="mv-surface p-3">
                                 <p class="font-semibold text-ink-900">{{ $flag->code }}</p>
                                 <p class="mt-1 text-sm text-ink-600">{{ $flag->message }}</p>
                             </div>
@@ -93,7 +93,7 @@
                     <h2 class="text-lg font-semibold text-ink-900">Execução</h2>
                     <div class="mt-4 space-y-3">
                         @forelse ($analysis->processingLogs->take(8) as $log)
-                            <div class="border-l-2 border-civic-200 pl-3 text-sm">
+                            <div class="border-l-2 border-mvhab-support/30 pl-3 text-sm">
                                 <p class="font-semibold text-ink-900">{{ $log->step }}</p>
                                 <p class="text-ink-500">{{ $log->message }}</p>
                             </div>

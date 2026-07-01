@@ -39,7 +39,7 @@
                         @if ($field->requires_review)
                             <span class="text-amber-700">Requer revisão</span>
                         @else
-                            <span class="text-civic-700">Sem revisão</span>
+                            <span class="text-mvhab-primary">Sem revisão</span>
                         @endif
                         @if ($item['is_health_data'])
                             <p class="text-xs text-ink-500">Dado de saúde</p>
@@ -52,7 +52,7 @@
                             <form method="POST" action="{{ route('backoffice.document-ai.fields.review', $field) }}" class="inline">
                                 @csrf
                                 <input type="hidden" name="reason" value="Revisão manual solicitada no detalhe da extração IA.">
-                                <button type="submit" class="font-semibold text-civic-700">Rever</button>
+                                <button type="submit" class="font-semibold text-mvhab-primary">Rever</button>
                             </form>
                         @endcan
                     </td>

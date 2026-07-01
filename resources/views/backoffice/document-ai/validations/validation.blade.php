@@ -70,7 +70,7 @@
                         </div>
                         <div>
                             <dt class="font-semibold text-ink-500">Revisão</dt>
-                            <dd class="{{ $validation->requires_manual_review ? 'text-amber-700' : 'text-civic-700' }}">
+                            <dd class="{{ $validation->requires_manual_review ? 'text-amber-700' : 'text-mvhab-primary' }}">
                                 {{ $validation->requires_manual_review ? 'Necessária' : 'Não necessária' }}
                             </dd>
                         </div>
@@ -83,7 +83,7 @@
                         @csrf
                         <label class="block space-y-1 text-sm">
                             <span class="font-semibold text-ink-700">Notas</span>
-                            <textarea name="review_notes" rows="4" class="w-full rounded-md border-ink-200 text-sm">{{ old('review_notes', $validation->review_notes) }}</textarea>
+                            <textarea name="review_notes" rows="4" class="mv-input w-full text-sm">{{ old('review_notes', $validation->review_notes) }}</textarea>
                         </label>
                         <button type="submit" class="mv-button-primary w-full justify-center">Marcar revisão</button>
                     </form>

@@ -33,7 +33,7 @@
                         </div>
                         <div>
                             <dt class="font-semibold text-ink-500">Revisão manual</dt>
-                            <dd class="{{ $run?->requires_manual_review ? 'text-amber-700' : 'text-civic-700' }}">
+                            <dd class="{{ $run?->requires_manual_review ? 'text-amber-700' : 'text-mvhab-primary' }}">
                                 {{ $run?->requires_manual_review ? 'Necessária' : 'Não necessária' }}
                             </dd>
                         </div>

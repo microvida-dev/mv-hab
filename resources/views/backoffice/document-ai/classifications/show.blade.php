@@ -28,7 +28,7 @@
                         </div>
                         <div>
                             <p class="text-xs font-semibold uppercase text-ink-500">OCR</p>
-                            <p class="mt-1 text-lg font-semibold {{ $analysis->ocr_available ? 'text-civic-700' : 'text-amber-700' }}">{{ $analysis->ocr_available ? 'Disponível' : 'Indisponível' }}</p>
+                            <p class="mt-1 text-lg font-semibold {{ $analysis->ocr_available ? 'text-mvhab-primary' : 'text-amber-700' }}">{{ $analysis->ocr_available ? 'Disponível' : 'Indisponível' }}</p>
                         </div>
                     </div>
                 </section>
@@ -37,7 +37,7 @@
                     <h2 class="text-lg font-semibold text-ink-900">Sinais de classificação</h2>
                     <div class="mt-4 flex flex-wrap gap-2">
                         @forelse (($analysis->classification_signals ?? []) as $signal)
-                            <span class="rounded-md bg-ink-50 px-2.5 py-1 text-xs font-medium text-ink-700">{{ $signal }}</span>
+                            <span class="rounded-2xl bg-ink-50 px-2.5 py-1 text-xs font-medium text-ink-700">{{ $signal }}</span>
                         @empty
                             <p class="text-sm text-ink-500">Sem sinais registados.</p>
                         @endforelse
@@ -73,7 +73,7 @@
                 <section class="mv-surface p-6">
                     <h2 class="text-lg font-semibold text-ink-900">Texto OCR</h2>
                     @if ($canViewSensitive && $analysis->ocr_text)
-                        <pre class="mt-4 max-h-96 overflow-auto rounded-md bg-ink-950 p-4 text-xs leading-6 text-white">{{ \Illuminate\Support\Str::limit($analysis->ocr_text, 6000) }}</pre>
+                        <pre class="mt-4 max-h-96 overflow-auto rounded-2xl bg-ink-950 p-4 text-xs leading-6 text-white">{{ \Illuminate\Support\Str::limit($analysis->ocr_text, 6000) }}</pre>
                     @else
                         <p class="mt-3 text-sm text-ink-500">Texto OCR sensível oculto. Apenas perfis com permissão de auditoria documental podem consultar o excerto técnico.</p>
                     @endif
@@ -103,7 +103,7 @@
                     <h2 class="text-lg font-semibold text-ink-900">Flags</h2>
                     <div class="mt-4 space-y-3">
                         @forelse ($analysis->flags as $flag)
-                            <div class="rounded-md border border-ink-100 p-3">
+                            <div class="mv-surface p-3">
                                 <p class="font-semibold text-ink-900">{{ $flag->code }}</p>
                                 <p class="mt-1 text-sm text-ink-600">{{ $flag->message }}</p>
                             </div>
@@ -118,7 +118,7 @@
                         <h2 class="text-lg font-semibold text-ink-900">Revisão manual</h2>
                         <form method="POST" action="{{ route('backoffice.document-ai.classifications.manual-review', $analysis) }}" class="mt-4 space-y-3">
                             @csrf
-                            <textarea name="reason" rows="3" class="w-full rounded-md border-ink-200 text-sm" placeholder="Motivo da revisão manual"></textarea>
+                            <textarea name="reason" rows="3" class="mv-input w-full text-sm" placeholder="Motivo da revisão manual"></textarea>
                             <button type="submit" class="mv-button-primary w-full justify-center">Marcar revisão manual</button>
                         </form>
                     </section>
@@ -128,7 +128,7 @@
                     <h2 class="text-lg font-semibold text-ink-900">Execução</h2>
                     <div class="mt-4 space-y-3">
                         @foreach ($analysis->processingLogs->take(8) as $log)
-                            <div class="border-l-2 border-civic-200 pl-3 text-sm">
+                            <div class="border-l-2 border-mvhab-support/30 pl-3 text-sm">
                                 <p class="font-semibold text-ink-900">{{ $log->step }}</p>
                                 <p class="text-ink-500">{{ $log->message }}</p>
                             </div>

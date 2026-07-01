@@ -24,7 +24,7 @@
                     <td class="px-5 py-4 text-ink-700">{{ $validation['extracted_value'] }}</td>
                     <td class="px-5 py-4">{{ $validation['confidence'] !== null ? number_format($validation['confidence'] * 100, 0).'%' : '-' }}</td>
                     <td class="px-5 py-4 text-right">
-                        <a class="font-semibold text-civic-700" href="{{ route('backoffice.document-ai.validations.validation', $validation['id']) }}">Detalhe</a>
+                        <a class="font-semibold text-mvhab-primary" href="{{ route('backoffice.document-ai.validations.validation', $validation['id']) }}">Detalhe</a>
                     </td>
                 </tr>
             @empty
