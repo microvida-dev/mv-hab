@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">{{ $task->task_number }}</p>
+                <p class="text-sm font-semibold text-mvhab-primary">{{ $task->task_number }}</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ \App\Models\WorkTask::typeLabel($task->type) }}</h1>
                 <p class="mt-1 text-sm text-ink-500">{{ \App\Models\WorkTask::statusLabel($task->status) }} · {{ app(\App\Services\UX\MunicipalLanguageService::class)->priorityLabel((string) $task->priority) }}</p>
             </div>
@@ -14,7 +14,7 @@
         <div class="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_360px] lg:px-8">
             <div class="space-y-6">
                 @if (session('success'))
-                    <div class="rounded-md border border-civic-200 bg-civic-50 px-4 py-3 text-sm font-semibold text-civic-800">{{ session('success') }}</div>
+                    <div class="rounded-2xl border border-mvhab-support/40 bg-mvhab-surface px-4 py-3 text-sm font-semibold text-mvhab-primary">{{ session('success') }}</div>
                 @endif
 
                 <section class="mv-surface p-5">
@@ -68,7 +68,7 @@
                         <h2 class="text-base font-semibold text-ink-900">Reatribuir</h2>
                         <label class="block text-sm font-semibold text-ink-700">
                             Equipa
-                            <select name="municipal_team_id" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                            <select name="municipal_team_id" class="mv-input mt-1 w-full">
                                 <option value="">Fila geral</option>
                                 @foreach ($teams as $team)
                                     <option value="{{ $team->id }}" @selected($task->municipal_team_id === $team->id)>{{ $team->name }}</option>
@@ -77,7 +77,7 @@
                         </label>
                         <label class="block text-sm font-semibold text-ink-700">
                             Responsável
-                            <select name="assigned_user_id" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                            <select name="assigned_user_id" class="mv-input mt-1 w-full">
                                 <option value="">Por atribuir</option>
                                 @foreach ($users as $user)
                                     <option value="{{ $user->id }}" @selected($task->assigned_user_id === $user->id)>{{ $user->name }}</option>
@@ -86,7 +86,7 @@
                         </label>
                         <label class="block text-sm font-semibold text-ink-700">
                             Justificação
-                            <textarea name="reason" rows="3" class="mt-1 w-full rounded-md border-ink-200 text-sm" required></textarea>
+                            <textarea name="reason" rows="3" class="mv-input mt-1 w-full" required></textarea>
                         </label>
                         <button class="mv-button-primary w-full">Reatribuir</button>
                     </form>
@@ -98,7 +98,7 @@
                         <h2 class="text-base font-semibold text-ink-900">Atualizar estado</h2>
                         <label class="block text-sm font-semibold text-ink-700">
                             Estado
-                            <select name="status" class="mt-1 w-full rounded-md border-ink-200 text-sm">
+                            <select name="status" class="mv-input mt-1 w-full">
                                 <option value="{{ \App\Models\WorkTask::STATUS_IN_ANALYSIS }}">Em análise</option>
                                 <option value="{{ \App\Models\WorkTask::STATUS_WAITING_CANDIDATE }}">Em espera pelo candidato</option>
                                 <option value="{{ \App\Models\WorkTask::STATUS_WAITING_INTERNAL }}">Em espera interna</option>
@@ -107,7 +107,7 @@
                         </label>
                         <label class="block text-sm font-semibold text-ink-700">
                             Nota
-                            <textarea name="note" rows="3" class="mt-1 w-full rounded-md border-ink-200 text-sm"></textarea>
+                            <textarea name="note" rows="3" class="mv-input mt-1 w-full"></textarea>
                         </label>
                         <button class="mv-button-primary w-full">Atualizar</button>
                     </form>
@@ -120,7 +120,7 @@
                         <h2 class="text-base font-semibold text-ink-900">Concluir</h2>
                         <label class="block text-sm font-semibold text-ink-700">
                             Resultado
-                            <textarea name="outcome_note" rows="3" class="mt-1 w-full rounded-md border-ink-200 text-sm" required></textarea>
+                            <textarea name="outcome_note" rows="3" class="mv-input mt-1 w-full" required></textarea>
                         </label>
                         <button class="mv-button-primary w-full">Concluir</button>
                     </form>
@@ -133,7 +133,7 @@
                         <h2 class="text-base font-semibold text-ink-900">Cancelar</h2>
                         <label class="block text-sm font-semibold text-ink-700">
                             Motivo
-                            <textarea name="cancellation_reason" rows="3" class="mt-1 w-full rounded-md border-ink-200 text-sm" required></textarea>
+                            <textarea name="cancellation_reason" rows="3" class="mv-input mt-1 w-full" required></textarea>
                         </label>
                         <button class="mv-button-secondary w-full">Cancelar tarefa</button>
                     </form>
