@@ -207,7 +207,7 @@
         }
     }"
     :class="collapsed ? 'w-28' : 'w-72'"
-    class="fixed inset-y-0 left-0 hidden flex-col border-r border-ink-100 bg-white transition-all duration-300 lg:flex"
+    class="fixed inset-y-0 left-0 z-40 hidden flex-col overflow-hidden border-r border-ink-100 bg-white transition-all duration-300 lg:flex"
 >
     <div
         class="relative flex h-20 items-center border-b border-ink-100 px-4"
@@ -236,7 +236,7 @@
         </button>
     </div>
 
-    <div class="flex-1 overflow-y-auto py-6" :class="collapsed ? 'px-3' : 'px-4'">
+    <div class="flex-1 overflow-y-auto overflow-x-hidden py-6" :class="collapsed ? 'px-3' : 'px-4'">
         <div x-bind:data-sidebar-collapsed="collapsed">
             <x-navigation.context-sidebar :groups="$navigationGroups" />
         </div>

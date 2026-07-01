@@ -36,7 +36,9 @@
 
                 @if ($responsive)
                     <x-responsive-nav-link :href="route($link['route'], $parameters)" :active="$isActive">
-                        <x-mv-icon :name="$iconName" size="lg" class="shrink-0" />
+                        <span class="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden">
+                            <x-mv-icon :name="$iconName" size="md" class="h-6 w-6" />
+                        </span>
                         <span>{{ $link['label'] }}</span>
                     </x-responsive-nav-link>
                 @else
@@ -44,19 +46,29 @@
                         href="{{ route($link['route'], $parameters) }}"
                         title="{{ $link['label'] }}"
                         @class([
-                            'flex items-center rounded-2xl text-sm font-semibold transition duration-200',
+                            'group relative flex items-center rounded-2xl text-sm font-semibold transition duration-200',
                             'gap-3 px-3 py-2',
                             'bg-mvhab-surface text-mvhab-primary' => $isActive,
                             'text-ink-600 hover:bg-mvhab-surface hover:text-ink-900' => ! $isActive,
                         ])
                         x-bind:class="collapsed ? 'justify-center px-3 py-3' : 'gap-3 px-3 py-2'"
                     >
-                        <x-mv-icon :name="$iconName" size="lg" class="shrink-0" />
+                        <span class="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden">
+                            <x-mv-icon :name="$iconName" size="md" class="h-6 w-6" />
+                        </span>
 
                         <span
                             class="truncate"
                             x-show="!collapsed"
                             x-transition.opacity
+                        >
+                            {{ $link['label'] }}
+                        </span>
+
+                        <span
+                            x-show="collapsed"
+                            x-cloak
+                            class="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-xl bg-ink-900 px-3 py-2 text-xs font-semibold text-white opacity-0 shadow-lg transition group-hover:opacity-100"
                         >
                             {{ $link['label'] }}
                         </span>

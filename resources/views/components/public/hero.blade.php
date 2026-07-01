@@ -46,7 +46,9 @@
             <div class="mt-6 space-y-4">
                 <div class="mv-card flex items-center gap-4 p-5">
                     <div class="flex h-14 w-14 items-center justify-center rounded-full bg-mvhab-surface text-mvhab-primary">
-                        <x-mv-icon name="contest" size="lg" />
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden">
+                            <x-mv-icon name="contest" size="md" class="h-7 w-7" />
+                        </span>
                     </div>
                     <div>
                         <p class="mv-data-label">Concursos publicados</p>
@@ -56,7 +58,9 @@
 
                 <div class="mv-card flex items-center gap-4 p-5">
                     <div class="flex h-14 w-14 items-center justify-center rounded-full bg-mvhab-surface text-mvhab-primary">
-                        <x-mv-icon name="program" size="lg" />
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden">
+                            <x-mv-icon name="program" size="md" class="h-7 w-7" />
+                        </span>
                     </div>
                     <div>
                         <p class="mv-data-label">Programas disponíveis</p>
@@ -66,7 +70,9 @@
 
                 <div class="mv-card flex items-center gap-4 p-5">
                     <div class="flex h-14 w-14 items-center justify-center rounded-full bg-mvhab-surface text-mvhab-primary">
-                        <x-mv-icon name="housing" size="lg" />
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden">
+                            <x-mv-icon name="housing" size="md" class="h-7 w-7" />
+                        </span>
                     </div>
                     <div>
                         <p class="mv-data-label">Habitações disponíveis</p>
@@ -76,7 +82,9 @@
 
                 <div class="mv-card flex items-center gap-4 p-5">
                     <div class="flex h-14 w-14 items-center justify-center rounded-full bg-mvhab-surface text-mvhab-primary">
-                        <x-mv-icon name="simulator" size="lg" />
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden">
+                            <x-mv-icon name="simulator" size="md" class="h-7 w-7" />
+                        </span>
                     </div>
                     <div class="flex-1">
                         <p class="mv-data-label">Próximo passo recomendado</p>
@@ -84,7 +92,9 @@
                             Simular elegibilidade antes de iniciar candidatura
                         </p>
                     </div>
-                    <x-mv-icon name="arrow-right" size="sm" class="text-ink-400" />
+                    <span class="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden">
+                        <x-mv-icon name="arrow-right" size="sm" class="h-4 w-4 text-ink-400" />
+                    </span>
                 </div>
             </div>
         </aside>

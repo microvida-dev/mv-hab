@@ -38,61 +38,61 @@ class CandidateNavigationService
 
         $groups = [
             'Área pessoal' => [
-                $this->link('Visão Geral', 'candidate.dashboard', 'candidate.dashboard', 'dashboard'),
+                $this->link('Visão Geral', 'candidate.dashboard', 'candidate.dashboard', 'user-dashboard'),
                 $this->link('O meu registo', 'candidate.registration.show', 'candidate.registration.*', 'user'),
-                $this->link('Agregado', 'candidate.household.show', 'candidate.household*', 'users'),
-                $this->link('Rendimentos', 'candidate.income-records.index', 'candidate.income-records.*', 'wallet'),
-                $this->link('Habitação Atual', 'candidate.current-housing.show', 'candidate.current-housing.*', 'home'),
+                $this->link('Agregado', 'candidate.household.show', 'candidate.household*', 'household'),
+                $this->link('Rendimentos', 'candidate.income-records.index', 'candidate.income-records.*', 'income'),
+                $this->link('Habitação Atual', 'candidate.current-housing.show', 'candidate.current-housing.*', 'housing'),
             ],
             'Simulador' => [
-                $this->link('Simulador', 'candidate.simulations.index', 'candidate.simulations.*', 'check'),
+                $this->link('Simulador', 'candidate.simulations.index', 'candidate.simulations.*', 'simulator'),
             ],
         ];
 
         if ($hasSimulation) {
             $groups['Simulador'][] = $this->link('Elegibilidade', 'candidate.eligibility.index', 'candidate.eligibility.*', 'check');
             $groups['Simulador'][] = $isEligible
-                ? $this->link('Nova candidatura', 'public.contests.index', 'public.contests.*', 'file')
-                : $this->link('Consultar concursos', 'public.contests.index', 'public.contests.*', 'file');
+                ? $this->link('Nova candidatura', 'public.contests.index', 'public.contests.*', 'contest')
+                : $this->link('Consultar concursos', 'public.contests.index', 'public.contests.*', 'see-contest');
         } else {
             $groups['Oferta'] = [
-                $this->link('Concursos', 'public.contests.index', 'public.contests.*', 'file'),
+                $this->link('Concursos', 'public.contests.index', 'public.contests.*', 'folder'),
             ];
         }
 
         if ($hasDraftApplication) {
             $groups['Candidatura'] = [
-                $this->link('Candidaturas', 'candidate.applications.index', 'candidate.applications.*', 'file'),
+                $this->link('Candidaturas', 'candidate.applications.index', 'candidate.applications.*', 'user-application'),
                 $this->link('Documentos', 'candidate.documents.index', 'candidate.documents.*', 'document'),
-                $this->link('FAQ', 'candidate.contextual-faq.index', 'candidate.contextual-faq.*', 'check'),
-                $this->link('Apoio', 'candidate.support-tickets.index', 'candidate.support-tickets.*', 'alert'),
+                $this->link('FAQ', 'candidate.contextual-faq.index', 'candidate.contextual-faq.*', 'faq'),
+                $this->link('Apoio', 'candidate.support-tickets.index', 'candidate.support-tickets.*', 'user-message'),
             ];
         }
 
         if ($hasSubmittedApplication) {
             $groups['Processo'] = [
-                $this->link('Estado da candidatura', 'candidate.applications.index', 'candidate.applications.*', 'file'),
-                $this->link('Processo', 'candidate.processes.index', 'candidate.processes.*', 'document'),
+                $this->link('Estado da candidatura', 'candidate.applications.index', 'candidate.applications.*', 'status'),
+                $this->link('Processo', 'candidate.processes.index', 'candidate.processes.*', 'process'),
                 $this->link('Documentos', 'candidate.documents.index', 'candidate.documents.*', 'document'),
-                $this->link('Interações', 'candidate.interactions.index', 'candidate.interactions.*', 'document'),
-                $this->link('Aperfeiçoamentos', 'candidate.correction-requests.index', 'candidate.correction-requests.*', 'alert'),
-                $this->link('Visitas', 'candidate.visits.index', 'candidate.visits.*', 'home'),
-                $this->link('FAQ', 'candidate.contextual-faq.index', 'candidate.contextual-faq.*', 'check'),
-                $this->link('Apoio', 'candidate.support-tickets.index', 'candidate.support-tickets.*', 'alert'),
+                $this->link('Interações', 'candidate.interactions.index', 'candidate.interactions.*', 'interactions'),
+                $this->link('Aperfeiçoamentos', 'candidate.correction-requests.index', 'candidate.correction-requests.*', 'edit'),
+                $this->link('Visitas', 'candidate.visits.index', 'candidate.visits.*', 'user-inspection'),
+                $this->link('FAQ', 'candidate.contextual-faq.index', 'candidate.contextual-faq.*', 'faq'),
+                $this->link('Apoio', 'candidate.support-tickets.index', 'candidate.support-tickets.*', 'ticket'),
             ];
         }
 
         if ($hasProvisionalListStage) {
             $groups['Lista provisória'] = [
-                $this->link('Audiência Prévia', 'candidate.hearings.index', 'candidate.hearings.*', 'document'),
-                $this->link('Reclamações', 'candidate.complaints.index', 'candidate.complaints.*', 'alert'),
+                $this->link('Audiência Prévia', 'candidate.hearings.index', 'candidate.hearings.*', 'audit'),
+                $this->link('Reclamações', 'candidate.complaints.index', 'candidate.complaints.*', 'complaints'),
             ];
         }
 
         if ($hasAllocation) {
             $groups['Atribuição'] = [
-                $this->link('Ofertas', 'candidate.allocation-offers.index', 'candidate.allocation-offers.*', 'file'),
-                $this->link('Atribuições', 'candidate.allocations.index', 'candidate.allocations.*', 'check'),
+                $this->link('Ofertas', 'candidate.allocation-offers.index', 'candidate.allocation-offers.*', 'offers'),
+                $this->link('Atribuições', 'candidate.allocations.index', 'candidate.allocations.*', 'atribuition'),
             ];
         }
 
@@ -127,7 +127,7 @@ class CandidateNavigationService
     {
         return [
             $this->link('Ir para Portal Público', 'public.portal', 'public.*', 'home'),
-            $this->link('Notificações', 'candidate.notifications.index', 'candidate.notifications.*', 'alert'),
+            $this->link('Notificações', 'candidate.notifications.index', 'candidate.notifications.*', 'bell'),
         ];
     }
 
