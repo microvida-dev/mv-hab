@@ -26,6 +26,6 @@ class CandidateAccessibilityTest extends TestCase
 
         $css = (string) file_get_contents(resource_path('css/app.css'));
 
-        $this->assertStringContainsString('focus-visible:ring-civic-500', $css);
+        $this->assertStringContainsString('focus-visible:ring-mvhab-primary', $css);
     }
 }

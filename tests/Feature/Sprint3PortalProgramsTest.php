@@ -86,7 +86,7 @@ class Sprint3PortalProgramsTest extends TestCase
         $this->actingAs($administrator)
             ->get(route('public.contests.show', $contest->slug))
             ->assertOk()
-            ->assertSee('Backoffice')
+            ->assertSee('Área reservada')
             ->assertSee('Está autenticado com um perfil interno')
             ->assertSee('Terminar sessão')
             ->assertDontSee('Iniciar candidatura');
