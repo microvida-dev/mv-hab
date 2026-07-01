@@ -5,7 +5,7 @@
 <div class="grid gap-5 md:grid-cols-2">
     <div>
         <x-input-label for="household_member_id" value="Membro do agregado *" />
-        <select id="household_member_id" name="household_member_id" class="mt-1 w-full rounded-md border-gray-300 shadow-sm" required>
+        <select id="household_member_id" name="household_member_id" class="mv-input mt-1 w-full" required>
             <option value="">Selecione</option>
             @foreach ($household->members as $member)
                 <option value="{{ $member->id }}" @selected((int) old('household_member_id', $incomeRecord?->household_member_id) === $member->id) @disabled($member->has_no_income)>
@@ -18,7 +18,7 @@
 
     <div>
         <x-input-label for="income_source_id" value="Fonte de rendimento *" />
-        <select id="income_source_id" name="income_source_id" class="mt-1 w-full rounded-md border-gray-300 shadow-sm" required>
+        <select id="income_source_id" name="income_source_id" class="mv-input mt-1 w-full" required>
             <option value="">Selecione</option>
             @foreach ($incomeSources as $source)
                 <option value="{{ $source->id }}" @selected((int) old('income_source_id', $incomeRecord?->income_source_id) === $source->id)>{{ $source->name }}</option>
@@ -60,19 +60,19 @@
     </div>
 
     <div class="md:col-span-2 grid gap-3 sm:grid-cols-2">
-        <label class="flex items-center gap-3 rounded-md border border-ink-100 p-3 text-sm text-ink-700">
-            <input type="checkbox" name="is_current" value="1" class="rounded border-gray-300 text-civic-700" @checked(old('is_current', $incomeRecord?->is_current ?? true))>
+        <label class="flex items-center gap-3 rounded-2xl border border-ink-100 p-3 text-sm text-ink-700">
+            <input type="checkbox" name="is_current" value="1" class="mv-checkbox" @checked(old('is_current', $incomeRecord?->is_current ?? true))>
             Rendimento atual
         </label>
-        <label class="flex items-center gap-3 rounded-md border border-ink-100 p-3 text-sm text-ink-700">
-            <input type="checkbox" name="is_taxable" value="1" class="rounded border-gray-300 text-civic-700" @checked(old('is_taxable', $incomeRecord?->is_taxable ?? true))>
+        <label class="flex items-center gap-3 rounded-2xl border border-ink-100 p-3 text-sm text-ink-700">
+            <input type="checkbox" name="is_taxable" value="1" class="mv-checkbox" @checked(old('is_taxable', $incomeRecord?->is_taxable ?? true))>
             Sujeito a tributação
         </label>
     </div>
 
     <div class="md:col-span-2">
         <x-input-label for="notes" value="Observações" />
-        <textarea id="notes" name="notes" rows="4" class="mt-1 w-full rounded-md border-gray-300 shadow-sm">{{ old('notes', $incomeRecord?->notes) }}</textarea>
+        <textarea id="notes" name="notes" rows="4" class="mv-input mt-1 w-full">{{ old('notes', $incomeRecord?->notes) }}</textarea>
         <x-input-error :messages="$errors->get('notes')" class="mt-2" />
     </div>
 </div>
