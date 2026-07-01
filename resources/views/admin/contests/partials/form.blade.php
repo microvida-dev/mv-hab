@@ -18,7 +18,7 @@
 <div class="grid gap-6 lg:grid-cols-2">
     <div>
         <x-input-label for="program_id" value="Programa" />
-        <select id="program_id" name="program_id" class="mt-1 block w-full rounded-md border-ink-100 focus:border-civic-500 focus:ring-civic-500" required>
+        <select id="program_id" name="program_id" class="mv-input mt-1 block w-full" required>
             <option value="">Selecionar programa</option>
             @foreach ($programs as $programOption)
                 <option value="{{ $programOption->id }}" @selected(old('program_id', $contest->program_id ?? request('program_id')) == $programOption->id)>
@@ -47,17 +47,17 @@
 
     <div class="lg:col-span-2">
         <x-input-label for="summary" value="Resumo público" />
-        <textarea id="summary" name="summary" rows="3" maxlength="500" class="mt-1 block w-full rounded-md border-ink-100 focus:border-civic-500 focus:ring-civic-500" required>{{ old('summary', $contest->summary ?? '') }}</textarea>
+        <textarea id="summary" name="summary" rows="3" maxlength="500" class="mv-input mt-1 block w-full" required>{{ old('summary', $contest->summary ?? '') }}</textarea>
     </div>
 
     <div class="lg:col-span-2">
         <x-input-label for="description" value="Descrição pública" />
-        <textarea id="description" name="description" rows="7" class="mt-1 block w-full rounded-md border-ink-100 focus:border-civic-500 focus:ring-civic-500" required>{{ old('description', $contest->description ?? '') }}</textarea>
+        <textarea id="description" name="description" rows="7" class="mv-input mt-1 block w-full" required>{{ old('description', $contest->description ?? '') }}</textarea>
     </div>
 
     <div class="lg:col-span-2">
         <x-input-label for="application_instructions" value="Instruções de preparação" />
-        <textarea id="application_instructions" name="application_instructions" rows="5" class="mt-1 block w-full rounded-md border-ink-100 focus:border-civic-500 focus:ring-civic-500">{{ old('application_instructions', $contest->application_instructions ?? '') }}</textarea>
+        <textarea id="application_instructions" name="application_instructions" rows="5" class="mv-input mt-1 block w-full">{{ old('application_instructions', $contest->application_instructions ?? '') }}</textarea>
     </div>
 
     <div>
@@ -77,11 +77,11 @@
 
     <div class="mt-5 space-y-4">
         @foreach ($deadlineRows as $index => $deadline)
-            <div class="rounded-lg border border-ink-100 bg-ink-50 p-4">
+            <div class="rounded-2xl border border-ink-100 bg-ink-50 p-4">
                 <div class="grid gap-4 lg:grid-cols-2">
                     <div>
                         <x-input-label :for="'deadline_'.$index.'_type'" :value="'Prazo '.($index + 1)" />
-                        <select id="deadline_{{ $index }}_type" name="deadlines[{{ $index }}][type]" class="mt-1 block w-full rounded-md border-ink-100 focus:border-civic-500 focus:ring-civic-500">
+                        <select id="deadline_{{ $index }}_type" name="deadlines[{{ $index }}][type]" class="mv-input mt-1 block w-full">
                             <option value="">Selecionar tipo</option>
                             @foreach ($deadlineTypes as $value => $label)
                                 <option value="{{ $value }}" @selected(($deadline['type'] ?? '') === $value)>{{ $label }}</option>
@@ -101,7 +101,7 @@
                         <x-text-input :id="'deadline_'.$index.'_ends'" :name="'deadlines['.$index.'][ends_at]'" type="datetime-local" class="mt-1 block w-full" :value="$deadline['ends_at'] ?? ''" />
                     </div>
                     <div class="lg:col-span-2">
-                        <textarea name="deadlines[{{ $index }}][description]" rows="2" class="block w-full rounded-md border-ink-100 focus:border-civic-500 focus:ring-civic-500" placeholder="Descrição opcional">{{ $deadline['description'] ?? '' }}</textarea>
+                        <textarea name="deadlines[{{ $index }}][description]" rows="2" class="mv-input block w-full" placeholder="Descrição opcional">{{ $deadline['description'] ?? '' }}</textarea>
                     </div>
                 </div>
             </div>
@@ -115,9 +115,9 @@
 
     <div class="mt-5 grid gap-4 lg:grid-cols-2">
         @foreach ($juryRows as $index => $member)
-            <div class="rounded-lg border border-ink-100 bg-ink-50 p-4">
+            <div class="rounded-2xl border border-ink-100 bg-ink-50 p-4">
                 <x-input-label :for="'jury_'.$index.'_user'" :value="'Membro '.($index + 1)" />
-                <select id="jury_{{ $index }}_user" name="jury_members[{{ $index }}][user_id]" class="mt-1 block w-full rounded-md border-ink-100 focus:border-civic-500 focus:ring-civic-500">
+                <select id="jury_{{ $index }}_user" name="jury_members[{{ $index }}][user_id]" class="mv-input mt-1 block w-full">
                     <option value="">Selecionar utilizador</option>
                     @foreach ($juryUsers as $juryUser)
                         <option value="{{ $juryUser->id }}" @selected(($member['user_id'] ?? null) == $juryUser->id)>{{ $juryUser->name }} · {{ $juryUser->email }}</option>

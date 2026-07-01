@@ -12,7 +12,7 @@
 <div class="grid gap-6 lg:grid-cols-2">
     <div>
         <x-input-label for="municipality_id" value="Município" />
-        <select id="municipality_id" name="municipality_id" class="mt-1 block w-full rounded-md border-ink-100 focus:border-civic-500 focus:ring-civic-500" required>
+        <select id="municipality_id" name="municipality_id" class="mv-input mt-1 block w-full" required>
             <option value="">Selecionar município</option>
             @foreach ($municipalities as $municipality)
                 <option value="{{ $municipality->id }}" @selected(old('municipality_id', $program->municipality_id ?? null) == $municipality->id)>{{ $municipality->name }}</option>
@@ -36,19 +36,19 @@
 
     <div class="lg:col-span-2">
         <x-input-label for="summary" value="Resumo público" />
-        <textarea id="summary" name="summary" rows="3" maxlength="500" class="mt-1 block w-full rounded-md border-ink-100 focus:border-civic-500 focus:ring-civic-500" required>{{ old('summary', $program->summary ?? '') }}</textarea>
+        <textarea id="summary" name="summary" rows="3" maxlength="500" class="mv-input mt-1 block w-full" required>{{ old('summary', $program->summary ?? '') }}</textarea>
         <x-input-error :messages="$errors->get('summary')" class="mt-2" />
     </div>
 
     <div class="lg:col-span-2">
         <x-input-label for="description" value="Descrição pública" />
-        <textarea id="description" name="description" rows="7" class="mt-1 block w-full rounded-md border-ink-100 focus:border-civic-500 focus:ring-civic-500" required>{{ old('description', $program->description ?? '') }}</textarea>
+        <textarea id="description" name="description" rows="7" class="mv-input mt-1 block w-full" required>{{ old('description', $program->description ?? '') }}</textarea>
         <x-input-error :messages="$errors->get('description')" class="mt-2" />
     </div>
 
     <div class="lg:col-span-2">
         <x-input-label for="legal_basis" value="Enquadramento legal" />
-        <textarea id="legal_basis" name="legal_basis" rows="4" class="mt-1 block w-full rounded-md border-ink-100 focus:border-civic-500 focus:ring-civic-500">{{ old('legal_basis', $program->legal_basis ?? '') }}</textarea>
+        <textarea id="legal_basis" name="legal_basis" rows="4" class="mv-input mt-1 block w-full">{{ old('legal_basis', $program->legal_basis ?? '') }}</textarea>
         <x-input-error :messages="$errors->get('legal_basis')" class="mt-2" />
     </div>
 
@@ -71,14 +71,14 @@
 
     <div class="mt-5 space-y-4">
         @foreach ($ruleRows as $index => $rule)
-            <div class="rounded-lg border border-ink-100 bg-ink-50 p-4">
+            <div class="rounded-2xl border border-ink-100 bg-ink-50 p-4">
                 <div class="grid gap-4 lg:grid-cols-2">
                     <div class="lg:col-span-2">
                         <x-input-label :for="'rules_'.$index.'_title'" :value="'Regra '.($index + 1)" />
                         <x-text-input :id="'rules_'.$index.'_title'" :name="'rules['.$index.'][title]'" class="mt-1 block w-full" :value="$rule['title'] ?? ''" />
                     </div>
                     <div class="lg:col-span-2">
-                        <textarea name="rules[{{ $index }}][description]" rows="3" class="block w-full rounded-md border-ink-100 focus:border-civic-500 focus:ring-civic-500" placeholder="Descrição da regra">{{ $rule['description'] ?? '' }}</textarea>
+                        <textarea name="rules[{{ $index }}][description]" rows="3" class="mv-input block w-full" placeholder="Descrição da regra">{{ $rule['description'] ?? '' }}</textarea>
                     </div>
                     <div>
                         <x-input-label :for="'rules_'.$index.'_from'" value="Vigência desde" />

@@ -18,14 +18,14 @@
 
     <div>
         <x-input-label for="description" value="Descrição" />
-        <textarea id="description" name="description" rows="3" class="mt-1 block w-full rounded-md border-ink-300 shadow-sm focus:border-civic-700 focus:ring-civic-700">{{ old('description', $documentType?->description) }}</textarea>
+        <textarea id="description" name="description" rows="3" class="mv-input mt-1 block w-full">{{ old('description', $documentType?->description) }}</textarea>
         <x-input-error class="mt-2" :messages="$errors->get('description')" />
     </div>
 
     <div class="grid gap-4 sm:grid-cols-2">
         <div>
             <x-input-label for="category" value="Categoria" />
-            <select id="category" name="category" class="mt-1 block w-full rounded-md border-ink-300 text-sm shadow-sm focus:border-civic-700 focus:ring-civic-700" required>
+            <select id="category" name="category" class="mv-input mt-1 block w-full text-sm" required>
                 @foreach ($categories as $value => $label)
                     <option value="{{ $value }}" @selected(old('category', $documentType?->category?->value) === $value)>{{ $label }}</option>
                 @endforeach
@@ -34,7 +34,7 @@
         </div>
         <div>
             <x-input-label for="applies_to" value="Aplica-se a" />
-            <select id="applies_to" name="applies_to" class="mt-1 block w-full rounded-md border-ink-300 text-sm shadow-sm focus:border-civic-700 focus:ring-civic-700" required>
+            <select id="applies_to" name="applies_to" class="mv-input mt-1 block w-full text-sm" required>
                 @foreach ($appliesTo as $value => $label)
                     <option value="{{ $value }}" @selected(old('applies_to', $documentType?->applies_to?->value) === $value)>{{ $label }}</option>
                 @endforeach
@@ -63,9 +63,9 @@
             'requires_issue_date' => 'Exige data de emissão',
             'requires_expiry_date' => 'Exige data de validade',
         ] as $field => $label)
-            <label class="flex items-center gap-2 rounded-md border border-ink-100 p-3 text-sm text-ink-700">
+            <label class="flex items-center gap-2 rounded-2xl border border-mvhab-support/30 bg-mvhab-surface p-3 text-sm text-ink-700">
                 <input type="hidden" name="{{ $field }}" value="0">
-                <input type="checkbox" name="{{ $field }}" value="1" class="rounded border-ink-300 text-civic-700 focus:ring-civic-700" @checked(old($field, $documentType?->{$field} ?? ($field === 'is_active')))>
+                <input type="checkbox" name="{{ $field }}" value="1" class="mv-checkbox" @checked(old($field, $documentType?->{$field} ?? ($field === 'is_active')))>
                 <span>{{ $label }}</span>
             </label>
         @endforeach
@@ -75,8 +75,8 @@
         <x-input-label value="Mime types permitidos" />
         <div class="mt-2 grid gap-2 sm:grid-cols-2">
             @foreach ($mimeTypes as $mime => $label)
-                <label class="flex items-center gap-2 rounded-md border border-ink-100 p-3 text-sm text-ink-700">
-                    <input type="checkbox" name="allowed_mime_types[]" value="{{ $mime }}" class="rounded border-ink-300 text-civic-700 focus:ring-civic-700" @checked(in_array($mime, $selectedMimeTypes ?? [], true))>
+                <label class="flex items-center gap-2 rounded-2xl border border-mvhab-support/30 bg-mvhab-surface p-3 text-sm text-ink-700">
+                    <input type="checkbox" name="allowed_mime_types[]" value="{{ $mime }}" class="mv-checkbox" @checked(in_array($mime, $selectedMimeTypes ?? [], true))>
                     <span>{{ $label }}</span>
                 </label>
             @endforeach
