@@ -17,8 +17,8 @@
         @foreach ($steps as $step)
             <li>
                 <a href="{{ route($step['route']) }}"
-                   class="flex min-h-14 items-center gap-2 border-b-2 px-3 text-sm font-semibold {{ request()->routeIs($step['active']) ? 'border-civic-700 text-civic-900' : 'border-transparent text-ink-500 hover:text-ink-900' }}">
-                    <span class="flex h-6 w-6 items-center justify-center rounded-md {{ $step['complete'] ? 'bg-civic-50 text-civic-700' : 'bg-ink-100 text-ink-500' }}">
+                   class="flex min-h-14 items-center gap-2 border-b-2 px-3 text-sm font-semibold {{ request()->routeIs($step['active']) ? 'border-mvhab-primary text-mvhab-primary' : 'border-transparent text-ink-500 hover:text-ink-900' }}">
+                    <span class="flex h-6 w-6 items-center justify-center rounded-2xl {{ $step['complete'] ? 'bg-mvhab-surface text-mvhab-primary' : 'bg-ink-100 text-ink-500' }}">
                         <x-ui-icon :name="$step['complete'] ? 'check' : 'arrow'" class="h-3.5 w-3.5" />
                     </span>
                     {{ $loop->iteration }}. {{ $step['label'] }}
