@@ -41,4 +41,12 @@ enum TimelineType: string
     case ContractActive = 'contract-active';
     case ContractSuspended = 'contract-suspended';
     case ContractTerminated = 'contract-terminated';
+    case TenantTransitionPending = 'tenant-transition-pending';
+    case TenantTransitionCompleted = 'tenant-transition-completed';
+    case TenantInvoiceDue = 'tenant-invoice-due';
+    case TenantInvoiceOverdue = 'tenant-invoice-overdue';
+    case TenantPaymentRegistered = 'tenant-payment-registered';
+    case TenantPaymentConfirmed = 'tenant-payment-confirmed';
+    case TenantCommunicationOpen = 'tenant-communication-open';
+    case TenantCommunicationAwaitingMunicipality = 'tenant-communication-awaiting-municipality';
 }

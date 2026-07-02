@@ -21,6 +21,7 @@ use App\Services\Dashboard\Timeline\Providers\LotteryTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\RentTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\DocumentTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\ContractTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\TenantOperationsTimelineProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -47,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
             new RentTimelineProvider(),
             new DocumentTimelineProvider(),
             new ContractTimelineProvider(),
+            new TenantOperationsTimelineProvider(),
         ]));
     }
 
