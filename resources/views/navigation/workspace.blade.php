@@ -1,21 +1,33 @@
 <x-app-layout>
     <x-slot name="header">
-        <x-ui.page-header
-            eyebrow="Espaço de Trabalho Municipal"
-            :title="$workspace['title']"
-            :description="$workspace['description']"
-        >
-            <x-slot name="actions">
-                <form method="POST" action="{{ route('navigation.favorites.store') }}">
-                    @csrf
-                    <input type="hidden" name="workspace_key" value="{{ $workspace['key'] }}">
-                    <x-ui.action-button type="submit">
-                        <x-ui-icon name="check" class="h-4 w-4" />
-                        <span>Fixar espaço</span>
-                    </x-ui.action-button>
-                </form>
-            </x-slot>
-        </x-ui.page-header>
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-start gap-4">
+                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
+                    <x-mv-icon :name="$workspace['icon'] ?? 'dashboard'" size="lg" />
+                </span>
+
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-mvhab-primary">
+                        Espaço de Trabalho Municipal
+                    </p>
+                    <h1 class="mt-1 text-2xl font-semibold tracking-tight text-ink-950">
+                        {{ $workspace['title'] }}
+                    </h1>
+                    <p class="mt-2 max-w-3xl text-sm leading-6 text-ink-600">
+                        {{ $workspace['description'] }}
+                    </p>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ route('navigation.favorites.store') }}">
+                @csrf
+                <input type="hidden" name="workspace_key" value="{{ $workspace['key'] }}">
+                <x-ui.action-button type="submit">
+                    <x-mv-icon name="check" size="sm" />
+                    <span>Fixar espaço</span>
+                </x-ui.action-button>
+            </form>
+        </div>
     </x-slot>
 
     <div class="py-8">
