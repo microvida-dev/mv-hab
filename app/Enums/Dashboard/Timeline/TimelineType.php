@@ -28,4 +28,7 @@ enum TimelineType: string
     case LotteryReady = 'lottery-ready';
     case LotteryCompleted = 'lottery-completed';
     case LotteryValidated = 'lottery-validated';
+    case RentDue = 'rent-due';
+    case RentOverdue = 'rent-overdue';
+    case LeasePaymentReceived = 'lease-payment-received';
 }

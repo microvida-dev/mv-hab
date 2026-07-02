@@ -18,6 +18,7 @@ use App\Services\Dashboard\Timeline\Providers\RgpdTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\InternalAlertTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\AllocationTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\LotteryTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\RentTimelineProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
             new RgpdTimelineProvider(),
             new InternalAlertTimelineProvider(),
             new LotteryTimelineProvider(),
+            new RentTimelineProvider(),
         ]));
     }
 
