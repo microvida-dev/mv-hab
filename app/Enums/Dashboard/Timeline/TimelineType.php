@@ -36,4 +36,9 @@ enum TimelineType: string
     case DocumentDossierIncomplete = 'document-dossier-incomplete';
     case AdditionalDocumentRequested = 'additional-document-requested';
     case AdditionalDocumentSubmitted = 'additional-document-submitted';
+    case ContractIssued = 'contract-issued';
+    case ContractSigned = 'contract-signed';
+    case ContractActive = 'contract-active';
+    case ContractSuspended = 'contract-suspended';
+    case ContractTerminated = 'contract-terminated';
 }
