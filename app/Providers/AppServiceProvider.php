@@ -17,6 +17,7 @@ use App\Services\Dashboard\Timeline\Providers\KeyHandoverTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\RgpdTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\InternalAlertTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\AllocationTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\LotteryTimelineProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
             new KeyHandoverTimelineProvider(),
             new RgpdTimelineProvider(),
             new InternalAlertTimelineProvider(),
+            new LotteryTimelineProvider(),
         ]));
     }
 

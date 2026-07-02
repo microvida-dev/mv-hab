@@ -24,4 +24,8 @@ enum TimelineType: string
     case AllocationOffer = 'allocation-offer';
     case AllocationAccepted = 'allocation-accepted';
     case AllocationReadyForContract = 'allocation-ready-for-contract';
+    case LotteryScheduled = 'lottery-scheduled';
+    case LotteryReady = 'lottery-ready';
+    case LotteryCompleted = 'lottery-completed';
+    case LotteryValidated = 'lottery-validated';
 }

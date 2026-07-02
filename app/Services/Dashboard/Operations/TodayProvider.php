@@ -19,6 +19,7 @@ use App\Services\Dashboard\Timeline\Providers\InternalAlertTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\KeyHandoverTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\MaintenanceTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\RgpdTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\LotteryTimelineProvider;
 
 class TodayProvider
 {
@@ -70,6 +71,7 @@ class TodayProvider
             new MaintenanceTimelineProvider(),
             new ApplicationTimelineProvider(),
             new AllocationTimelineProvider(),
+            new LotteryTimelineProvider(),
             new KeyHandoverTimelineProvider(),
             new RgpdTimelineProvider(),
             new InternalAlertTimelineProvider(),
