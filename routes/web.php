@@ -762,6 +762,9 @@ Route::middleware('auth')->group(function () {
             Route::get('productivity', BackofficeProductivityController::class)
                 ->name('productivity.index');
 
+            Route::get('agenda', [\App\Http\Controllers\Backoffice\AgendaController::class, 'index'])
+                ->name('agenda.index');
+
             Route::get('work-tasks/dashboard', BackofficeWorkTaskDashboardController::class)
                 ->name('work-tasks.dashboard');
             Route::get('work-tasks/my', [BackofficeWorkTaskController::class, 'my'])
