@@ -7,62 +7,32 @@
 
             <x-dashboard.operations.hero :user="Auth::user()" />
 
+            <x-dashboard.operations.summary
+                :dashboard="$dashboard"
+                :productivity="$productivity"
+            />
+
             <x-search.universal-search :groups="$searchGroups" />
 
             <x-dashboard.profile-dashboard :dashboard="$dashboard" />
 
             @if (($productivity['enabled'] ?? false) === true)
-                <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
-                    <x-productivity.next-case :next-case="$productivity['next_case'] ?? null" />
-
-                    <x-ui.card>
-                        <div class="flex h-full flex-col justify-between gap-4">
-                            <div>
-                                <p class="mv-card-title">
-                                    {{ $productivity['notification_summary']['label'] ?? 'Caixa de Entrada Municipal' }}
-                                </p>
-                                <p class="mv-section-description">
-                                    {{ $productivity['notification_summary']['description'] ?? 'Sem notificações operacionais autorizadas.' }}
-                                </p>
-                            </div>
-
-                            <x-ui.action-button :href="route('backoffice.productivity.index')">
-                                <x-ui-icon name="bolt" class="h-4 w-4" />
-                                <span>Abrir produtividade</span>
-                            </x-ui.action-button>
-                        </div>
-                    </x-ui.card>
-                </section>
-
-                <x-productivity.action-center :sections="$productivity['action_center'] ?? []" compact />
+                <x-productivity.action-center
+                    :sections="$productivity['action_center'] ?? []"
+                    compact
+                />
             @endif
 
-            <section>
-                <x-ui.section-header
-                    class="mb-4"
-                    title="Indicadores do perfil"
-                    description="Contagens agregadas e autorizadas para orientar a operação diária."
-                />
+            <x-dashboard.operations.workspace-section
+                :workspaces="$workspaces"
+                :favorites="$favorites"
+            />
 
-                @if (($dashboard['metrics'] ?? []) !== [])
-                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                        @foreach ($dashboard['metrics'] as $metric)
-                            <x-dashboard.kpi-card :metric="$metric" />
-                        @endforeach
-                    </div>
-                @else
-                    <x-dashboard.empty-state
-                        title="Sem indicadores disponíveis"
-                        description="Não existem KPIs autorizados ou dados operacionais para apresentar neste momento."
-                    />
-                @endif
-            </section>
-
-            <x-dashboard.operations.workspace-section :workspaces="$workspaces" :favorites="$favorites" />
-
-            <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+            <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
                 <div class="space-y-6">
-                  <x-dashboard.operations.action-section :quick-actions="$quickActions" />
+                    <x-dashboard.operations.today :dashboard="$dashboard" />
+
+                    <x-dashboard.operations.action-section :quick-actions="$quickActions" />
 
                     <section class="mv-card">
                         <div class="border-b border-ink-100 px-5 py-4">
@@ -86,7 +56,7 @@
                     <x-ui.card>
                         <div class="flex items-start gap-3">
                             <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
-                                <x-ui-icon name="alert" class="h-4 w-4" />
+                                <x-mv-icon name="bell" size="sm" />
                             </span>
 
                             <div>
