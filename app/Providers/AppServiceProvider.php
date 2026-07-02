@@ -19,6 +19,7 @@ use App\Services\Dashboard\Timeline\Providers\InternalAlertTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\AllocationTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\LotteryTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\RentTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\DocumentTimelineProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -43,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
             new InternalAlertTimelineProvider(),
             new LotteryTimelineProvider(),
             new RentTimelineProvider(),
+            new DocumentTimelineProvider(),
         ]));
     }
 

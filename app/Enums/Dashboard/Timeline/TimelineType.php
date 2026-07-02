@@ -31,4 +31,9 @@ enum TimelineType: string
     case RentDue = 'rent-due';
     case RentOverdue = 'rent-overdue';
     case LeasePaymentReceived = 'lease-payment-received';
+    case DocumentSubmitted = 'document-submitted';
+    case DocumentUnderReview = 'document-under-review';
+    case DocumentDossierIncomplete = 'document-dossier-incomplete';
+    case AdditionalDocumentRequested = 'additional-document-requested';
+    case AdditionalDocumentSubmitted = 'additional-document-submitted';
 }
