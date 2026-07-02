@@ -331,6 +331,7 @@ class WorkspaceService
             'route' => 'workspaces.show',
             'parameters' => ['workspace' => $workspace],
             'active' => 'workspaces.show',
+            'icon' => 'dashboard',
             'workspace_dashboard' => true,
         ];
     }
@@ -346,10 +347,101 @@ class WorkspaceService
             'label' => $label,
             'route' => $route,
             'active' => $active,
+            'icon' => $this->iconFor($route, $active, $label),
             'permission' => $permission,
             'roles' => $roles,
             'model' => $model,
         ], fn (mixed $value): bool => $value !== null);
+    }
+
+    private function iconFor(string $route, string $active, string $label): string
+    {
+        $haystack = Str::lower($route.' '.$active.' '.$label);
+
+        return match (true) {
+            str_contains($haystack, 'dashboard'),
+            str_contains($haystack, 'painel'),
+            str_contains($haystack, 'kpi'),
+            str_contains($haystack, 'analítico'),
+            str_contains($haystack, 'executivo') => 'dashboard',
+
+            str_contains($haystack, 'program') => 'program',
+            str_contains($haystack, 'contest'),
+            str_contains($haystack, 'concurso') => 'contest',
+
+            str_contains($haystack, 'housing'),
+            str_contains($haystack, 'fogo'),
+            str_contains($haystack, 'habitaç'),
+            str_contains($haystack, 'patrim') => 'housing',
+
+            str_contains($haystack, 'simulator'),
+            str_contains($haystack, 'simulador') => 'simulator',
+
+            str_contains($haystack, 'document'),
+            str_contains($haystack, 'documental'),
+            str_contains($haystack, 'minuta'),
+            str_contains($haystack, 'cláusula'),
+            str_contains($haystack, 'publicaç') => 'document',
+
+            str_contains($haystack, 'payment'),
+            str_contains($haystack, 'pagamento'),
+            str_contains($haystack, 'renda'),
+            str_contains($haystack, 'finance'),
+            str_contains($haystack, 'conta'),
+            str_contains($haystack, 'incumprimento') => 'payment',
+
+            str_contains($haystack, 'maintenance'),
+            str_contains($haystack, 'manutenção') => 'maintenance',
+
+            str_contains($haystack, 'inspection'),
+            str_contains($haystack, 'vistoria'),
+            str_contains($haystack, 'visit'),
+            str_contains($haystack, 'visita'),
+            str_contains($haystack, 'horário') => 'calendar',
+
+            str_contains($haystack, 'notification'),
+            str_contains($haystack, 'communication'),
+            str_contains($haystack, 'comunicaç'),
+            str_contains($haystack, 'alert'),
+            str_contains($haystack, 'ticket'),
+            str_contains($haystack, 'faq') => 'notification',
+
+            str_contains($haystack, 'security'),
+            str_contains($haystack, 'segurança'),
+            str_contains($haystack, 'mfa'),
+            str_contains($haystack, 'rgpd'),
+            str_contains($haystack, 'privacy'),
+            str_contains($haystack, 'auditoria'),
+            str_contains($haystack, 'acessos sensíveis'),
+            str_contains($haystack, 'permiss') => 'security',
+
+            str_contains($haystack, 'report'),
+            str_contains($haystack, 'relatório'),
+            str_contains($haystack, 'export') => 'report',
+
+            str_contains($haystack, 'contract'),
+            str_contains($haystack, 'contrato') => 'contract',
+
+            str_contains($haystack, 'allocation'),
+            str_contains($haystack, 'atribui'),
+            str_contains($haystack, 'oferta'),
+            str_contains($haystack, 'sorteio'),
+            str_contains($haystack, 'suplente') => 'contest',
+
+            str_contains($haystack, 'user'),
+            str_contains($haystack, 'utilizador'),
+            str_contains($haystack, 'perfil'),
+            str_contains($haystack, 'role'),
+            str_contains($haystack, 'equipa'),
+            str_contains($haystack, 'munícipe'),
+            str_contains($haystack, 'agregado') => 'profile',
+
+            str_contains($haystack, 'task'),
+            str_contains($haystack, 'tarefa'),
+            str_contains($haystack, 'produtividade') => 'status',
+
+            default => 'dashboard',
+        };
     }
 
     /**
@@ -409,6 +501,7 @@ class WorkspaceService
                     'route' => 'workspaces.show',
                     'parameters' => ['workspace' => $workspace['key']],
                     'active' => 'workspaces.show',
+                    'icon' => 'dashboard',
                 ],
                 $this->availableFor($user),
             )),
