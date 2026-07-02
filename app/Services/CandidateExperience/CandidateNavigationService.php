@@ -112,9 +112,9 @@ class CandidateNavigationService
             'Área do inquilino' => [
                 $this->link('Área do Inquilino', 'tenant.dashboard', 'tenant.dashboard', 'home'),
                 $this->link('Contratos', 'tenant.contracts.index', 'tenant.contracts.*', 'document'),
-                $this->link('Pagamentos', 'tenant.payments.index', 'tenant.payments.*', 'wallet'),
+                $this->link('Pagamentos', 'tenant.payments.index', 'tenant.payments.*', 'payment'),
                 $this->link('Vistorias', 'tenant.inspections.index', 'tenant.inspections.*', 'check'),
-                $this->link('Manutenção', 'tenant.maintenance.index', 'tenant.maintenance.*', 'tool'),
+                $this->link('Manutenção', 'tenant.maintenance.index', 'tenant.maintenance.*', 'maintenance'),
                 $this->link('Comunicações', 'tenant.communications.index', 'tenant.communications.*', 'document'),
             ],
         ];
