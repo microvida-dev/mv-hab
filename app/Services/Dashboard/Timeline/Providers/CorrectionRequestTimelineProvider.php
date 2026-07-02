@@ -48,9 +48,11 @@ class CorrectionRequestTimelineProvider implements TimelineProviderInterface
                     ? 'Pedido de aperfeiçoamento expirado'
                     : 'Pedido de aperfeiçoamento com prazo próximo',
                 description: trim(($request->request_number ?? 'Pedido').' · prazo '.$request->response_deadline_at?->format('d/m/Y H:i')),
-                route: 'backoffice.correction-requests.show',
+                route: route('backoffice.correction-requests.show', [
+                    'correctionRequest' => $request->getKey(),
+                ]),
                 datetime: $request->response_deadline_at,
-                priority: $request->response_deadline_at?->isPast() ? 'critical' : 'high',
+                priority: $request->response_deadline_at?->isPast() ? TimelinePriority::Critical : TimelinePriority::High,
                 icon: 'document',
                 tone: $request->response_deadline_at?->isPast() ? 'danger' : 'warning',
                 workspace: TimelineWorkspace::Applications,
@@ -77,7 +79,9 @@ class CorrectionRequestTimelineProvider implements TimelineProviderInterface
                 type: TimelineType::CorrectionResponse,
                 title: 'Resposta a aperfeiçoamento por analisar',
                 description: trim('Resposta submetida · '.$response->submitted_at?->format('d/m/Y H:i')),
-                route: 'backoffice.correction-responses.show',
+                route: route('backoffice.correction-responses.show', [
+                    'correctionResponse' => $response->getKey(),
+                ]),
                 datetime: $response->submitted_at,
                 priority: TimelinePriority::High,
                 icon: 'document-check',

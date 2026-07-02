@@ -47,9 +47,11 @@ class HearingTimelineProvider implements TimelineProviderInterface
                     ? 'Audiência prévia expirada'
                     : 'Audiência prévia com prazo próximo',
                 description: trim(($hearing->hearing_number ?? 'Audiência').' · '.$hearing->subject),
-                route: 'backoffice.hearings.show',
+                route: route('backoffice.hearings.show', [
+                    'hearing' => $hearing->getKey(),
+                ]),
                 datetime: $hearing->deadline_at,
-                priority: $hearing->deadline_at?->isPast() ? 'critical' : 'high',
+                priority: $hearing->deadline_at?->isPast() ? TimelinePriority::Critical : TimelinePriority::High,
                 icon: 'message',
                 tone: $hearing->deadline_at?->isPast() ? 'danger' : 'warning',
                 workspace: TimelineWorkspace::Contests,
@@ -76,7 +78,9 @@ class HearingTimelineProvider implements TimelineProviderInterface
                 type: TimelineType::HearingSubmission,
                 title: 'Pronúncia em audiência por analisar',
                 description: trim('Pronúncia submetida · '.$submission->submitted_at?->format('d/m/Y H:i')),
-                route: 'backoffice.hearing-submissions.show',
+                route: route('backoffice.hearing-submissions.show', [
+                    'hearingSubmission' => $submission->getKey(),
+                ]),
                 datetime: $submission->submitted_at,
                 priority: TimelinePriority::High,
                 icon: 'message',
