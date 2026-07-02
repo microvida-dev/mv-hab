@@ -34,7 +34,7 @@ class AgendaController extends Controller
         );
 
         return view('backoffice.agenda.index', [
-            'agenda' => $this->agenda->build($request->user(), $filters)->toArray(),
+            'agenda' => $this->agenda->build($request->user(), $filters),
             'filters' => [
                 'view' => $view->value,
                 'date' => $filters->from?->toDateString(),

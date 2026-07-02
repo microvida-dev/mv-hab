@@ -6,6 +6,8 @@
 
         <x-agenda.summary-ribbon :summary="$summary" :agenda="$agenda" :filters="$filters" />
 
+        <x-agenda.next-action :event="$agenda['nextAction'] ?? null" />
+
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
             <section class="rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm">
                 <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
