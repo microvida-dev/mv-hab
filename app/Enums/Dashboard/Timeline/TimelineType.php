@@ -17,4 +17,7 @@ enum TimelineType: string
     case ComplaintDecision = 'complaint-decision';
     case MaintenanceRequest = 'maintenance-request';
     case MaintenanceIntervention = 'maintenance-intervention';
+    case ApplicationSubmitted = 'application-submitted';
+    case KeyHandover = 'key-handover';
+    case RgpdRequest = 'rgpd-request';
 }

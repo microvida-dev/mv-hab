@@ -12,6 +12,9 @@ use App\Services\Dashboard\Timeline\Providers\VisitTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\WorkTaskTimelineProvider;
 use App\Services\Dashboard\Timeline\TimelineAggregatorService;
 use App\Services\Dashboard\Timeline\Providers\MaintenanceTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\ApplicationTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\KeyHandoverTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\RgpdTimelineProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +32,18 @@ class AppServiceProvider extends ServiceProvider
             new ComplaintTimelineProvider(),
             new DeadlineTimelineProvider(),
             new MaintenanceTimelineProvider(),
+            new WorkTaskTimelineProvider(),
+            new VisitTimelineProvider(),
+            new InspectionTimelineProvider(),
+            new CorrectionRequestTimelineProvider(),
+            new HearingTimelineProvider(),
+            new ComplaintTimelineProvider(),
+            new DeadlineTimelineProvider(),
+            new MaintenanceTimelineProvider(),
+
+            new ApplicationTimelineProvider(),
+            new KeyHandoverTimelineProvider(),
+            new RgpdTimelineProvider(),
         ]));
     }
 

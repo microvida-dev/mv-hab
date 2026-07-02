@@ -51,6 +51,13 @@ class NextActionResolver
             TimelineType::Visit => 40,
 
             TimelineType::Deadline => 50,
+
+            TimelineType::RgpdRequest => 15,
+
+            TimelineType::ApplicationSubmitted,
+            TimelineType::KeyHandover,
+            TimelineType::MaintenanceRequest,
+            TimelineType::MaintenanceIntervention => 25,
         };
     }
 }
