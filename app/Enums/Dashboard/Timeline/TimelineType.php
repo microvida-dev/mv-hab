@@ -20,4 +20,5 @@ enum TimelineType: string
     case ApplicationSubmitted = 'application-submitted';
     case KeyHandover = 'key-handover';
     case RgpdRequest = 'rgpd-request';
+    case InternalAlert = 'internal-alert';
 }

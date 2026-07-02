@@ -15,6 +15,7 @@ use App\Services\Dashboard\Timeline\Providers\MaintenanceTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\ApplicationTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\KeyHandoverTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\RgpdTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\InternalAlertTimelineProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
             new ApplicationTimelineProvider(),
             new KeyHandoverTimelineProvider(),
             new RgpdTimelineProvider(),
+            new InternalAlertTimelineProvider(),
         ]));
     }
 

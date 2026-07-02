@@ -58,6 +58,9 @@ class NextActionResolver
             TimelineType::KeyHandover,
             TimelineType::MaintenanceRequest,
             TimelineType::MaintenanceIntervention => 25,
+
+            TimelineType::InternalAlert,
+            TimelineType::RgpdRequest => 15,
         };
     }
 }
