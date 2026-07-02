@@ -17,7 +17,7 @@
     <div class="{{ $loop->first ? '' : 'mt-7' }}">
         <p
             class="px-3 text-xs font-semibold uppercase text-ink-500"
-            x-show="!collapsed"
+            x-show="!sidebarCollapsed"
             x-transition.opacity
         >
             {{ $group['label'] }}
@@ -51,7 +51,7 @@
                             'bg-mvhab-surface text-mvhab-primary' => $isActive,
                             'text-ink-600 hover:bg-mvhab-surface hover:text-ink-900' => ! $isActive,
                         ])
-                        x-bind:class="collapsed ? 'justify-center px-3 py-3' : 'gap-3 px-3 py-2'"
+                        x-bind:class="sidebarCollapsed ? 'justify-center px-3 py-3' : 'gap-3 px-3 py-2'"
                     >
                         <span class="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden">
                             <x-mv-icon :name="$iconName" size="md" class="h-6 w-6" />
@@ -59,14 +59,14 @@
 
                         <span
                             class="truncate"
-                            x-show="!collapsed"
+                            x-show="!sidebarCollapsed"
                             x-transition.opacity
                         >
                             {{ $link['label'] }}
                         </span>
 
                         <span
-                            x-show="collapsed"
+                            x-show="sidebarCollapsed"
                             x-cloak
                             class="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-xl bg-ink-900 px-3 py-2 text-xs font-semibold text-white opacity-0 shadow-lg transition group-hover:opacity-100"
                         >
