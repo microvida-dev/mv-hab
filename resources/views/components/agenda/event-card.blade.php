@@ -26,6 +26,15 @@
     $cardStyle = $workspaceStyles[$workspace] ?? $workspaceStyles['administration'];
     $priorityStyle = $priorityStyles[$priority] ?? $priorityStyles['medium'];
 
+    $eventRoute = $event['route'] ?? null;
+    $eventHref = null;
+
+    if ($eventRoute) {
+        $eventHref = \Illuminate\Support\Str::startsWith($eventRoute, ['http://', 'https://', '/'])
+            ? $eventRoute
+            : route($eventRoute);
+    }
+
     $references = [
         'Tarefa' => $metadata['task_number'] ?? null,
         'Visita' => $metadata['visit_number'] ?? null,
@@ -105,8 +114,8 @@
             @endif
 
             <div class="mt-4 flex flex-wrap gap-2">
-                @if (! empty($event['route']))
-                    <a href="{{ route($event['route']) }}" class="rounded-2xl bg-blue-600 px-4 py-2 text-xs font-black text-white transition hover:bg-blue-700">
+                @if ($eventHref)
+                    <a href="{{ $eventHref }}" class="rounded-2xl bg-blue-600 px-4 py-2 text-xs font-black text-white transition hover:bg-blue-700">
                         Abrir
                     </a>
                 @endif

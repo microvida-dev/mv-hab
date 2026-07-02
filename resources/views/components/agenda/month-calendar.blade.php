@@ -29,9 +29,13 @@
                                 @foreach (collect($day['events'])->take(3) as $event)
                                     @php
                                         $eventRoute = $event['route'] ?? null;
-                                        $eventHref = $eventRoute
-                                            ? (str_starts_with($eventRoute, 'http') ? $eventRoute : route($eventRoute))
-                                            : '#';
+                                        $eventHref = null;
+
+                                        if ($eventRoute) {
+                                            $eventHref = \Illuminate\Support\Str::startsWith($eventRoute, ['http://', 'https://', '/'])
+                                                ? $eventRoute
+                                                : route($eventRoute);
+                                        }
                                     @endphp
 
                                     <a href="{{ $eventHref }}"
