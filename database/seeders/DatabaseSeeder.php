@@ -11,7 +11,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             SystemAccessSeeder::class,
             MunicipalTeamSeeder::class,
-            UserSeeder::class,
             ProgramSeeder::class,
             IncomeSourceSeeder::class,
             DocumentTypeSeeder::class,
@@ -32,11 +31,6 @@ class DatabaseSeeder extends Seeder
             ReportDefinitionSeeder::class,
             SecurityRgpdSeeder::class,
             SimulatorConfigurationSeeder::class,
-            DemoAlcanenaAffordableRentSeeder::class,
-            Sprint24BackofficeOperationalSeeder::class,
-            HousingUnitSeeder::class,
-            CitizenSeeder::class,
-            DemoDataSeeder::class,
         ]);
     }
 }

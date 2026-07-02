@@ -3,6 +3,14 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Services\Dashboard\Timeline\Providers\ComplaintTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\CorrectionRequestTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\DeadlineTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\HearingTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\InspectionTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\VisitTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\WorkTaskTimelineProvider;
+use App\Services\Dashboard\Timeline\TimelineAggregatorService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -11,7 +19,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(TimelineAggregatorService::class, fn () => new TimelineAggregatorService([
+            new WorkTaskTimelineProvider(),
+            new VisitTimelineProvider(),
+            new InspectionTimelineProvider(),
+            new CorrectionRequestTimelineProvider(),
+            new HearingTimelineProvider(),
+            new ComplaintTimelineProvider(),
+            new DeadlineTimelineProvider(),
+        ]));
     }
 
     /**

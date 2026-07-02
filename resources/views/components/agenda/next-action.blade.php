@@ -11,6 +11,15 @@
 
         $priority = $event['priority'] ?? 'medium';
         $priorityStyle = $priorityStyles[$priority] ?? $priorityStyles['medium'];
+
+        $eventRoute = $event['route'] ?? null;
+        $eventHref = null;
+
+        if ($eventRoute) {
+            $eventHref = \Illuminate\Support\Str::startsWith($eventRoute, ['http://', 'https://', '/'])
+                ? $eventRoute
+                : route($eventRoute);
+        }
     @endphp
 
     <section class="rounded-[2rem] border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-slate-50 p-6 shadow-sm">
@@ -62,8 +71,9 @@
                 </div>
             </div>
 
-            @if (! empty($event['route']))
-                <a href="{{ route($event['route']) }}" class="inline-flex shrink-0 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-blue-700">
+            @if ($eventHref)
+                <a href="{{ $eventHref }}"
+                    class="inline-flex shrink-0 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-blue-700">
                     Abrir processo →
                 </a>
             @endif

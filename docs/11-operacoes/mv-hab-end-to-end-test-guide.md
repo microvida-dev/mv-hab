@@ -14,16 +14,28 @@ php -d memory_limit=-1 ./vendor/bin/phpunit --configuration phpunit.xml
 npm run build
 ```
 
-Opcionalmente preparar utilizadores funcionais fictícios para teste local:
+Opcionalmente preparar utilizadores funcionais fictícios para teste local simples:
 
 ```bash
 php artisan db:seed --class=MunicipalEndToEndWorkflowSeeder
 ```
 
-Se for necessário autenticar diretamente com esses utilizadores no ambiente local, definir previamente uma password apenas no ambiente local:
+Para validar a plataforma no estado da arte, com candidaturas em vários estados, documentos, IA documental fictícia, elegibilidade, pontuação, listas, atribuição, contrato, inquilino, manutenção, vistorias, open house, tickets, Work Tasks, auditoria e RGPD, usar o seeder municipal completo:
 
 ```bash
-MVHAB_E2E_USER_PASSWORD="SUBSTITUIR_LOCALMENTE" php artisan db:seed --class=MunicipalEndToEndWorkflowSeeder
+php artisan db:seed --class=Database\\Seeders\\MunicipalStateOfArtSeeder
+```
+
+Ver também:
+
+```text
+docs/13-dados-demo/municipal-state-of-art-seeder.md
+```
+
+Se for necessário autenticar diretamente com estes utilizadores no ambiente local, definir previamente uma password apenas no ambiente local:
+
+```bash
+MVHAB_E2E_USER_PASSWORD="SUBSTITUIR_LOCALMENTE" php artisan db:seed --class=Database\\Seeders\\MunicipalStateOfArtSeeder
 ```
 
 Nunca versionar a password em `.env`, documentação, screenshots ou artefactos.

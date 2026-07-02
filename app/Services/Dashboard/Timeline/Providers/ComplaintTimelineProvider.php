@@ -45,7 +45,7 @@ class ComplaintTimelineProvider implements TimelineProviderInterface
                 type: TimelineType::Complaint,
                 title: 'Reclamação por analisar',
                 description: trim(($complaint->complaint_number ?? 'Reclamação').' · '.$complaint->subject),
-                route: 'backoffice.complaints.show',
+                route: route('backoffice.complaints.show', ['complaint' => $complaint->getKey()]),
                 datetime: $complaint->submitted_at ?? $complaint->received_at ?? $complaint->created_at,
                 priority: $complaint->assigned_to
                     ? TimelinePriority::High
@@ -79,7 +79,7 @@ class ComplaintTimelineProvider implements TimelineProviderInterface
                     ? 'Informação adicional de reclamação expirada'
                     : 'Informação adicional de reclamação com prazo próximo',
                 description: trim(($complaint->complaint_number ?? 'Reclamação').' · '.$complaint->subject),
-                route: 'backoffice.complaints.show',
+                route: route('backoffice.complaints.show', ['complaint' => $complaint->getKey()]),
                 datetime: $complaint->additional_information_deadline_at,
                 priority: $complaint->additional_information_deadline_at?->isPast()
                     ? TimelinePriority::Critical
@@ -111,7 +111,7 @@ class ComplaintTimelineProvider implements TimelineProviderInterface
                 type: TimelineType::ComplaintDecision,
                 title: 'Decisão de reclamação pendente',
                 description: trim(($decision->decision_number ?? 'Decisão').' · '.$decision->summary),
-                route: 'backoffice.complaint-decisions.show',
+                route: route('backoffice.complaint-decisions.show', ['complaint_decision' => $decision->getKey()]),
                 datetime: $decision->proposed_at ?? $decision->created_at,
                 priority: TimelinePriority::High,
                 icon: 'document-check',
