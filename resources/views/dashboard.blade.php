@@ -1,22 +1,11 @@
 <x-app-layout>
-    <x-slot name="header">
-        <x-ui.page-header
-            eyebrow="Centro de Operações Municipal da Habitação"
-            title="Painel Principal"
-            description="Aceda aos espaços de trabalho disponíveis para o seu perfil e continue a operação municipal a partir de áreas funcionais."
-        >
-            <x-slot name="actions">
-                <x-ui.action-button :href="route('public.portal')">
-                    <x-ui-icon name="home" class="h-4 w-4" />
-                    <span>Portal Público</span>
-                </x-ui.action-button>
-            </x-slot>
-        </x-ui.page-header>
-    </x-slot>
+    <x-slot name="header"></x-slot>
 
     <div class="py-8">
         <div class="mv-page-shell">
             <x-flash-message />
+
+            <x-dashboard.operations.hero :user="Auth::user()" />
 
             <x-search.universal-search :groups="$searchGroups" />
 
@@ -69,36 +58,11 @@
                 @endif
             </section>
 
-            <section>
-                <x-ui.section-header
-                    class="mb-4"
-                    title="Espaços de Trabalho"
-                    description="Cada espaço de trabalho agrupa apenas os módulos permitidos pelo seu perfil."
-                />
-
-                <x-navigation.workspace-grid :workspaces="$workspaces" :favorites="$favorites" />
-            </section>
+            <x-dashboard.operations.workspace-section :workspaces="$workspaces" :favorites="$favorites" />
 
             <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
                 <div class="space-y-6">
-                    <section class="mv-card">
-                        <div class="border-b border-ink-100 px-5 py-4">
-                            <x-ui.section-header title="Ações rápidas" />
-                        </div>
-
-                        <div class="grid gap-0 divide-y divide-ink-100 md:grid-cols-2 md:divide-x md:divide-y-0">
-                            @forelse ($quickActions as $action)
-                                <x-dashboard.quick-action :action="$action" />
-                            @empty
-                                <div class="p-5">
-                                    <x-ui.empty-state
-                                        title="Sem ações rápidas"
-                                        description="Não existem ações rápidas disponíveis para o seu perfil."
-                                    />
-                                </div>
-                            @endforelse
-                        </div>
-                    </section>
+                  <x-dashboard.operations.action-section :quick-actions="$quickActions" />
 
                     <section class="mv-card">
                         <div class="border-b border-ink-100 px-5 py-4">
