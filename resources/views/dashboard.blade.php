@@ -25,7 +25,7 @@
 
             <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
                 <div class="space-y-6">
-                    <x-dashboard.operations.today :items="$todayOperations" />
+                    <x-dashboard.operations.today :items="$todayOperations" :timeline="$operationsTimeline ?? []" />
 
                     <x-dashboard.operations.action-section :quick-actions="$quickActions" />
 

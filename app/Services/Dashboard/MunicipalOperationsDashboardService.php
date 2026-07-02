@@ -34,6 +34,7 @@ class MunicipalOperationsDashboardService
             'searchGroups' => $dashboard['search_groups'] ?? [],
             'operationsSummary' => $this->summaryProvider->forUser($user, $dashboard),
             'todayOperations' => $this->todayProvider->forUser($user, $dashboard),
+            'operationsTimeline' => $this->todayProvider->timelineForUser($user, $dashboard),
         ];
     }
 }

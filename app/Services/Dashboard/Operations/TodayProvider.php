@@ -2,38 +2,82 @@
 
 namespace App\Services\Dashboard\Operations;
 
+use App\Data\Dashboard\TimelineEvent;
 use App\Enums\InspectionStatus;
 use App\Enums\VisitStatus;
 use App\Models\HousingVisit;
 use App\Models\PropertyInspection;
 use App\Models\User;
 use App\Models\WorkTask;
+use App\Services\Dashboard\Timeline\TimelineAggregatorService;
+use App\Services\Dashboard\Timeline\TimelineProviderInterface;
 use Illuminate\Support\Carbon;
 
 class TodayProvider
 {
+    public function __construct(
+        private readonly ?TimelineAggregatorService $timelineAggregator = null,
+    ) {}
+
     /**
      * @param  array<string, mixed>  $dashboard
      * @return array<int, array<string, mixed>>
      */
     public function forUser(User $user, array $dashboard): array
     {
+        $timeline = $this->timeline($user, $dashboard);
+
+        return $timeline['items'] ?? [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $dashboard
+     * @return array<string, mixed>
+     */
+    public function timelineForUser(User $user, array $dashboard): array
+    {
+        return $this->timeline($user, $dashboard);
+    }
+
+    /**
+     * @param  array<string, mixed>  $dashboard
+     * @return array<string, mixed>
+     */
+    private function timeline(User $user, array $dashboard): array
+    {
+        $aggregator = $this->timelineAggregator ?? new TimelineAggregatorService([
+            new class($this) implements TimelineProviderInterface {
+                public function __construct(
+                    private readonly TodayProvider $provider,
+                ) {}
+
+                public function forUser(User $user, array $dashboard = []): array
+                {
+                    return $this->provider->eventsForUser($user, $dashboard);
+                }
+            },
+        ]);
+
+        return $aggregator->forUser($user, $dashboard);
+    }
+
+    /**
+     * @param  array<string, mixed>  $dashboard
+     * @return array<int, TimelineEvent>
+     */
+    public function eventsForUser(User $user, array $dashboard): array
+    {
         return collect()
             ->merge($this->assignedTasks($user))
             ->merge($this->housingVisits($user))
             ->merge($this->propertyInspections($user))
             ->merge($this->deadlineItems($dashboard))
-            ->sortBy([
-                ['datetime', 'asc'],
-                ['priority', 'asc'],
-            ])
-            ->take(12)
             ->values()
             ->all();
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array<int, TimelineEvent>
      */
     private function assignedTasks(User $user): array
     {
@@ -50,7 +94,8 @@ class TodayProvider
             ->orderByRaw('due_at IS NULL, due_at ASC')
             ->limit(5)
             ->get()
-            ->map(fn (WorkTask $task): array => $this->item(
+            ->map(fn (WorkTask $task): TimelineEvent => $this->event(
+                id: 'work-task-'.$task->getKey(),
                 type: 'task',
                 title: WorkTask::typeLabel((string) $task->type),
                 description: trim(($task->task_number ?? 'Tarefa').' · '.WorkTask::statusLabel((string) $task->status)),
@@ -59,17 +104,23 @@ class TodayProvider
                 tone: in_array($task->priority, [WorkTask::PRIORITY_HIGH, WorkTask::PRIORITY_URGENT], true) ? 'danger' : 'warning',
                 datetime: $task->due_at,
                 priority: match ((string) $task->priority) {
-                    WorkTask::PRIORITY_URGENT => 10,
-                    WorkTask::PRIORITY_HIGH => 20,
-                    WorkTask::PRIORITY_NORMAL => 40,
-                    default => 60,
+                    WorkTask::PRIORITY_URGENT => 'critical',
+                    WorkTask::PRIORITY_HIGH => 'high',
+                    WorkTask::PRIORITY_NORMAL => 'medium',
+                    default => 'low',
                 },
+                workspace: 'operations',
+                metadata: [
+                    'task_id' => $task->getKey(),
+                    'task_number' => $task->task_number,
+                    'status' => $task->status,
+                ],
             ))
             ->all();
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array<int, TimelineEvent>
      */
     private function housingVisits(User $user): array
     {
@@ -88,7 +139,8 @@ class TodayProvider
             ->orderBy('scheduled_at')
             ->limit(5)
             ->get()
-            ->map(fn (HousingVisit $visit): array => $this->item(
+            ->map(fn (HousingVisit $visit): TimelineEvent => $this->event(
+                id: 'housing-visit-'.$visit->getKey(),
                 type: 'visit',
                 title: 'Visita agendada',
                 description: trim(($visit->visit_number ?? 'Visita').' · '.$visit->scheduled_at?->format('H:i')),
@@ -96,13 +148,19 @@ class TodayProvider
                 icon: 'user-inspection',
                 tone: 'info',
                 datetime: $visit->scheduled_at,
-                priority: 30,
+                priority: 'medium',
+                workspace: 'patrimony',
+                metadata: [
+                    'visit_id' => $visit->getKey(),
+                    'visit_number' => $visit->visit_number,
+                    'status' => $visit->status,
+                ],
             ))
             ->all();
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array<int, TimelineEvent>
      */
     private function propertyInspections(User $user): array
     {
@@ -119,7 +177,8 @@ class TodayProvider
             ->orderBy('scheduled_for')
             ->limit(5)
             ->get()
-            ->map(fn (PropertyInspection $inspection): array => $this->item(
+            ->map(fn (PropertyInspection $inspection): TimelineEvent => $this->event(
+                id: 'property-inspection-'.$inspection->getKey(),
                 type: 'inspection',
                 title: 'Vistoria técnica',
                 description: trim(($inspection->inspection_number ?? 'Vistoria').' · '.$inspection->scheduled_for?->format('H:i')),
@@ -127,19 +186,26 @@ class TodayProvider
                 icon: 'inspection',
                 tone: 'info',
                 datetime: $inspection->scheduled_for,
-                priority: 35,
+                priority: 'medium',
+                workspace: 'patrimony',
+                metadata: [
+                    'inspection_id' => $inspection->getKey(),
+                    'inspection_number' => $inspection->inspection_number,
+                    'status' => $inspection->status,
+                ],
             ))
             ->all();
     }
 
     /**
      * @param  array<string, mixed>  $dashboard
-     * @return array<int, array<string, mixed>>
+     * @return array<int, TimelineEvent>
      */
     private function deadlineItems(array $dashboard): array
     {
         return collect($dashboard['deadlines'] ?? [])
-            ->map(fn (array $deadline): array => $this->item(
+            ->map(fn (array $deadline, int $index): TimelineEvent => $this->event(
+                id: 'deadline-'.$index.'-'.md5((string) ($deadline['label'] ?? $deadline['title'] ?? 'Prazo')),
                 type: 'deadline',
                 title: (string) ($deadline['label'] ?? $deadline['title'] ?? 'Prazo'),
                 description: (string) ($deadline['description'] ?? ''),
@@ -147,34 +213,43 @@ class TodayProvider
                 icon: 'calendar',
                 tone: (string) ($deadline['tone'] ?? 'neutral'),
                 datetime: null,
-                priority: 80,
+                priority: 'low',
+                workspace: 'operations',
+                metadata: $deadline,
             ))
             ->all();
     }
 
     /**
-     * @return array<string, mixed>
+     * @param  array<string, mixed>  $metadata
      */
-    private function item(
+    private function event(
+        string $id,
         string $type,
         string $title,
-        string $description,
-        string $route,
+        ?string $description,
+        ?string $route,
         string $icon,
         string $tone,
         ?Carbon $datetime,
-        int $priority,
-    ): array {
-        return [
-            'type' => $type,
-            'priority' => $priority,
-            'datetime' => $datetime?->toIso8601String(),
-            'time' => $datetime?->format('H:i'),
-            'title' => $title,
-            'description' => $description,
-            'route' => $route,
-            'icon' => $icon,
-            'tone' => $tone,
-        ];
+        string $priority,
+        ?string $workspace = null,
+        string $status = 'pending',
+        array $metadata = [],
+    ): TimelineEvent {
+        return new TimelineEvent(
+            id: $id,
+            type: $type,
+            title: $title,
+            description: $description,
+            route: $route,
+            datetime: $datetime,
+            priority: $priority,
+            status: $status,
+            icon: $icon,
+            tone: $tone,
+            workspace: $workspace,
+            metadata: $metadata,
+        );
     }
 }
