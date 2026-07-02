@@ -404,7 +404,7 @@ class WorkspaceService
             str_contains($haystack, 'comunicaç'),
             str_contains($haystack, 'alert'),
             str_contains($haystack, 'ticket'),
-            str_contains($haystack, 'faq') => 'notification',
+            str_contains($haystack, 'faq') => 'bell',
 
             str_contains($haystack, 'security'),
             str_contains($haystack, 'segurança'),
@@ -434,11 +434,11 @@ class WorkspaceService
             str_contains($haystack, 'role'),
             str_contains($haystack, 'equipa'),
             str_contains($haystack, 'munícipe'),
-            str_contains($haystack, 'agregado') => 'profile',
+            str_contains($haystack, 'agregado') => 'user',
 
             str_contains($haystack, 'task'),
             str_contains($haystack, 'tarefa'),
-            str_contains($haystack, 'produtividade') => 'status',
+            str_contains($haystack, 'produtividade') => 'check',
 
             default => 'dashboard',
         };
