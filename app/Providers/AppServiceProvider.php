@@ -11,6 +11,7 @@ use App\Services\Dashboard\Timeline\Providers\InspectionTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\VisitTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\WorkTaskTimelineProvider;
 use App\Services\Dashboard\Timeline\TimelineAggregatorService;
+use App\Services\Dashboard\Timeline\Providers\MaintenanceTimelineProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
             new HearingTimelineProvider(),
             new ComplaintTimelineProvider(),
             new DeadlineTimelineProvider(),
+            new MaintenanceTimelineProvider(),
         ]));
     }
 

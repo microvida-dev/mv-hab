@@ -15,4 +15,6 @@ enum TimelineType: string
     case Complaint = 'complaint';
     case ComplaintAdditionalInformation = 'complaint-additional-information';
     case ComplaintDecision = 'complaint-decision';
+    case MaintenanceRequest = 'maintenance-request';
+    case MaintenanceIntervention = 'maintenance-intervention';
 }

@@ -42,6 +42,9 @@ class NextActionResolver
             TimelineType::ComplaintAdditionalInformation,
             TimelineType::ComplaintDecision => 20,
 
+            TimelineType::MaintenanceRequest,
+            TimelineType::MaintenanceIntervention => 25,
+
             TimelineType::Task => 30,
 
             TimelineType::Inspection,
