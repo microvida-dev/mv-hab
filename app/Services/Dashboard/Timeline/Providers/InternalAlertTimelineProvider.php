@@ -8,10 +8,15 @@ use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\InternalAlert;
 use App\Models\User;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
 
 class InternalAlertTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
         if (! $user->hasPermission('internal_alerts.view')) {
@@ -24,7 +29,7 @@ class InternalAlertTimelineProvider implements TimelineProviderInterface
             ->orderBy('due_at')
             ->limit(20)
             ->get()
-            ->map(fn (InternalAlert $alert): TimelineEvent => new TimelineEvent(
+            ->map(fn (InternalAlert $alert): TimelineEvent => $this->factory->make(
                 id: 'internal-alert-'.$alert->getKey(),
                 type: TimelineType::InternalAlert,
                 title: 'Alerta interno com prazo',
