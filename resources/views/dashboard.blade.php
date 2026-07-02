@@ -29,9 +29,9 @@
 
                     <x-dashboard.operations.action-section :quick-actions="$quickActions" />
 
-                    <x-dashboard.operations.deadlines :items="$todayOperations" />
+                    <x-dashboard.operations.deadlines :items="$dashboard['deadlines'] ?? []" />
 
-                    <<x-dashboard.operations.notifications :summary="$dashboard['notifications_summary'] ?? null" />
+                    <x-dashboard.operations.notifications :summary="$dashboard['notifications_summary'] ?? null" />
                 </div>
 
                 <x-dashboard.operations.sidebar
