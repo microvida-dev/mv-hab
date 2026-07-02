@@ -395,6 +395,7 @@ class WorkspaceService
             'backoffice.maintenance.index' => 'maintenance',
             'backoffice.inspections.index' => 'inspection',
 
+            'backoffice.agenda.index' => 'calendar',
             'backoffice.productivity.index' => 'check',
             'backoffice.work-tasks.my' => 'check',
             'backoffice.work-tasks.dashboard' => 'dashboard',
@@ -470,6 +471,11 @@ class WorkspaceService
     private function workspaceShortcutGroups(User $user): array
     {
         return [
+            $this->group('Operação Municipal', [
+                $this->item('Agenda Municipal', 'backoffice.agenda.index', 'backoffice.agenda.*', 'work_tasks.view'),
+                $this->item('Caixa de trabalho', 'backoffice.work-tasks.my', 'backoffice.work-tasks.*', 'work_tasks.view', null, WorkTask::class),
+                $this->item('Produtividade', 'backoffice.productivity.index', 'backoffice.productivity.*', 'work_tasks.view'),
+            ]),
             $this->group('Espaços de Trabalho', array_map(
                 fn (array $workspace): array => [
                     'label' => (string) $workspace['title'],
