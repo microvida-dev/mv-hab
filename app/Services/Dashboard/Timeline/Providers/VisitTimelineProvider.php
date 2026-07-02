@@ -9,10 +9,15 @@ use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Enums\VisitStatus;
 use App\Models\HousingVisit;
 use App\Models\User;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
 
 class VisitTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
         if (! $user->hasPermission('visits.view')) {
@@ -30,7 +35,7 @@ class VisitTimelineProvider implements TimelineProviderInterface
             ->orderBy('scheduled_at')
             ->limit(5)
             ->get()
-            ->map(fn (HousingVisit $visit): TimelineEvent => new TimelineEvent(
+            ->map(fn (HousingVisit $visit): TimelineEvent => $this->factory->make(
                 id: 'housing-visit-'.$visit->getKey(),
                 type: TimelineType::Visit,
                 title: 'Visita agendada',

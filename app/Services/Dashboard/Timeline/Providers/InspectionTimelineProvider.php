@@ -9,10 +9,15 @@ use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Enums\InspectionStatus;
 use App\Models\PropertyInspection;
 use App\Models\User;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
 
 class InspectionTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
         if (! $user->hasPermission('inspections.view')) {
@@ -28,7 +33,7 @@ class InspectionTimelineProvider implements TimelineProviderInterface
             ->orderBy('scheduled_for')
             ->limit(5)
             ->get()
-            ->map(fn (PropertyInspection $inspection): TimelineEvent => new TimelineEvent(
+            ->map(fn (PropertyInspection $inspection): TimelineEvent => $this->factory->make(
                 id: 'property-inspection-'.$inspection->getKey(),
                 type: TimelineType::Inspection,
                 title: 'Vistoria técnica',

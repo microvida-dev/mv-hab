@@ -8,10 +8,15 @@ use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\User;
 use App\Models\WorkTask;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
 
 class WorkTaskTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
         if (! $user->hasPermission('work_tasks.view')) {
@@ -27,7 +32,7 @@ class WorkTaskTimelineProvider implements TimelineProviderInterface
             ->orderByRaw('due_at IS NULL, due_at ASC')
             ->limit(5)
             ->get()
-            ->map(fn (WorkTask $task): TimelineEvent => new TimelineEvent(
+            ->map(fn (WorkTask $task): TimelineEvent => $this->factory->make(
                 id: 'work-task-'.$task->getKey(),
                 type: TimelineType::Task,
                 title: WorkTask::typeLabel((string) $task->type),

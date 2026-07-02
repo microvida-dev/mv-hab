@@ -9,10 +9,15 @@ use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\MaintenanceIntervention;
 use App\Models\MaintenanceRequest;
 use App\Models\User;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
 
 class MaintenanceTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
         if (! $user->hasPermission('maintenance_requests.view')) {
@@ -34,7 +39,7 @@ class MaintenanceTimelineProvider implements TimelineProviderInterface
             ->orderBy('scheduled_for')
             ->limit(20)
             ->get()
-            ->map(fn (MaintenanceRequest $request): TimelineEvent => new TimelineEvent(
+            ->map(fn (MaintenanceRequest $request): TimelineEvent => $this->factory->make(
                 id: 'maintenance-request-'.$request->getKey(),
                 type: TimelineType::MaintenanceRequest,
                 title: 'Manutenção agendada',
@@ -64,7 +69,7 @@ class MaintenanceTimelineProvider implements TimelineProviderInterface
             ->orderBy('scheduled_for')
             ->limit(20)
             ->get()
-            ->map(fn (MaintenanceIntervention $intervention): TimelineEvent => new TimelineEvent(
+            ->map(fn (MaintenanceIntervention $intervention): TimelineEvent => $this->factory->make(
                 id: 'maintenance-intervention-'.$intervention->getKey(),
                 type: TimelineType::MaintenanceIntervention,
                 title: 'Intervenção de manutenção',
