@@ -199,19 +199,12 @@
 </div>
 
 <aside
-    x-data="{
-        collapsed: JSON.parse(localStorage.getItem('mvhab-sidebar') ?? 'false'),
-        toggle() {
-            this.collapsed = ! this.collapsed;
-            localStorage.setItem('mvhab-sidebar', JSON.stringify(this.collapsed));
-        }
-    }"
-    :class="collapsed ? 'w-28' : 'w-72'"
+    :class="sidebarCollapsed ? 'w-28' : 'w-72'"
     class="fixed inset-y-0 left-0 z-40 hidden flex-col overflow-hidden border-r border-ink-100 bg-white transition-all duration-300 lg:flex"
 >
     <div
         class="relative flex h-20 items-center border-b border-ink-100 px-4"
-        :class="collapsed ? 'justify-center' : 'justify-between'"
+        :class="sidebarCollapsed ? 'justify-center' : 'justify-between'"
     >
         <a href="{{ route($homeRoute) }}" class="flex min-w-0 items-center overflow-hidden">
             <img
@@ -223,11 +216,11 @@
 
         <button
             type="button"
-            @click="toggle()"
+            @click="toggleSidebar()"
             class="rounded-xl border border-ink-100 bg-white p-2 text-ink-600 transition hover:bg-mvhab-surface hover:text-mvhab-primary"
-            :aria-label="collapsed ? 'Expandir navegação' : 'Recolher navegação'"
+            :aria-label="sidebarCollapsed ? 'Expandir navegação' : 'Recolher navegação'"
         >
-            <span x-show="!collapsed">
+            <span x-show="!sidebarCollapsed">
                 <x-mv-icon name="arrow-left" size="sm" />
             </span>
             <span x-show="collapsed" x-cloak>
@@ -236,8 +229,8 @@
         </button>
     </div>
 
-    <div class="flex-1 overflow-y-auto overflow-x-hidden py-6" :class="collapsed ? 'px-3' : 'px-4'">
-        <div x-bind:data-sidebar-collapsed="collapsed">
+    <div class="flex-1 overflow-y-auto overflow-x-hidden py-6" :class="sidebarCollapsed ? 'px-3' : 'px-4'">
+        <div x-bind:data-sidebar-collapsed="sidebarCollapsed">
             <x-navigation.context-sidebar :groups="$navigationGroups" />
         </div>
     </div>
@@ -246,13 +239,13 @@
         @if ($isCandidate)
             <div
                 class="flex items-center rounded-2xl border border-ink-100 bg-white px-3 py-3"
-                :class="collapsed ? 'justify-center' : 'gap-3'"
+                :class="sidebarCollapsed ? 'justify-center' : 'gap-3'"
             >
                 <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
                     <x-mv-icon name="profile" size="sm" />
                 </span>
 
-                <span x-show="!collapsed" x-transition.opacity class="min-w-0 flex-1">
+                <span x-show="!sidebarCollapsed" x-transition.opacity class="min-w-0 flex-1">
                     <span class="block truncate text-sm font-semibold text-ink-900">{{ $user->name }}</span>
                     <span class="block truncate text-xs text-ink-500">{{ $user->email }}</span>
                 </span>
@@ -264,11 +257,11 @@
                         href="{{ route($link['route']) }}"
                         title="{{ $link['label'] }}"
                         class="flex w-full items-center rounded-2xl px-3 py-2 text-sm font-medium text-ink-600 transition hover:bg-mvhab-surface hover:text-ink-900"
-                        :class="collapsed ? 'justify-center' : 'gap-3'"
+                        :class="sidebarCollapsed ? 'justify-center' : 'gap-3'"
                     >
                         <x-mv-icon :name="$link['icon'] ?? 'dashboard'" size="sm" />
 
-                        <span x-show="!collapsed" x-transition.opacity>
+                        <span x-show="!sidebarCollapsed" x-transition.opacity>
                             {{ $link['label'] }}
                         </span>
                     </a>
@@ -280,11 +273,11 @@
                         type="submit"
                         title="Terminar sessão"
                         class="flex w-full items-center rounded-2xl px-3 py-2 text-left text-sm font-medium text-ink-600 transition hover:bg-mvhab-surface hover:text-ink-900"
-                        :class="collapsed ? 'justify-center' : 'gap-3'"
+                        :class="sidebarCollapsed ? 'justify-center' : 'gap-3'"
                     >
                         <x-mv-icon name="logout" size="sm" />
 
-                        <span x-show="!collapsed" x-transition.opacity>
+                        <span x-show="!sidebarCollapsed" x-transition.opacity>
                             Terminar sessão
                         </span>
                     </button>
@@ -295,18 +288,18 @@
                 <x-slot name="trigger">
                     <button
                         class="flex w-full items-center rounded-2xl border border-ink-100 bg-white px-3 py-3 text-left transition hover:bg-mvhab-surface"
-                        :class="collapsed ? 'justify-center' : 'gap-3'"
+                        :class="sidebarCollapsed ? 'justify-center' : 'gap-3'"
                     >
                         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
                             <x-mv-icon name="profile" size="sm" />
                         </span>
 
-                        <span x-show="!collapsed" x-transition.opacity class="min-w-0 flex-1">
+                        <span x-show="!sidebarCollapsed" x-transition.opacity class="min-w-0 flex-1">
                             <span class="block truncate text-sm font-semibold text-ink-900">{{ $user->name }}</span>
                             <span class="block truncate text-xs text-ink-500">{{ $user->email }}</span>
                         </span>
 
-                        <span x-show="!collapsed" x-transition.opacity>
+                        <span x-show="!sidebarCollapsed" x-transition.opacity>
                             <x-mv-icon name="arrow-right" size="sm" class="text-ink-500" />
                         </span>
                     </button>

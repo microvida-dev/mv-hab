@@ -23,12 +23,27 @@
             $showSidebar = ! request()->routeIs('dashboard');
         @endphp
 
-        <div x-data="{ sidebarOpen: false }" class="min-h-screen bg-ink-50">
+        <div
+            x-data="{
+                sidebarOpen: false,
+                sidebarCollapsed: JSON.parse(localStorage.getItem('mvhab-sidebar') ?? 'false'),
+                toggleSidebar() {
+                    this.sidebarCollapsed = ! this.sidebarCollapsed;
+                    localStorage.setItem('mvhab-sidebar', JSON.stringify(this.sidebarCollapsed));
+                }
+            }"
+            class="min-h-screen bg-ink-50"
+        >
             @if ($showSidebar)
                 @include('layouts.navigation')
             @endif
 
-            <div @class(['lg:ps-72' => $showSidebar])>
+            <div
+                @class(['transition-all duration-300' => $showSidebar])
+                @if ($showSidebar)
+                    :class="sidebarCollapsed ? 'lg:ps-28' : 'lg:ps-72'"
+                @endif
+            >
                 @isset($header)
                     <header class="border-b border-ink-100 bg-white">
                         <div class="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
