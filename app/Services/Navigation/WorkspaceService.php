@@ -190,6 +190,7 @@ class WorkspaceService
         return [
             [
                 'key' => 'atendimento',
+                'icon' => 'contact',
                 'title' => 'Atendimento',
                 'short_label' => 'AT',
                 'description' => 'Munícipes, candidatos, visitas, tickets e FAQ operacional.',
@@ -216,6 +217,7 @@ class WorkspaceService
             ],
             [
                 'key' => 'concursos',
+                'icon' => 'contest',
                 'title' => 'Concursos',
                 'short_label' => 'CO',
                 'description' => 'Programas, concursos, elegibilidade, pontuação, listas e publicações.',
@@ -240,6 +242,7 @@ class WorkspaceService
             ],
             [
                 'key' => 'patrimonio',
+                'icon' => 'housing',
                 'title' => 'Património',
                 'short_label' => 'PA',
                 'description' => 'Fogos, empreendimentos, contratos, rendas, manutenção e vistorias.',
@@ -263,6 +266,7 @@ class WorkspaceService
             ],
             [
                 'key' => 'gestao',
+                'icon' => 'report',
                 'title' => 'Gestão',
                 'short_label' => 'GE',
                 'description' => 'Relatórios, KPIs, auditoria, RGPD, IA documental e tarefas.',
@@ -289,6 +293,7 @@ class WorkspaceService
             ],
             [
                 'key' => 'administracao',
+                'icon' => 'security',
                 'title' => 'Administração',
                 'short_label' => 'AD',
                 'description' => 'Utilizadores, perfis, equipas, permissões, segurança e configuração.',
@@ -356,92 +361,62 @@ class WorkspaceService
 
     private function iconFor(string $route, string $active, string $label): string
     {
-        $haystack = Str::lower($route.' '.$active.' '.$label);
+        return [
+            'citizens.index' => 'users',
+            'households.index' => 'household',
+            'backoffice.simulator.insights.index' => 'simulator',
+            'backoffice.applications.index' => 'application',
+            'backoffice.application-intake.index' => 'folder',
+            'backoffice.administrative-processes.index' => 'process',
+            'admin.document-reviews.index' => 'candidate-document',
+            'backoffice.visit-availabilities.index' => 'calendar',
+            'backoffice.visit-slots.index' => 'schedule',
+            'backoffice.housing-visits.index' => 'inspection',
+            'backoffice.support-tickets.index' => 'ticket',
+            'backoffice.contextual-faqs.index' => 'faq',
 
-        return match (true) {
-            str_contains($haystack, 'dashboard'),
-            str_contains($haystack, 'painel'),
-            str_contains($haystack, 'kpi'),
-            str_contains($haystack, 'analítico'),
-            str_contains($haystack, 'executivo') => 'dashboard',
+            'admin.programs.index' => 'program',
+            'admin.contests.index' => 'contest',
+            'admin.document-types.index' => 'document',
+            'admin.required-documents.index' => 'candidate-document',
+            'backoffice.eligibility.rule-sets.index' => 'check',
+            'backoffice.scoring.rule-sets.index' => 'balance',
+            'backoffice.allocation.runs.index' => 'allocation',
+            'backoffice.lottery-draws.index' => 'contest',
+            'backoffice.allocation.reports.index' => 'report',
 
-            str_contains($haystack, 'program') => 'program',
-            str_contains($haystack, 'contest'),
-            str_contains($haystack, 'concurso') => 'contest',
+            'housing-units.index' => 'housing',
+            'backoffice.public-portal.settings.edit' => 'settings',
+            'backoffice.public-portal.links.index' => 'external',
+            'backoffice.contracts.leases.index' => 'contract',
+            'backoffice.contracts.templates.index' => 'document',
+            'backoffice.finance.accounts.index' => 'payment',
+            'backoffice.finance.payments.index' => 'payment',
+            'backoffice.maintenance.index' => 'maintenance',
+            'backoffice.inspections.index' => 'inspection',
 
-            str_contains($haystack, 'housing'),
-            str_contains($haystack, 'fogo'),
-            str_contains($haystack, 'habitaç'),
-            str_contains($haystack, 'patrim') => 'housing',
+            'backoffice.productivity.index' => 'check',
+            'backoffice.work-tasks.my' => 'check',
+            'backoffice.work-tasks.dashboard' => 'dashboard',
+            'backoffice.analytics.index' => 'dashboard',
+            'backoffice.reports.index' => 'report',
+            'backoffice.reports.operational' => 'report',
+            'backoffice.reports.executive' => 'report',
+            'backoffice.security.audit.events.index' => 'audit',
+            'backoffice.security.audit.access-logs.index' => 'lock',
+            'backoffice.security.privacy.requests.index' => 'shield',
+            'backoffice.document-ai.assistant.index' => 'document',
+            'backoffice.communications.index' => 'communication',
 
-            str_contains($haystack, 'simulator'),
-            str_contains($haystack, 'simulador') => 'simulator',
-
-            str_contains($haystack, 'document'),
-            str_contains($haystack, 'documental'),
-            str_contains($haystack, 'minuta'),
-            str_contains($haystack, 'cláusula'),
-            str_contains($haystack, 'publicaç') => 'document',
-
-            str_contains($haystack, 'payment'),
-            str_contains($haystack, 'pagamento'),
-            str_contains($haystack, 'renda'),
-            str_contains($haystack, 'finance'),
-            str_contains($haystack, 'conta'),
-            str_contains($haystack, 'incumprimento') => 'payment',
-
-            str_contains($haystack, 'maintenance'),
-            str_contains($haystack, 'manutenção') => 'maintenance',
-
-            str_contains($haystack, 'inspection'),
-            str_contains($haystack, 'vistoria'),
-            str_contains($haystack, 'visit'),
-            str_contains($haystack, 'visita'),
-            str_contains($haystack, 'horário') => 'calendar',
-
-            str_contains($haystack, 'notification'),
-            str_contains($haystack, 'communication'),
-            str_contains($haystack, 'comunicaç'),
-            str_contains($haystack, 'alert'),
-            str_contains($haystack, 'ticket'),
-            str_contains($haystack, 'faq') => 'bell',
-
-            str_contains($haystack, 'security'),
-            str_contains($haystack, 'segurança'),
-            str_contains($haystack, 'mfa'),
-            str_contains($haystack, 'rgpd'),
-            str_contains($haystack, 'privacy'),
-            str_contains($haystack, 'auditoria'),
-            str_contains($haystack, 'acessos sensíveis'),
-            str_contains($haystack, 'permiss') => 'security',
-
-            str_contains($haystack, 'report'),
-            str_contains($haystack, 'relatório'),
-            str_contains($haystack, 'export') => 'report',
-
-            str_contains($haystack, 'contract'),
-            str_contains($haystack, 'contrato') => 'contract',
-
-            str_contains($haystack, 'allocation'),
-            str_contains($haystack, 'atribui'),
-            str_contains($haystack, 'oferta'),
-            str_contains($haystack, 'sorteio'),
-            str_contains($haystack, 'suplente') => 'contest',
-
-            str_contains($haystack, 'user'),
-            str_contains($haystack, 'utilizador'),
-            str_contains($haystack, 'perfil'),
-            str_contains($haystack, 'role'),
-            str_contains($haystack, 'equipa'),
-            str_contains($haystack, 'munícipe'),
-            str_contains($haystack, 'agregado') => 'user',
-
-            str_contains($haystack, 'task'),
-            str_contains($haystack, 'tarefa'),
-            str_contains($haystack, 'produtividade') => 'check',
-
-            default => 'dashboard',
-        };
+            'backoffice.users.index' => 'users',
+            'backoffice.roles.index' => 'security',
+            'backoffice.teams.index' => 'users',
+            'backoffice.access-audit.index' => 'audit',
+            'backoffice.security.dashboard' => 'security',
+            'backoffice.security.mfa.index' => 'lock',
+            'backoffice.security.permission-reviews.index' => 'shield',
+            'backoffice.security.privacy.retention.index' => 'shield',
+        ][$route] ?? 'dashboard';
     }
 
     /**
@@ -501,7 +476,7 @@ class WorkspaceService
                     'route' => 'workspaces.show',
                     'parameters' => ['workspace' => $workspace['key']],
                     'active' => 'workspaces.show',
-                    'icon' => 'dashboard',
+                    'icon' => (string) ($workspace['icon'] ?? 'dashboard'),
                 ],
                 $this->availableFor($user),
             )),
