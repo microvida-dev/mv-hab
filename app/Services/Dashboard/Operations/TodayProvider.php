@@ -4,7 +4,10 @@ namespace App\Services\Dashboard\Operations;
 
 use App\Data\Dashboard\TimelineEvent;
 use App\Models\User;
+use App\Services\Dashboard\Timeline\Providers\ComplaintTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\CorrectionRequestTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\DeadlineTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\HearingTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\InspectionTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\VisitTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\WorkTaskTimelineProvider;
@@ -54,6 +57,9 @@ class TodayProvider
             new WorkTaskTimelineProvider(),
             new VisitTimelineProvider(),
             new InspectionTimelineProvider(),
+            new CorrectionRequestTimelineProvider(),
+            new HearingTimelineProvider(),
+            new ComplaintTimelineProvider(),
             new DeadlineTimelineProvider(),
         ];
     }
