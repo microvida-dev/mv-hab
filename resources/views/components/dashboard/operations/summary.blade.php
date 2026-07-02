@@ -1,10 +1,10 @@
 @props([
-    'dashboard' => [],
+    'summary' => [],
     'productivity' => [],
 ])
 
 @php
-    $metrics = collect($dashboard['metrics'] ?? [])->take(4);
+    $metrics = collect($summary['metrics'] ?? []);
     $notification = $productivity['notification_summary'] ?? null;
     $nextCase = $productivity['next_case'] ?? null;
 @endphp
@@ -58,6 +58,15 @@
                     </div>
                 </div>
             </x-ui.card>
+        @endif
+
+        @if (($productivity['enabled'] ?? false) === true)
+            <div class="mt-4">
+                <x-ui.action-button :href="route('backoffice.productivity.index')">
+                    <x-mv-icon name="play" size="sm" />
+                    <span>Abrir produtividade</span>
+                </x-ui.action-button>
+            </div>
         @endif
 
         @if($nextCase)
