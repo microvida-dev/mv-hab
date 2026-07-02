@@ -47,7 +47,9 @@ class ComplaintTimelineProvider implements TimelineProviderInterface
                 description: trim(($complaint->complaint_number ?? 'Reclamação').' · '.$complaint->subject),
                 route: 'backoffice.complaints.show',
                 datetime: $complaint->submitted_at ?? $complaint->received_at ?? $complaint->created_at,
-                priority: $complaint->assigned_to ? 'high' : 'critical',
+                priority: $complaint->assigned_to
+                    ? TimelinePriority::High
+                    : TimelinePriority::Critical,
                 icon: 'message-alert',
                 tone: $complaint->assigned_to ? 'warning' : 'danger',
                 workspace: TimelineWorkspace::Contests,
@@ -79,7 +81,9 @@ class ComplaintTimelineProvider implements TimelineProviderInterface
                 description: trim(($complaint->complaint_number ?? 'Reclamação').' · '.$complaint->subject),
                 route: 'backoffice.complaints.show',
                 datetime: $complaint->additional_information_deadline_at,
-                priority: $complaint->additional_information_deadline_at?->isPast() ? 'critical' : 'high',
+                priority: $complaint->additional_information_deadline_at?->isPast()
+                    ? TimelinePriority::Critical
+                    : TimelinePriority::High,
                 icon: 'message-alert',
                 tone: $complaint->additional_information_deadline_at?->isPast() ? 'danger' : 'warning',
                 workspace: TimelineWorkspace::Contests,
