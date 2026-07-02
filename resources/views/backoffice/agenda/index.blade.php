@@ -22,51 +22,7 @@
                 </div>
 
                 @if (($filters['view'] ?? 'day') === 'day')
-                    <div class="space-y-3">
-                        @forelse ($agenda['events'] ?? [] as $event)
-                            <div class="group rounded-3xl border border-slate-200 bg-slate-50/70 p-4 transition hover:border-blue-200 hover:bg-white hover:shadow-sm">
-                                <div class="flex gap-4">
-                                    <div class="flex w-16 shrink-0 flex-col items-center rounded-2xl bg-white px-3 py-2 text-center shadow-sm">
-                                        <span class="text-xs font-semibold text-slate-400">Hora</span>
-                                        <span class="mt-1 text-sm font-bold text-slate-900">{{ $event['time'] ?? '—' }}</span>
-                                    </div>
-
-                                    <div class="min-w-0 flex-1">
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <h3 class="text-base font-bold text-slate-950">{{ $event['title'] }}</h3>
-                                            <span class="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold uppercase text-slate-600 shadow-sm">
-                                                {{ $event['priority'] }}
-                                            </span>
-                                        </div>
-
-                                        @if (! empty($event['description']))
-                                            <p class="mt-1 text-sm leading-6 text-slate-600">{{ $event['description'] }}</p>
-                                        @endif
-
-                                        <div class="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-slate-500">
-                                            <span class="rounded-full bg-white px-2.5 py-1">{{ $event['workspace'] ?? 'workspace' }}</span>
-                                            <span class="rounded-full bg-white px-2.5 py-1">{{ $event['type'] ?? 'tipo' }}</span>
-                                            <span class="rounded-full bg-white px-2.5 py-1">{{ $event['status'] ?? 'estado' }}</span>
-                                        </div>
-                                    </div>
-
-                                    @if (! empty($event['route']))
-                                        <a href="{{ route($event['route']) }}" class="self-start rounded-full bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700">
-                                            Abrir
-                                        </a>
-                                    @endif
-                                </div>
-                            </div>
-                        @empty
-                            <div class="rounded-[2rem] border border-dashed border-slate-300 bg-slate-50 p-12 text-center">
-                                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm">
-                                    <span class="text-xl">✓</span>
-                                </div>
-                                <p class="mt-4 text-base font-bold text-slate-800">Sem eventos para o período selecionado.</p>
-                                <p class="mt-1 text-sm text-slate-500">Ajuste os filtros ou selecione outra data.</p>
-                            </div>
-                        @endforelse
-                    </div>
+                    <x-agenda.day-timeline :events="$agenda['events'] ?? []" />
                 @elseif (($filters['view'] ?? 'day') === 'week')
                     <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
                         @foreach ($agenda['days'] ?? [] as $day)
