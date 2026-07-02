@@ -101,7 +101,11 @@ final readonly class AgendaService
     {
         return $this->timeline
             ->eventsForUser($user, $dashboard)
-            ->sortBy(fn ($event): int => $event->datetime?->timestamp ?? PHP_INT_MAX)
+            ->sortBy([
+                fn ($event): int => $event->datetime?->timestamp ?? PHP_INT_MAX,
+                fn ($event): int => $event->priorityWeight(),
+                fn ($event): string => mb_strtolower($event->title),
+            ])
             ->take($limit)
             ->values();
     }
@@ -115,7 +119,11 @@ final readonly class AgendaService
         return $this->timeline
             ->eventsForUser($user, $dashboard)
             ->filter(fn ($event): bool => $event->priority === TimelinePriority::Critical)
-            ->sortBy(fn ($event): int => $event->datetime?->timestamp ?? PHP_INT_MAX)
+            ->sortBy([
+                fn ($event): int => $event->datetime?->timestamp ?? PHP_INT_MAX,
+                fn ($event): int => $event->priorityWeight(),
+                fn ($event): string => mb_strtolower($event->title),
+            ])
             ->take($limit)
             ->values();
     }

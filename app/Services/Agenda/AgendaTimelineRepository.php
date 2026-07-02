@@ -89,10 +89,11 @@ final class AgendaTimelineRepository
     {
         return $events
             ->sortBy([
-                fn (TimelineEvent $event): int => $event->priorityWeight(),
                 fn (TimelineEvent $event): string => $event->datetime?->toIso8601String() ?? '9999-12-31T23:59:59',
+                fn (TimelineEvent $event): int => $event->priorityWeight(),
                 fn (TimelineEvent $event): string => $event->workspace?->value ?? '',
                 fn (TimelineEvent $event): string => $event->type->value,
+                fn (TimelineEvent $event): string => mb_strtolower($event->title),
             ])
             ->values();
     }
