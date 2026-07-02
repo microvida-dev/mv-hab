@@ -29,7 +29,7 @@ class RgpdTimelineProvider implements TimelineProviderInterface
                 type: TimelineType::RgpdRequest,
                 title: 'Pedido RGPD com prazo',
                 description: trim(($request->request_number ?? 'Pedido RGPD').' · '.$request->type),
-                route: route('backoffice.security.privacy.requests.show', ['dataSubjectRequest' => $request->getKey()]),
+                route: route('backoffice.security.privacy.requests.index'),
                 datetime: $request->due_at,
                 priority: $request->due_at?->isPast()
                     ? TimelinePriority::Critical

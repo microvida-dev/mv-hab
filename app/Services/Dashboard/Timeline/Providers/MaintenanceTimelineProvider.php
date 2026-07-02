@@ -39,7 +39,7 @@ class MaintenanceTimelineProvider implements TimelineProviderInterface
                 type: TimelineType::MaintenanceRequest,
                 title: 'Manutenção agendada',
                 description: trim(($request->request_number ?? 'Pedido de manutenção').' · '.$request->title),
-                route: route('backoffice.maintenance.requests.show', ['maintenanceRequest' => $request->getKey()]),
+                route: route('backoffice.maintenance.requests.index'),
                 datetime: $request->scheduled_for,
                 priority: $request->scheduled_for?->isPast()
                     ? TimelinePriority::High
@@ -69,7 +69,7 @@ class MaintenanceTimelineProvider implements TimelineProviderInterface
                 type: TimelineType::MaintenanceIntervention,
                 title: 'Intervenção de manutenção',
                 description: trim(($intervention->intervention_number ?? 'Intervenção').' · '.$intervention->title),
-                route: route('backoffice.maintenance.interventions.show', ['maintenanceIntervention' => $intervention->getKey()]),
+                route: route('backoffice.maintenance.requests.index'),
                 datetime: $intervention->scheduled_for,
                 priority: $intervention->scheduled_for?->isPast()
                     ? TimelinePriority::High

@@ -29,7 +29,7 @@ class InternalAlertTimelineProvider implements TimelineProviderInterface
                 type: TimelineType::InternalAlert,
                 title: 'Alerta interno com prazo',
                 description: trim(($alert->title ?? 'Alerta interno').' · '.($alert->message ?? '')),
-                route: route('backoffice.internal-alerts.show', ['internalAlert' => $alert->getKey()]),
+                route: route('backoffice.internal-alerts.index'),
                 datetime: $alert->due_at,
                 priority: $alert->due_at?->isPast()
                     ? TimelinePriority::Critical

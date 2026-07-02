@@ -29,7 +29,7 @@ class KeyHandoverTimelineProvider implements TimelineProviderInterface
                 type: TimelineType::KeyHandover,
                 title: 'Entrega de chave agendada',
                 description: trim(($appointment->appointment_number ?? 'Entrega de chave').' · '.$appointment->location),
-                route: route('backoffice.key-handovers.show', ['keyHandoverAppointment' => $appointment->getKey()]),
+                route: route('backoffice.key-handovers.index'),
                 datetime: $appointment->scheduled_for,
                 priority: $appointment->scheduled_for?->isPast()
                     ? TimelinePriority::High

@@ -29,7 +29,7 @@ class ApplicationTimelineProvider implements TimelineProviderInterface
                 type: TimelineType::ApplicationSubmitted,
                 title: 'Candidatura submetida',
                 description: trim(($application->application_number ?? 'Candidatura').' · para análise técnica'),
-                route: route('backoffice.applications.show', ['application' => $application->getKey()]),
+                route: route('backoffice.applications.index'),
                 datetime: $application->submitted_at,
                 priority: TimelinePriority::Medium,
                 icon: 'document',
