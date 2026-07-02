@@ -3,6 +3,8 @@
 namespace App\Services\Dashboard\Timeline;
 
 use App\Data\Dashboard\TimelineEvent;
+use App\Enums\Dashboard\Timeline\TimelinePriority;
+use App\Enums\Dashboard\Timeline\TimelineType;
 use Illuminate\Support\Collection;
 
 class NextActionResolver
@@ -27,27 +29,25 @@ class NextActionResolver
             return 1;
         }
 
-        if ($event->priority === 'critical') {
+        if ($event->priority === TimelinePriority::Critical) {
             return 10;
         }
 
         return match ($event->type) {
-            'correction-request',
-            'correction-response',
-            'hearing',
-            'hearing-submission',
-            'complaint',
-            'complaint-additional-information',
-            'complaint-decision' => 20,
+            TimelineType::CorrectionRequest,
+            TimelineType::CorrectionResponse,
+            TimelineType::Hearing,
+            TimelineType::HearingSubmission,
+            TimelineType::Complaint,
+            TimelineType::ComplaintAdditionalInformation,
+            TimelineType::ComplaintDecision => 20,
 
-            'task' => 30,
+            TimelineType::Task => 30,
 
-            'inspection',
-            'visit' => 40,
+            TimelineType::Inspection,
+            TimelineType::Visit => 40,
 
-            'deadline' => 50,
-
-            default => 80,
+            TimelineType::Deadline => 50,
         };
     }
 }

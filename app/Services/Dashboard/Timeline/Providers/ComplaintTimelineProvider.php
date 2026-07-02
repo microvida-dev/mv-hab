@@ -3,6 +3,9 @@
 namespace App\Services\Dashboard\Timeline\Providers;
 
 use App\Data\Dashboard\TimelineEvent;
+use App\Enums\Dashboard\Timeline\TimelinePriority;
+use App\Enums\Dashboard\Timeline\TimelineType;
+use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Enums\ComplaintDecisionStatus;
 use App\Enums\ComplaintStatus;
 use App\Models\Complaint;
@@ -39,7 +42,7 @@ class ComplaintTimelineProvider implements TimelineProviderInterface
             ->get()
             ->map(fn (Complaint $complaint): TimelineEvent => new TimelineEvent(
                 id: 'complaint-'.$complaint->getKey(),
-                type: 'complaint',
+                type: TimelineType::Complaint,
                 title: 'Reclamação por analisar',
                 description: trim(($complaint->complaint_number ?? 'Reclamação').' · '.$complaint->subject),
                 route: 'backoffice.complaints.show',
@@ -47,7 +50,7 @@ class ComplaintTimelineProvider implements TimelineProviderInterface
                 priority: $complaint->assigned_to ? 'high' : 'critical',
                 icon: 'message-alert',
                 tone: $complaint->assigned_to ? 'warning' : 'danger',
-                workspace: 'contests',
+                workspace: TimelineWorkspace::Contests,
                 metadata: [
                     'complaint_id' => $complaint->getKey(),
                     'complaint_number' => $complaint->complaint_number,
@@ -69,7 +72,7 @@ class ComplaintTimelineProvider implements TimelineProviderInterface
             ->get()
             ->map(fn (Complaint $complaint): TimelineEvent => new TimelineEvent(
                 id: 'complaint-additional-information-'.$complaint->getKey(),
-                type: 'complaint-additional-information',
+                type: TimelineType::ComplaintAdditionalInformation,
                 title: $complaint->additional_information_deadline_at?->isPast()
                     ? 'Informação adicional de reclamação expirada'
                     : 'Informação adicional de reclamação com prazo próximo',
@@ -79,7 +82,7 @@ class ComplaintTimelineProvider implements TimelineProviderInterface
                 priority: $complaint->additional_information_deadline_at?->isPast() ? 'critical' : 'high',
                 icon: 'message-alert',
                 tone: $complaint->additional_information_deadline_at?->isPast() ? 'danger' : 'warning',
-                workspace: 'contests',
+                workspace: TimelineWorkspace::Contests,
                 metadata: [
                     'complaint_id' => $complaint->getKey(),
                     'complaint_number' => $complaint->complaint_number,
@@ -101,15 +104,15 @@ class ComplaintTimelineProvider implements TimelineProviderInterface
             ->get()
             ->map(fn (ComplaintDecision $decision): TimelineEvent => new TimelineEvent(
                 id: 'complaint-decision-'.$decision->getKey(),
-                type: 'complaint-decision',
+                type: TimelineType::ComplaintDecision,
                 title: 'Decisão de reclamação pendente',
                 description: trim(($decision->decision_number ?? 'Decisão').' · '.$decision->summary),
                 route: 'backoffice.complaint-decisions.show',
                 datetime: $decision->proposed_at ?? $decision->created_at,
-                priority: 'high',
+                priority: TimelinePriority::High,
                 icon: 'document-check',
                 tone: 'warning',
-                workspace: 'contests',
+                workspace: TimelineWorkspace::Contests,
                 metadata: [
                     'complaint_decision_id' => $decision->getKey(),
                     'decision_number' => $decision->decision_number,

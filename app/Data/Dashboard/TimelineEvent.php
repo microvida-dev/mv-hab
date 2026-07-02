@@ -2,44 +2,42 @@
 
 namespace App\Data\Dashboard;
 
+use App\Enums\Dashboard\Timeline\TimelinePriority;
+use App\Enums\Dashboard\Timeline\TimelineStatus;
+use App\Enums\Dashboard\Timeline\TimelineType;
+use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use Illuminate\Support\Carbon;
 
 final readonly class TimelineEvent
 {
     public function __construct(
         public string $id,
-        public string $type,
+        public TimelineType $type,
         public string $title,
         public ?string $description = null,
         public ?string $route = null,
         public ?Carbon $datetime = null,
-        public string $priority = 'medium',
-        public string $status = 'pending',
+        public TimelinePriority $priority = TimelinePriority::Medium,
+        public TimelineStatus $status = TimelineStatus::Pending,
         public string $icon = 'calendar',
         public string $tone = 'neutral',
-        public ?string $workspace = null,
+        public ?TimelineWorkspace $workspace = null,
         public array $metadata = [],
     ) {}
 
     public function priorityWeight(): int
     {
-        return match ($this->priority) {
-            'critical' => 10,
-            'high' => 20,
-            'medium' => 40,
-            'low' => 60,
-            default => 80,
-        };
+        return $this->priority->weight();
     }
 
     public function toArray(): array
     {
         return [
             'id' => $this->id,
-            'type' => $this->type,
-            'priority' => $this->priority,
+            'type' => $this->type->value,
+            'priority' => $this->priority->value,
             'priority_weight' => $this->priorityWeight(),
-            'status' => $this->status,
+            'status' => $this->status->value,
             'datetime' => $this->datetime?->toIso8601String(),
             'date' => $this->datetime?->toDateString(),
             'time' => $this->datetime?->format('H:i'),
@@ -48,7 +46,7 @@ final readonly class TimelineEvent
             'route' => $this->route,
             'icon' => $this->icon,
             'tone' => $this->tone,
-            'workspace' => $this->workspace,
+            'workspace' => $this->workspace?->value,
             'metadata' => $this->metadata,
         ];
     }

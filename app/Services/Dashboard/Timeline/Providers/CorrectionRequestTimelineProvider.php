@@ -3,6 +3,9 @@
 namespace App\Services\Dashboard\Timeline\Providers;
 
 use App\Data\Dashboard\TimelineEvent;
+use App\Enums\Dashboard\Timeline\TimelinePriority;
+use App\Enums\Dashboard\Timeline\TimelineType;
+use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Enums\CorrectionRequestStatus;
 use App\Enums\CorrectionResponseStatus;
 use App\Models\CorrectionRequest;
@@ -40,7 +43,7 @@ class CorrectionRequestTimelineProvider implements TimelineProviderInterface
             ->get()
             ->map(fn (CorrectionRequest $request): TimelineEvent => new TimelineEvent(
                 id: 'correction-request-'.$request->getKey(),
-                type: 'correction-request',
+                type: TimelineType::CorrectionRequest,
                 title: $request->response_deadline_at?->isPast()
                     ? 'Pedido de aperfeiçoamento expirado'
                     : 'Pedido de aperfeiçoamento com prazo próximo',
@@ -50,7 +53,7 @@ class CorrectionRequestTimelineProvider implements TimelineProviderInterface
                 priority: $request->response_deadline_at?->isPast() ? 'critical' : 'high',
                 icon: 'document',
                 tone: $request->response_deadline_at?->isPast() ? 'danger' : 'warning',
-                workspace: 'applications',
+                workspace: TimelineWorkspace::Applications,
                 metadata: [
                     'correction_request_id' => $request->getKey(),
                     'request_number' => $request->request_number,
@@ -71,15 +74,15 @@ class CorrectionRequestTimelineProvider implements TimelineProviderInterface
             ->get()
             ->map(fn (CorrectionResponse $response): TimelineEvent => new TimelineEvent(
                 id: 'correction-response-'.$response->getKey(),
-                type: 'correction-response',
+                type: TimelineType::CorrectionResponse,
                 title: 'Resposta a aperfeiçoamento por analisar',
                 description: trim('Resposta submetida · '.$response->submitted_at?->format('d/m/Y H:i')),
                 route: 'backoffice.correction-responses.show',
                 datetime: $response->submitted_at,
-                priority: 'high',
+                priority: TimelinePriority::High,
                 icon: 'document-check',
                 tone: 'warning',
-                workspace: 'applications',
+                workspace: TimelineWorkspace::Applications,
                 metadata: [
                     'correction_response_id' => $response->getKey(),
                     'correction_request_id' => $response->correction_request_id,

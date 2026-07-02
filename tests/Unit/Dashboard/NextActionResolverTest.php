@@ -3,6 +3,9 @@
 namespace Tests\Unit\Dashboard;
 
 use App\Data\Dashboard\TimelineEvent;
+use App\Enums\Dashboard\Timeline\TimelinePriority;
+use App\Enums\Dashboard\Timeline\TimelineType;
+use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Services\Dashboard\Timeline\NextActionResolver;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -17,17 +20,17 @@ class NextActionResolverTest extends TestCase
         $events = new Collection([
             new TimelineEvent(
                 id: 'future-critical',
-                type: 'task',
+                type: TimelineType::Task,
                 title: 'Crítico futuro',
                 datetime: Carbon::parse('2026-07-02 12:00:00'),
-                priority: 'critical',
+                priority: TimelinePriority::Critical,
             ),
             new TimelineEvent(
                 id: 'past-high',
-                type: 'visit',
+                type: TimelineType::Visit,
                 title: 'Visita atrasada',
                 datetime: Carbon::parse('2026-07-02 09:00:00'),
-                priority: 'high',
+                priority: TimelinePriority::High,
             ),
         ]);
 
@@ -43,17 +46,17 @@ class NextActionResolverTest extends TestCase
         $events = new Collection([
             new TimelineEvent(
                 id: 'task',
-                type: 'task',
+                type: TimelineType::Task,
                 title: 'Tarefa',
                 datetime: Carbon::parse('2026-07-02 10:30:00'),
-                priority: 'critical',
+                priority: TimelinePriority::Critical,
             ),
             new TimelineEvent(
                 id: 'complaint',
-                type: 'complaint',
+                type: TimelineType::Complaint,
                 title: 'Reclamação',
                 datetime: Carbon::parse('2026-07-02 11:30:00'),
-                priority: 'high',
+                priority: TimelinePriority::High,
             ),
         ]);
 

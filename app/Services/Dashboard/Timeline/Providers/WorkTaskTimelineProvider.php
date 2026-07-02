@@ -3,6 +3,9 @@
 namespace App\Services\Dashboard\Timeline\Providers;
 
 use App\Data\Dashboard\TimelineEvent;
+use App\Enums\Dashboard\Timeline\TimelinePriority;
+use App\Enums\Dashboard\Timeline\TimelineType;
+use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\User;
 use App\Models\WorkTask;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
@@ -26,7 +29,7 @@ class WorkTaskTimelineProvider implements TimelineProviderInterface
             ->get()
             ->map(fn (WorkTask $task): TimelineEvent => new TimelineEvent(
                 id: 'work-task-'.$task->getKey(),
-                type: 'task',
+                type: TimelineType::Task,
                 title: WorkTask::typeLabel((string) $task->type),
                 description: trim(($task->task_number ?? 'Tarefa').' · '.WorkTask::statusLabel((string) $task->status)),
                 route: 'backoffice.work-tasks.my',
@@ -39,7 +42,7 @@ class WorkTaskTimelineProvider implements TimelineProviderInterface
                 },
                 icon: 'check',
                 tone: in_array($task->priority, [WorkTask::PRIORITY_HIGH, WorkTask::PRIORITY_URGENT], true) ? 'danger' : 'warning',
-                workspace: 'operations',
+                workspace: TimelineWorkspace::Operations,
                 metadata: [
                     'task_id' => $task->getKey(),
                     'task_number' => $task->task_number,

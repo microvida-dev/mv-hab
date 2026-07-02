@@ -3,6 +3,7 @@
 namespace App\Services\Dashboard\Timeline;
 
 use App\Data\Dashboard\TimelineEvent;
+use App\Enums\Dashboard\Timeline\TimelinePriority;
 use Illuminate\Support\Collection;
 
 class TimelineMetricsService
@@ -15,8 +16,8 @@ class TimelineMetricsService
     {
         return [
             'total' => $events->count(),
-            'critical' => $events->where('priority', 'critical')->count(),
-            'high' => $events->where('priority', 'high')->count(),
+            'critical' => $events->filter(fn (TimelineEvent $event): bool => $event->priority === TimelinePriority::Critical)->count(),
+            'high' => $events->filter(fn (TimelineEvent $event): bool => $event->priority === TimelinePriority::High)->count(),
             'overdue' => $events->filter(fn (TimelineEvent $event): bool => $event->datetime?->isPast() ?? false)->count(),
             'today' => $events->filter(fn (TimelineEvent $event): bool => $event->datetime?->isToday() ?? false)->count(),
             'by_workspace' => $this->byWorkspace($events),
@@ -31,7 +32,7 @@ class TimelineMetricsService
     private function byWorkspace(Collection $events): array
     {
         return $events
-            ->groupBy(fn (TimelineEvent $event): string => $event->workspace ?? 'unknown')
+            ->groupBy(fn (TimelineEvent $event): string => $event->workspace?->value ?? 'unknown')
             ->map(fn (Collection $items): int => $items->count())
             ->sortDesc()
             ->all();
@@ -44,7 +45,7 @@ class TimelineMetricsService
     private function byType(Collection $events): array
     {
         return $events
-            ->groupBy(fn (TimelineEvent $event): string => $event->type)
+            ->groupBy(fn (TimelineEvent $event): string => $event->type->value)
             ->map(fn (Collection $items): int => $items->count())
             ->sortDesc()
             ->all();

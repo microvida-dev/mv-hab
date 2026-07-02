@@ -3,6 +3,9 @@
 namespace Tests\Unit\Dashboard;
 
 use App\Data\Dashboard\TimelineEvent;
+use App\Enums\Dashboard\Timeline\TimelinePriority;
+use App\Enums\Dashboard\Timeline\TimelineType;
+use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineAggregatorService;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
@@ -21,24 +24,24 @@ class TimelineAggregatorServiceTest extends TestCase
                 return [
                     new TimelineEvent(
                         id: 'low-later',
-                        type: 'deadline',
+                        type: TimelineType::Deadline,
                         title: 'Prazo baixo',
                         datetime: Carbon::parse('2026-07-02 10:00:00'),
-                        priority: 'low',
+                        priority: TimelinePriority::Low,
                     ),
                     new TimelineEvent(
                         id: 'critical-later',
-                        type: 'task',
+                        type: TimelineType::Task,
                         title: 'Tarefa crítica',
                         datetime: Carbon::parse('2026-07-02 11:00:00'),
-                        priority: 'critical',
+                        priority: TimelinePriority::Critical,
                     ),
                     new TimelineEvent(
                         id: 'high-earlier',
-                        type: 'visit',
+                        type: TimelineType::Visit,
                         title: 'Visita alta',
                         datetime: Carbon::parse('2026-07-02 09:00:00'),
-                        priority: 'high',
+                        priority: TimelinePriority::High,
                     ),
                 ];
             }
@@ -64,24 +67,24 @@ class TimelineAggregatorServiceTest extends TestCase
                 return [
                     new TimelineEvent(
                         id: 'today',
-                        type: 'task',
+                        type: TimelineType::Task,
                         title: 'Hoje',
                         datetime: Carbon::parse('2026-07-02 09:00:00'),
-                        priority: 'medium',
+                        priority: TimelinePriority::Medium,
                     ),
                     new TimelineEvent(
                         id: 'tomorrow',
-                        type: 'visit',
+                        type: TimelineType::Visit,
                         title: 'Amanhã',
                         datetime: Carbon::parse('2026-07-03 09:00:00'),
-                        priority: 'medium',
+                        priority: TimelinePriority::Medium,
                     ),
                     new TimelineEvent(
                         id: 'without-date',
-                        type: 'deadline',
+                        type: TimelineType::Deadline,
                         title: 'Sem data',
                         datetime: null,
-                        priority: 'low',
+                        priority: TimelinePriority::Low,
                     ),
                 ];
             }
@@ -98,8 +101,8 @@ class TimelineAggregatorServiceTest extends TestCase
             public function forUser(User $user, array $dashboard = []): array
             {
                 return [
-                    new TimelineEvent(id: 'same-id', type: 'task', title: 'Primeiro'),
-                    new TimelineEvent(id: 'same-id', type: 'task', title: 'Duplicado'),
+                    new TimelineEvent(id: 'same-id', type: TimelineType::Task, title: 'Primeiro'),
+                    new TimelineEvent(id: 'same-id', type: TimelineType::Task, title: 'Duplicado'),
                 ];
             }
         };

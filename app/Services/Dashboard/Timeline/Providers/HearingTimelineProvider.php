@@ -3,6 +3,9 @@
 namespace App\Services\Dashboard\Timeline\Providers;
 
 use App\Data\Dashboard\TimelineEvent;
+use App\Enums\Dashboard\Timeline\TimelinePriority;
+use App\Enums\Dashboard\Timeline\TimelineType;
+use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Enums\HearingStatus;
 use App\Enums\HearingSubmissionStatus;
 use App\Models\Hearing;
@@ -39,7 +42,7 @@ class HearingTimelineProvider implements TimelineProviderInterface
             ->get()
             ->map(fn (Hearing $hearing): TimelineEvent => new TimelineEvent(
                 id: 'hearing-'.$hearing->getKey(),
-                type: 'hearing',
+                type: TimelineType::Hearing,
                 title: $hearing->deadline_at?->isPast()
                     ? 'Audiência prévia expirada'
                     : 'Audiência prévia com prazo próximo',
@@ -49,7 +52,7 @@ class HearingTimelineProvider implements TimelineProviderInterface
                 priority: $hearing->deadline_at?->isPast() ? 'critical' : 'high',
                 icon: 'message',
                 tone: $hearing->deadline_at?->isPast() ? 'danger' : 'warning',
-                workspace: 'contests',
+                workspace: TimelineWorkspace::Contests,
                 metadata: [
                     'hearing_id' => $hearing->getKey(),
                     'hearing_number' => $hearing->hearing_number,
@@ -70,15 +73,15 @@ class HearingTimelineProvider implements TimelineProviderInterface
             ->get()
             ->map(fn (HearingSubmission $submission): TimelineEvent => new TimelineEvent(
                 id: 'hearing-submission-'.$submission->getKey(),
-                type: 'hearing-submission',
+                type: TimelineType::HearingSubmission,
                 title: 'Pronúncia em audiência por analisar',
                 description: trim('Pronúncia submetida · '.$submission->submitted_at?->format('d/m/Y H:i')),
                 route: 'backoffice.hearing-submissions.show',
                 datetime: $submission->submitted_at,
-                priority: 'high',
+                priority: TimelinePriority::High,
                 icon: 'message',
                 tone: 'warning',
-                workspace: 'contests',
+                workspace: TimelineWorkspace::Contests,
                 metadata: [
                     'hearing_submission_id' => $submission->getKey(),
                     'hearing_id' => $submission->hearing_id,

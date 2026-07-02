@@ -3,6 +3,9 @@
 namespace App\Services\Dashboard\Timeline\Providers;
 
 use App\Data\Dashboard\TimelineEvent;
+use App\Enums\Dashboard\Timeline\TimelinePriority;
+use App\Enums\Dashboard\Timeline\TimelineType;
+use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Enums\VisitStatus;
 use App\Models\HousingVisit;
 use App\Models\User;
@@ -29,15 +32,15 @@ class VisitTimelineProvider implements TimelineProviderInterface
             ->get()
             ->map(fn (HousingVisit $visit): TimelineEvent => new TimelineEvent(
                 id: 'housing-visit-'.$visit->getKey(),
-                type: 'visit',
+                type: TimelineType::Visit,
                 title: 'Visita agendada',
                 description: trim(($visit->visit_number ?? 'Visita').' · '.$visit->scheduled_at?->format('H:i')),
                 route: 'backoffice.housing-visits.index',
                 datetime: $visit->scheduled_at,
-                priority: 'medium',
+                priority: TimelinePriority::Medium,
                 icon: 'user-inspection',
                 tone: 'info',
-                workspace: 'patrimony',
+                workspace: TimelineWorkspace::Patrimony,
                 metadata: [
                     'visit_id' => $visit->getKey(),
                     'visit_number' => $visit->visit_number,

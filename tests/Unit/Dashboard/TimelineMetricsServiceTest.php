@@ -3,6 +3,9 @@
 namespace Tests\Unit\Dashboard;
 
 use App\Data\Dashboard\TimelineEvent;
+use App\Enums\Dashboard\Timeline\TimelinePriority;
+use App\Enums\Dashboard\Timeline\TimelineType;
+use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Services\Dashboard\Timeline\TimelineMetricsService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -17,27 +20,27 @@ class TimelineMetricsServiceTest extends TestCase
         $metrics = (new TimelineMetricsService())->calculate(new Collection([
             new TimelineEvent(
                 id: 'overdue',
-                type: 'complaint',
+                type: TimelineType::Complaint,
                 title: 'Reclamação',
                 datetime: Carbon::parse('2026-07-02 09:00:00'),
-                priority: 'critical',
-                workspace: 'contests',
+                priority: TimelinePriority::Critical,
+                workspace: TimelineWorkspace::Contests,
             ),
             new TimelineEvent(
                 id: 'today',
-                type: 'visit',
+                type: TimelineType::Visit,
                 title: 'Visita',
                 datetime: Carbon::parse('2026-07-02 12:00:00'),
-                priority: 'medium',
-                workspace: 'patrimony',
+                priority: TimelinePriority::Medium,
+                workspace: TimelineWorkspace::Patrimony,
             ),
             new TimelineEvent(
                 id: 'future',
-                type: 'task',
+                type: TimelineType::Task,
                 title: 'Tarefa',
                 datetime: Carbon::parse('2026-07-03 12:00:00'),
-                priority: 'high',
-                workspace: 'operations',
+                priority: TimelinePriority::High,
+                workspace: TimelineWorkspace::Operations,
             ),
         ]));
 

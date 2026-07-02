@@ -30,8 +30,8 @@ class TimelineAggregatorService
             ->sortBy([
                 fn (TimelineEvent $event): int => $event->priorityWeight(),
                 fn (TimelineEvent $event): string => $event->datetime?->toIso8601String() ?? '9999-12-31T23:59:59',
-                fn (TimelineEvent $event): string => $event->workspace ?? '',
-                fn (TimelineEvent $event): string => $event->type,
+                fn (TimelineEvent $event): string => $event->workspace?->value ?? '',
+                fn (TimelineEvent $event): string => $event->type->value,
             ])
             ->values();
 
@@ -42,7 +42,6 @@ class TimelineAggregatorService
             'groups' => $this->groups($events->take(24)),
         ];
     }
-
 
     /**
      * @param  Collection<int, TimelineEvent>  $events
