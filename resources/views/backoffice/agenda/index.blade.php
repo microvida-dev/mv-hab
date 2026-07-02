@@ -26,48 +26,9 @@
                 @if (($filters['view'] ?? 'day') === 'day')
                     <x-agenda.day-timeline :events="$agenda['events'] ?? []" />
                 @elseif (($filters['view'] ?? 'day') === 'week')
-                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
-                        @foreach ($agenda['days'] ?? [] as $day)
-                            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                                <p class="text-xs font-bold uppercase text-slate-400">{{ \Illuminate\Support\Carbon::parse($day['date'])->translatedFormat('D') }}</p>
-                                <h3 class="mt-1 text-sm font-bold text-slate-950">{{ \Illuminate\Support\Carbon::parse($day['date'])->format('d/m') }}</h3>
-                                <p class="mt-1 text-xs font-semibold text-blue-700">{{ $day['statistics']['total'] ?? 0 }} eventos</p>
-
-                                <div class="mt-4 space-y-2">
-                                    @forelse ($day['events'] ?? [] as $event)
-                                        <div class="rounded-2xl bg-white p-3 shadow-sm">
-                                            <p class="text-xs font-bold text-slate-400">{{ $event['time'] ?? '—' }}</p>
-                                            <p class="mt-1 text-sm font-bold text-slate-900">{{ $event['title'] }}</p>
-                                        </div>
-                                    @empty
-                                        <p class="text-xs text-slate-400">Sem eventos.</p>
-                                    @endforelse
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
+                    <x-agenda.week-calendar :days="$agenda['days'] ?? []" />
                 @else
-                    <div class="space-y-4">
-                        @foreach ($agenda['weeks'] ?? [] as $week)
-                            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                                <div class="mb-4 flex items-center justify-between">
-                                    <h3 class="text-sm font-bold text-slate-950">{{ $week['label'] }}</h3>
-                                    <span class="rounded-full bg-white px-3 py-1 text-xs font-bold text-blue-700 shadow-sm">
-                                        {{ $week['summary']['total'] ?? 0 }} eventos
-                                    </span>
-                                </div>
-
-                                <div class="grid gap-3 md:grid-cols-7">
-                                    @foreach ($week['days'] ?? [] as $day)
-                                        <div class="rounded-2xl bg-white p-3 shadow-sm">
-                                            <p class="text-sm font-bold text-slate-900">{{ \Illuminate\Support\Carbon::parse($day['date'])->format('d') }}</p>
-                                            <p class="mt-1 text-xs font-semibold text-slate-500">{{ $day['statistics']['total'] ?? 0 }} eventos</p>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
+                    <x-agenda.month-calendar :weeks="$agenda['weeks'] ?? []" />
                 @endif
             </section>
 
