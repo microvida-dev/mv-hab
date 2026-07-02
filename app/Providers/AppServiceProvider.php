@@ -16,6 +16,7 @@ use App\Services\Dashboard\Timeline\Providers\ApplicationTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\KeyHandoverTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\RgpdTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\InternalAlertTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\AllocationTimelineProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,16 +34,8 @@ class AppServiceProvider extends ServiceProvider
             new ComplaintTimelineProvider(),
             new DeadlineTimelineProvider(),
             new MaintenanceTimelineProvider(),
-            new WorkTaskTimelineProvider(),
-            new VisitTimelineProvider(),
-            new InspectionTimelineProvider(),
-            new CorrectionRequestTimelineProvider(),
-            new HearingTimelineProvider(),
-            new ComplaintTimelineProvider(),
-            new DeadlineTimelineProvider(),
-            new MaintenanceTimelineProvider(),
-
             new ApplicationTimelineProvider(),
+            new AllocationTimelineProvider(),
             new KeyHandoverTimelineProvider(),
             new RgpdTimelineProvider(),
             new InternalAlertTimelineProvider(),

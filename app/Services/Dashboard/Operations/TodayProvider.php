@@ -13,6 +13,12 @@ use App\Services\Dashboard\Timeline\Providers\VisitTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\WorkTaskTimelineProvider;
 use App\Services\Dashboard\Timeline\TimelineAggregatorService;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\Providers\AllocationTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\ApplicationTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\InternalAlertTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\KeyHandoverTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\MaintenanceTimelineProvider;
+use App\Services\Dashboard\Timeline\Providers\RgpdTimelineProvider;
 
 class TodayProvider
 {
@@ -61,6 +67,12 @@ class TodayProvider
             new HearingTimelineProvider(),
             new ComplaintTimelineProvider(),
             new DeadlineTimelineProvider(),
+            new MaintenanceTimelineProvider(),
+            new ApplicationTimelineProvider(),
+            new AllocationTimelineProvider(),
+            new KeyHandoverTimelineProvider(),
+            new RgpdTimelineProvider(),
+            new InternalAlertTimelineProvider(),
         ];
     }
 }

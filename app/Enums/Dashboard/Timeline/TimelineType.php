@@ -21,4 +21,7 @@ enum TimelineType: string
     case KeyHandover = 'key-handover';
     case RgpdRequest = 'rgpd-request';
     case InternalAlert = 'internal-alert';
+    case AllocationOffer = 'allocation-offer';
+    case AllocationAccepted = 'allocation-accepted';
+    case AllocationReadyForContract = 'allocation-ready-for-contract';
 }
