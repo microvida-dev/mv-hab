@@ -6,14 +6,26 @@ Não deve ser usado para introduzir dados reais.
 
 ## Comando
 
+Modo explícito, recomendado quando a base já tem estrutura carregada:
+
 ```bash
 php artisan db:seed --class=Database\\Seeders\\MunicipalStateOfArtSeeder
 ```
 
+Modo completo para recriar a base e carregar a demo no mesmo comando:
+
+```bash
+MVHAB_E2E_USER_PASSWORD="PASSWORD_LOCAL_DE_TESTE" MVHAB_SEED_STATE_OF_ART_DEMO=true php artisan migrate:fresh --seed
+```
+
+Sem a flag `MVHAB_SEED_STATE_OF_ART_DEMO=true`, o comando `php artisan migrate:fresh --seed` executa apenas seeders estruturais. Nesse caso, as tabelas de agenda/timeline ficam sem dados demo por desenho.
+
+Quando `MVHAB_E2E_USER_PASSWORD` está definido, essa password é aplicada aos utilizadores fictícios dos domínios reservados `@example.test` e `@exemplo.pt`.
+
 Quando for necessário autenticar utilizadores E2E, definir uma password apenas no ambiente local:
 
 ```bash
-MVHAB_E2E_USER_PASSWORD="SUBSTITUIR_LOCALMENTE" php artisan db:seed --class=Database\\Seeders\\MunicipalStateOfArtSeeder
+MVHAB_E2E_USER_PASSWORD="PASSWORD_LOCAL_DE_TESTE" php artisan db:seed --class=Database\\Seeders\\MunicipalStateOfArtSeeder
 ```
 
 Nunca versionar passwords, `.env`, dumps, documentos reais ou screenshots com dados pessoais.
@@ -53,6 +65,37 @@ O `MunicipalStateOfArtSeeder` é explícito e cobre o percurso funcional complet
 - cronologia operacional;
 - auditoria;
 - RGPD.
+
+## Agenda municipal
+
+Os dados temporais críticos usam a data-base fixa:
+
+```php
+Carbon::parse('2026-07-02 09:00:00')
+```
+
+O seeder cria eventos futuros, posteriores a 02/07/2026, para alimentar Agenda, Timeline e providers operacionais:
+
+- Work Tasks;
+- visitas/open house;
+- vistorias;
+- audiências;
+- reclamações;
+- manutenção;
+- intervenções de manutenção;
+- candidaturas submetidas;
+- entrega de chaves;
+- pedidos RGPD;
+- alertas internos;
+- ofertas de atribuição;
+- convocatórias de sorteio;
+- rendas/prestações;
+- pedidos documentais adicionais;
+- pedidos de informação adicional;
+- ações processuais;
+- pedidos de aperfeiçoamento.
+
+A distribuição temporal cobre 03/07/2026, 04/07/2026, 07/07/2026, 10/07/2026, 15/07/2026, 22/07/2026, 05/08/2026 e 12/08/2026.
 
 ## Estrutura
 
@@ -127,6 +170,7 @@ Perfis principais:
 Executar:
 
 ```bash
+MVHAB_E2E_USER_PASSWORD="PASSWORD_LOCAL_DE_TESTE" MVHAB_SEED_STATE_OF_ART_DEMO=true php artisan migrate:fresh --seed
 php -d memory_limit=-1 ./vendor/bin/phpunit --configuration phpunit.xml --filter MunicipalStateOfArtSeederTest
 php -d memory_limit=-1 ./vendor/bin/phpunit --configuration phpunit.xml --filter Seeder
 ```

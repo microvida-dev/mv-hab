@@ -32,5 +32,9 @@ class DatabaseSeeder extends Seeder
             SecurityRgpdSeeder::class,
             SimulatorConfigurationSeeder::class,
         ]);
+
+        if (config('mvhab.seed_state_of_art_demo', false)) {
+            $this->call(MunicipalStateOfArtSeeder::class);
+        }
     }
 }

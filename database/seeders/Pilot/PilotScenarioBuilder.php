@@ -2,15 +2,19 @@
 
 namespace Database\Seeders\Pilot;
 
+use App\Enums\AdditionalInformationRequestStatus;
 use App\Enums\AdhesionRegistrationStatus;
 use App\Enums\AdministrativeProcessStatus;
 use App\Enums\AllocationMethod;
+use App\Enums\AllocationOfferStatus;
 use App\Enums\AllocationRunStatus;
 use App\Enums\AllocationStatus;
 use App\Enums\ApplicationScoreStatus;
 use App\Enums\ApplicationStatus;
 use App\Enums\ComplaintStatus;
 use App\Enums\ContractStatus;
+use App\Enums\ConvocationStatus;
+use App\Enums\CorrectionRequestStatus;
 use App\Enums\DataSubjectRequestStatus;
 use App\Enums\DataSubjectRequestType;
 use App\Enums\DefinitiveListStatus;
@@ -26,9 +30,17 @@ use App\Enums\HearingStatus;
 use App\Enums\HearingType;
 use App\Enums\InspectionStatus;
 use App\Enums\InspectionType;
+use App\Enums\InternalAlertSeverity;
+use App\Enums\InternalAlertStatus;
+use App\Enums\InternalAlertType;
+use App\Enums\KeyHandoverStatus;
 use App\Enums\LeasePaymentStatus;
 use App\Enums\ListEntryStatus;
 use App\Enums\ListEntryType;
+use App\Enums\LotteryDrawStatus;
+use App\Enums\LotteryDrawType;
+use App\Enums\LotteryParticipantStatus;
+use App\Enums\MaintenanceInterventionStatus;
 use App\Enums\MaintenancePriority;
 use App\Enums\MaintenanceRequestStatus;
 use App\Enums\MaintenanceSource;
@@ -36,9 +48,12 @@ use App\Enums\MaintenanceUrgency;
 use App\Enums\OfficialNotificationChannel;
 use App\Enums\OfficialNotificationStatus;
 use App\Enums\OfficialNotificationType;
+use App\Enums\ProcessActionStatus;
+use App\Enums\ProcessActionType;
 use App\Enums\ProvisionalListStatus;
 use App\Enums\RankingEntryStatus;
 use App\Enums\RankingSnapshotStatus;
+use App\Enums\RentInstallmentStatus;
 use App\Enums\ScoringRunStatus;
 use App\Enums\TenantInvoiceStatus;
 use App\Enums\TenantPaymentStatus;
@@ -50,9 +65,12 @@ use App\Enums\TimelineEventType;
 use App\Enums\TimelineEventVisibility;
 use App\Enums\VisitSlotStatus;
 use App\Enums\VisitStatus;
+use App\Models\AdditionalDocumentRequest;
+use App\Models\AdditionalInformationRequest;
 use App\Models\AdhesionRegistration;
 use App\Models\AdministrativeProcess;
 use App\Models\Allocation;
+use App\Models\AllocationOffer;
 use App\Models\AllocationRuleSet;
 use App\Models\AllocationRun;
 use App\Models\Application;
@@ -64,6 +82,7 @@ use App\Models\Complaint;
 use App\Models\Contest;
 use App\Models\ContestHousingUnit;
 use App\Models\Contract;
+use App\Models\CorrectionRequest;
 use App\Models\CurrentHousingSituation;
 use App\Models\DataSubjectRequest;
 use App\Models\DefinitiveList;
@@ -74,6 +93,7 @@ use App\Models\DocumentAiScore;
 use App\Models\DocumentReview;
 use App\Models\DocumentSubmission;
 use App\Models\DocumentType;
+use App\Models\DrawConvocation;
 use App\Models\Hearing;
 use App\Models\Household;
 use App\Models\HouseholdMember;
@@ -81,13 +101,18 @@ use App\Models\HousingUnit;
 use App\Models\HousingVisit;
 use App\Models\IncomeRecord;
 use App\Models\IncomeSource;
+use App\Models\InternalAlert;
 use App\Models\KeyHandoverAppointment;
 use App\Models\LeasePayment;
+use App\Models\LotteryDraw;
+use App\Models\LotteryParticipant;
 use App\Models\MaintenanceCategory;
+use App\Models\MaintenanceIntervention;
 use App\Models\MaintenanceRequest;
 use App\Models\Municipality;
 use App\Models\MunicipalTeam;
 use App\Models\OfficialNotification;
+use App\Models\ProcessAction;
 use App\Models\ProcessTimelineEvent;
 use App\Models\Program;
 use App\Models\PropertyInspection;
@@ -95,6 +120,7 @@ use App\Models\ProvisionalList;
 use App\Models\ProvisionalListEntry;
 use App\Models\RankingEntry;
 use App\Models\RankingSnapshot;
+use App\Models\RentInstallment;
 use App\Models\RequiredDocument;
 use App\Models\ScoringRuleSet;
 use App\Models\ScoringRun;
@@ -108,6 +134,7 @@ use App\Models\User;
 use App\Models\VisitAvailability;
 use App\Models\VisitSlot;
 use App\Models\WorkTask;
+use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Database\Seeders\DemoAlcanenaAffordableRentSeeder;
 use Illuminate\Support\Facades\Hash;
@@ -115,6 +142,15 @@ use Illuminate\Support\Str;
 
 class PilotScenarioBuilder
 {
+    private Carbon $baseDate;
+
+    public function __construct()
+    {
+        $baseDate = Carbon::parse('2026-07-02 09:00:00');
+
+        $this->baseDate = $baseDate;
+    }
+
     public function ensureCandidateJourney(): void
     {
         foreach ([
@@ -131,6 +167,7 @@ class PilotScenarioBuilder
 
     public function ensureApplicationStates(): void
     {
+        $baseDate = $this->baseDate();
         $technical = $this->user('e2e.tecnico@example.test');
 
         $statuses = [
@@ -145,12 +182,12 @@ class PilotScenarioBuilder
             $process = $this->administrativeProcess($application, $status);
             $process->forceFill([
                 'assigned_to' => $technical->id,
-                'assigned_at' => now()->subDays(4),
-                'received_at' => now()->subDays(6),
-                'preliminary_review_started_at' => now()->subDays(5),
-                'document_review_started_at' => now()->subDays(4),
-                'eligibility_review_started_at' => now()->subDays(3),
-                'admitted_for_scoring_at' => $status === AdministrativeProcessStatus::AdmittedForScoring ? now()->subDays(2) : null,
+                'assigned_at' => $baseDate->copy()->subDays(4),
+                'received_at' => $baseDate->copy()->subDays(6),
+                'preliminary_review_started_at' => $baseDate->copy()->subDays(5),
+                'document_review_started_at' => $baseDate->copy()->subDays(4),
+                'eligibility_review_started_at' => $baseDate->copy()->subDays(3),
+                'admitted_for_scoring_at' => $status === AdministrativeProcessStatus::AdmittedForScoring ? $baseDate->copy()->addDays(13) : null,
                 'summary' => 'Processo piloto fictício para validação end-to-end.',
                 'internal_notes' => 'Sem dados pessoais reais. Uso exclusivo em ambiente de demonstração.',
                 'created_by' => $technical->id,
@@ -168,9 +205,9 @@ class PilotScenarioBuilder
                     'status' => $key === 'eligible' ? WorkTask::STATUS_COMPLETED : WorkTask::STATUS_ASSIGNED,
                     'municipal_team_id' => $this->team('Gabinete Técnico')?->id,
                     'assigned_user_id' => $technical->id,
-                    'due_at' => now()->addDays($key === 'correction' ? 1 : 5),
-                    'assigned_at' => now()->subDays(4),
-                    'completed_at' => $key === 'eligible' ? now()->subDay() : null,
+                    'due_at' => $baseDate->copy()->addDays($key === 'correction' ? 1 : 5),
+                    'assigned_at' => $baseDate->copy()->subDays(4),
+                    'completed_at' => $key === 'eligible' ? $baseDate->copy()->addDays(13) : null,
                     'metadata' => ['scenario' => $key],
                     'created_by' => $technical->id,
                     'updated_by' => $technical->id,
@@ -225,6 +262,7 @@ class PilotScenarioBuilder
 
     public function ensureHearingAndComplaints(): void
     {
+        $baseDate = $this->baseDate();
         $application = $this->application('eligible');
         $candidate = $application->user;
         $provisionalList = $this->provisionalList();
@@ -242,9 +280,9 @@ class PilotScenarioBuilder
                 'message' => 'Pronúncia fictícia para validar audiência prévia.',
                 'legal_basis' => 'Regulamento municipal aplicável ao procedimento.',
                 'grounds' => 'Dados fictícios sem efeitos administrativos.',
-                'deadline_at' => now()->addDays(10),
+                'deadline_at' => $baseDate->copy()->addDays(2)->setTime(11, 0),
                 'issued_by' => $this->user('e2e.juridico@example.test')->id,
-                'issued_at' => now()->subDay(),
+                'issued_at' => $baseDate->copy()->addDay()->setTime(10, 0),
                 'candidate_visible' => true,
             ],
         );
@@ -260,10 +298,13 @@ class PilotScenarioBuilder
                 'subject' => 'Reclamação fictícia sobre pontuação',
                 'grounds' => 'Fundamentos fictícios para testar revisão pelo júri.',
                 'requested_outcome' => 'Revisão da classificação em ambiente de teste.',
-                'submitted_at' => now()->subDay(),
-                'received_at' => now()->subDay(),
+                'submitted_at' => $baseDate->copy()->addDays(2)->setTime(9, 30),
+                'received_at' => $baseDate->copy()->addDays(2)->setTime(10, 0),
                 'assigned_to' => $this->user('e2e.juri@example.test')->id,
-                'assigned_at' => now(),
+                'assigned_at' => $baseDate->copy()->addDays(2)->setTime(10, 15),
+                'requires_additional_information' => true,
+                'additional_information_requested_at' => $baseDate->copy()->addDays(2)->setTime(10, 30),
+                'additional_information_deadline_at' => $baseDate->copy()->addDays(2)->setTime(15, 0),
                 'candidate_visible' => true,
             ],
         );
@@ -271,6 +312,7 @@ class PilotScenarioBuilder
 
     public function ensureRankingAndAllocation(): void
     {
+        $baseDate = $this->baseDate();
         $this->provisionalList();
         $definitiveList = $this->definitiveList();
         $application = $this->application('contract');
@@ -288,8 +330,8 @@ class PilotScenarioBuilder
             'status' => AllocationRunStatus::Completed->value,
             'allocation_method' => AllocationMethod::Ranking->value,
             'started_by' => $this->user('e2e.habitacao@example.test')->id,
-            'started_at' => now()->subDays(2),
-            'completed_at' => now()->subDays(2),
+            'started_at' => $baseDate->copy()->addDays(13)->setTime(9, 0),
+            'completed_at' => $baseDate->copy()->addDays(13)->setTime(9, 30),
             'total_housing_units' => 1,
             'total_candidates' => 2,
             'total_allocations' => 1,
@@ -315,16 +357,17 @@ class PilotScenarioBuilder
                 'rank_position' => 1,
                 'preference_order' => 1,
                 'allocated_by' => $this->user('e2e.habitacao@example.test')->id,
-                'allocated_at' => now()->subDays(2),
-                'offered_at' => now()->subDays(2),
-                'accepted_at' => now()->subDay(),
-                'ready_for_contract_at' => now()->subDay(),
+                'allocated_at' => $baseDate->copy()->addDays(13)->setTime(10, 0),
+                'offered_at' => $baseDate->copy()->addDays(13)->setTime(10, 30),
+                'accepted_at' => $baseDate->copy()->addDays(14)->setTime(10, 0),
+                'ready_for_contract_at' => $baseDate->copy()->addDays(14)->setTime(11, 0),
             ],
         );
     }
 
     public function ensureContractsAndTenant(): void
     {
+        $baseDate = $this->baseDate();
         $application = $this->application('contract');
         $allocation = Allocation::query()->where('application_id', $application->id)->firstOrFail();
         $housingUnit = $this->housingUnit('ALC-DEMO-T2-MONSANTO');
@@ -348,11 +391,11 @@ class PilotScenarioBuilder
             'deposit_amount' => 285.00,
             'payment_day' => 8,
             'payment_method_description' => 'Gestão administrativa/manual no âmbito aceite.',
-            'issued_at' => now()->subDay(),
+            'issued_at' => $baseDate->copy()->addDays(15)->setTime(10, 0),
             'issued_by' => $housingManager->id,
-            'signed_at' => now(),
+            'signed_at' => $baseDate->copy()->addDays(15)->setTime(11, 0),
             'signed_by' => $housingManager->id,
-            'activated_at' => now(),
+            'activated_at' => $baseDate->copy()->addDays(15)->setTime(12, 0),
             'activated_by' => $housingManager->id,
             'created_by' => $housingManager->id,
             'updated_by' => $housingManager->id,
@@ -369,7 +412,7 @@ class PilotScenarioBuilder
             ['user_id' => $application->user_id],
             [
                 'status' => TenantPortalStatus::Active->value,
-                'activated_at' => now(),
+                'activated_at' => $baseDate->copy()->addDays(15)->setTime(12, 30),
                 'activation_notes' => 'Ativação fictícia por contrato piloto.',
                 'created_by' => $housingManager->id,
                 'updated_by' => $housingManager->id,
@@ -386,12 +429,12 @@ class PilotScenarioBuilder
             'housing_unit_id' => $housingUnit->id,
             'status' => FinancialAccountStatus::Active->value,
             'currency' => 'EUR',
-            'opened_at' => now(),
+            'opened_at' => $baseDate->copy()->addDays(15)->setTime(12, 45),
             'current_balance' => 285.00,
             'total_issued' => 570.00,
             'total_paid' => 285.00,
             'total_overdue' => 285.00,
-            'next_due_date' => now()->addMonth()->startOfMonth()->addDays(7),
+            'next_due_date' => $baseDate->copy()->addMonth()->startOfMonth()->addDays(7),
             'created_by' => $housingManager->id,
             'updated_by' => $housingManager->id,
         ])->save();
@@ -474,8 +517,8 @@ class PilotScenarioBuilder
                 'allocation_id' => $allocation->id,
                 'contest_id' => $this->contest()->id,
                 'contest_housing_unit_id' => $allocation->contest_housing_unit_id,
-                'status' => 'scheduled',
-                'scheduled_for' => now()->addDays(7),
+                'status' => KeyHandoverStatus::Scheduled->value,
+                'scheduled_for' => $baseDate->copy()->addDays(20)->setTime(10, 0),
                 'location' => 'Paços do Concelho - atendimento municipal',
                 'instructions' => 'Entrega de chaves fictícia para validação de agenda.',
                 'metadata' => ['pilot' => true],
@@ -485,6 +528,7 @@ class PilotScenarioBuilder
 
     public function ensureMaintenanceAndInspections(): void
     {
+        $baseDate = $this->baseDate();
         $contract = Contract::query()->where('contract_number', 'E2E-CON-2026-0001')->firstOrFail();
         $housingUnit = $this->housingUnit('ALC-DEMO-T2-MONSANTO');
         $category = MaintenanceCategory::query()->first();
@@ -506,10 +550,28 @@ class PilotScenarioBuilder
             'urgency' => MaintenanceUrgency::Urgent->value,
             'technical_priority' => MaintenanceUrgency::Urgent->value,
             'status' => MaintenanceRequestStatus::Scheduled->value,
-            'reported_at' => now()->subDays(2),
-            'scheduled_for' => now()->addDay(),
+            'reported_at' => $baseDate->copy()->addDay()->setTime(9, 0),
+            'scheduled_for' => $baseDate->copy()->addDays(34)->setTime(9, 30),
             'created_by' => $contract->user_id,
             'updated_by' => $this->user('e2e.manutencao@example.test')->id,
+        ])->save();
+
+        $intervention = MaintenanceIntervention::query()->firstOrNew([
+            'maintenance_request_id' => $maintenance->id,
+            'housing_unit_id' => $housingUnit->id,
+        ]);
+
+        $intervention->forceFill([
+            'lease_contract_id' => $contract->id,
+            'performed_by_user_id' => $this->user('e2e.manutencao@example.test')->id,
+            'status' => MaintenanceInterventionStatus::Scheduled->value,
+            'scheduled_for' => $baseDate->copy()->addDays(34)->setTime(11, 0),
+            'work_description' => 'Intervenção fictícia agendada para validação da agenda municipal.',
+            'materials_used' => 'Material fictício.',
+            'result_summary' => null,
+            'next_steps' => 'Confirmar comparência do técnico.',
+            'requires_follow_up' => false,
+            'created_by' => $this->user('e2e.manutencao@example.test')->id,
         ])->save();
 
         PropertyInspection::query()->updateOrCreate(
@@ -521,7 +583,7 @@ class PilotScenarioBuilder
                 'inspection_type' => InspectionType::Periodic->value,
                 'status' => InspectionStatus::Scheduled->value,
                 'inspector_user_id' => $this->user('e2e.vistorias@example.test')->id,
-                'scheduled_for' => now()->addDays(10),
+                'scheduled_for' => $baseDate->copy()->addDays(5)->setTime(14, 0),
                 'summary' => 'Vistoria preventiva fictícia.',
                 'tenant_visible' => true,
                 'tenant_present' => true,
@@ -532,11 +594,12 @@ class PilotScenarioBuilder
 
     public function ensureVisitsAndSupport(): void
     {
+        $baseDate = $this->baseDate();
         $contest = $this->contest();
         $housingUnit = $this->housingUnit('ALC-DEMO-T2-MONSANTO');
         $staff = $this->user('e2e.atendimento@example.test');
         $candidate = $this->application('submitted')->user;
-        $start = now()->addDays(14)->setTime(10, 0);
+        $start = $baseDate->copy()->addDays(5)->setTime(10, 0);
 
         $availability = VisitAvailability::query()->firstOrNew(['title' => 'Open house piloto - Monsanto T2']);
         $availability->forceFill([
@@ -584,10 +647,10 @@ class PilotScenarioBuilder
                 'candidate_user_id' => $candidate->id,
                 'staff_user_id' => $staff->id,
                 'status' => VisitStatus::Confirmed->value,
-                'scheduled_at' => now(),
+                'scheduled_at' => $start,
                 'starts_at' => $slot->starts_at,
                 'ends_at' => $slot->ends_at,
-                'confirmed_at' => now(),
+                'confirmed_at' => $baseDate->copy()->addDays(3)->setTime(10, 0),
                 'candidate_notes' => 'Visita piloto marcada pelo candidato.',
                 'location' => $slot->location,
                 'meeting_point' => $slot->meeting_point,
@@ -608,20 +671,21 @@ class PilotScenarioBuilder
                 'subject' => 'Dúvida fictícia sobre visita aberta',
                 'description' => 'Ticket fictício para validar apoio e interações.',
                 'context' => ['pilot' => true],
-                'last_message_at' => now(),
+                'last_message_at' => $baseDate->copy()->addDays(2)->setTime(12, 0),
             ],
         );
     }
 
     public function ensureOperationsAgenda(): void
     {
+        $baseDate = $this->baseDate();
         $admin = $this->user('e2e.admin@example.test');
         $application = $this->application('eligible');
 
         foreach ([
-            ['E2E-TASK-DOC-2026-0001', WorkTask::TYPE_DOCUMENT_REVIEW, WorkTask::STATUS_OVERDUE, WorkTask::PRIORITY_URGENT, -1, 'e2e.tecnico@example.test'],
-            ['E2E-TASK-SCORE-2026-0001', WorkTask::TYPE_SCORING_REVIEW, WorkTask::STATUS_ASSIGNED, WorkTask::PRIORITY_HIGH, 2, 'e2e.juri@example.test'],
-            ['E2E-TASK-RGPD-2026-0001', WorkTask::TYPE_RGPD_REQUEST, WorkTask::STATUS_PENDING, WorkTask::PRIORITY_NORMAL, 5, 'e2e.auditor@example.test'],
+            ['E2E-TASK-DOC-2026-0001', WorkTask::TYPE_DOCUMENT_REVIEW, WorkTask::STATUS_ASSIGNED, WorkTask::PRIORITY_URGENT, 1, 'e2e.tecnico@example.test'],
+            ['E2E-TASK-SCORE-2026-0001', WorkTask::TYPE_SCORING_REVIEW, WorkTask::STATUS_ASSIGNED, WorkTask::PRIORITY_HIGH, 13, 'e2e.juri@example.test'],
+            ['E2E-TASK-RGPD-2026-0001', WorkTask::TYPE_RGPD_REQUEST, WorkTask::STATUS_PENDING, WorkTask::PRIORITY_NORMAL, 41, 'e2e.auditor@example.test'],
         ] as [$number, $type, $status, $priority, $dueOffset, $email]) {
             WorkTask::query()->updateOrCreate(
                 ['task_number' => (string) $number],
@@ -634,14 +698,58 @@ class PilotScenarioBuilder
                     'status' => (string) $status,
                     'municipal_team_id' => $this->teamForUser((string) $email)?->id,
                     'assigned_user_id' => $this->user((string) $email)->id,
-                    'due_at' => now()->addDays((int) $dueOffset),
-                    'assigned_at' => now()->subDay(),
+                    'due_at' => $baseDate->copy()->addDays((int) $dueOffset)->setTime(10, 0),
+                    'assigned_at' => $baseDate->copy()->setTime(9, 30),
                     'metadata' => ['pilot' => true],
                     'created_by' => $admin->id,
                     'updated_by' => $admin->id,
                 ],
             );
         }
+
+        foreach ([
+            ['E2E-ALT-2026-0001', InternalAlertType::DeadlineApproaching, InternalAlertSeverity::Critical, 'Prazo crítico de validação documental', 1, 'e2e.tecnico@example.test'],
+            ['E2E-ALT-2026-0002', InternalAlertType::VisitPending, InternalAlertSeverity::Warning, 'Confirmar visitas abertas', 5, 'e2e.atendimento@example.test'],
+            ['E2E-ALT-2026-0003', InternalAlertType::ProcessConfirmationPending, InternalAlertSeverity::High, 'Confirmar decisão processual', 13, 'e2e.juri@example.test'],
+        ] as [$number, $type, $severity, $title, $dueOffset, $email]) {
+            InternalAlert::query()->updateOrCreate(
+                ['alert_number' => (string) $number],
+                [
+                    'type' => $type->value,
+                    'severity' => $severity->value,
+                    'status' => InternalAlertStatus::Open->value,
+                    'title' => (string) $title,
+                    'message' => 'Alerta fictício para validação de agenda municipal.',
+                    'assigned_to' => $this->user((string) $email)->id,
+                    'assigned_role' => null,
+                    'municipality_id' => $this->municipality()->id,
+                    'program_id' => $this->program()->id,
+                    'contest_id' => $this->contest()->id,
+                    'application_id' => $application->id,
+                    'due_at' => $baseDate->copy()->addDays((int) $dueOffset)->setTime(11, 0),
+                    'related_type' => $application->getMorphClass(),
+                    'related_id' => $application->id,
+                    'metadata' => ['pilot' => true],
+                    'created_by' => $admin->id,
+                ],
+            );
+        }
+
+        ProcessAction::query()->updateOrCreate(
+            ['action_number' => 'E2E-ACT-2026-0001'],
+            [
+                'application_id' => $application->id,
+                'user_id' => $application->user_id,
+                'action_type' => ProcessActionType::ConfirmData->value,
+                'status' => ProcessActionStatus::Available->value,
+                'title' => 'Confirmar dados antes de decisão',
+                'description' => 'Ação processual fictícia para alimentar agenda e timeline.',
+                'due_at' => $baseDate->copy()->addDays(13)->setTime(15, 0),
+                'related_type' => $application->getMorphClass(),
+                'related_id' => $application->id,
+                'metadata' => ['pilot' => true],
+            ],
+        );
 
         ProcessTimelineEvent::query()->updateOrCreate(
             ['event_number' => 'E2E-TL-2026-0001'],
@@ -655,7 +763,7 @@ class PilotScenarioBuilder
                 'public_status' => null,
                 'title' => 'Candidatura preparada para classificação',
                 'description' => 'Evento fictício para validar cronologia, case workspace e dashboard.',
-                'occurred_at' => now()->subDay(),
+                'occurred_at' => $baseDate->copy()->addDays(13)->setTime(14, 0),
                 'created_by' => $admin->id,
                 'metadata' => ['pilot' => true],
             ],
@@ -676,14 +784,203 @@ class PilotScenarioBuilder
                 'title' => 'Candidatura em análise',
                 'body' => 'Mensagem fictícia para validação da área do candidato.',
                 'requires_acknowledgement' => false,
-                'sent_at' => now()->subDay(),
+                'sent_at' => $baseDate->copy()->addDays(13)->setTime(14, 30),
                 'created_by' => $admin->id,
             ],
         );
+
+        $this->ensureFuturePreparedAgendaModules($baseDate);
+    }
+
+    private function ensureFuturePreparedAgendaModules(Carbon $baseDate): void
+    {
+        $application = $this->application('contract');
+        $allocation = Allocation::query()->where('application_id', $application->id)->firstOrFail();
+        $contract = Contract::query()->where('contract_number', 'E2E-CON-2026-0001')->firstOrFail();
+        $account = TenantFinancialAccount::query()->where('account_number', 'E2E-FIN-2026-0001')->firstOrFail();
+        $complaint = Complaint::query()->where('complaint_number', 'E2E-COMP-2026-0001')->firstOrFail();
+        $housingManager = $this->user('e2e.habitacao@example.test');
+        $technical = $this->user('e2e.tecnico@example.test');
+        $documentType = $this->documentType();
+
+        $offer = AllocationOffer::query()->firstOrNew(['offer_number' => 'E2E-OFFER-2026-0001']);
+        $offer->forceFill([
+            'allocation_id' => $allocation->id,
+            'application_id' => $application->id,
+            'user_id' => $application->user_id,
+            'contest_housing_unit_id' => $allocation->contest_housing_unit_id,
+            'housing_unit_id' => $allocation->housing_unit_id,
+            'status' => AllocationOfferStatus::PendingResponse->value,
+            'message' => 'Oferta fictícia de atribuição para validação futura.',
+            'instructions' => 'Responder no prazo indicado na área do candidato.',
+            'issued_by' => $housingManager->id,
+            'issued_at' => $baseDate->copy()->addDays(13)->setTime(11, 0),
+            'response_deadline_at' => $baseDate->copy()->addDays(20)->setTime(16, 0),
+        ])->save();
+
+        $draw = $this->lotteryDraw($baseDate);
+        $participant = $this->lotteryParticipant($draw, $application);
+        $convocation = DrawConvocation::query()->firstOrNew([
+            'lottery_run_id' => $draw->id,
+            'application_id' => $application->id,
+        ]);
+
+        $convocation->forceFill([
+            'contest_id' => $this->contest()->id,
+            'user_id' => $application->user_id,
+            'lottery_participant_id' => $participant->id,
+            'status' => ConvocationStatus::Generated->value,
+            'scheduled_for' => $baseDate->copy()->addDays(13)->setTime(15, 0),
+            'location' => 'Sala municipal fictícia',
+            'instructions' => 'Convocatória fictícia para validação de agenda.',
+            'generated_at' => $baseDate->copy()->addDays(10)->setTime(10, 0),
+            'generated_by' => $housingManager->id,
+            'metadata' => ['pilot' => true],
+        ])->save();
+
+        $installment = RentInstallment::query()->firstOrNew(['reference' => 'E2E-RENT-2026-0001']);
+        $installment->forceFill([
+            'tenant_financial_account_id' => $account->id,
+            'rent_schedule_id' => null,
+            'lease_contract_id' => $contract->id,
+            'user_id' => $contract->user_id,
+            'status' => RentInstallmentStatus::Overdue->value,
+            'period_year' => 2026,
+            'period_month' => 8,
+            'issue_date' => $baseDate->copy()->addMonth()->startOfMonth()->toDateString(),
+            'due_date' => $baseDate->copy()->addDays(37)->toDateString(),
+            'original_amount' => 285.00,
+            'amount_due' => 285.00,
+            'amount_paid' => 0,
+            'amount_outstanding' => 285.00,
+            'amount_waived' => 0,
+            'currency' => 'EUR',
+            'issued_at' => $baseDate->copy()->addMonth()->startOfMonth()->setTime(9, 0),
+            'overdue_at' => $baseDate->copy()->addDays(41)->setTime(9, 0),
+            'internal_notes' => 'Prestação fictícia para validação de agenda financeira.',
+            'created_by' => $this->user('e2e.financeiro@example.test')->id,
+            'updated_by' => $this->user('e2e.financeiro@example.test')->id,
+        ])->save();
+
+        AdditionalDocumentRequest::query()->updateOrCreate(
+            ['request_number' => 'E2E-ADD-DOC-2026-0001'],
+            [
+                'application_id' => $application->id,
+                'user_id' => $application->user_id,
+                'document_type_id' => $documentType->id,
+                'required_document_id' => $this->requiredDocument($documentType)->id,
+                'status' => ProcessActionStatus::Available->value,
+                'title' => 'Documento adicional fictício',
+                'description' => 'Pedido documental adicional para validar agenda futura.',
+                'due_at' => $baseDate->copy()->addDays(8)->setTime(10, 0),
+                'issued_by' => $technical->id,
+                'issued_at' => $baseDate->copy()->addDays(2)->setTime(10, 30),
+                'internal_notes' => 'Sem documentos reais.',
+            ],
+        );
+
+        AdditionalInformationRequest::query()->updateOrCreate(
+            ['request_number' => 'E2E-ADD-INFO-2026-0001'],
+            [
+                'complaint_id' => $complaint->id,
+                'application_id' => $complaint->application_id,
+                'user_id' => $complaint->user_id,
+                'status' => AdditionalInformationRequestStatus::Open->value,
+                'subject' => 'Pedido de informação complementar fictício',
+                'message' => 'Mensagem fictícia para validar prazos de reclamação.',
+                'instructions' => 'Responder através da área do candidato.',
+                'deadline_at' => $baseDate->copy()->addDays(8)->setTime(14, 0),
+                'issued_by' => $this->user('e2e.juri@example.test')->id,
+                'issued_at' => $baseDate->copy()->addDays(2)->setTime(11, 0),
+                'internal_notes' => 'Pedido fictício sem dados reais.',
+            ],
+        );
+
+        $this->correctionRequest($baseDate);
+    }
+
+    private function correctionRequest(Carbon $baseDate): CorrectionRequest
+    {
+        $application = $this->application('correction');
+        $process = $this->administrativeProcess($application, AdministrativeProcessStatus::RequiresCorrection);
+
+        $request = CorrectionRequest::query()->firstOrNew(['request_number' => 'E2E-CORR-2026-0001']);
+        $request->forceFill([
+            'administrative_process_id' => $process->id,
+            'application_id' => $application->id,
+            'user_id' => $application->user_id,
+            'status' => CorrectionRequestStatus::Open->value,
+            'subject' => 'Pedido de aperfeiçoamento fictício',
+            'message' => 'Pedido fictício para validar prazos e timeline de aperfeiçoamentos.',
+            'legal_basis' => 'Regulamento municipal aplicável.',
+            'instructions' => 'Responder com os elementos em falta através da área do candidato.',
+            'issued_by' => $this->user('e2e.tecnico@example.test')->id,
+            'issued_at' => $baseDate->copy()->addDay()->setTime(12, 0),
+            'response_deadline_at' => $baseDate->copy()->addDays(2)->setTime(16, 0),
+            'candidate_visible' => true,
+            'internal_notes' => 'Pedido fictício sem documentos reais.',
+        ])->save();
+
+        return $request;
+    }
+
+    private function lotteryDraw(Carbon $baseDate): LotteryDraw
+    {
+        $allocationRun = AllocationRun::query()->where('run_number', 'E2E-ALLOC-RUN-2026-0001')->firstOrFail();
+        $definitiveList = $this->definitiveList();
+        $draw = LotteryDraw::query()
+            ->where('seed', 'E2E-LOTTERY-SEED-2026')
+            ->firstOrNew();
+
+        $draw->forceFill([
+            'allocation_run_id' => $allocationRun->id,
+            'program_id' => $this->program()->id,
+            'contest_id' => $this->contest()->id,
+            'definitive_list_id' => $definitiveList->id,
+            'status' => LotteryDrawStatus::Ready->value,
+            'draw_type' => LotteryDrawType::General->value,
+            'lottery_method' => 'hash_seeded_order',
+            'seed' => 'E2E-LOTTERY-SEED-2026',
+            'seed_hash' => hash('sha256', 'E2E-LOTTERY-SEED-2026'),
+            'seed_source' => 'pilot_state_of_art',
+            'algorithm' => 'sha256(seed:participant)',
+            'scheduled_at' => $baseDate->copy()->addDays(13)->setTime(15, 0),
+            'location' => 'Sala municipal fictícia',
+            'instructions' => 'Sorteio fictício para validação futura.',
+            'participants_count' => 1,
+            'drawn_count' => 0,
+            'started_by' => $this->user('e2e.juri@example.test')->id,
+            'audit_payload' => ['pilot' => true],
+        ])->save();
+
+        return $draw;
+    }
+
+    private function lotteryParticipant(LotteryDraw $draw, Application $application): LotteryParticipant
+    {
+        $entry = DefinitiveListEntry::query()->where('application_id', $application->id)->latest('id')->first();
+        $participant = LotteryParticipant::query()->firstOrNew([
+            'lottery_run_id' => $draw->id,
+            'application_id' => $application->id,
+        ]);
+
+        $participant->forceFill([
+            'user_id' => $application->user_id,
+            'definitive_list_entry_id' => $entry?->id,
+            'participant_number' => 'E2E-PART-2026-0001',
+            'rank_position' => 1,
+            'weight' => 1,
+            'status' => LotteryParticipantStatus::Included->value,
+            'is_eligible' => true,
+            'snapshot' => ['pilot' => true],
+        ])->save();
+
+        return $participant;
     }
 
     public function ensureRgpdAndAudit(): void
     {
+        $baseDate = $this->baseDate();
         $auditor = $this->user('e2e.auditor@example.test');
         $candidate = $this->application('submitted')->user;
 
@@ -696,9 +993,9 @@ class PilotScenarioBuilder
                 'request_type' => DataSubjectRequestType::Access->value,
                 'status' => DataSubjectRequestStatus::UnderReview->value,
                 'description' => 'Pedido RGPD fictício para validação operacional.',
-                'identity_verified_at' => now(),
-                'received_at' => now()->subDay(),
-                'due_at' => now()->addDays(20),
+                'identity_verified_at' => $baseDate->copy()->addDays(2)->setTime(9, 0),
+                'received_at' => $baseDate->copy()->addDays(2)->setTime(9, 30),
+                'due_at' => $baseDate->copy()->addDays(41)->setTime(10, 0),
                 'assigned_to' => $auditor->id,
                 'created_by' => $auditor->id,
                 'internal_notes' => 'Sem dados pessoais reais.',
@@ -718,7 +1015,7 @@ class PilotScenarioBuilder
                 'access_reason' => 'Validação fictícia RGPD para piloto.',
                 'ip_address' => '127.0.0.1',
                 'user_agent' => 'MV HAB Seeder',
-                'accessed_at' => now(),
+                'accessed_at' => $baseDate->copy()->addDays(2)->setTime(10, 0),
             ],
         );
 
@@ -732,13 +1029,14 @@ class PilotScenarioBuilder
                 'metadata' => ['safe_demo_data' => true],
                 'ip_address' => '127.0.0.1',
                 'user_agent' => 'MV HAB Seeder',
-                'occurred_at' => now(),
+                'occurred_at' => $baseDate->copy()->addDays(2)->setTime(10, 15),
             ],
         );
     }
 
     public function application(string $key, ?ApplicationStatus $status = null, float $monthlyIncome = 1200.00): Application
     {
+        $baseDate = $this->baseDate();
         $candidate = $this->candidate($key);
         $registration = $this->adhesionRegistration($candidate, $monthlyIncome);
         $household = $this->household($registration, $monthlyIncome);
@@ -761,18 +1059,18 @@ class PilotScenarioBuilder
             'household_id' => $household->id,
             'current_housing_situation_id' => $currentHousing->id,
             'status' => $status->value,
-            'submitted_at' => $status === ApplicationStatus::Draft ? null : now()->subDays(7),
-            'locked_at' => $status === ApplicationStatus::Draft ? null : now()->subDays(7),
+            'submitted_at' => $status === ApplicationStatus::Draft ? null : $baseDate->copy()->addDays(13)->setTime(9, 0),
+            'locked_at' => $status === ApplicationStatus::Draft ? null : $baseDate->copy()->addDays(13)->setTime(9, 5),
             'declaration_accepted' => $status !== ApplicationStatus::Draft,
-            'declaration_accepted_at' => $status === ApplicationStatus::Draft ? null : now()->subDays(7),
+            'declaration_accepted_at' => $status === ApplicationStatus::Draft ? null : $baseDate->copy()->addDays(13)->setTime(9, 10),
             'contest_rules_accepted' => $status !== ApplicationStatus::Draft,
-            'contest_rules_accepted_at' => $status === ApplicationStatus::Draft ? null : now()->subDays(7),
+            'contest_rules_accepted_at' => $status === ApplicationStatus::Draft ? null : $baseDate->copy()->addDays(13)->setTime(9, 10),
             'data_processing_accepted' => $status !== ApplicationStatus::Draft,
-            'data_processing_accepted_at' => $status === ApplicationStatus::Draft ? null : now()->subDays(7),
+            'data_processing_accepted_at' => $status === ApplicationStatus::Draft ? null : $baseDate->copy()->addDays(13)->setTime(9, 10),
             'truthfulness_accepted' => $status !== ApplicationStatus::Draft,
-            'truthfulness_accepted_at' => $status === ApplicationStatus::Draft ? null : now()->subDays(7),
+            'truthfulness_accepted_at' => $status === ApplicationStatus::Draft ? null : $baseDate->copy()->addDays(13)->setTime(9, 10),
             'data_current_confirmed' => $status !== ApplicationStatus::Draft,
-            'data_current_confirmed_at' => $status === ApplicationStatus::Draft ? null : now()->subDays(7),
+            'data_current_confirmed_at' => $status === ApplicationStatus::Draft ? null : $baseDate->copy()->addDays(13)->setTime(9, 10),
             'candidate_notes' => 'Candidatura fictícia '.$key.' para piloto estado da arte.',
             'created_by' => $candidate->id,
             'updated_by' => $candidate->id,
@@ -1274,6 +1572,11 @@ class PilotScenarioBuilder
                 'changed_by' => $application->user_id,
             ],
         );
+    }
+
+    private function baseDate(): Carbon
+    {
+        return $this->baseDate->copy();
     }
 
     private function incomeSource(): IncomeSource

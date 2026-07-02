@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Database\Seeders\Pilot\PilotApplicationStatesSeeder;
 use Database\Seeders\Pilot\PilotCandidateJourneySeeder;
 use Database\Seeders\Pilot\PilotContractsTenantSeeder;
@@ -17,6 +18,7 @@ use Database\Seeders\Pilot\PilotRgpdAuditSeeder;
 use Database\Seeders\Pilot\PilotUsersAndTeamsSeeder;
 use Database\Seeders\Pilot\PilotVisitsSupportSeeder;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class MunicipalStateOfArtSeeder extends Seeder
 {
@@ -38,5 +40,28 @@ class MunicipalStateOfArtSeeder extends Seeder
             PilotOperationsAgendaSeeder::class,
             PilotRgpdAuditSeeder::class,
         ]);
+
+        $this->syncKnownDemoPassword();
+    }
+
+    private function syncKnownDemoPassword(): void
+    {
+        $password = config('mvhab.e2e_user_password');
+
+        if (! is_string($password) || trim($password) === '') {
+            return;
+        }
+
+        $passwordHash = Hash::make(trim($password));
+
+        User::query()
+            ->where(function ($query): void {
+                $query
+                    ->where('email', 'like', '%@example.test')
+                    ->orWhere('email', 'like', '%@exemplo.pt');
+            })
+            ->eachById(function (User $user) use ($passwordHash): void {
+                $user->forceFill(['password' => $passwordHash])->save();
+            });
     }
 }

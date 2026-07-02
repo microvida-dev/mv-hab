@@ -2,6 +2,7 @@
 
 return [
     'e2e_user_password' => env('MVHAB_E2E_USER_PASSWORD'),
+    'seed_state_of_art_demo' => env('MVHAB_SEED_STATE_OF_ART_DEMO', false),
 
     'permissions' => [
         'dashboard' => ['view', 'export', 'audit'],

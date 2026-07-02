@@ -25,8 +25,11 @@ use App\Models\TenantProfile;
 use App\Models\User;
 use App\Models\VisitAvailability;
 use App\Models\WorkTask;
+use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\MunicipalStateOfArtSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class MunicipalStateOfArtSeederTest extends TestCase
@@ -66,6 +69,26 @@ class MunicipalStateOfArtSeederTest extends TestCase
         $this->assertTrue(WorkTask::query()->where('task_number', 'E2E-TASK-DOC-2026-0001')->exists());
     }
 
+    public function test_database_seeder_keeps_state_of_art_demo_opt_in(): void
+    {
+        config(['mvhab.seed_state_of_art_demo' => false]);
+
+        $this->seed(DatabaseSeeder::class);
+
+        $this->assertSame(0, DB::table('work_tasks')->whereNotNull('due_at')->count());
+        $this->assertSame(0, DB::table('housing_visits')->whereNotNull('scheduled_at')->count());
+    }
+
+    public function test_database_seeder_can_load_state_of_art_demo_when_enabled(): void
+    {
+        config(['mvhab.seed_state_of_art_demo' => true]);
+
+        $this->seed(DatabaseSeeder::class);
+
+        $this->assertGreaterThan(0, DB::table('work_tasks')->whereNotNull('due_at')->count());
+        $this->assertGreaterThan(0, DB::table('housing_visits')->whereNotNull('scheduled_at')->count());
+    }
+
     public function test_state_of_art_seeder_uses_reserved_domains_and_no_real_files(): void
     {
         $this->seed(MunicipalStateOfArtSeeder::class);
@@ -78,5 +101,70 @@ class MunicipalStateOfArtSeederTest extends TestCase
         $this->assertSame(0, $unexpectedEmails);
         $this->assertSame(0, Municipality::query()->whereNotNull('tax_number')->count());
         $this->assertDirectoryDoesNotExist(storage_path('app/private/demo-real-documents'));
+    }
+
+    public function test_state_of_art_seeder_applies_known_password_to_demo_users_when_configured(): void
+    {
+        config(['mvhab.e2e_user_password' => 'pass']);
+
+        $this->seed(MunicipalStateOfArtSeeder::class);
+
+        $passwordHashes = User::query()
+            ->where(function ($query): void {
+                $query
+                    ->where('email', 'like', '%@example.test')
+                    ->orWhere('email', 'like', '%@exemplo.pt');
+            })
+            ->pluck('password', 'email');
+
+        $this->assertNotEmpty($passwordHashes);
+
+        foreach ($passwordHashes as $email => $passwordHash) {
+            $this->assertTrue(Hash::check('pass', $passwordHash), sprintf('%s should use the configured demo password.', $email));
+        }
+    }
+
+    public function test_state_of_art_seeder_creates_future_agenda_events_for_all_tracked_modules(): void
+    {
+        $this->seed(MunicipalStateOfArtSeeder::class);
+
+        $baseDate = '2026-07-02 09:00:00';
+
+        $trackedFields = [
+            'work_tasks' => 'due_at',
+            'housing_visits' => 'scheduled_at',
+            'property_inspections' => 'scheduled_for',
+            'hearings' => 'deadline_at',
+            'complaints' => 'submitted_at',
+            'maintenance_requests' => 'scheduled_for',
+            'maintenance_interventions' => 'scheduled_for',
+            'applications' => 'submitted_at',
+            'key_handover_appointments' => 'scheduled_for',
+            'data_subject_requests' => 'due_at',
+            'internal_alerts' => 'due_at',
+            'allocation_offers' => 'response_deadline_at',
+            'draw_convocations' => 'scheduled_for',
+            'rent_installments' => 'overdue_at',
+            'additional_document_requests' => 'due_at',
+            'additional_information_requests' => 'deadline_at',
+            'process_actions' => 'due_at',
+            'correction_requests' => 'response_deadline_at',
+        ];
+
+        foreach ($trackedFields as $table => $field) {
+            $count = DB::table($table)
+                ->whereNotNull($field)
+                ->where($field, '>', $baseDate)
+                ->count();
+
+            $this->assertGreaterThan(0, $count, sprintf('%s.%s should have future demo data.', $table, $field));
+        }
+
+        $complaintsWithAdditionalInformationDeadline = DB::table('complaints')
+            ->whereNotNull('additional_information_deadline_at')
+            ->where('additional_information_deadline_at', '>', $baseDate)
+            ->count();
+
+        $this->assertGreaterThan(0, $complaintsWithAdditionalInformationDeadline);
     }
 }
