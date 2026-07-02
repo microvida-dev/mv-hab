@@ -14,6 +14,7 @@ class TimelineAggregatorService
     public function __construct(
         private readonly array $providers = [],
         private readonly ?NextActionResolver $nextActionResolver = null,
+        private readonly ?TimelineMetricsService $metricsService = null,
     ) {}
 
     /**
@@ -36,9 +37,22 @@ class TimelineAggregatorService
 
         return [
             'nextAction' => $this->nextAction($events),
+            'metrics' => $this->metrics($events),
             'items' => $events->take(12)->map->toArray()->values()->all(),
             'groups' => $this->groups($events->take(24)),
         ];
+    }
+
+
+    /**
+     * @param  Collection<int, TimelineEvent>  $events
+     * @return array<string, mixed>
+     */
+    private function metrics(Collection $events): array
+    {
+        $metrics = $this->metricsService ?? new TimelineMetricsService();
+
+        return $metrics->calculate($events);
     }
 
     /**
