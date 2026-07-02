@@ -26,7 +26,7 @@
             </div>
         </div>
 
-        <form method="GET" action="{{ route('backoffice.agenda.index') }}" class="grid gap-3 lg:grid-cols-[150px_170px_1fr_160px_160px_130px]">
+        <form method="GET" action="{{ route('backoffice.agenda.index') }}" class="grid gap-3 lg:grid-cols-[130px_160px_1fr_140px_140px_120px_120px]">
             <select name="view" class="rounded-2xl border-slate-200 bg-slate-50 text-sm font-medium">
                 @foreach ($options['views'] ?? [] as $option)
                     <option value="{{ $option->value }}" @selected($view === $option->value)>
@@ -63,6 +63,14 @@
                     </option>
                 @endforeach
             </select>
+
+            <input
+                type="number"
+                name="technician"
+                value="{{ $filters['technician'] ?? '' }}"
+                placeholder="Técnico ID"
+                class="rounded-2xl border-slate-200 bg-slate-50 text-sm font-medium"
+            >
 
             <button type="submit" class="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700">
                 Filtrar

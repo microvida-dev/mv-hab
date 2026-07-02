@@ -59,4 +59,31 @@ class AgendaEventFilterTest extends TestCase
         $this->assertCount(1, $filtered);
         $this->assertSame('match', $filtered->first()?->id);
     }
+    public function test_it_filters_events_by_technician_id_from_metadata(): void
+    {
+        $events = new Collection([
+            new TimelineEvent(
+                id: 'assigned',
+                type: TimelineType::Task,
+                title: 'Atribuído',
+                datetime: Carbon::parse('2026-07-02 10:00:00'),
+                metadata: ['assigned_to' => 15],
+            ),
+            new TimelineEvent(
+                id: 'other',
+                type: TimelineType::Task,
+                title: 'Outro',
+                datetime: Carbon::parse('2026-07-02 11:00:00'),
+                metadata: ['assigned_to' => 20],
+            ),
+        ]);
+
+        $filtered = (new AgendaEventFilter())->apply($events, new AgendaFilters(
+            technicianId: 15,
+        ));
+
+        $this->assertCount(1, $filtered);
+        $this->assertSame('assigned', $filtered->first()?->id);
+    }
+
 }

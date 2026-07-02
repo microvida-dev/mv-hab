@@ -51,6 +51,12 @@ final class AgendaEventFilter
                     fn (TimelineEvent $event) => $event->datetime?->lte($filters->to) ?? false
                 )
             )
+            ->when(
+                $filters->technicianId,
+                fn (Collection $items) => $items->filter(
+                    fn (TimelineEvent $event) => (int) ($event->metadata['assigned_to'] ?? $event->metadata['technician_id'] ?? 0) === $filters->technicianId
+                )
+            )
             ->values();
     }
 }
