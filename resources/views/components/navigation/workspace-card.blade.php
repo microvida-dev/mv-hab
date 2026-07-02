@@ -6,8 +6,8 @@
 <article class="mv-card-interactive p-5">
     <div class="flex items-start justify-between gap-4">
         <a href="{{ route('workspaces.show', $workspace['key']) }}" class="min-w-0 flex-1 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-offset-2">
-            <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-mvhab-surface text-sm font-bold text-mvhab-primary">
-                {{ $workspace['short_label'] ?? mb_substr((string) $workspace['title'], 0, 2) }}
+            <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
+                <x-mv-icon :name="$workspace['icon'] ?? 'dashboard'" size="md" />
             </span>
             <span class="mt-4 block text-base font-semibold text-ink-900">{{ $workspace['title'] }}</span>
             <span class="mt-2 block text-sm leading-5 text-ink-500">{{ $workspace['description'] }}</span>
