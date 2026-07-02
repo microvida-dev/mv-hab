@@ -26,13 +26,13 @@
             <div class="flex items-start gap-4 py-4">
 
                 <span class="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-mvhab-surface text-mvhab-primary">
-                    <x-mv-icon name="calendar" size="sm"/>
+                    <x-mv-icon :name="$alert['icon'] ?? 'calendar'" size="sm" />
                 </span>
 
                 <div class="min-w-0 flex-1">
 
                     <p class="font-semibold text-ink-900">
-                        {{ $alert['title'] ?? 'Prazo' }}
+                        {{ $alert['title'] ?? $alert['label'] ?? 'Prazo' }}
                     </p>
 
                     @if(!empty($alert['description']))
