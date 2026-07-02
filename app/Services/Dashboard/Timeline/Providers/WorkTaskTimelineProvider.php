@@ -32,7 +32,7 @@ class WorkTaskTimelineProvider implements TimelineProviderInterface
                 type: TimelineType::Task,
                 title: WorkTask::typeLabel((string) $task->type),
                 description: trim(($task->task_number ?? 'Tarefa').' · '.WorkTask::statusLabel((string) $task->status)),
-                route: 'backoffice.work-tasks.my',
+                route: route('backoffice.work-tasks.my'),
                 datetime: $task->due_at,
                 priority: match ((string) $task->priority) {
                     WorkTask::PRIORITY_URGENT => TimelinePriority::Critical,

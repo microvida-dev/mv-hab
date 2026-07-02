@@ -35,7 +35,7 @@ class VisitTimelineProvider implements TimelineProviderInterface
                 type: TimelineType::Visit,
                 title: 'Visita agendada',
                 description: trim(($visit->visit_number ?? 'Visita').' · '.$visit->scheduled_at?->format('H:i')),
-                route: 'backoffice.housing-visits.index',
+                route: route('backoffice.housing-visits.index'),
                 datetime: $visit->scheduled_at,
                 priority: TimelinePriority::Medium,
                 icon: 'user-inspection',

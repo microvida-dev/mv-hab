@@ -33,7 +33,7 @@ class InspectionTimelineProvider implements TimelineProviderInterface
                 type: TimelineType::Inspection,
                 title: 'Vistoria técnica',
                 description: trim(($inspection->inspection_number ?? 'Vistoria').' · '.$inspection->scheduled_for?->format('H:i')),
-                route: 'backoffice.inspections.index',
+                route: route('backoffice.inspections.index'),
                 datetime: $inspection->scheduled_for,
                 priority: TimelinePriority::Medium,
                 icon: 'inspection',
