@@ -49,7 +49,7 @@ class TimelineAggregatorServiceTest extends TestCase
         $this->assertSame('critical-later', $timeline['items'][0]['id']);
         $this->assertSame('high-earlier', $timeline['items'][1]['id']);
         $this->assertSame('low-later', $timeline['items'][2]['id']);
-        $this->assertSame('critical-later', $timeline['nextAction']['id']);
+        $this->assertSame('high-earlier', $timeline['nextAction']['id']);
     }
 
     public function test_it_groups_events_by_today_tomorrow_and_without_date(): void

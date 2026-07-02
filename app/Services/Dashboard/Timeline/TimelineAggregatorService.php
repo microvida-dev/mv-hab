@@ -13,6 +13,7 @@ class TimelineAggregatorService
      */
     public function __construct(
         private readonly array $providers = [],
+        private readonly ?NextActionResolver $nextActionResolver = null,
     ) {}
 
     /**
@@ -46,7 +47,9 @@ class TimelineAggregatorService
      */
     private function nextAction(Collection $events): ?array
     {
-        return $events->first()?->toArray();
+        $resolver = $this->nextActionResolver ?? new NextActionResolver();
+
+        return $resolver->resolve($events)?->toArray();
     }
 
     /**
