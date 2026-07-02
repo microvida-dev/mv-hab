@@ -1,5 +1,5 @@
 @props([
-    'dashboard' => [],
+    'items' => [],
 ])
 
 <section class="mv-card p-5">
@@ -21,7 +21,7 @@
 
     <div class="mt-6 divide-y divide-ink-100">
 
-        @forelse(($dashboard['deadlines'] ?? []) as $alert)
+        @forelse($items as $alert)
 
             <div class="flex items-start gap-4 py-4">
 
