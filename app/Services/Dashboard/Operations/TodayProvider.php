@@ -2,6 +2,10 @@
 
 namespace App\Services\Dashboard\Operations;
 
+use App\Enums\InspectionStatus;
+use App\Enums\VisitStatus;
+use App\Models\HousingVisit;
+use App\Models\PropertyInspection;
 use App\Models\User;
 use App\Models\WorkTask;
 
@@ -15,7 +19,10 @@ class TodayProvider
     {
         return collect()
             ->merge($this->assignedTasks($user))
+            ->merge($this->housingVisits($user))
+            ->merge($this->propertyInspections($user))
             ->merge($dashboard['deadlines'] ?? [])
+            ->take(12)
             ->values()
             ->all();
     }
@@ -44,6 +51,64 @@ class TodayProvider
                 'route' => 'backoffice.work-tasks.my',
                 'icon' => 'check',
                 'tone' => in_array($task->priority, [WorkTask::PRIORITY_HIGH, WorkTask::PRIORITY_URGENT], true) ? 'danger' : 'warning',
+            ])
+            ->all();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function housingVisits(User $user): array
+    {
+        if (! $user->hasPermission('visits.view')) {
+            return [];
+        }
+
+        return HousingVisit::query()
+            ->whereDate('scheduled_at', today())
+            ->whereIn('status', [
+                VisitStatus::Requested->value,
+                VisitStatus::PendingConfirmation->value,
+                VisitStatus::Confirmed->value,
+                VisitStatus::Rescheduled->value,
+            ])
+            ->orderBy('scheduled_at')
+            ->limit(5)
+            ->get()
+            ->map(fn (HousingVisit $visit): array => [
+                'title' => 'Visita agendada',
+                'description' => trim(($visit->visit_number ?? 'Visita').' · '.$visit->scheduled_at?->format('H:i')),
+                'route' => 'backoffice.housing-visits.index',
+                'icon' => 'user-inspection',
+                'tone' => 'info',
+            ])
+            ->all();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function propertyInspections(User $user): array
+    {
+        if (! $user->hasPermission('inspections.view')) {
+            return [];
+        }
+
+        return PropertyInspection::query()
+            ->whereDate('scheduled_for', today())
+            ->whereIn('status', [
+                InspectionStatus::Scheduled->value,
+                InspectionStatus::InProgress->value,
+            ])
+            ->orderBy('scheduled_for')
+            ->limit(5)
+            ->get()
+            ->map(fn (PropertyInspection $inspection): array => [
+                'title' => 'Vistoria técnica',
+                'description' => trim(($inspection->inspection_number ?? 'Vistoria').' · '.$inspection->scheduled_for?->format('H:i')),
+                'route' => 'backoffice.inspections.index',
+                'icon' => 'inspection',
+                'tone' => 'info',
             ])
             ->all();
     }
