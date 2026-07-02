@@ -27,7 +27,11 @@
                                 : route($eventRoute);
                         }
 
-                        $eventClasses = 'block rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-blue-500 hover:bg-blue-50 hover:shadow-lg';
+                        $eventClasses = 'block rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-sm transition';
+
+                        if ($eventHref) {
+                            $eventClasses .= ' hover:border-blue-500 hover:bg-blue-50 hover:shadow-lg';
+                        }
                     @endphp
 
                     @if ($eventHref)

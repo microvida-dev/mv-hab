@@ -56,7 +56,7 @@
     ];
 @endphp
 
-<article class="rounded-3xl border p-4 shadow-sm transition hover:shadow-md {{ $cardStyle }}">
+<article class="rounded-3xl border p-4 shadow-sm transition {{ $eventHref ? 'hover:shadow-md' : '' }} {{ $cardStyle }}">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-2">

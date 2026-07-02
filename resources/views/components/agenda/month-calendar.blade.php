@@ -39,7 +39,7 @@
                                     @endphp
 
                                     <a href="{{ $eventHref }}"
-                                        class="block truncate rounded-lg bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-700 transition hover:bg-blue-50 hover:text-blue-700">
+                                        class="block truncate rounded-lg bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-700 transition {{ $eventHref ? 'hover:bg-blue-50 hover:text-blue-700' : '' }}">
                                         @if (! empty($event['time']))
                                             <span class="text-slate-400">{{ $event['time'] }}</span>
                                         @endif
