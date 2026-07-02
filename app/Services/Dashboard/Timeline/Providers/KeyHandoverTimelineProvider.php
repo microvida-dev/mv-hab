@@ -8,10 +8,15 @@ use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\KeyHandoverAppointment;
 use App\Models\User;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
 
 class KeyHandoverTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
         if (! $user->hasPermission('contracts.view')) {
@@ -24,7 +29,7 @@ class KeyHandoverTimelineProvider implements TimelineProviderInterface
             ->orderBy('scheduled_for')
             ->limit(20)
             ->get()
-            ->map(fn (KeyHandoverAppointment $appointment): TimelineEvent => new TimelineEvent(
+            ->map(fn (KeyHandoverAppointment $appointment): TimelineEvent => $this->factory->make(
                 id: 'key-handover-'.$appointment->getKey(),
                 type: TimelineType::KeyHandover,
                 title: 'Entrega de chave agendada',

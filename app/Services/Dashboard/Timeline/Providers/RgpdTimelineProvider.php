@@ -8,10 +8,15 @@ use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\DataSubjectRequest;
 use App\Models\User;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
 
 class RgpdTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
         if (! $user->hasPermission('rgpd.view')) {
@@ -24,7 +29,7 @@ class RgpdTimelineProvider implements TimelineProviderInterface
             ->orderBy('due_at')
             ->limit(20)
             ->get()
-            ->map(fn (DataSubjectRequest $request): TimelineEvent => new TimelineEvent(
+            ->map(fn (DataSubjectRequest $request): TimelineEvent => $this->factory->make(
                 id: 'rgpd-request-'.$request->getKey(),
                 type: TimelineType::RgpdRequest,
                 title: 'Pedido RGPD com prazo',
