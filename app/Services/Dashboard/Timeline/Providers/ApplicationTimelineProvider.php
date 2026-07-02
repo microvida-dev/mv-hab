@@ -8,10 +8,15 @@ use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\Application;
 use App\Models\User;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
 
 class ApplicationTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
         if (! $user->hasPermission('applications.view')) {
@@ -24,7 +29,7 @@ class ApplicationTimelineProvider implements TimelineProviderInterface
             ->orderBy('submitted_at')
             ->limit(20)
             ->get()
-            ->map(fn (Application $application): TimelineEvent => new TimelineEvent(
+            ->map(fn (Application $application): TimelineEvent => $this->factory->make(
                 id: 'application-submitted-'.$application->getKey(),
                 type: TimelineType::ApplicationSubmitted,
                 title: 'Candidatura submetida',

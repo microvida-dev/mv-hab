@@ -6,25 +6,28 @@ use App\Data\Dashboard\TimelineEvent;
 use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
-use App\Enums\ComplaintDecisionStatus;
-use App\Enums\ComplaintStatus;
 use App\Models\Complaint;
 use App\Models\ComplaintDecision;
 use App\Models\User;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
 
 class ComplaintTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
-        if (! $user->hasPermission('public_lists.view')) {
+        if (! $user->hasPermission('complaints.view')) {
             return [];
         }
 
         return collect()
             ->merge($this->openComplaints())
             ->merge($this->additionalInformationDeadlines())
-            ->merge($this->pendingDecisions())
+            ->merge($this->decisions())
             ->values()
             ->all();
     }
@@ -32,32 +35,25 @@ class ComplaintTimelineProvider implements TimelineProviderInterface
     private function openComplaints(): array
     {
         return Complaint::query()
-            ->whereIn('status', [
-                ComplaintStatus::Submitted->value,
-                ComplaintStatus::Received->value,
-                ComplaintStatus::UnderReview->value,
-            ])
-            ->orderByRaw('assigned_at IS NULL DESC, submitted_at ASC')
-            ->limit(8)
+            ->whereIn('status', ['submitted', 'registered', 'in_analysis'])
+            ->orderByDesc('submitted_at')
+            ->limit(20)
             ->get()
-            ->map(fn (Complaint $complaint): TimelineEvent => new TimelineEvent(
+            ->map(fn (Complaint $complaint): TimelineEvent => $this->factory->make(
                 id: 'complaint-'.$complaint->getKey(),
                 type: TimelineType::Complaint,
-                title: 'Reclamação por analisar',
+                title: 'Reclamação em análise',
                 description: trim(($complaint->complaint_number ?? 'Reclamação').' · '.$complaint->subject),
                 route: route('backoffice.complaints.index'),
                 datetime: $complaint->submitted_at ?? $complaint->received_at ?? $complaint->created_at,
-                priority: $complaint->assigned_to
-                    ? TimelinePriority::High
-                    : TimelinePriority::Critical,
-                icon: 'message-alert',
-                tone: $complaint->assigned_to ? 'warning' : 'danger',
-                workspace: TimelineWorkspace::Contests,
+                priority: TimelinePriority::High,
+                icon: 'complaint',
+                tone: 'warning',
+                workspace: TimelineWorkspace::Applications,
                 metadata: [
                     'complaint_id' => $complaint->getKey(),
                     'complaint_number' => $complaint->complaint_number,
-                    'status' => $complaint->status?->value,
-                    'assigned_to' => $complaint->assigned_to,
+                    'status' => $complaint->status,
                 ],
             ))
             ->all();
@@ -66,61 +62,56 @@ class ComplaintTimelineProvider implements TimelineProviderInterface
     private function additionalInformationDeadlines(): array
     {
         return Complaint::query()
-            ->where('requires_additional_information', true)
             ->whereNotNull('additional_information_deadline_at')
-            ->whereDate('additional_information_deadline_at', '<=', now()->addDays(2)->toDateString())
+            ->whereIn('status', ['additional_information_requested'])
             ->orderBy('additional_information_deadline_at')
-            ->limit(8)
+            ->limit(20)
             ->get()
-            ->map(fn (Complaint $complaint): TimelineEvent => new TimelineEvent(
+            ->map(fn (Complaint $complaint): TimelineEvent => $this->factory->make(
                 id: 'complaint-additional-information-'.$complaint->getKey(),
                 type: TimelineType::ComplaintAdditionalInformation,
-                title: $complaint->additional_information_deadline_at?->isPast()
-                    ? 'Informação adicional de reclamação expirada'
-                    : 'Informação adicional de reclamação com prazo próximo',
-                description: trim(($complaint->complaint_number ?? 'Reclamação').' · '.$complaint->subject),
+                title: 'Informação adicional de reclamação pendente',
+                description: trim(($complaint->complaint_number ?? 'Reclamação').' · prazo de resposta'),
                 route: route('backoffice.complaints.index'),
                 datetime: $complaint->additional_information_deadline_at,
                 priority: $complaint->additional_information_deadline_at?->isPast()
                     ? TimelinePriority::Critical
                     : TimelinePriority::High,
-                icon: 'message-alert',
+                icon: 'document-warning',
                 tone: $complaint->additional_information_deadline_at?->isPast() ? 'danger' : 'warning',
-                workspace: TimelineWorkspace::Contests,
+                workspace: TimelineWorkspace::Applications,
                 metadata: [
                     'complaint_id' => $complaint->getKey(),
                     'complaint_number' => $complaint->complaint_number,
-                    'status' => $complaint->status?->value,
+                    'status' => $complaint->status,
                 ],
             ))
             ->all();
     }
 
-    private function pendingDecisions(): array
+    private function decisions(): array
     {
         return ComplaintDecision::query()
-            ->whereIn('status', [
-                ComplaintDecisionStatus::Draft->value,
-                ComplaintDecisionStatus::Proposed->value,
-            ])
+            ->whereNotNull('proposed_at')
+            ->whereIn('status', ['proposed', 'pending_approval'])
             ->orderBy('proposed_at')
-            ->limit(8)
+            ->limit(20)
             ->get()
-            ->map(fn (ComplaintDecision $decision): TimelineEvent => new TimelineEvent(
+            ->map(fn (ComplaintDecision $decision): TimelineEvent => $this->factory->make(
                 id: 'complaint-decision-'.$decision->getKey(),
                 type: TimelineType::ComplaintDecision,
                 title: 'Decisão de reclamação pendente',
-                description: trim(($decision->decision_number ?? 'Decisão').' · '.$decision->summary),
+                description: trim(($decision->decision_number ?? 'Decisão').' · aguarda aprovação'),
                 route: route('backoffice.complaints.index'),
                 datetime: $decision->proposed_at ?? $decision->created_at,
-                priority: TimelinePriority::High,
-                icon: 'document-check',
-                tone: 'warning',
-                workspace: TimelineWorkspace::Contests,
+                priority: TimelinePriority::Medium,
+                icon: 'scale',
+                tone: 'info',
+                workspace: TimelineWorkspace::Applications,
                 metadata: [
                     'complaint_decision_id' => $decision->getKey(),
                     'decision_number' => $decision->decision_number,
-                    'status' => $decision->status?->value,
+                    'status' => $decision->status,
                 ],
             ))
             ->all();

@@ -6,18 +6,21 @@ use App\Data\Dashboard\TimelineEvent;
 use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
-use App\Enums\HearingStatus;
-use App\Enums\HearingSubmissionStatus;
 use App\Models\Hearing;
 use App\Models\HearingSubmission;
 use App\Models\User;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
 
 class HearingTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
-        if (! $user->hasPermission('public_lists.view')) {
+        if (! $user->hasPermission('hearings.view')) {
             return [];
         }
 
@@ -31,32 +34,28 @@ class HearingTimelineProvider implements TimelineProviderInterface
     private function openHearings(): array
     {
         return Hearing::query()
-            ->whereIn('status', [
-                HearingStatus::Issued->value,
-                HearingStatus::Open->value,
-            ])
             ->whereNotNull('deadline_at')
-            ->whereDate('deadline_at', '<=', now()->addDays(2)->toDateString())
+            ->whereNotIn('status', ['closed', 'cancelled', 'expired'])
             ->orderBy('deadline_at')
-            ->limit(8)
+            ->limit(20)
             ->get()
-            ->map(fn (Hearing $hearing): TimelineEvent => new TimelineEvent(
+            ->map(fn (Hearing $hearing): TimelineEvent => $this->factory->make(
                 id: 'hearing-'.$hearing->getKey(),
                 type: TimelineType::Hearing,
-                title: $hearing->deadline_at?->isPast()
-                    ? 'Audiência prévia expirada'
-                    : 'Audiência prévia com prazo próximo',
-                description: trim(($hearing->hearing_number ?? 'Audiência').' · '.$hearing->subject),
+                title: 'Audiência prévia em curso',
+                description: trim(($hearing->hearing_number ?? 'Audiência').' · prazo de pronúncia'),
                 route: route('backoffice.hearings.index'),
                 datetime: $hearing->deadline_at,
-                priority: $hearing->deadline_at?->isPast() ? TimelinePriority::Critical : TimelinePriority::High,
-                icon: 'message',
+                priority: $hearing->deadline_at?->isPast()
+                    ? TimelinePriority::Critical
+                    : TimelinePriority::High,
+                icon: 'hearing',
                 tone: $hearing->deadline_at?->isPast() ? 'danger' : 'warning',
-                workspace: TimelineWorkspace::Contests,
+                workspace: TimelineWorkspace::Applications,
                 metadata: [
                     'hearing_id' => $hearing->getKey(),
                     'hearing_number' => $hearing->hearing_number,
-                    'status' => $hearing->status?->value,
+                    'status' => $hearing->status,
                 ],
             ))
             ->all();
@@ -65,27 +64,26 @@ class HearingTimelineProvider implements TimelineProviderInterface
     private function submittedHearings(): array
     {
         return HearingSubmission::query()
-            ->whereIn('status', [
-                HearingSubmissionStatus::Submitted->value,
-            ])
+            ->whereNotNull('submitted_at')
+            ->whereIn('status', ['submitted', 'under_review'])
             ->orderBy('submitted_at')
-            ->limit(8)
+            ->limit(20)
             ->get()
-            ->map(fn (HearingSubmission $submission): TimelineEvent => new TimelineEvent(
+            ->map(fn (HearingSubmission $submission): TimelineEvent => $this->factory->make(
                 id: 'hearing-submission-'.$submission->getKey(),
                 type: TimelineType::HearingSubmission,
-                title: 'Pronúncia em audiência por analisar',
-                description: trim('Pronúncia submetida · '.$submission->submitted_at?->format('d/m/Y H:i')),
+                title: 'Pronúncia recebida',
+                description: trim(($submission->submission_number ?? 'Pronúncia').' · aguarda análise'),
                 route: route('backoffice.hearings.index'),
                 datetime: $submission->submitted_at,
-                priority: TimelinePriority::High,
+                priority: TimelinePriority::Medium,
                 icon: 'message',
-                tone: 'warning',
-                workspace: TimelineWorkspace::Contests,
+                tone: 'info',
+                workspace: TimelineWorkspace::Applications,
                 metadata: [
                     'hearing_submission_id' => $submission->getKey(),
-                    'hearing_id' => $submission->hearing_id,
-                    'status' => $submission->status?->value,
+                    'submission_number' => $submission->submission_number,
+                    'status' => $submission->status,
                 ],
             ))
             ->all();

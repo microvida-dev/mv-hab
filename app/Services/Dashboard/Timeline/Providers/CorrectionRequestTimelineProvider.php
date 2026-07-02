@@ -6,58 +6,56 @@ use App\Data\Dashboard\TimelineEvent;
 use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
-use App\Enums\CorrectionRequestStatus;
-use App\Enums\CorrectionResponseStatus;
 use App\Models\CorrectionRequest;
 use App\Models\CorrectionResponse;
 use App\Models\User;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
 
 class CorrectionRequestTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
-        if (! $user->hasPermission('applications.view')) {
+        if (! $user->hasPermission('correction_requests.view')) {
             return [];
         }
 
         return collect()
-            ->merge($this->openRequests())
+            ->merge($this->openCorrectionRequests())
             ->merge($this->submittedResponses())
             ->values()
             ->all();
     }
 
-    private function openRequests(): array
+    private function openCorrectionRequests(): array
     {
         return CorrectionRequest::query()
-            ->whereIn('status', [
-                CorrectionRequestStatus::Issued->value,
-                CorrectionRequestStatus::Open->value,
-                CorrectionRequestStatus::PartiallyResponded->value,
-            ])
             ->whereNotNull('response_deadline_at')
-            ->whereDate('response_deadline_at', '<=', now()->addDays(2)->toDateString())
+            ->whereNotIn('status', ['completed', 'cancelled', 'expired'])
             ->orderBy('response_deadline_at')
-            ->limit(8)
+            ->limit(20)
             ->get()
-            ->map(fn (CorrectionRequest $request): TimelineEvent => new TimelineEvent(
+            ->map(fn (CorrectionRequest $request): TimelineEvent => $this->factory->make(
                 id: 'correction-request-'.$request->getKey(),
                 type: TimelineType::CorrectionRequest,
-                title: $request->response_deadline_at?->isPast()
-                    ? 'Pedido de aperfeiçoamento expirado'
-                    : 'Pedido de aperfeiçoamento com prazo próximo',
-                description: trim(($request->request_number ?? 'Pedido').' · prazo '.$request->response_deadline_at?->format('d/m/Y H:i')),
+                title: 'Pedido de aperfeiçoamento pendente',
+                description: trim(($request->request_number ?? 'Pedido').' · prazo de resposta'),
                 route: route('backoffice.applications.index'),
                 datetime: $request->response_deadline_at,
-                priority: $request->response_deadline_at?->isPast() ? TimelinePriority::Critical : TimelinePriority::High,
-                icon: 'document',
+                priority: $request->response_deadline_at?->isPast()
+                    ? TimelinePriority::Critical
+                    : TimelinePriority::High,
+                icon: 'document-warning',
                 tone: $request->response_deadline_at?->isPast() ? 'danger' : 'warning',
                 workspace: TimelineWorkspace::Applications,
                 metadata: [
                     'correction_request_id' => $request->getKey(),
                     'request_number' => $request->request_number,
-                    'status' => $request->status?->value,
+                    'status' => $request->status,
                 ],
             ))
             ->all();
@@ -66,29 +64,28 @@ class CorrectionRequestTimelineProvider implements TimelineProviderInterface
     private function submittedResponses(): array
     {
         return CorrectionResponse::query()
-            ->whereIn('status', [
-                CorrectionResponseStatus::Submitted->value,
-            ])
+            ->whereNotNull('submitted_at')
+            ->whereIn('status', ['submitted', 'under_review'])
             ->orderBy('submitted_at')
-            ->limit(8)
+            ->limit(20)
             ->get()
-            ->map(fn (CorrectionResponse $response): TimelineEvent => new TimelineEvent(
+            ->map(fn (CorrectionResponse $response): TimelineEvent => $this->factory->make(
                 id: 'correction-response-'.$response->getKey(),
                 type: TimelineType::CorrectionResponse,
-                title: 'Resposta a aperfeiçoamento por analisar',
-                description: trim('Resposta submetida · '.$response->submitted_at?->format('d/m/Y H:i')),
+                title: 'Resposta a aperfeiçoamento recebida',
+                description: trim(($response->response_number ?? 'Resposta').' · aguarda validação'),
                 route: route('backoffice.correction-responses.show', [
-                    'correctionResponse' => $response->getKey(),
+                    'correctionResponse' => $response,
                 ]),
                 datetime: $response->submitted_at,
-                priority: TimelinePriority::High,
+                priority: TimelinePriority::Medium,
                 icon: 'document-check',
-                tone: 'warning',
+                tone: 'info',
                 workspace: TimelineWorkspace::Applications,
                 metadata: [
                     'correction_response_id' => $response->getKey(),
-                    'correction_request_id' => $response->correction_request_id,
-                    'status' => $response->status?->value,
+                    'response_number' => $response->response_number,
+                    'status' => $response->status,
                 ],
             ))
             ->all();
