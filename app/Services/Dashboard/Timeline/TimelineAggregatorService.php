@@ -19,11 +19,11 @@ class TimelineAggregatorService
 
     /**
      * @param  array<string, mixed>  $dashboard
-     * @return array<string, mixed>
+     * @return Collection<int, TimelineEvent>
      */
-    public function forUser(User $user, array $dashboard = []): array
+    public function eventsForUser(User $user, array $dashboard = []): Collection
     {
-        $events = collect($this->providers)
+        return collect($this->providers)
             ->flatMap(fn (TimelineProviderInterface $provider): array => $provider->forUser($user, $dashboard))
             ->filter(fn (mixed $event): bool => $event instanceof TimelineEvent)
             ->unique(fn (TimelineEvent $event): string => $event->id)
@@ -34,6 +34,15 @@ class TimelineAggregatorService
                 fn (TimelineEvent $event): string => $event->type->value,
             ])
             ->values();
+    }
+
+    /**
+     * @param  array<string, mixed>  $dashboard
+     * @return array<string, mixed>
+     */
+    public function forUser(User $user, array $dashboard = []): array
+    {
+        $events = $this->eventsForUser($user, $dashboard);
 
         return [
             'nextAction' => $this->nextAction($events),

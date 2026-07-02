@@ -20,7 +20,7 @@
         </a>
 
         @php
-            $showSidebar = ! request()->routeIs('dashboard');
+            $showSidebar = true;
         @endphp
 
         <div
