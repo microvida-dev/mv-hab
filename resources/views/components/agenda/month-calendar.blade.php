@@ -1,5 +1,35 @@
 @props(['weeks' => []])
 
+@once
+    <style>
+        .agenda-month-event-card {
+            transition:
+                background-color .2s ease,
+                border-color .2s ease,
+                color .2s ease,
+                box-shadow .2s ease,
+                transform .2s ease;
+        }
+
+        .agenda-month-event-card:hover {
+            background: #2563EB !important;
+            border-color: #2563EB !important;
+            color: #fff !important;
+            box-shadow: 0 12px 24px rgba(37,99,235,.28);
+            transform: translateY(-2px);
+        }
+
+        .agenda-month-event-card:hover .agenda-month-event-time,
+        .agenda-month-event-card:hover .agenda-month-event-title {
+            color: #fff !important;
+        }
+
+        .agenda-month-event-card:hover .agenda-month-event-time {
+            opacity: .9;
+        }
+    </style>
+@endonce
+
 <div class="space-y-4">
     @foreach ($weeks as $week)
         <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
@@ -36,15 +66,24 @@
                                                 ? $eventRoute
                                                 : route($eventRoute);
                                         }
+
+                                        $eventClasses = 'agenda-month-event-card block truncate rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 shadow-sm';
+
+                                        if (! $eventHref) {
+                                            $eventClasses .= ' opacity-80';
+                                        }
                                     @endphp
 
-                                    <a href="{{ $eventHref }}"
-                                        class="block truncate rounded-lg bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-700 transition {{ $eventHref ? 'hover:bg-blue-50 hover:text-blue-700' : '' }}">
+                                    <a href="{{ $eventHref ?: '#' }}" class="{{ $eventClasses }}">
                                         @if (! empty($event['time']))
-                                            <span class="text-slate-400">{{ $event['time'] }}</span>
+                                            <span class="agenda-month-event-time text-slate-400">
+                                                {{ $event['time'] }}
+                                            </span>
                                         @endif
 
-                                        {{ $event['title'] ?? 'Evento' }}
+                                        <span class="agenda-month-event-title text-slate-700">
+                                            {{ $event['title'] ?? 'Evento' }}
+                                        </span>
                                     </a>
                                 @endforeach
 

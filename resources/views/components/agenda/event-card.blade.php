@@ -56,7 +56,7 @@
     ];
 @endphp
 
-<article class="rounded-3xl border p-4 shadow-sm transition {{ $eventHref ? 'hover:shadow-md' : '' }} {{ $cardStyle }}">
+<article class="group rounded-3xl border p-4 shadow-sm transition {{ $eventHref ? 'hover:shadow-md' : '' }} {{ $cardStyle }}">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-2">
@@ -77,12 +77,12 @@
                 </span>
             </div>
 
-            <h3 class="mt-3 text-base font-bold text-slate-950">
+            <h3 class="mt-3 text-base font-bold text-slate-950 transition {{ $eventHref ? 'group-hover:text-blue-700' : '' }}">
                 {{ $event['title'] }}
             </h3>
 
             @if (! empty($event['description']))
-                <p class="mt-1 max-w-3xl text-sm leading-6 text-slate-700">
+                <p class="mt-1 max-w-3xl text-sm leading-6 text-slate-700 transition {{ $eventHref ? 'group-hover:text-slate-900' : '' }}">
                     {{ $event['description'] }}
                 </p>
             @endif
