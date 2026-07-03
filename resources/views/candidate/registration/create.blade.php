@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Registo de Adesão</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Registo de Adesão</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">Iniciar registo</h1>
             <p class="mt-1 text-sm text-ink-500">Pode guardar informação parcial e continuar mais tarde.</p>
         </div>

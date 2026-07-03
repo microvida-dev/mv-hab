@@ -120,10 +120,11 @@
                 'wants_sms_notifications' => ['SMS', false],
                 'wants_postal_notifications' => ['Via postal', false],
             ] as $field => [$label, $default])
-                <label class="flex items-center gap-3 rounded-2xl border border-ink-100 px-4 py-3 text-sm text-ink-700">
-                    <input type="checkbox" name="{{ $field }}" value="1" class="mv-checkbox" @checked(old($field, $registration?->{$field} ?? $default))>
-                    Pretendo receber notificações por {{ $label }}.
-                </label>
+                <x-mv.checkbox-card
+                    :name="$field"
+                    :label="'Pretendo receber notificações por '.$label.'.'"
+                    :checked="old($field, $registration?->{$field} ?? $default)"
+                />
             @endforeach
         </div>
     </section>
@@ -132,16 +133,20 @@
         <h2 class="text-base font-semibold text-ink-900">Consentimentos</h2>
         <p class="mt-2 text-sm leading-6 text-ink-500">Os dados recolhidos destinam-se à gestão do Registo de Adesão e à preparação de futuras candidaturas a programas municipais de habitação. O tratamento será realizado nos termos da legislação aplicável e das finalidades definidas pelo município.</p>
         <div class="mt-4 grid gap-3">
-            <label class="flex items-start gap-3 rounded-2xl border border-ink-100 px-4 py-3 text-sm text-ink-700">
-                <input type="checkbox" name="accepts_terms" value="1" class="mv-checkbox mt-0.5" @checked(old('accepts_terms', $registration?->accepts_terms ?? false))>
-                <span>Declaro que li e aceito os termos de utilização. *</span>
-            </label>
+            <x-mv.checkbox-card
+                name="accepts_terms"
+                label="Declaro que li e aceito os termos de utilização. *"
+                :checked="old('accepts_terms', $registration?->accepts_terms ?? false)"
+                align="start"
+            />
             <x-input-error :messages="$errors->get('accepts_terms')" />
 
-            <label class="flex items-start gap-3 rounded-2xl border border-ink-100 px-4 py-3 text-sm text-ink-700">
-                <input type="checkbox" name="accepts_data_processing" value="1" class="mv-checkbox mt-0.5" @checked(old('accepts_data_processing', $registration?->accepts_data_processing ?? false))>
-                <span>Confirmo a informação sobre o tratamento dos meus dados para gestão do Registo de Adesão e futuras candidaturas. *</span>
-            </label>
+            <x-mv.checkbox-card
+                name="accepts_data_processing"
+                label="Confirmo a informação sobre o tratamento dos meus dados para gestão do Registo de Adesão e futuras candidaturas. *"
+                :checked="old('accepts_data_processing', $registration?->accepts_data_processing ?? false)"
+                align="start"
+            />
             <x-input-error :messages="$errors->get('accepts_data_processing')" />
         </div>
     </section>

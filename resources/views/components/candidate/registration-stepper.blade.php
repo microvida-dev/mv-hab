@@ -12,7 +12,7 @@
     ];
 @endphp
 
-<nav aria-label="Etapas do Registo de Adesão" class="overflow-x-auto border-b border-ink-100 bg-white">
+<nav aria-label="Etapas do Registo de Adesão" class="overflow-x-auto border-b border-ink-100 bg-ink-50">
     <ol class="mx-auto flex min-w-max max-w-7xl gap-1 px-4 sm:px-6 lg:px-8">
         @foreach ($steps as $step)
             <li>
