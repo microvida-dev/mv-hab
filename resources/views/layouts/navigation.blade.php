@@ -119,7 +119,7 @@
 @endphp
 
 <div class="lg:hidden">
-    <div class="flex h-16 items-center justify-between border-b border-ink-100 bg-white px-4">
+    <div class="flex h-16 items-center justify-between border-b border-ink-100 bg-ink-50 px-4">
         <a href="{{ route($homeRoute) }}" class="flex items-center">
             <img
                 src="{{ asset('images/brand/logo-mvhab-semfundo-comp.png') }}"
@@ -128,7 +128,7 @@
             >
         </a>
 
-        <button type="button" class="rounded-2xl border border-ink-100 bg-white p-2 text-ink-700" @click="sidebarOpen = true" aria-label="Abrir navegação">
+        <button type="button" class="rounded-2xl border border-ink-100 bg-mvhab-surface p-2 text-ink-700" @click="sidebarOpen = true" aria-label="Abrir navegação">
             <x-mv-icon name="menu" size="sm" />
         </button>
     </div>
@@ -137,7 +137,7 @@
 <div x-show="sidebarOpen" x-cloak class="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true">
     <div class="fixed inset-0 bg-ink-900/40" @click="sidebarOpen = false"></div>
 
-    <aside class="fixed inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col border-r border-ink-100 bg-white">
+    <aside class="fixed inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col border-r border-ink-100 bg-ink-50">
         <div class="flex h-16 items-center justify-between border-b border-ink-100 px-4">
             <a href="{{ route($homeRoute) }}" class="flex items-center">
                 <img
@@ -147,7 +147,7 @@
                 >
             </a>
 
-            <button type="button" class="rounded-2xl border border-ink-100 bg-white p-2 text-ink-700" @click="sidebarOpen = false" aria-label="Fechar navegação">
+            <button type="button" class="rounded-2xl border border-ink-100 bg-mvhab-surface p-2 text-ink-700" @click="sidebarOpen = false" aria-label="Fechar navegação">
                 <x-mv-icon name="close" size="sm" />
             </button>
         </div>
@@ -200,11 +200,11 @@
 
 <aside
     :class="sidebarCollapsed ? 'w-28' : 'w-72'"
-    class="fixed inset-y-0 left-0 z-40 hidden flex-col overflow-hidden border-r border-ink-100 bg-white transition-all duration-300 lg:flex"
+    class="fixed inset-y-0 left-0 z-40 hidden flex-col overflow-hidden border-r border-ink-100 bg-ink-50 transition-all duration-300 lg:flex"
 >
     <div
-        class="relative flex h-20 items-center border-b border-ink-100 px-4"
-        :class="sidebarCollapsed ? 'justify-center' : 'justify-between'"
+        class="relative flex h-20 items-center border-b border-ink-100"
+        :class="sidebarCollapsed ? 'justify-center px-4' : 'justify-between px-5'"
     >
         <a href="{{ route($homeRoute) }}" class="flex min-w-0 items-center overflow-hidden">
             <img
@@ -217,14 +217,14 @@
         <button
             type="button"
             @click="toggleSidebar()"
-            class="rounded-xl border border-ink-100 bg-white p-2 text-ink-600 transition hover:bg-mvhab-surface hover:text-mvhab-primary"
             :aria-label="sidebarCollapsed ? 'Expandir navegação' : 'Recolher navegação'"
         >
-            <span x-show="!sidebarCollapsed">
-                <x-mv-icon name="arrow-left" size="sm" />
+            <span x-show="!sidebarCollapsed" x-cloak>
+                <x-mv-icon name="arrow-left" size="sm" class="h-4 w-4" />
             </span>
-            <span x-show="collapsed" x-cloak>
-                <x-mv-icon name="arrow-right" size="sm" />
+
+            <span x-show="sidebarCollapsed" x-cloak>
+                <x-mv-icon name="arrow-right" size="sm" class="h-4 w-4" />
             </span>
         </button>
     </div>
@@ -238,7 +238,7 @@
     <div class="border-t border-ink-100 p-4">
         @if ($isCandidate)
             <div
-                class="flex items-center rounded-2xl border border-ink-100 bg-white px-3 py-3"
+                class="flex items-center rounded-2xl border border-ink-100 bg-mvhab-surface px-3 py-3"
                 :class="sidebarCollapsed ? 'justify-center' : 'gap-3'"
             >
                 <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
@@ -287,7 +287,7 @@
             <x-dropdown align="right" width="48">
                 <x-slot name="trigger">
                     <button
-                        class="flex w-full items-center rounded-2xl border border-ink-100 bg-white px-3 py-3 text-left transition hover:bg-mvhab-surface"
+                        class="flex w-full items-center rounded-2xl border border-ink-100 bg-mvhab-surface px-3 py-3 text-left transition hover:bg-mvhab-surface"
                         :class="sidebarCollapsed ? 'justify-center' : 'gap-3'"
                     >
                         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
