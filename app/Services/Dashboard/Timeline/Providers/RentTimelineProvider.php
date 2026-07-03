@@ -11,10 +11,10 @@ use App\Enums\RentInstallmentStatus;
 use App\Models\LeasePayment;
 use App\Models\RentInstallment;
 use App\Models\User;
-use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
 
-class RentTimelineProvider implements TimelineProviderInterface
+class RentTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
         private readonly TimelineEventFactory $factory = new TimelineEventFactory(),

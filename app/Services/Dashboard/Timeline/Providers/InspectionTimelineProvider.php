@@ -10,9 +10,9 @@ use App\Enums\InspectionStatus;
 use App\Models\PropertyInspection;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
-use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 
-class InspectionTimelineProvider implements TimelineProviderInterface
+class InspectionTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
         private readonly TimelineEventFactory $factory = new TimelineEventFactory(),

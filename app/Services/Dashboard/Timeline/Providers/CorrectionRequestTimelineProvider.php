@@ -10,9 +10,9 @@ use App\Models\CorrectionRequest;
 use App\Models\CorrectionResponse;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
-use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 
-class CorrectionRequestTimelineProvider implements TimelineProviderInterface
+class CorrectionRequestTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
         private readonly TimelineEventFactory $factory = new TimelineEventFactory(),

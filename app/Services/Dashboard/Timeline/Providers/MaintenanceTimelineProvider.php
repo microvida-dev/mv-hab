@@ -10,9 +10,9 @@ use App\Models\MaintenanceIntervention;
 use App\Models\MaintenanceRequest;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
-use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 
-class MaintenanceTimelineProvider implements TimelineProviderInterface
+class MaintenanceTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
         private readonly TimelineEventFactory $factory = new TimelineEventFactory(),

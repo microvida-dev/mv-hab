@@ -10,9 +10,9 @@ use App\Enums\VisitStatus;
 use App\Models\HousingVisit;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
-use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 
-class VisitTimelineProvider implements TimelineProviderInterface
+class VisitTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
         private readonly TimelineEventFactory $factory = new TimelineEventFactory(),

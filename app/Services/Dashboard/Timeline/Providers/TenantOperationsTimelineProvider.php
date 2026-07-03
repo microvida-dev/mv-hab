@@ -15,10 +15,10 @@ use App\Models\TenantInvoice;
 use App\Models\TenantPayment;
 use App\Models\TenantTransition;
 use App\Models\User;
-use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
 
-class TenantOperationsTimelineProvider implements TimelineProviderInterface
+class TenantOperationsTimelineProvider extends BaseTimelineProvider
 {
 
     public function __construct(

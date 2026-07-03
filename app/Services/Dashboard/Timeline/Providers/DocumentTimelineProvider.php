@@ -15,10 +15,10 @@ use App\Models\AdditionalDocumentSubmission;
 use App\Models\DocumentDossier;
 use App\Models\DocumentSubmission;
 use App\Models\User;
-use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
 
-class DocumentTimelineProvider implements TimelineProviderInterface
+class DocumentTimelineProvider extends BaseTimelineProvider
 {
 
     public function __construct(

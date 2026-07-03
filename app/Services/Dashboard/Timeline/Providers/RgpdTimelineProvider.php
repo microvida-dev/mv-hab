@@ -9,9 +9,9 @@ use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\DataSubjectRequest;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
-use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 
-class RgpdTimelineProvider implements TimelineProviderInterface
+class RgpdTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
         private readonly TimelineEventFactory $factory = new TimelineEventFactory(),

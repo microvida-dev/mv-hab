@@ -9,10 +9,10 @@ use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\Contract;
 use App\Models\User;
-use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
 
-class ContractTimelineProvider implements TimelineProviderInterface
+class ContractTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
         private readonly TimelineEventFactory $factory = new TimelineEventFactory(),

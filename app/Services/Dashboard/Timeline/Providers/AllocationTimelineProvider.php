@@ -10,10 +10,10 @@ use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\Allocation;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
-use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 use Illuminate\Support\Collection;
 
-class AllocationTimelineProvider implements TimelineProviderInterface
+class AllocationTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
         private readonly TimelineEventFactory $factory = new TimelineEventFactory(),

@@ -10,10 +10,10 @@ use App\Enums\LotteryDrawStatus;
 use App\Models\LotteryDraw;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
-use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 use Illuminate\Support\Collection;
 
-class LotteryTimelineProvider implements TimelineProviderInterface
+class LotteryTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
         private readonly TimelineEventFactory $factory = new TimelineEventFactory(),

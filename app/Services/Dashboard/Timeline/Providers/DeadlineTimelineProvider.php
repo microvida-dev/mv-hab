@@ -8,9 +8,9 @@ use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
-use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 
-class DeadlineTimelineProvider implements TimelineProviderInterface
+class DeadlineTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
         private readonly TimelineEventFactory $factory = new TimelineEventFactory(),

@@ -10,9 +10,9 @@ use App\Models\Complaint;
 use App\Models\ComplaintDecision;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
-use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 
-class ComplaintTimelineProvider implements TimelineProviderInterface
+class ComplaintTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
         private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
