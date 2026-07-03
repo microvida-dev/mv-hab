@@ -9,11 +9,16 @@ use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Enums\LotteryDrawStatus;
 use App\Models\LotteryDraw;
 use App\Models\User;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
 use Illuminate\Support\Collection;
 
 class LotteryTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
         if (! $user->hasPermission('allocations.view')) {
@@ -43,42 +48,29 @@ class LotteryTimelineProvider implements TimelineProviderInterface
             ->all();
     }
 
-    /**
-     * @return Collection<int, TimelineEvent>
-     */
+    /** @return Collection<int, TimelineEvent> */
     private function eventsForDraw(LotteryDraw $draw): Collection
     {
         return collect()
-            ->when(
-                $draw->scheduled_at,
-                fn (Collection $events): Collection => $events->push($this->scheduledEvent($draw))
-            )
+            ->when($draw->scheduled_at, fn (Collection $events): Collection => $events->push($this->scheduledEvent($draw)))
             ->when(
                 in_array($draw->status, [LotteryDrawStatus::Ready, LotteryDrawStatus::ParticipantsLocked, LotteryDrawStatus::Running], true),
                 fn (Collection $events): Collection => $events->push($this->readyEvent($draw))
             )
-            ->when(
-                $draw->completed_at,
-                fn (Collection $events): Collection => $events->push($this->completedEvent($draw))
-            )
-            ->when(
-                $draw->validated_at,
-                fn (Collection $events): Collection => $events->push($this->validatedEvent($draw))
-            );
+            ->when($draw->completed_at, fn (Collection $events): Collection => $events->push($this->completedEvent($draw)))
+            ->when($draw->validated_at, fn (Collection $events): Collection => $events->push($this->validatedEvent($draw)));
     }
 
     private function scheduledEvent(LotteryDraw $draw): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'lottery-scheduled-'.$draw->getKey(),
             type: TimelineType::LotteryScheduled,
             title: 'Sorteio agendado',
             description: $this->description($draw),
             route: route('backoffice.lottery-draws.show', $draw),
             datetime: $draw->scheduled_at,
-            priority: $draw->scheduled_at?->isPast()
-                ? TimelinePriority::High
-                : TimelinePriority::Medium,
+            priority: $draw->scheduled_at?->isPast() ? TimelinePriority::High : TimelinePriority::Medium,
             icon: 'calendar',
             tone: $draw->scheduled_at?->isPast() ? 'warning' : 'info',
             workspace: TimelineWorkspace::Contests,
@@ -88,7 +80,7 @@ class LotteryTimelineProvider implements TimelineProviderInterface
 
     private function readyEvent(LotteryDraw $draw): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'lottery-ready-'.$draw->getKey(),
             type: TimelineType::LotteryReady,
             title: 'Sorteio pronto para execução',
@@ -105,7 +97,7 @@ class LotteryTimelineProvider implements TimelineProviderInterface
 
     private function completedEvent(LotteryDraw $draw): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'lottery-completed-'.$draw->getKey(),
             type: TimelineType::LotteryCompleted,
             title: 'Sorteio concluído',
@@ -122,7 +114,7 @@ class LotteryTimelineProvider implements TimelineProviderInterface
 
     private function validatedEvent(LotteryDraw $draw): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'lottery-validated-'.$draw->getKey(),
             type: TimelineType::LotteryValidated,
             title: 'Sorteio validado',
@@ -145,9 +137,7 @@ class LotteryTimelineProvider implements TimelineProviderInterface
         return trim("{$contest} · {$program}");
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     private function metadata(LotteryDraw $draw): array
     {
         return [

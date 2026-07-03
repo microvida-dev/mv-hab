@@ -16,9 +16,15 @@ use App\Models\DocumentDossier;
 use App\Models\DocumentSubmission;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 
 class DocumentTimelineProvider implements TimelineProviderInterface
 {
+
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
         if (! $user->hasPermission('documents.view')) {
@@ -114,7 +120,7 @@ class DocumentTimelineProvider implements TimelineProviderInterface
 
     private function documentSubmittedEvent(DocumentSubmission $document): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'document-submitted-'.$document->getKey(),
             type: TimelineType::DocumentSubmitted,
             title: 'Documento submetido',
@@ -131,7 +137,7 @@ class DocumentTimelineProvider implements TimelineProviderInterface
 
     private function documentUnderReviewEvent(DocumentSubmission $document): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'document-under-review-'.$document->getKey(),
             type: TimelineType::DocumentUnderReview,
             title: 'Documento em análise',
@@ -148,7 +154,7 @@ class DocumentTimelineProvider implements TimelineProviderInterface
 
     private function dossierIncompleteEvent(DocumentDossier $dossier): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'document-dossier-incomplete-'.$dossier->getKey(),
             type: TimelineType::DocumentDossierIncomplete,
             title: 'Dossier documental incompleto',
@@ -174,7 +180,7 @@ class DocumentTimelineProvider implements TimelineProviderInterface
 
     private function additionalRequestedEvent(AdditionalDocumentRequest $request): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'additional-document-requested-'.$request->getKey(),
             type: TimelineType::AdditionalDocumentRequested,
             title: 'Pedido de documentação adicional',
@@ -198,7 +204,7 @@ class DocumentTimelineProvider implements TimelineProviderInterface
 
     private function additionalSubmittedEvent(AdditionalDocumentSubmission $submission): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'additional-document-submitted-'.$submission->getKey(),
             type: TimelineType::AdditionalDocumentSubmitted,
             title: 'Documentação adicional recebida',

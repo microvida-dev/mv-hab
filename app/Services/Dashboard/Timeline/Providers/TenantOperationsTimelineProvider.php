@@ -16,9 +16,15 @@ use App\Models\TenantPayment;
 use App\Models\TenantTransition;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 
 class TenantOperationsTimelineProvider implements TimelineProviderInterface
 {
+
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
         if (! $user->hasPermission('tenant_operations.view')) {
@@ -126,7 +132,7 @@ class TenantOperationsTimelineProvider implements TimelineProviderInterface
 
     private function transitionPendingEvent(TenantTransition $transition): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'tenant-transition-pending-'.$transition->getKey(),
             type: TimelineType::TenantTransitionPending,
             title: 'Transição para inquilino pendente',
@@ -143,7 +149,7 @@ class TenantOperationsTimelineProvider implements TimelineProviderInterface
 
     private function transitionCompletedEvent(TenantTransition $transition): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'tenant-transition-completed-'.$transition->getKey(),
             type: TimelineType::TenantTransitionCompleted,
             title: 'Transição para inquilino concluída',
@@ -160,7 +166,7 @@ class TenantOperationsTimelineProvider implements TimelineProviderInterface
 
     private function invoiceDueEvent(TenantInvoice $invoice): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'tenant-invoice-due-'.$invoice->getKey(),
             type: TimelineType::TenantInvoiceDue,
             title: 'Fatura de inquilino a vencer',
@@ -177,7 +183,7 @@ class TenantOperationsTimelineProvider implements TimelineProviderInterface
 
     private function invoiceOverdueEvent(TenantInvoice $invoice): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'tenant-invoice-overdue-'.$invoice->getKey(),
             type: TimelineType::TenantInvoiceOverdue,
             title: 'Fatura de inquilino vencida',
@@ -194,7 +200,7 @@ class TenantOperationsTimelineProvider implements TimelineProviderInterface
 
     private function paymentRegisteredEvent(TenantPayment $payment): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'tenant-payment-registered-'.$payment->getKey(),
             type: TimelineType::TenantPaymentRegistered,
             title: 'Pagamento de inquilino registado',
@@ -211,7 +217,7 @@ class TenantOperationsTimelineProvider implements TimelineProviderInterface
 
     private function paymentConfirmedEvent(TenantPayment $payment): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'tenant-payment-confirmed-'.$payment->getKey(),
             type: TimelineType::TenantPaymentConfirmed,
             title: 'Pagamento de inquilino confirmado',
@@ -228,7 +234,7 @@ class TenantOperationsTimelineProvider implements TimelineProviderInterface
 
     private function communicationOpenEvent(TenantCommunication $communication): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'tenant-communication-open-'.$communication->getKey(),
             type: TimelineType::TenantCommunicationOpen,
             title: 'Comunicação de inquilino aberta',
@@ -245,7 +251,7 @@ class TenantOperationsTimelineProvider implements TimelineProviderInterface
 
     private function communicationAwaitingMunicipalityEvent(TenantCommunication $communication): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'tenant-communication-awaiting-municipality-'.$communication->getKey(),
             type: TimelineType::TenantCommunicationAwaitingMunicipality,
             title: 'Comunicação aguarda resposta do município',

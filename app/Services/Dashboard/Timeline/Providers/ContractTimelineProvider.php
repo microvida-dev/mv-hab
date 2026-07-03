@@ -10,9 +10,14 @@ use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\Contract;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 
 class ContractTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
         if (! $user->hasPermission('contracts.view')) {
@@ -59,7 +64,7 @@ class ContractTimelineProvider implements TimelineProviderInterface
 
     private function issuedEvent(Contract $contract): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'contract-issued-'.$contract->getKey(),
             type: TimelineType::ContractIssued,
             title: 'Contrato emitido',
@@ -76,7 +81,7 @@ class ContractTimelineProvider implements TimelineProviderInterface
 
     private function signedEvent(Contract $contract): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'contract-signed-'.$contract->getKey(),
             type: TimelineType::ContractSigned,
             title: 'Contrato assinado',
@@ -93,7 +98,7 @@ class ContractTimelineProvider implements TimelineProviderInterface
 
     private function activeEvent(Contract $contract): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'contract-active-'.$contract->getKey(),
             type: TimelineType::ContractActive,
             title: 'Contrato ativo',
@@ -110,7 +115,7 @@ class ContractTimelineProvider implements TimelineProviderInterface
 
     private function suspendedEvent(Contract $contract): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'contract-suspended-'.$contract->getKey(),
             type: TimelineType::ContractSuspended,
             title: 'Contrato suspenso',
@@ -127,7 +132,7 @@ class ContractTimelineProvider implements TimelineProviderInterface
 
     private function terminatedEvent(Contract $contract): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'contract-terminated-'.$contract->getKey(),
             type: TimelineType::ContractTerminated,
             title: 'Contrato terminado',

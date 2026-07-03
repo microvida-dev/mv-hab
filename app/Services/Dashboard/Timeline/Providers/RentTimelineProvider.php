@@ -12,9 +12,14 @@ use App\Models\LeasePayment;
 use App\Models\RentInstallment;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 
 class RentTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
         if (! $user->hasPermission('finance.view')) {
@@ -74,7 +79,7 @@ class RentTimelineProvider implements TimelineProviderInterface
 
     private function dueEvent(RentInstallment $installment): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'rent-due-'.$installment->getKey(),
             type: TimelineType::RentDue,
             title: 'Prestação de renda a vencer',
@@ -93,7 +98,7 @@ class RentTimelineProvider implements TimelineProviderInterface
 
     private function overdueEvent(RentInstallment $installment): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'rent-overdue-'.$installment->getKey(),
             type: TimelineType::RentOverdue,
             title: 'Prestação de renda em atraso',
@@ -110,7 +115,7 @@ class RentTimelineProvider implements TimelineProviderInterface
 
     private function paymentReceivedEvent(LeasePayment $payment): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'lease-payment-received-'.$payment->getKey(),
             type: TimelineType::LeasePaymentReceived,
             title: 'Pagamento de renda recebido',

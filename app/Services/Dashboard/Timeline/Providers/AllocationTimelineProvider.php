@@ -9,11 +9,16 @@ use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\Allocation;
 use App\Models\User;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
 use Illuminate\Support\Collection;
 
 class AllocationTimelineProvider implements TimelineProviderInterface
 {
+    public function __construct(
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+    ) {}
+
     public function forUser(User $user, array $dashboard = []): array
     {
         if (! $user->hasPermission('allocations.view')) {
@@ -42,38 +47,25 @@ class AllocationTimelineProvider implements TimelineProviderInterface
             ->all();
     }
 
-    /**
-     * @return Collection<int, TimelineEvent>
-     */
+    /** @return Collection<int, TimelineEvent> */
     private function eventsForAllocation(Allocation $allocation): Collection
     {
         return collect()
-            ->when(
-                $allocation->offered_at,
-                fn (Collection $events): Collection => $events->push($this->offerEvent($allocation))
-            )
-            ->when(
-                $allocation->accepted_at,
-                fn (Collection $events): Collection => $events->push($this->acceptedEvent($allocation))
-            )
-            ->when(
-                $allocation->ready_for_contract_at,
-                fn (Collection $events): Collection => $events->push($this->readyForContractEvent($allocation))
-            );
+            ->when($allocation->offered_at, fn (Collection $events): Collection => $events->push($this->offerEvent($allocation)))
+            ->when($allocation->accepted_at, fn (Collection $events): Collection => $events->push($this->acceptedEvent($allocation)))
+            ->when($allocation->ready_for_contract_at, fn (Collection $events): Collection => $events->push($this->readyForContractEvent($allocation)));
     }
 
     private function offerEvent(Allocation $allocation): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'allocation-offer-'.$allocation->getKey(),
             type: TimelineType::AllocationOffer,
             title: 'Oferta de atribuição emitida',
             description: $this->description($allocation),
             route: route('backoffice.allocation.allocations.index'),
             datetime: $allocation->acceptance_deadline_at ?? $allocation->offered_at,
-            priority: $allocation->acceptance_deadline_at?->isPast()
-                ? TimelinePriority::High
-                : TimelinePriority::Medium,
+            priority: $allocation->acceptance_deadline_at?->isPast() ? TimelinePriority::High : TimelinePriority::Medium,
             icon: 'housing',
             tone: $allocation->acceptance_deadline_at?->isPast() ? 'warning' : 'info',
             workspace: TimelineWorkspace::Applications,
@@ -83,7 +75,7 @@ class AllocationTimelineProvider implements TimelineProviderInterface
 
     private function acceptedEvent(Allocation $allocation): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'allocation-accepted-'.$allocation->getKey(),
             type: TimelineType::AllocationAccepted,
             title: 'Oferta de atribuição aceite',
@@ -100,7 +92,7 @@ class AllocationTimelineProvider implements TimelineProviderInterface
 
     private function readyForContractEvent(Allocation $allocation): TimelineEvent
     {
-        return new TimelineEvent(
+        return $this->factory->make(
             id: 'allocation-ready-for-contract-'.$allocation->getKey(),
             type: TimelineType::AllocationReadyForContract,
             title: 'Atribuição pronta para contrato',
@@ -124,9 +116,7 @@ class AllocationTimelineProvider implements TimelineProviderInterface
         return trim("{$application} · {$candidate} · {$housing}");
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     private function metadata(Allocation $allocation): array
     {
         return [
