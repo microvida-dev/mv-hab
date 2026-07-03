@@ -1,52 +1,28 @@
 <x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
-        @csrf
+    <x-auth-page
+        title="Criar conta"
+        description="Registe-se para aceder à plataforma MVHAB."
+    >
+        <form method="POST" action="{{ route('register') }}" class="mt-8 space-y-5">
+            @csrf
 
-        <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
-        </div>
+            <x-auth-text-input id="name" name="name" label="Nome" icon="user" :value="old('name')" placeholder="Nome completo" autocomplete="name" required autofocus />
 
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+            <x-auth-text-input id="email" name="email" label="Email" type="email" icon="user" :value="old('email')" placeholder="nome@exemplo.pt" autocomplete="username" required />
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+            <x-auth-text-input id="password" name="password" label="Palavra-passe" type="password" icon="security" placeholder="Defina uma palavra-passe" autocomplete="new-password" required />
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
+            <x-auth-text-input id="password_confirmation" name="password_confirmation" label="Confirmar palavra-passe" type="password" icon="security" placeholder="Repita a palavra-passe" autocomplete="new-password" required />
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+            <x-auth-button>
+                Criar conta
+            </x-auth-button>
 
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
-            </a>
-
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
-        </div>
-    </form>
+            <div class="text-center">
+                <a class="text-sm font-semibold text-purple-700 underline-offset-4 hover:text-purple-900 hover:underline focus:outline-none focus:ring-4 focus:ring-purple-100" href="{{ route('login') }}">
+                    Já tem conta? Iniciar sessão
+                </a>
+            </div>
+        </form>
+    </x-auth-page>
 </x-guest-layout>

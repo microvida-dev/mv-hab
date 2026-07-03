@@ -1,39 +1,28 @@
 <x-guest-layout>
-    <form method="POST" action="{{ route('password.store') }}">
-        @csrf
+    <x-auth-page
+        title="Definir nova palavra-passe"
+        description="Introduza uma nova palavra-passe para concluir a recuperação da sua conta."
+    >
+        <form method="POST" action="{{ route('password.store') }}" class="mt-8 space-y-5">
+            @csrf
 
-        <!-- Password Reset Token -->
-        <input type="hidden" name="token" value="{{ $request->route('token') }}">
+            <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email', $request->email)" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+            <x-auth-text-input id="email" name="email" label="Email" type="email" icon="user" :value="old('email', $request->email)" placeholder="nome@exemplo.pt" autocomplete="username" readonly required />
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+            <x-auth-text-input id="password" name="password" label="Nova palavra-passe" type="password" icon="security" placeholder="Introduza a nova palavra-passe" autocomplete="new-password" required />
 
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+            <x-auth-text-input id="password_confirmation" name="password_confirmation" label="Confirmar palavra-passe" type="password" icon="security" placeholder="Repita a nova palavra-passe" autocomplete="new-password" required />
 
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                                type="password"
-                                name="password_confirmation" required autocomplete="new-password" />
+            <x-auth-button>
+                Atualizar palavra-passe
+            </x-auth-button>
 
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Reset Password') }}
-            </x-primary-button>
-        </div>
-    </form>
+            <div class="text-center">
+                <a href="{{ route('login') }}" class="text-sm font-semibold text-purple-700 underline-offset-4 hover:text-purple-900 hover:underline focus:outline-none focus:ring-4 focus:ring-purple-100">
+                    Voltar ao início de sessão
+                </a>
+            </div>
+        </form>
+    </x-auth-page>
 </x-guest-layout>
