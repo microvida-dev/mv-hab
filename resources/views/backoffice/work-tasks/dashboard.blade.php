@@ -1,27 +1,26 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-semibold text-civic-700">Produtividade operacional</p>
-                <h1 class="mt-1 text-2xl font-semibold text-ink-900">Painel de tarefas</h1>
-            </div>
-            <a class="mv-button-secondary" href="{{ route('backoffice.work-tasks.index') }}">Tarefas</a>
-        </div>
+        <x-mv.page-header
+            eyebrow="Produtividade operacional"
+            title="Painel de tarefas"
+            description="Resumo de carga operacional, SLA e distribuição de tarefas."
+        >
+            <x-slot name="actions">
+                <a class="mv-button-secondary" href="{{ route('backoffice.work-tasks.index') }}">Tarefas</a>
+            </x-slot>
+        </x-mv.page-header>
     </x-slot>
 
     <div class="py-8">
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             <section class="grid gap-4 md:grid-cols-4">
-                <div class="mv-surface p-5"><p class="text-sm font-semibold text-ink-500">Vencidas</p><p class="mt-2 text-3xl font-semibold text-ink-900">{{ $metrics['overdue'] }}</p></div>
-                <div class="mv-surface p-5"><p class="text-sm font-semibold text-ink-500">A vencer</p><p class="mt-2 text-3xl font-semibold text-ink-900">{{ $metrics['due_soon'] }}</p></div>
-                <div class="mv-surface p-5"><p class="text-sm font-semibold text-ink-500">Concluídas 30 dias</p><p class="mt-2 text-3xl font-semibold text-ink-900">{{ $metrics['completed_last_30_days'] }}</p></div>
-                <div class="mv-surface p-5"><p class="text-sm font-semibold text-ink-500">Cumprimento SLA</p><p class="mt-2 text-3xl font-semibold text-ink-900">{{ number_format($metrics['sla_rate'], 2, ',', ' ') }}%</p></div>
+                <x-mv.stat-card label="Vencidas" :value="$metrics['overdue']" />
+                <x-mv.stat-card label="A vencer" :value="$metrics['due_soon']" />
+                <x-mv.stat-card label="Concluídas 30 dias" :value="$metrics['completed_last_30_days']" />
+                <x-mv.stat-card label="Cumprimento SLA" :value="number_format($metrics['sla_rate'], 2, ',', ' ').'%'" />
             </section>
 
-            <section class="mv-surface overflow-hidden">
-                <div class="border-b border-ink-100 px-5 py-4">
-                    <h2 class="text-lg font-semibold text-ink-900">Estados</h2>
-                </div>
+            <x-mv.section title="Estados" class="overflow-hidden">
                 <table class="min-w-full divide-y divide-ink-100 text-sm">
                     <tbody class="divide-y divide-ink-100">
                         @foreach ($metrics['by_status'] as $status => $total)
@@ -29,13 +28,10 @@
                         @endforeach
                     </tbody>
                 </table>
-            </section>
+            </x-mv.section>
 
             <section class="grid gap-6 lg:grid-cols-2">
-                <div class="mv-surface overflow-hidden">
-                    <div class="border-b border-ink-100 px-5 py-4">
-                        <h2 class="text-lg font-semibold text-ink-900">Carga por equipa</h2>
-                    </div>
+                <x-mv.section title="Carga por equipa" class="overflow-hidden">
                     <table class="min-w-full divide-y divide-ink-100 text-sm">
                         <tbody class="divide-y divide-ink-100">
                             @forelse ($metrics['team_load'] as $row)
@@ -45,12 +41,9 @@
                             @endforelse
                         </tbody>
                     </table>
-                </div>
+                </x-mv.section>
 
-                <div class="mv-surface overflow-hidden">
-                    <div class="border-b border-ink-100 px-5 py-4">
-                        <h2 class="text-lg font-semibold text-ink-900">Carga por utilizador</h2>
-                    </div>
+                <x-mv.section title="Carga por utilizador" class="overflow-hidden">
                     <table class="min-w-full divide-y divide-ink-100 text-sm">
                         <tbody class="divide-y divide-ink-100">
                             @forelse ($metrics['user_load'] as $row)
@@ -60,7 +53,7 @@
                             @endforelse
                         </tbody>
                     </table>
-                </div>
+                </x-mv.section>
             </section>
         </div>
     </div>

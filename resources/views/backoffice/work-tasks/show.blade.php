@@ -1,24 +1,24 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-semibold text-mvhab-primary">{{ $task->task_number }}</p>
-                <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ \App\Models\WorkTask::typeLabel($task->type) }}</h1>
-                <p class="mt-1 text-sm text-ink-500">{{ \App\Models\WorkTask::statusLabel($task->status) }} · {{ app(\App\Services\UX\MunicipalLanguageService::class)->priorityLabel((string) $task->priority) }}</p>
-            </div>
-            <a class="mv-button-secondary" href="{{ route('backoffice.work-tasks.index') }}">Voltar</a>
-        </div>
+        <x-mv.page-header
+            :eyebrow="$task->task_number"
+            :title="\App\Models\WorkTask::typeLabel($task->type)"
+            :description="\App\Models\WorkTask::statusLabel($task->status).' · '.app(\App\Services\UX\MunicipalLanguageService::class)->priorityLabel((string) $task->priority)"
+        >
+            <x-slot name="actions">
+                <a class="mv-button-secondary" href="{{ route('backoffice.work-tasks.index') }}">Voltar</a>
+            </x-slot>
+        </x-mv.page-header>
     </x-slot>
 
     <div class="py-8">
         <div class="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_360px] lg:px-8">
             <div class="space-y-6">
                 @if (session('success'))
-                    <div class="rounded-2xl border border-mvhab-support/40 bg-mvhab-surface px-4 py-3 text-sm font-semibold text-mvhab-primary">{{ session('success') }}</div>
+                    <x-mv.alert tone="success">{{ session('success') }}</x-mv.alert>
                 @endif
 
-                <section class="mv-surface p-5">
-                    <h2 class="text-lg font-semibold text-ink-900">Resumo</h2>
+                <x-mv.section title="Resumo">
                     <dl class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
                         <div><dt class="font-semibold text-ink-500">Equipa</dt><dd class="mt-1 text-ink-900">{{ $task->municipalTeam?->name ?? 'Fila geral' }}</dd></div>
                         <div><dt class="font-semibold text-ink-500">Responsável</dt><dd class="mt-1 text-ink-900">{{ $task->assignedUser?->name ?? 'Por atribuir' }}</dd></div>
@@ -27,12 +27,9 @@
                         <div><dt class="font-semibold text-ink-500">Entidade relacionada</dt><dd class="mt-1 text-ink-900">{{ class_basename((string) $task->related_type) ?: '—' }} #{{ $task->related_id ?? '—' }}</dd></div>
                         <div><dt class="font-semibold text-ink-500">Criada em</dt><dd class="mt-1 text-ink-900">{{ $task->created_at?->format('d/m/Y H:i') }}</dd></div>
                     </dl>
-                </section>
+                </x-mv.section>
 
-                <section class="mv-surface overflow-hidden">
-                    <div class="border-b border-ink-100 px-5 py-4">
-                        <h2 class="text-lg font-semibold text-ink-900">Histórico</h2>
-                    </div>
+                <x-mv.section title="Histórico" class="overflow-hidden">
                     <table class="min-w-full divide-y divide-ink-100 text-sm">
                         <thead class="bg-ink-50 text-left text-xs font-semibold uppercase text-ink-500">
                             <tr><th class="px-4 py-3">Evento</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">Actor</th><th class="px-4 py-3">Data</th></tr>
@@ -50,92 +47,105 @@
                             @endforelse
                         </tbody>
                     </table>
-                </section>
+                </x-mv.section>
             </div>
 
             <aside class="space-y-6">
                 @can('claim', $task)
-                    <form method="POST" action="{{ route('backoffice.work-tasks.claim', $task) }}" class="mv-surface p-5">
+                    <form method="POST" action="{{ route('backoffice.work-tasks.claim', $task) }}">
                         @csrf
-                        <h2 class="text-base font-semibold text-ink-900">Assumir tarefa</h2>
-                        <button class="mv-button-primary mt-4 w-full">Assumir</button>
+                        <x-mv.section title="Assumir tarefa">
+                            <button class="mv-button-primary w-full">Assumir</button>
+                        </x-mv.section>
                     </form>
                 @endcan
 
                 @can('reassign', $task)
-                    <form method="POST" action="{{ route('backoffice.work-tasks.reassign', $task) }}" class="mv-surface space-y-4 p-5">
+                    <form method="POST" action="{{ route('backoffice.work-tasks.reassign', $task) }}">
                         @csrf
-                        <h2 class="text-base font-semibold text-ink-900">Reatribuir</h2>
-                        <label class="block text-sm font-semibold text-ink-700">
-                            Equipa
-                            <select name="municipal_team_id" class="mv-input mt-1 w-full">
-                                <option value="">Fila geral</option>
-                                @foreach ($teams as $team)
-                                    <option value="{{ $team->id }}" @selected($task->municipal_team_id === $team->id)>{{ $team->name }}</option>
-                                @endforeach
-                            </select>
-                        </label>
-                        <label class="block text-sm font-semibold text-ink-700">
-                            Responsável
-                            <select name="assigned_user_id" class="mv-input mt-1 w-full">
-                                <option value="">Por atribuir</option>
-                                @foreach ($users as $user)
-                                    <option value="{{ $user->id }}" @selected($task->assigned_user_id === $user->id)>{{ $user->name }}</option>
-                                @endforeach
-                            </select>
-                        </label>
-                        <label class="block text-sm font-semibold text-ink-700">
-                            Justificação
-                            <textarea name="reason" rows="3" class="mv-input mt-1 w-full" required></textarea>
-                        </label>
-                        <button class="mv-button-primary w-full">Reatribuir</button>
+                        <x-mv.section title="Reatribuir">
+                            <div class="space-y-4">
+                                <label class="block text-sm font-semibold text-ink-700">
+                                    Equipa
+                                    <select name="municipal_team_id" class="mv-input mt-1 w-full">
+                                        <option value="">Fila geral</option>
+                                        @foreach ($teams as $team)
+                                            <option value="{{ $team->id }}" @selected($task->municipal_team_id === $team->id)>{{ $team->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                                <label class="block text-sm font-semibold text-ink-700">
+                                    Responsável
+                                    <select name="assigned_user_id" class="mv-input mt-1 w-full">
+                                        <option value="">Por atribuir</option>
+                                        @foreach ($users as $user)
+                                            <option value="{{ $user->id }}" @selected($task->assigned_user_id === $user->id)>{{ $user->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                                <label class="block text-sm font-semibold text-ink-700">
+                                    Justificação
+                                    <textarea name="reason" rows="3" class="mv-input mt-1 w-full" required></textarea>
+                                </label>
+                                <button class="mv-button-primary w-full">Reatribuir</button>
+                            </div>
+                        </x-mv.section>
                     </form>
                 @endcan
 
                 @can('updateStatus', $task)
-                    <form method="POST" action="{{ route('backoffice.work-tasks.status', $task) }}" class="mv-surface space-y-4 p-5">
+                    <form method="POST" action="{{ route('backoffice.work-tasks.status', $task) }}">
                         @csrf
-                        <h2 class="text-base font-semibold text-ink-900">Atualizar estado</h2>
-                        <label class="block text-sm font-semibold text-ink-700">
-                            Estado
-                            <select name="status" class="mv-input mt-1 w-full">
-                                <option value="{{ \App\Models\WorkTask::STATUS_IN_ANALYSIS }}">Em análise</option>
-                                <option value="{{ \App\Models\WorkTask::STATUS_WAITING_CANDIDATE }}">Em espera pelo candidato</option>
-                                <option value="{{ \App\Models\WorkTask::STATUS_WAITING_INTERNAL }}">Em espera interna</option>
-                                <option value="{{ \App\Models\WorkTask::STATUS_WAITING_EXTERNAL }}">Em espera externa</option>
-                            </select>
-                        </label>
-                        <label class="block text-sm font-semibold text-ink-700">
-                            Nota
-                            <textarea name="note" rows="3" class="mv-input mt-1 w-full"></textarea>
-                        </label>
-                        <button class="mv-button-primary w-full">Atualizar</button>
+                        <x-mv.section title="Atualizar estado">
+                            <div class="space-y-4">
+                                <label class="block text-sm font-semibold text-ink-700">
+                                    Estado
+                                    <select name="status" class="mv-input mt-1 w-full">
+                                        <option value="{{ \App\Models\WorkTask::STATUS_IN_ANALYSIS }}">Em análise</option>
+                                        <option value="{{ \App\Models\WorkTask::STATUS_WAITING_CANDIDATE }}">Em espera pelo candidato</option>
+                                        <option value="{{ \App\Models\WorkTask::STATUS_WAITING_INTERNAL }}">Em espera interna</option>
+                                        <option value="{{ \App\Models\WorkTask::STATUS_WAITING_EXTERNAL }}">Em espera externa</option>
+                                    </select>
+                                </label>
+                                <label class="block text-sm font-semibold text-ink-700">
+                                    Nota
+                                    <textarea name="note" rows="3" class="mv-input mt-1 w-full"></textarea>
+                                </label>
+                                <button class="mv-button-primary w-full">Atualizar</button>
+                            </div>
+                        </x-mv.section>
                     </form>
                 @endcan
 
                 @can('complete', $task)
-                    <form method="POST" action="{{ route('backoffice.work-tasks.status', $task) }}" class="mv-surface space-y-4 p-5">
+                    <form method="POST" action="{{ route('backoffice.work-tasks.status', $task) }}">
                         @csrf
                         <input type="hidden" name="status" value="{{ \App\Models\WorkTask::STATUS_COMPLETED }}">
-                        <h2 class="text-base font-semibold text-ink-900">Concluir</h2>
-                        <label class="block text-sm font-semibold text-ink-700">
-                            Resultado
-                            <textarea name="outcome_note" rows="3" class="mv-input mt-1 w-full" required></textarea>
-                        </label>
-                        <button class="mv-button-primary w-full">Concluir</button>
+                        <x-mv.section title="Concluir">
+                            <div class="space-y-4">
+                                <label class="block text-sm font-semibold text-ink-700">
+                                    Resultado
+                                    <textarea name="outcome_note" rows="3" class="mv-input mt-1 w-full" required></textarea>
+                                </label>
+                                <button class="mv-button-primary w-full">Concluir</button>
+                            </div>
+                        </x-mv.section>
                     </form>
                 @endcan
 
                 @can('cancel', $task)
-                    <form method="POST" action="{{ route('backoffice.work-tasks.status', $task) }}" class="mv-surface space-y-4 p-5">
+                    <form method="POST" action="{{ route('backoffice.work-tasks.status', $task) }}">
                         @csrf
                         <input type="hidden" name="status" value="{{ \App\Models\WorkTask::STATUS_CANCELLED }}">
-                        <h2 class="text-base font-semibold text-ink-900">Cancelar</h2>
-                        <label class="block text-sm font-semibold text-ink-700">
-                            Motivo
-                            <textarea name="cancellation_reason" rows="3" class="mv-input mt-1 w-full" required></textarea>
-                        </label>
-                        <button class="mv-button-secondary w-full">Cancelar tarefa</button>
+                        <x-mv.section title="Cancelar">
+                            <div class="space-y-4">
+                                <label class="block text-sm font-semibold text-ink-700">
+                                    Motivo
+                                    <textarea name="cancellation_reason" rows="3" class="mv-input mt-1 w-full" required></textarea>
+                                </label>
+                                <button class="mv-button-secondary w-full">Cancelar tarefa</button>
+                            </div>
+                        </x-mv.section>
                     </form>
                 @endcan
             </aside>
