@@ -1,13 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-semibold text-mvhab-primary">Candidatura</p>
-                <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $application->application_number ?? 'Rascunho' }}</h1>
-                <p class="mt-1 text-sm text-ink-500">{{ $application->contest->title }}</p>
-            </div>
-            <span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $application->status->label() }}</span>
-        </div>
+        <x-mv.page-header
+            eyebrow="Candidatura"
+            :title="$application->application_number ?? 'Rascunho'"
+            :description="$application->contest->title"
+        >
+            <x-slot name="actions">
+                <span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">
+                    {{ $application->status->label() }}
+                </span>
+            </x-slot>
+        </x-mv.page-header>
     </x-slot>
 
     <div class="py-8">
@@ -15,26 +18,93 @@
             <x-flash-message />
 
             <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div class="mv-surface p-5">
-                    <p class="text-sm text-ink-500">Programa</p>
-                    <p class="mt-2 font-semibold text-ink-900">{{ $application->program->name }}</p>
-                </div>
-                <div class="mv-surface p-5">
-                    <p class="text-sm text-ink-500">Criada em</p>
-                    <p class="mt-2 font-semibold text-ink-900">{{ $application->created_at->format('d/m/Y H:i') }}</p>
-                </div>
-                <div class="mv-surface p-5">
-                    <p class="text-sm text-ink-500">Submetida em</p>
-                    <p class="mt-2 font-semibold text-ink-900">{{ $application->submitted_at?->format('d/m/Y H:i') ?? 'Ainda não submetida' }}</p>
-                </div>
-                <div class="mv-surface p-5">
-                    <p class="text-sm text-ink-500">Documentos associados</p>
-                    <p class="mt-2 text-2xl font-semibold text-ink-900">{{ $application->applicationDocuments->count() }}</p>
-                </div>
+                <x-mv.stat-card
+                    label="Programa"
+                    :value="$application->program->name"
+                />
+
+                <x-mv.stat-card
+                    label="Criada em"
+                    :value="$application->created_at->format('d/m/Y H:i')"
+                />
+
+                <x-mv.stat-card
+                    label="Submetida em"
+                    :value="$application->submitted_at?->format('d/m/Y H:i') ?? 'Ainda não submetida'"
+                />
+
+                <x-mv.stat-card
+                    label="Documentos associados"
+                    :value="$application->applicationDocuments->count()"
+                />
             </section>
 
-            <section class="mv-surface p-6">
-                <h2 class="text-lg font-semibold text-ink-900">Resumo do processo</h2>
+            @if ($application->isEditable())
+                <x-mv.section
+                    eyebrow="Preparação da candidatura"
+                    :title="$readiness['ready']
+                        ? 'Pronta para submissão'
+                        : 'Ainda existem passos por concluir'"
+                >
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <span @class([
+                            'rounded-2xl px-3 py-1.5 text-sm font-semibold',
+                            'bg-mvhab-surface text-mvhab-primary' => $readiness['ready'],
+                            'bg-signal-50 text-signal-700' => ! $readiness['ready'],
+                        ])>
+                            {{ collect($readiness['checks'])->where('passed', true)->count() }}
+                            /
+                            {{ count($readiness['checks']) }}
+                            concluídos
+                        </span>
+                    </div>
+
+                    <div class="mt-5 h-2 overflow-hidden rounded-2xl bg-ink-100">
+                        <div
+                            class="h-full bg-mvhab-primary transition-all duration-300"
+                            style="width: {{ count($readiness['checks']) > 0
+                                ? round((collect($readiness['checks'])->where('passed', true)->count() / count($readiness['checks'])) * 100)
+                                : 0 }}%"
+                        ></div>
+                    </div>
+
+                    <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                        @foreach ($readiness['checks'] as $check)
+                            <x-mv.check-card
+                                :label="$check['label']"
+                                :detail="$check['detail']"
+                                :passed="$check['passed']"
+                            />
+                        @endforeach
+                    </div>
+
+                    @unless ($readiness['ready'])
+                        <div class="mt-6 flex flex-wrap gap-3">
+                            <a href="{{ route('candidate.registration.show') }}" class="mv-button-secondary">
+                                Registo de Adesão
+                            </a>
+
+                            <a href="{{ route('candidate.household.show') }}" class="mv-button-secondary">
+                                Agregado
+                            </a>
+
+                            <a href="{{ route('candidate.income-records.index') }}" class="mv-button-secondary">
+                                Rendimentos
+                            </a>
+
+                            <a href="{{ route('candidate.current-housing.show') }}" class="mv-button-secondary">
+                                Habitação atual
+                            </a>
+
+                            <a href="{{ route('candidate.documents.checklist') }}" class="mv-button-secondary">
+                                Documentos
+                            </a>
+                        </div>
+                    @endunless
+                </x-mv.section>
+            @endif
+
+            <x-mv.section title="Resumo do processo">
                 <div class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                     <div>
                         <p class="text-xs font-semibold uppercase text-ink-500">Candidato</p>
@@ -53,22 +123,24 @@
                         <p class="mt-2 text-sm font-semibold text-ink-900">{{ $application->currentHousingSituation->housing_status->label() }}</p>
                     </div>
                 </div>
-            </section>
+            </x-mv.section>
 
             @if ($application->latestEligibilityCheck)
-                <section class="mv-surface p-6">
-                    <p class="text-sm font-semibold text-mvhab-primary">Última verificação de elegibilidade</p>
-                    <h2 class="mt-1 text-lg font-semibold text-ink-900">{{ $application->latestEligibilityCheck->result->label() }}</h2>
+                <x-mv.section
+                    eyebrow="Última verificação de elegibilidade"
+                    :title="$application->latestEligibilityCheck->result->label()"
+                >
                     <p class="mt-2 text-sm leading-6 text-ink-600">{{ $application->latestEligibilityCheck->summary }}</p>
                     <p class="mt-3 text-xs leading-5 text-ink-500">Esta informação é indicativa e não substitui a decisão dos serviços municipais.</p>
                     <a href="{{ route('candidate.eligibility.show', $application->latestEligibilityCheck) }}" class="mt-4 inline-flex text-sm font-semibold text-mvhab-primary">Consultar condições verificadas</a>
-                </section>
+                </x-mv.section>
             @endif
 
             @if ($application->simulationInconsistencies->isNotEmpty())
-                <section class="mv-surface p-6">
-                    <p class="text-sm font-semibold text-mvhab-primary">Simulação e candidatura</p>
-                    <h2 class="mt-1 text-lg font-semibold text-ink-900">Dados a rever</h2>
+                <x-mv.section
+                    eyebrow="Simulação e candidatura"
+                    title="Dados a rever"
+                >
                     <div class="mt-4 space-y-3">
                         @foreach ($application->simulationInconsistencies as $inconsistency)
                             <div class="border-l-2 border-mvhab-primary pl-4 text-sm">
@@ -77,26 +149,25 @@
                             </div>
                         @endforeach
                     </div>
-                </section>
+               </x-mv.section>
             @endif
 
             @if ($application->submitted_at)
-                <section class="mv-surface p-6">
-                    <p class="text-sm font-semibold text-mvhab-primary">Classificação</p>
-                    <h2 class="mt-1 text-lg font-semibold text-ink-900">Fase interna do procedimento</h2>
+                <x-mv.section
+                    eyebrow="Classificação"
+                    title="Fase interna do procedimento"
+                >
                     <p class="mt-2 text-sm leading-6 text-ink-600">A candidatura será classificada de acordo com os critérios definidos no aviso de concurso. Os resultados provisórios serão disponibilizados em fase própria do procedimento.</p>
-                </section>
+                </x-mv.section>
             @endif
 
             @if ($application->candidate_notes)
-                <section class="mv-surface p-6">
-                    <h2 class="text-lg font-semibold text-ink-900">Notas do candidato</h2>
-                    <p class="mt-3 whitespace-pre-line text-sm leading-6 text-ink-600">{{ $application->candidate_notes }}</p>
-                </section>
+                <x-mv.section title="Notas do candidato">
+                    <p class="whitespace-pre-line text-sm leading-6 text-ink-600">{{ $application->candidate_notes }}</p>
+                </x-mv.section>
             @endif
 
-            <section class="mv-surface p-6">
-                <h2 class="text-lg font-semibold text-ink-900">Histórico de estado</h2>
+            <x-mv.section title="Histórico de estado">
                 <div class="mt-4 divide-y divide-ink-100">
                     @foreach ($application->statusHistories as $history)
                         <div class="flex flex-wrap justify-between gap-3 py-4 text-sm">
@@ -105,7 +176,7 @@
                         </div>
                     @endforeach
                 </div>
-            </section>
+            </x-mv.section>
 
             <div class="flex flex-wrap gap-3">
                 @if ($application->isEditable())

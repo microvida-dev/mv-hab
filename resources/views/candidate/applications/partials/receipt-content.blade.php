@@ -30,18 +30,20 @@
 <section class="mv-surface p-6">
     <h2 class="text-lg font-semibold text-ink-900">Resumo submetido</h2>
     <div class="mt-4 grid gap-4 sm:grid-cols-3">
-        <div class="rounded-2xl border border-ink-100 p-4">
-            <p class="text-xs uppercase text-ink-500">Membros</p>
-            <p class="mt-2 text-xl font-semibold text-ink-900">{{ $summary['member_count'] ?? $application->household->members->count() }}</p>
-        </div>
-        <div class="rounded-2xl border border-ink-100 p-4">
-            <p class="text-xs uppercase text-ink-500">Rendimento mensal</p>
-            <p class="mt-2 text-xl font-semibold text-ink-900">{{ number_format($summary['monthly_income'] ?? 0, 2, ',', '.') }} €</p>
-        </div>
-        <div class="rounded-2xl border border-ink-100 p-4">
-            <p class="text-xs uppercase text-ink-500">Documentos</p>
-            <p class="mt-2 text-xl font-semibold text-ink-900">{{ $application->applicationDocuments->count() }}</p>
-        </div>
+        <x-mv.stat-card
+            label="Membros"
+            :value="$summary['member_count'] ?? $application->household->members->count()"
+        />
+
+        <x-mv.stat-card
+            label="Rendimento mensal"
+            :value="number_format($summary['monthly_income'] ?? 0, 2, ',', '.') . ' €'"
+        />
+
+        <x-mv.stat-card
+            label="Documentos"
+            :value="$application->applicationDocuments->count()"
+        />
     </div>
 </section>
 

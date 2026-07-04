@@ -1,16 +1,17 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-semibold text-mvhab-primary">Candidaturas</p>
-                <h1 class="mt-1 text-2xl font-semibold text-ink-900">As minhas candidaturas</h1>
-                <p class="mt-1 text-sm text-ink-500">Consulte rascunhos, submissões e comprovativos.</p>
-            </div>
-            <a href="{{ route('public.contests.index') }}" class="mv-button-primary">
-                <x-ui-icon name="plus" class="h-4 w-4" />
-                Ver concursos
-            </a>
-        </div>
+        <x-mv.page-header
+            eyebrow="Candidaturas"
+            title="As minhas candidaturas"
+            description="Consulte rascunhos, submissões e comprovativos."
+        >
+            <x-slot name="actions">
+                <a href="{{ route('public.contests.index') }}" class="mv-button-primary">
+                    <x-ui-icon name="plus" class="h-4 w-4" />
+                    Ver concursos
+                </a>
+            </x-slot>
+        </x-mv.page-header>
     </x-slot>
 
     <div class="py-8">
@@ -18,11 +19,14 @@
             <x-flash-message />
 
             @if ($applications->isEmpty())
-                <section class="mv-surface p-6">
-                    <h2 class="text-xl font-semibold text-ink-900">Ainda não iniciou nenhuma candidatura.</h2>
-                    <p class="mt-2 text-sm leading-6 text-ink-600">Consulte os concursos disponíveis para iniciar uma candidatura.</p>
-                    <a href="{{ route('public.contests.index') }}" class="mv-button-primary mt-5">Ver concursos disponíveis</a>
-                </section>
+                <x-mv.section
+                    title="Ainda não iniciou nenhuma candidatura."
+                    description="Consulte os concursos disponíveis para iniciar uma candidatura."
+                >
+                    <a href="{{ route('public.contests.index') }}" class="mv-button-primary mt-5">
+                        Ver concursos disponíveis
+                    </a>
+                </x-mv.section>
             @else
                 <section class="mv-surface overflow-hidden">
                     <div class="overflow-x-auto">
@@ -37,7 +41,7 @@
                                     <th class="px-5 py-3 text-right">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-ink-100 bg-mvhab-card">
+                            <tbody class="divide-y divide-ink-100 bg-ink-50">
                                 @foreach ($applications as $application)
                                     <tr>
                                         <td class="px-5 py-4 font-semibold text-ink-900">{{ $application->application_number ?? 'Rascunho' }}</td>

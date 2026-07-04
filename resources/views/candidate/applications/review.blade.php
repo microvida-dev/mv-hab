@@ -1,10 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <p class="text-sm font-semibold text-mvhab-primary">Revisão final</p>
-            <h1 class="mt-1 text-2xl font-semibold text-ink-900">Rever e submeter candidatura</h1>
-            <p class="mt-1 text-sm text-ink-500">{{ $application->contest->title }}</p>
-        </div>
+        <x-mv.page-header
+            eyebrow="Revisão final"
+            title="Rever e submeter candidatura"
+            :description="$application->contest->title"
+        />
     </x-slot>
 
     <div class="py-8">
@@ -15,19 +15,17 @@
                 Antes de submeter, confirme cuidadosamente todos os dados. Após a submissão, a candidatura ficará bloqueada para edição direta e será analisada pelos serviços municipais.
             </section>
 
-            <section class="mv-surface p-6">
-                <h2 class="text-lg font-semibold text-ink-900">Estado da preparação</h2>
+            <x-mv.section title="Estado da preparação">
                 <div class="mt-4 divide-y divide-ink-100">
                     @foreach ($readiness['checks'] as $check)
-                        <div class="flex items-start gap-3 py-4">
-                            <span class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-2xl {{ $check['passed'] ? 'bg-mvhab-surface text-mvhab-primary' : 'bg-red-50 text-red-700' }}">
-                                <x-ui-icon :name="$check['passed'] ? 'check' : 'alert'" class="h-3.5 w-3.5" />
-                            </span>
-                            <p class="text-sm text-ink-700">{{ $check['passed'] ? $check['successMessage'] : $check['message'] }}</p>
-                        </div>
+                        <x-mv.check-card
+                            :label="$check['label']"
+                            :detail="$check['detail']"
+                            :passed="$check['passed']"
+                        />
                     @endforeach
                 </div>
-            </section>
+            </x-mv.section>
 
             <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <div class="mv-surface p-5">
@@ -86,10 +84,12 @@
                     'truthfulness_accepted' => 'Confirmo a veracidade da informação e dos documentos apresentados.',
                     'data_current_confirmed' => 'Confirmo que os dados do registo, agregado, rendimentos, situação habitacional e documentos estão corretos e atualizados.',
                 ] as $field => $label)
-                    <label class="flex items-start gap-3 rounded-2xl border border-ink-100 p-4">
-                        <input type="checkbox" name="{{ $field }}" value="1" class="mt-1 rounded border-ink-300 text-mvhab-primary focus:ring-mvhab-primary" {{ old($field) ? 'checked' : '' }}>
-                        <span class="text-sm leading-6 text-ink-700">{{ $label }}</span>
-                    </label>
+                    <x-mv.checkbox-card
+                        :name="$field"
+                        :label="$label"
+                        :checked="old($field)"
+                        align="start"
+                    />
                 @endforeach
 
                 <p class="text-xs leading-5 text-ink-500">{{ $readiness['eligibility_pre_check']['message'] }}</p>

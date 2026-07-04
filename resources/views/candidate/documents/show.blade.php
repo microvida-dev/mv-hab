@@ -7,6 +7,9 @@
                 <p class="mt-1 text-sm text-ink-500">{{ $submission->original_filename }}</p>
             </div>
             <div class="flex flex-wrap gap-2">
+                <a href="{{ route('candidate.documents.checklist') }}" class="mv-button-secondary">
+                    Voltar à checklist
+                </a>
                 <a href="{{ route('candidate.documents.download', $submission) }}" class="mv-button-secondary">
                     Download
                 </a>

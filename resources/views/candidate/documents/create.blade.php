@@ -51,7 +51,7 @@
 
                 <div>
                     <x-input-label for="file" value="Ficheiro" />
-                    <input id="file" name="file" type="file" class="mt-1 block w-full rounded-2xl border border-ink-200 px-3 py-2 text-sm" required>
+                    <x-mv.file-input id="file" name="file" required />
                     <p class="mt-2 text-xs text-ink-500">Formatos permitidos: PDF, JPG, PNG ou WEBP. Tamanho máximo: {{ $item['document_type']->max_file_size_mb }} MB.</p>
                     <x-input-error class="mt-2" :messages="$errors->get('file')" />
                 </div>

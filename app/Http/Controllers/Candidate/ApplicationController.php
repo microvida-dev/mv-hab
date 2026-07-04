@@ -80,7 +80,9 @@ class ApplicationController extends Controller
             'simulationInconsistencies',
         ]);
 
-        return view('candidate.applications.show', compact('application'));
+        $readiness = $this->validationService->readinessForSubmission($application);
+
+        return view('candidate.applications.show', compact('application', 'readiness'));
     }
 
     public function edit(Application $application): View
