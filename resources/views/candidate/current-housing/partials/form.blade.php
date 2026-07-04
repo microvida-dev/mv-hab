@@ -150,15 +150,12 @@
                 'has_accessibility_needs' => 'Necessidades de acessibilidade',
                 'has_high_rent_burden' => 'Encargo habitacional elevado',
             ] as $field => $label)
-                <label class="flex items-start gap-3 rounded-2xl border border-ink-100 p-3 text-sm text-ink-700">
-                    <x-ui.checkbox
-                        name="{{ $field }}"
-                        value="1"
-                        class="mt-0.5"
-                        @checked(old($field, $situation?->{$field} ?? false))
-                    />
-                    <span>{{ $label }}</span>
-                </label>
+                <x-mv.checkbox-card
+                    :name="$field"
+                    :label="$label"
+                    :checked="old($field, $situation?->{$field} ?? false)"
+                    align="start"
+                />
             @endforeach
         </div>
     </section>

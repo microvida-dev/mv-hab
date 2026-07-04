@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Rendimentos</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Rendimentos</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">Editar rendimento</h1>
         </div>
     </x-slot>

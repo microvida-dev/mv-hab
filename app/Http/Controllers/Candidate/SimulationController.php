@@ -17,6 +17,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use App\Enums\HousingStatus;
+use App\Models\AdhesionRegistration;
 
 class SimulationController extends Controller
 {
@@ -40,9 +42,35 @@ class SimulationController extends Controller
         return view('candidate.simulations.index', compact('sessions'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         Gate::authorize('create', SimulationSession::class);
+
+        $user = $this->authenticatedUser($request);
+
+        $registration = AdhesionRegistration::query()
+            ->where('user_id', $user->id)
+            ->with(['household.members', 'household.incomeRecords', 'currentHousingSituation'])
+            ->latest()
+            ->first();
+
+        $household = $registration?->household;
+        $housingSituation = $registration?->currentHousingSituation;
+
+        $members = $household?->members ?? collect();
+
+        $prefill = [
+            'housing_status' => $housingSituation?->housing_status?->value,
+            'housing_status_label' => $housingSituation?->housing_status?->label(),
+            'household_members_count' => $members->count() ?: null,
+            'adults_count' => $members->filter(fn ($member) => ($member->age() ?? 0) >= 18)->count() ?: null,
+            'dependents_count' => $members->where('is_dependent', true)->count(),
+            'monthly_income' => $household?->monthly_income,
+        ];
+
+        $prefillAvailable = filled($prefill['housing_status'])
+            || filled($prefill['household_members_count'])
+            || filled($prefill['monthly_income']);
 
         $contests = Contest::query()
             ->publiclyVisible()
@@ -50,9 +78,17 @@ class SimulationController extends Controller
             ->latest('published_at')
             ->limit(20)
             ->get();
+
+        $housingStatuses = HousingStatus::options();
         $notices = $this->messageService->notices();
 
-        return view('candidate.simulations.create', compact('contests', 'notices'));
+        return view('candidate.simulations.create', compact(
+            'contests',
+            'notices',
+            'prefill',
+            'prefillAvailable',
+            'housingStatuses',
+        ));
     }
 
     public function store(StoreCandidateSimulationRequest $request): RedirectResponse

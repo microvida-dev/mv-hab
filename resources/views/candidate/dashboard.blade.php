@@ -91,22 +91,22 @@
                 <section>
                     <h2 class="text-base font-semibold text-ink-900">Resumo declarado</h2>
                     <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                        <div class="mv-surface p-5">
-                            <p class="text-sm text-ink-500">Membros</p>
-                            <p class="mt-2 text-2xl font-semibold text-ink-900">{{ $progress['totals']['members'] }}</p>
-                        </div>
-                        <div class="mv-surface p-5">
-                            <p class="text-sm text-ink-500">Rendimento mensal</p>
-                            <p class="mt-2 text-2xl font-semibold text-ink-900">{{ number_format($progress['totals']['monthly'], 2, ',', '.') }} €</p>
-                        </div>
-                        <div class="mv-surface p-5">
-                            <p class="text-sm text-ink-500">Rendimento anual</p>
-                            <p class="mt-2 text-2xl font-semibold text-ink-900">{{ number_format($progress['totals']['annual'], 2, ',', '.') }} €</p>
-                        </div>
-                        <div class="mv-surface p-5">
-                            <p class="text-sm text-ink-500">Habitação atual</p>
-                            <p class="mt-2 text-base font-semibold text-ink-900">{{ $progress['housing_summary'] ?: 'Por preencher' }}</p>
-                        </div>
+                        <x-mv.stat-card label="Membros" :value="$progress['totals']['members']" />
+
+                        <x-mv.stat-card
+                            label="Rendimento mensal"
+                            :value="number_format($progress['totals']['monthly'], 2, ',', '.') . ' €'"
+                        />
+
+                        <x-mv.stat-card
+                            label="Rendimento anual"
+                            :value="number_format($progress['totals']['annual'], 2, ',', '.') . ' €'"
+                        />
+
+                        <x-mv.stat-card
+                            label="Habitação atual"
+                            :value="$progress['housing_summary'] ?: 'Por preencher'"
+                        />
                     </div>
                     <p class="mt-4 text-xs leading-5 text-ink-500">Os valores apresentados resultam dos dados declarados e servem apenas para preparação do registo. A elegibilidade será avaliada posteriormente de acordo com as regras do programa e do concurso.</p>
                 </section>
@@ -128,22 +128,29 @@
                         </div>
 
                         <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                            <div class="rounded-2xl border border-ink-100 p-4">
-                                <p class="text-xs font-semibold uppercase text-ink-500">Obrigatórios</p>
-                                <p class="mt-2 text-2xl font-semibold text-ink-900">{{ $documentProgress['total_required'] }}</p>
-                            </div>
-                            <div class="rounded-2xl border border-ink-100 p-4">
-                                <p class="text-xs font-semibold uppercase text-ink-500">Em falta</p>
-                                <p class="mt-2 text-2xl font-semibold text-ink-900">{{ $documentProgress['missing'] }}</p>
-                            </div>
-                            <div class="rounded-2xl border border-ink-100 p-4">
-                                <p class="text-xs font-semibold uppercase text-ink-500">Submetidos</p>
-                                <p class="mt-2 text-2xl font-semibold text-ink-900">{{ $documentProgress['submitted'] }}</p>
-                            </div>
-                            <div class="rounded-2xl border border-ink-100 p-4">
-                                <p class="text-xs font-semibold uppercase text-ink-500">Validados</p>
-                                <p class="mt-2 text-2xl font-semibold text-ink-900">{{ $documentProgress['validated'] }}</p>
-                            </div>
+                            <x-mv.stat-card
+                                label="Obrigatórios"
+                                :value="$documentProgress['total_required']"
+                                class="p-4"
+                            />
+
+                            <x-mv.stat-card
+                                label="Em falta"
+                                :value="$documentProgress['missing']"
+                                class="p-4"
+                            />
+
+                            <x-mv.stat-card
+                                label="Submetidos"
+                                :value="$documentProgress['submitted']"
+                                class="p-4"
+                            />
+
+                            <x-mv.stat-card
+                                label="Validados"
+                                :value="$documentProgress['validated']"
+                                class="p-4"
+                            />
                         </div>
                     </section>
                 @endif

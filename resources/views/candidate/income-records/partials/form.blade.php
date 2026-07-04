@@ -60,14 +60,17 @@
     </div>
 
     <div class="md:col-span-2 grid gap-3 sm:grid-cols-2">
-        <label class="flex items-center gap-3 rounded-2xl border border-ink-100 p-3 text-sm text-ink-700">
-            <input type="checkbox" name="is_current" value="1" class="mv-checkbox" @checked(old('is_current', $incomeRecord?->is_current ?? true))>
-            Rendimento atual
-        </label>
-        <label class="flex items-center gap-3 rounded-2xl border border-ink-100 p-3 text-sm text-ink-700">
-            <input type="checkbox" name="is_taxable" value="1" class="mv-checkbox" @checked(old('is_taxable', $incomeRecord?->is_taxable ?? true))>
-            Sujeito a tributação
-        </label>
+        <x-mv.checkbox-card
+            name="is_current"
+            label="Rendimento atual"
+            :checked="old('is_current', $incomeRecord?->is_current ?? true)"
+        />
+
+        <x-mv.checkbox-card
+            name="is_taxable"
+            label="Rendimento sujeito a IRS"
+            :checked="old('is_taxable', $incomeRecord?->is_taxable ?? true)"
+        />
     </div>
 
     <div class="md:col-span-2">

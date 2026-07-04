@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Etapa 2 de 4</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Etapa 2 de 4</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">Agregado familiar</h1>
                 <p class="mt-1 text-sm text-ink-500">Indique as pessoas que integram o seu agregado habitacional.</p>
             </div>
@@ -49,14 +49,14 @@
 
                         <div class="mt-6 grid gap-3 sm:grid-cols-2">
                             @foreach ($household->members as $member)
-                                <article class="rounded-md border border-ink-100 p-4">
+                                <article class="rounded-2xl border border-ink-100 p-4">
                                     <div class="flex items-start justify-between gap-3">
                                         <div>
                                             <p class="font-semibold text-ink-900">{{ $member->full_name }}</p>
                                             <p class="mt-1 text-sm text-ink-500">{{ $member->relationship->label() }} · {{ $member->age() ?? 'Idade por indicar' }}</p>
                                         </div>
                                         @if ($member->is_applicant)
-                                            <span class="rounded-md bg-civic-50 px-2 py-1 text-xs font-semibold text-civic-700">Requerente</span>
+                                            <span class="rounded-2xl bg-mvhab-surface px-2 py-1 text-xs font-semibold text-mvhab-primary">Requerente</span>
                                         @endif
                                     </div>
                                     <p class="mt-3 text-sm text-ink-600">

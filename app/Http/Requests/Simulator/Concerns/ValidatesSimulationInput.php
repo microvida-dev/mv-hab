@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests\Simulator\Concerns;
 
+use App\Enums\HousingStatus;
+use Illuminate\Validation\Rule;
+
 trait ValidatesSimulationInput
 {
     /**
@@ -18,7 +21,7 @@ trait ValidatesSimulationInput
             'monthly_income' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'annual_income' => ['nullable', 'numeric', 'min:0', 'max:9999999.99'],
             'current_monthly_rent' => ['nullable', 'numeric', 'min:0', 'max:99999.99'],
-            'housing_status' => ['required', 'string', 'max:100'],
+            'housing_status' => ['required', Rule::enum(HousingStatus::class)],
             'preferred_parishes' => ['nullable', 'array'],
             'preferred_parishes.*' => ['string', 'max:120'],
             'preferred_typologies' => ['nullable', 'array'],
@@ -33,6 +36,7 @@ trait ValidatesSimulationInput
             'false_declarations_history' => ['nullable', 'boolean'],
             'previous_municipal_eviction' => ['nullable', 'boolean'],
             'privacy_notice_accepted' => ['accepted'],
+            'use_registration_data' => ['nullable', 'boolean'],
         ];
     }
 }

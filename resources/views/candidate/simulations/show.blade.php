@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Simulação</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Simulação</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $simulationSession->result_status?->label() ?? 'Resultado' }}</h1>
                 <p class="mt-1 text-sm text-ink-500">{{ $notices['short'] }}</p>
             </div>
@@ -28,7 +28,7 @@
                     <h2 class="text-lg font-semibold text-ink-900">Impedimentos e avisos</h2>
                     <div class="mt-4 space-y-3">
                         @forelse ($simulationSession->result?->impediments ?? [] as $impediment)
-                            <div class="rounded-md border border-ink-100 p-4">
+                            <div class="rounded-2xl border border-ink-100 p-4">
                                 <p class="font-semibold text-ink-900">{{ $impediment->title }}</p>
                                 <p class="mt-1 text-sm text-ink-600">{{ $impediment->message }}</p>
                             </div>
@@ -57,7 +57,7 @@
                     <h2 class="text-lg font-semibold text-ink-900">Concursos</h2>
                     <div class="mt-4 space-y-3">
                         @forelse ($simulationSession->result?->recommendedContests ?? [] as $recommendation)
-                            <a href="{{ $recommendation->cta_url }}" class="block rounded-md border border-ink-100 p-3 text-sm font-semibold text-civic-700">{{ $recommendation->contest->title }}</a>
+                            <a href="{{ $recommendation->cta_url }}" class="block rounded-2xl border border-ink-100 p-3 text-sm font-semibold text-mvhab-primary">{{ $recommendation->contest->title }}</a>
                         @empty
                             <p class="text-sm text-ink-500">Sem recomendações.</p>
                         @endforelse

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-semibold text-civic-700">Agregado familiar</p>
+            <p class="text-sm font-semibold text-mvhab-primary">Agregado familiar</p>
             <h1 class="mt-1 text-2xl font-semibold text-ink-900">Editar dados gerais</h1>
         </div>
     </x-slot>
@@ -20,7 +20,7 @@
 
                 <div>
                     <x-input-label for="household_type" value="Tipo de agregado" />
-                    <select id="household_type" name="household_type" class="mt-1 w-full rounded-md border-gray-300 shadow-sm" required>
+                    <select id="household_type" name="household_type" class="mv-input mt-1 w-full" required>
                         <option value="family" @selected(old('household_type', $household->household_type) === 'family')>Agregado familiar</option>
                         <option value="single_person" @selected(old('household_type', $household->household_type) === 'single_person')>Pessoa isolada</option>
                         <option value="other" @selected(old('household_type', $household->household_type) === 'other')>Outra composição</option>
@@ -30,7 +30,7 @@
 
                 <div>
                     <x-input-label for="notes" value="Observações" />
-                    <textarea id="notes" name="notes" rows="4" class="mt-1 w-full rounded-md border-gray-300 shadow-sm">{{ old('notes', $household->notes) }}</textarea>
+                    <textarea id="notes" name="notes" rows="4" class="mv-input mt-1 w-full">{{ old('notes', $household->notes) }}</textarea>
                     <x-input-error :messages="$errors->get('notes')" class="mt-2" />
                 </div>
 

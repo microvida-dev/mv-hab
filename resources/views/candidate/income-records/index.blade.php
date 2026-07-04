@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Etapa 3 de 4</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Etapa 3 de 4</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">Rendimentos</h1>
                 <p class="mt-1 text-sm text-ink-500">Declare os rendimentos de cada membro ou assinale a ausência de rendimentos.</p>
             </div>
@@ -49,17 +49,17 @@
                         </div>
 
                         @if ($member->has_no_income)
-                            <div class="mt-4 rounded-md bg-ink-50 p-4 text-sm text-ink-600">
+                            <div class="mt-4 rounded-2xl bg-ink-50 p-4 text-sm text-ink-600">
                                 Sem rendimentos declarados{{ $member->no_income_reason ? ': '.$member->no_income_reason : '.' }}
                             </div>
                         @elseif ($member->incomeRecords->isEmpty())
-                            <div class="mt-4 rounded-md border border-dashed border-ink-200 p-4 text-sm text-ink-600">
+                            <div class="mt-4 rounded-2xl border border-dashed border-ink-200 p-4 text-sm text-ink-600">
                                 Ainda não declarou rendimentos para este membro.
                             </div>
                         @else
                             <div class="mt-4 grid gap-3 md:grid-cols-2">
                                 @foreach ($member->incomeRecords as $record)
-                                    <div class="rounded-md border border-ink-100 p-4">
+                                    <div class="rounded-2xl border border-ink-100 p-4">
                                         <div class="flex items-start justify-between gap-3">
                                             <div>
                                                 <p class="font-semibold text-ink-900">{{ $record->incomeSource->name }}</p>

@@ -140,10 +140,12 @@
                             <form method="POST" action="{{ route('candidate.registration.remove') }}" class="mt-4">
                                 @csrf
                                 @method('DELETE')
-                                <label class="flex items-start gap-3 text-sm text-red-900">
-                                    <input type="checkbox" name="confirm_removal" value="1" class="mt-0.5 rounded border-red-300 text-red-700 focus:ring-red-500">
-                                    Confirmo que pretendo remover o Registo de Adesão.
-                                </label>
+                                    <x-mv.checkbox-card
+                                        name="confirm_removal"
+                                        label="Confirmo que pretendo remover o Registo de Adesão."
+                                        align="start"
+                                        tone="danger"
+                                    />
                                 <button class="mv-button-danger mt-3 w-full">Remover registo</button>
                             </form>
                         </section>

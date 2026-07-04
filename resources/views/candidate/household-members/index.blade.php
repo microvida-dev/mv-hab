@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold text-civic-700">Agregado familiar</p>
+                <p class="text-sm font-semibold text-mvhab-primary">Agregado familiar</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">Membros do agregado</h1>
                 <p class="mt-1 text-sm text-ink-500">{{ $household->members->count() }} membro(s) registado(s)</p>
             </div>
@@ -29,7 +29,7 @@
                                 <p class="mt-1 text-sm text-ink-500">{{ $member->relationship->label() }}</p>
                             </div>
                             @if ($member->is_applicant)
-                                <span class="rounded-md bg-civic-50 px-2 py-1 text-xs font-semibold text-civic-700">Requerente</span>
+                                <span class="rounded-2xl bg-mvhab-surface px-2 py-1 text-xs font-semibold text-mvhab-primary">Requerente</span>
                             @endif
                         </div>
 

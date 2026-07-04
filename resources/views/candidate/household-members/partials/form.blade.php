@@ -105,10 +105,12 @@
                 'has_no_income' => 'Não possui rendimentos',
                 'is_exempt_from_irs' => 'Dispensado de entregar IRS',
             ] as $field => $label)
-                <label class="flex items-start gap-3 rounded-2xl border border-ink-100 p-3 text-sm text-ink-700">
-                    <input type="checkbox" name="{{ $field }}" value="1" class="mv-checkbox mt-0.5" @checked(old($field, $member?->{$field} ?? false))>
-                    <span>{{ $label }}</span>
-                </label>
+                <x-mv.checkbox-card
+                    :name="$field"
+                    :label="$label"
+                    :checked="old($field, $member?->{$field} ?? false)"
+                    align="start"
+                />
             @endforeach
         </div>
 
