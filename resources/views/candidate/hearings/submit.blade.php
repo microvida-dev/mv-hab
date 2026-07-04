@@ -1,5 +1,38 @@
 <x-app-layout>
-    <x-slot name="header"><div><p class="text-sm font-semibold text-civic-700">Audiência</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">Submeter pronúncia</h1></div></x-slot>
-    <div class="py-8"><div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8"><form method="POST" action="{{ route('candidate.hearings.submit.store', $hearing) }}" class="space-y-5 rounded-md border border-ink-100 bg-white p-6">@csrf<div><x-input-label for="submission_text" value="Pronúncia" /><textarea id="submission_text" name="submission_text" class="mt-1 w-full rounded-md border-ink-200" required></textarea></div><div><x-input-label for="document_submission_id" value="Documento associado" /><select id="document_submission_id" name="document_submission_id" class="mt-1 w-full rounded-md border-ink-200"><option value="">Sem documento</option>@foreach($documents as $document)<option value="{{ $document->id }}">{{ $document->title }}</option>@endforeach</select></div><x-primary-button>Submeter pronúncia</x-primary-button></form></div></div>
-</x-app-layout>
+    <x-slot name="header">
+        <x-mv.page-header
+            eyebrow="Audiência"
+            title="Submeter pronúncia"
+            :description="$hearing->subject"
+        />
+    </x-slot>
 
+    <div class="py-8">
+        <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+            <form method="POST" action="{{ route('candidate.hearings.submit.store', $hearing) }}" class="space-y-6">
+                @csrf
+
+                <x-mv.section title="Pronúncia">
+                    <div class="space-y-5">
+                        <div>
+                            <x-input-label for="submission_text" value="Pronúncia" />
+                            <textarea id="submission_text" name="submission_text" class="mv-input mt-1 w-full" required></textarea>
+                        </div>
+
+                        <div>
+                            <x-input-label for="document_submission_id" value="Documento associado" />
+                            <select id="document_submission_id" name="document_submission_id" class="mv-input mt-1 w-full">
+                                <option value="">Sem documento</option>
+                                @foreach ($documents as $document)
+                                    <option value="{{ $document->id }}">{{ $document->title }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </x-mv.section>
+
+                <button class="mv-button-primary">Submeter pronúncia</button>
+            </form>
+        </div>
+    </div>
+</x-app-layout>
