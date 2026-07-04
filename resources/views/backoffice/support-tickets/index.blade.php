@@ -1,9 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <p class="text-sm font-semibold text-mvhab-primary">Backoffice</p>
-            <h1 class="mt-1 text-2xl font-semibold text-ink-900">Tickets de apoio</h1>
-        </div>
+        <x-mv.page-header
+            eyebrow="Backoffice"
+            title="Tickets de apoio"
+            description="Acompanhe pedidos de apoio, estado de resposta e atribuição técnica."
+        />
     </x-slot>
 
     <div class="py-8">
@@ -11,13 +12,14 @@
             <x-flash-message />
             <section class="grid gap-4 md:grid-cols-4">
                 @foreach ($indicators as $label => $value)
-                    <div class="mv-surface p-5">
-                        <p class="text-xs font-semibold uppercase text-ink-500">{{ str_replace('_', ' ', $label) }}</p>
-                        <p class="mt-2 text-2xl font-semibold text-ink-900">{{ is_array($value) ? array_sum($value) : $value }}</p>
-                    </div>
+                    <x-mv.stat-card
+                        :label="str_replace('_', ' ', $label)"
+                        :value="is_array($value) ? array_sum($value) : $value"
+                    />
                 @endforeach
             </section>
-            <section class="mv-surface overflow-hidden">
+
+            <x-mv.section title="Tickets" padding="p-0" class="overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-ink-100 text-sm">
                         <thead class="bg-ink-50 text-left text-xs font-semibold uppercase text-ink-500">
@@ -29,7 +31,7 @@
                                     <td class="px-5 py-4 font-semibold text-ink-900">{{ $ticket->ticket_number }}</td>
                                     <td class="px-5 py-4 text-ink-700">{{ $ticket->user?->name }}</td>
                                     <td class="px-5 py-4 text-ink-700">{{ $ticket->subject }}</td>
-                                    <td class="px-5 py-4 text-ink-700">{{ $ticket->status->label() }}</td>
+                                    <td class="px-5 py-4"><x-mv.badge>{{ $ticket->status->label() }}</x-mv.badge></td>
                                     <td class="px-5 py-4 text-ink-600">{{ $ticket->assignee?->name ?? '—' }}</td>
                                     <td class="px-5 py-4 text-right"><a href="{{ route('backoffice.support-tickets.show', $ticket) }}" class="font-semibold text-mvhab-primary">Abrir</a></td>
                                 </tr>
@@ -39,7 +41,7 @@
                         </tbody>
                     </table>
                 </div>
-            </section>
+            </x-mv.section>
             {{ $tickets->links() }}
         </div>
     </div>
