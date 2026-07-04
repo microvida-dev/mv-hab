@@ -1,19 +1,20 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-semibold text-civic-700">Backoffice</p>
-                <h1 class="mt-1 text-2xl font-semibold text-ink-900">Visitas abertas</h1>
-                <p class="mt-1 text-sm text-ink-500">Defina datas e horários em que o município abre fogos ou concursos para visita dos candidatos.</p>
-            </div>
+        <x-mv.page-header
+            eyebrow="Backoffice"
+            title="Visitas abertas"
+            description="Defina datas e horários em que o município abre fogos ou concursos para visita dos candidatos."
+        >
+            <x-slot name="actions">
             <a href="{{ route('backoffice.visit-availabilities.create') }}" class="mv-button-primary">Criar visita aberta</a>
-        </div>
+            </x-slot>
+        </x-mv.page-header>
     </x-slot>
 
     <div class="py-8">
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
-            <section class="mv-surface overflow-hidden">
+            <x-mv.section title="Janelas configuradas" padding="p-0" class="overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-ink-100 text-sm">
                         <thead class="bg-ink-50 text-left text-xs font-semibold uppercase text-ink-500">
@@ -40,7 +41,7 @@
                         </tbody>
                     </table>
                 </div>
-            </section>
+            </x-mv.section>
             {{ $availabilities->links() }}
         </div>
     </div>

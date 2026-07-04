@@ -1,32 +1,37 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-semibold text-civic-700">Visitas abertas</p>
-                <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $availability->title }}</h1>
-                <p class="mt-1 text-sm text-ink-500">Janela de visita aberta para candidatos. Gere horários para disponibilizar marcações na área do candidato.</p>
-            </div>
+        <x-mv.page-header
+            eyebrow="Visitas abertas"
+            :title="$availability->title"
+            description="Janela de visita aberta para candidatos. Gere horários para disponibilizar marcações na área do candidato."
+        >
+            <x-slot name="actions">
             <a href="{{ route('backoffice.visit-availabilities.edit', $availability) }}" class="mv-button-secondary">Editar</a>
-        </div>
+            </x-slot>
+        </x-mv.page-header>
     </x-slot>
 
     <div class="py-8">
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
             <section class="grid gap-4 md:grid-cols-3">
-                <div class="mv-surface p-5"><p class="text-xs font-semibold uppercase text-ink-500">Início</p><p class="mt-2 font-semibold text-ink-900">{{ $availability->starts_at?->format('d/m/Y H:i') }}</p></div>
-                <div class="mv-surface p-5"><p class="text-xs font-semibold uppercase text-ink-500">Fim</p><p class="mt-2 font-semibold text-ink-900">{{ $availability->ends_at?->format('d/m/Y H:i') }}</p></div>
-                <div class="mv-surface p-5"><p class="text-xs font-semibold uppercase text-ink-500">Horários</p><p class="mt-2 font-semibold text-ink-900">{{ $availability->slots->count() }}</p></div>
+                <x-mv.stat-card label="Início" :value="$availability->starts_at?->format('d/m/Y H:i') ?? '—'" />
+                <x-mv.stat-card label="Fim" :value="$availability->ends_at?->format('d/m/Y H:i') ?? '—'" />
+                <x-mv.stat-card label="Horários" :value="$availability->slots->count()" />
             </section>
 
-            <form method="POST" action="{{ route('backoffice.visit-availabilities.slots.generate', $availability) }}" class="mv-surface grid gap-4 p-6 md:grid-cols-[1fr_1fr_auto]">
+            <form method="POST" action="{{ route('backoffice.visit-availabilities.slots.generate', $availability) }}">
                 @csrf
-                <input name="location" placeholder="Local" class="rounded-md border-ink-300 text-sm">
-                <input name="meeting_point" placeholder="Ponto de encontro" class="rounded-md border-ink-300 text-sm">
-                <button type="submit" class="mv-button-primary">Gerar horários</button>
+                <x-mv.section title="Gerar horários" description="Defina o local e o ponto de encontro a aplicar aos horários desta janela.">
+                    <div class="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
+                        <input name="location" placeholder="Local" class="mv-input text-sm">
+                        <input name="meeting_point" placeholder="Ponto de encontro" class="mv-input text-sm">
+                        <button type="submit" class="mv-button-primary">Gerar horários</button>
+                    </div>
+                </x-mv.section>
             </form>
 
-            <section class="mv-surface overflow-hidden">
+            <x-mv.section title="Horários publicados" padding="p-0" class="overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-ink-100 text-sm">
                         <thead class="bg-ink-50 text-left text-xs font-semibold uppercase text-ink-500">
@@ -36,7 +41,7 @@
                             @forelse ($availability->slots as $slot)
                                 <tr>
                                     <td class="px-5 py-4 text-ink-900">{{ $slot->starts_at?->format('d/m/Y H:i') }} a {{ $slot->ends_at?->format('H:i') }}</td>
-                                    <td class="px-5 py-4 text-ink-700">{{ $slot->status->label() }}</td>
+                                    <td class="px-5 py-4"><x-mv.badge>{{ $slot->status->label() }}</x-mv.badge></td>
                                     <td class="px-5 py-4 text-ink-700">{{ $slot->booked_count }}/{{ $slot->capacity }}</td>
                                     <td class="px-5 py-4 text-ink-600">{{ $slot->location ?? '—' }}</td>
                                 </tr>
@@ -46,7 +51,7 @@
                         </tbody>
                     </table>
                 </div>
-            </section>
+            </x-mv.section>
         </div>
     </div>
 </x-app-layout>
