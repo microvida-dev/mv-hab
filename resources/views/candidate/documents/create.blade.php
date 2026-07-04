@@ -39,9 +39,9 @@
                         <input type="hidden" name="current_housing_situation_id" value="{{ $item['target_id'] }}">
                     @endif
 
-                    <div class="rounded-2xl bg-mvhab-surface p-4 text-sm leading-6 text-mvhab-primary">
+                    <x-mv.alert tone="success">
                         Documentos ilegíveis, incompletos ou incorretos poderão ser rejeitados pelos serviços.
-                    </div>
+                    </x-mv.alert>
 
                     <div>
                         <x-input-label for="title" value="Título opcional" />

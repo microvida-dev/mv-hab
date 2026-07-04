@@ -60,9 +60,9 @@
                 </div>
 
                 @if ($submission->rejection_reason)
-                    <div class="mt-5 rounded-2xl bg-red-50 p-4 text-sm leading-6 text-red-800">
+                    <x-mv.alert tone="danger" class="mt-5">
                         {{ $submission->rejection_reason }}
-                    </div>
+                    </x-mv.alert>
                 @endif
             </x-mv.section>
 
@@ -83,9 +83,9 @@
                                 </p>
                             </div>
 
-                            <span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">
+                            <x-mv.badge>
                                 {{ $version->status_at_upload->label() }}
-                            </span>
+                            </x-mv.badge>
                         </div>
                     @endforeach
                 </div>

@@ -68,13 +68,15 @@
                     <h2 class="text-base font-semibold text-ink-900">{{ $group }}</h2>
                     <div class="grid gap-3">
                         @foreach ($items as $item)
-                            @php
+                           @php
                                 $status = $item['status'];
-                                $statusClass = match ($status) {
-                                    \App\Enums\DocumentStatus::Validated => 'bg-mvhab-surface text-mvhab-primary',
-                                    \App\Enums\DocumentStatus::Rejected, \App\Enums\DocumentStatus::Expired => 'bg-red-50 text-red-800',
-                                    \App\Enums\DocumentStatus::Missing => 'bg-signal-50 text-signal-800',
-                                    default => 'bg-ink-100 text-ink-700',
+
+                                $statusTone = match ($status) {
+                                    \App\Enums\DocumentStatus::Validated => 'success',
+                                    \App\Enums\DocumentStatus::Rejected,
+                                    \App\Enums\DocumentStatus::Expired => 'danger',
+                                    \App\Enums\DocumentStatus::Missing => 'warning',
+                                    default => 'neutral',
                                 };
                             @endphp
                             <article class="mv-surface p-5">
@@ -82,9 +84,13 @@
                                     <div class="min-w-0">
                                         <div class="flex flex-wrap items-center gap-2">
                                             <h3 class="font-semibold text-ink-900">{{ $item['document_type']->name }}</h3>
-                                            <span class="rounded-2xl px-2.5 py-1 text-xs font-semibold {{ $statusClass }}">{{ $status->label() }}</span>
+                                            <x-mv.badge :tone="$statusTone">
+                                                {{ $status->label() }}
+                                            </x-mv.badge>
                                             @if ($item['is_required'])
-                                                <span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">Obrigatório</span>
+                                                <x-mv.badge>
+                                                    Obrigatório
+                                                </x-mv.badge>
                                             @endif
                                         </div>
                                         <p class="mt-1 text-sm text-ink-500">{{ $item['target_label'] }}</p>
@@ -92,7 +98,9 @@
                                             <p class="mt-3 max-w-3xl text-sm leading-6 text-ink-600">{{ $item['instructions'] }}</p>
                                         @endif
                                         @if ($item['submission']?->rejection_reason)
-                                            <p class="mt-3 rounded-2xl bg-red-50 px-3 py-2 text-sm text-red-800">{{ $item['submission']->rejection_reason }}</p>
+                                            <x-mv.alert tone="danger" class="mt-3 px-3 py-2">
+                                                {{ $item['submission']->rejection_reason }}
+                                            </x-mv.alert>
                                         @endif
                                     </div>
                                     <div class="flex shrink-0 flex-wrap gap-2">

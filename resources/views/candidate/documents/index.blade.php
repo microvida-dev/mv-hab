@@ -68,9 +68,9 @@
                                 </div>
 
                                 <div class="flex shrink-0 flex-wrap items-center gap-3">
-                                    <span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">
+                                    <x-mv.badge>
                                         {{ $submission->status->label() }}
-                                    </span>
+                                    </x-mv.badge>
 
                                     <a href="{{ route('candidate.documents.show', $submission) }}" class="mv-button-secondary">
                                         Ver detalhe

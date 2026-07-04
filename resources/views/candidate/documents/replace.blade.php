@@ -29,9 +29,9 @@
                 >
                     @csrf
 
-                    <div class="rounded-2xl bg-signal-50 p-4 text-sm leading-6 text-signal-900">
+                    <x-mv.alert tone="warning">
                         Ao substituir este documento, a versão anterior será mantida no histórico do processo e a nova versão ficará pendente de análise.
-                    </div>
+                    </x-mv.alert>
 
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
