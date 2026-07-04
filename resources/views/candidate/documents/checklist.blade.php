@@ -1,15 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-semibold text-mvhab-primary">Documentos</p>
-                <h1 class="mt-1 text-2xl font-semibold text-ink-900">Checklist documental</h1>
-                <p class="mt-1 text-sm text-ink-500">Complete os documentos necessários para preparar futuras candidaturas.</p>
-            </div>
-            <a href="{{ route('candidate.documents.index') }}" class="mv-button-secondary">
-                Documentos submetidos
-            </a>
-        </div>
+        <x-mv.page-header
+            eyebrow="Documentos"
+            title="Checklist documental"
+            description="Complete os documentos necessários para preparar futuras candidaturas."
+        >
+            <x-slot name="actions">
+                <a href="{{ route('candidate.documents.index') }}" class="mv-button-secondary">
+                    Documentos submetidos
+                </a>
+            </x-slot>
+        </x-mv.page-header>
     </x-slot>
 
     <x-candidate.registration-stepper :registration="$registration" />
@@ -18,19 +19,34 @@
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
 
-            <section class="mv-surface p-6">
+            <x-mv.section
+                eyebrow="Progresso documental"
+                title="Preparação documental"
+                description="A validação final dependerá das regras do programa e do concurso a que se candidatar."
+            >
                 <div class="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                        <p class="text-sm font-semibold text-mvhab-primary">Progresso documental</p>
-                        <p class="mt-1 text-3xl font-semibold text-ink-900">{{ $checklist['summary']['percentage'] }}%</p>
+                        <p class="mt-1 text-3xl font-semibold text-ink-900">
+                            {{ $checklist['summary']['percentage'] }}%
+                        </p>
                     </div>
-                    <p class="max-w-xl text-sm leading-6 text-ink-600">{{ $checklist['next_step'] }}</p>
+
+                    <p class="max-w-xl text-sm leading-6 text-ink-600">
+                        {{ $checklist['next_step'] }}
+                    </p>
                 </div>
+
                 <div class="mt-4 h-2 overflow-hidden rounded bg-ink-100">
-                    <div class="h-full bg-mvhab-primary" style="width: {{ $checklist['summary']['percentage'] }}%"></div>
+                    <div
+                        class="h-full bg-mvhab-primary"
+                        style="width: {{ $checklist['summary']['percentage'] }}%"
+                    ></div>
                 </div>
-                <p class="mt-4 text-xs leading-5 text-ink-500">A submissão de documentos nesta área prepara o seu processo para futuras candidaturas. A validação final dependerá das regras do programa e do concurso a que se candidatar.</p>
-            </section>
+
+                <p class="mt-4 text-xs leading-5 text-ink-500">
+                    A submissão de documentos nesta área prepara o seu processo para futuras candidaturas.
+                </p>
+            </x-mv.section>
 
             <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 @foreach ([
@@ -40,10 +56,10 @@
                     'Validados' => $checklist['summary']['validated'],
                     'Rejeitados' => $checklist['summary']['rejected'],
                 ] as $label => $value)
-                    <div class="mv-surface p-5">
-                        <p class="text-sm text-ink-500">{{ $label }}</p>
-                        <p class="mt-2 text-2xl font-semibold text-ink-900">{{ $value }}</p>
-                    </div>
+                    <x-mv.stat-card
+                        :label="$label"
+                        :value="$value"
+                    />
                 @endforeach
             </section>
 
@@ -103,10 +119,10 @@
                     </div>
                 </section>
             @empty
-                <section class="mv-surface p-6">
-                    <h2 class="text-lg font-semibold text-ink-900">Não existem documentos configurados.</h2>
-                    <p class="mt-2 text-sm leading-6 text-ink-600">A equipa municipal ainda não configurou a matriz documental.</p>
-                </section>
+                <x-mv.section
+                    title="Não existem documentos configurados"
+                    description="A equipa municipal ainda não configurou a matriz documental."
+                />
             @endforelse
         </div>
     </div>

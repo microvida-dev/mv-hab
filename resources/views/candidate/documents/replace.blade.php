@@ -1,55 +1,104 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <p class="text-sm font-semibold text-mvhab-primary">Documentos</p>
-            <h1 class="mt-1 text-2xl font-semibold text-ink-900">Substituir documento</h1>
-            <p class="mt-1 text-sm text-ink-500">{{ $submission->documentType->name }}</p>
-        </div>
+        <x-mv.page-header
+            eyebrow="Documentos"
+            title="Substituir documento"
+            description="{{ $submission->documentType->name }}"
+        >
+            <x-slot name="actions">
+                <a href="{{ route('candidate.documents.show', $submission) }}" class="mv-button-secondary">
+                    Voltar ao detalhe
+                </a>
+            </x-slot>
+        </x-mv.page-header>
     </x-slot>
 
     <div class="py-8">
         <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-            <form method="POST" action="{{ route('candidate.documents.replace.store', $submission) }}" enctype="multipart/form-data" class="mv-surface space-y-6 p-6">
-                @csrf
+            <x-flash-message />
 
-                <div class="rounded-2xl bg-signal-50 p-4 text-sm leading-6 text-signal-900">
-                    Ao substituir este documento, a versão anterior será mantida no histórico do processo e a nova versão ficará pendente de análise.
-                </div>
+            <x-mv.section
+                title="Nova versão do documento"
+                description="A versão anterior permanecerá disponível no histórico do processo."
+            >
+                <form
+                    method="POST"
+                    action="{{ route('candidate.documents.replace.store', $submission) }}"
+                    enctype="multipart/form-data"
+                    class="space-y-6"
+                >
+                    @csrf
 
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <x-input-label for="issue_date" value="Data de emissão" />
-                        <x-text-input id="issue_date" name="issue_date" type="date" class="mt-1 block w-full" :value="old('issue_date', optional($submission->issue_date)->format('Y-m-d'))" />
-                        <x-input-error class="mt-2" :messages="$errors->get('issue_date')" />
+                    <div class="rounded-2xl bg-signal-50 p-4 text-sm leading-6 text-signal-900">
+                        Ao substituir este documento, a versão anterior será mantida no histórico do processo e a nova versão ficará pendente de análise.
                     </div>
-                    <div>
-                        <x-input-label for="expiry_date" value="Data de validade" />
-                        <x-text-input id="expiry_date" name="expiry_date" type="date" class="mt-1 block w-full" :value="old('expiry_date', optional($submission->expiry_date)->format('Y-m-d'))" />
-                        <x-input-error class="mt-2" :messages="$errors->get('expiry_date')" />
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <x-input-label for="issue_date" value="Data de emissão" />
+                            <x-text-input
+                                id="issue_date"
+                                name="issue_date"
+                                type="date"
+                                class="mt-1 block w-full"
+                                :value="old('issue_date', optional($submission->issue_date)->format('Y-m-d'))"
+                            />
+                            <x-input-error class="mt-2" :messages="$errors->get('issue_date')" />
+                        </div>
+
+                        <div>
+                            <x-input-label for="expiry_date" value="Data de validade" />
+                            <x-text-input
+                                id="expiry_date"
+                                name="expiry_date"
+                                type="date"
+                                class="mt-1 block w-full"
+                                :value="old('expiry_date', optional($submission->expiry_date)->format('Y-m-d'))"
+                            />
+                            <x-input-error class="mt-2" :messages="$errors->get('expiry_date')" />
+                        </div>
                     </div>
-                </div>
 
-                <div>
-                    <x-input-label for="file" value="Novo ficheiro" />
-                    <x-mv.file-input id="file" name="file" required />
-                    <p class="mt-2 text-xs text-ink-500">Formatos permitidos: PDF, JPG, PNG ou WEBP. Tamanho máximo: {{ $submission->documentType->max_file_size_mb }} MB.</p>
-                    <x-input-error class="mt-2" :messages="$errors->get('file')" />
-                </div>
+                    <div>
+                        <x-input-label for="file" value="Novo ficheiro" />
+                        <x-mv.file-input id="file" name="file" required />
 
-                <div>
-                    <x-input-label for="notes" value="Notas opcionais" />
-                    <textarea id="notes" name="notes" rows="4" class="mv-input mt-1 block w-full">{{ old('notes') }}</textarea>
-                    <x-input-error class="mt-2" :messages="$errors->get('notes')" />
-                </div>
+                        <p class="mt-2 text-xs text-ink-500">
+                            Formatos permitidos: PDF, JPG, PNG ou WEBP.
+                            Tamanho máximo:
+                            {{ $submission->documentType->max_file_size_mb }} MB.
+                        </p>
 
-                <div class="flex flex-wrap justify-end gap-3">
-                    <a href="{{ route('candidate.documents.show', $submission) }}" class="mv-button-secondary">Cancelar</a>
-                    <button type="submit" class="mv-button-primary">
-                        <x-ui-icon name="document" class="h-4 w-4" />
-                        Substituir documento
-                    </button>
-                </div>
-            </form>
+                        <x-input-error class="mt-2" :messages="$errors->get('file')" />
+                    </div>
+
+                    <div>
+                        <x-input-label for="notes" value="Notas opcionais" />
+                        <textarea
+                            id="notes"
+                            name="notes"
+                            rows="4"
+                            class="mv-input mt-1 block w-full"
+                        >{{ old('notes') }}</textarea>
+
+                        <x-input-error class="mt-2" :messages="$errors->get('notes')" />
+                    </div>
+
+                    <div class="flex flex-wrap justify-end gap-3">
+                        <a
+                            href="{{ route('candidate.documents.show', $submission) }}"
+                            class="mv-button-secondary"
+                        >
+                            Cancelar
+                        </a>
+
+                        <button type="submit" class="mv-button-primary">
+                            <x-ui-icon name="document" class="h-4 w-4" />
+                            Substituir documento
+                        </button>
+                    </div>
+                </form>
+            </x-mv.section>
         </div>
     </div>
 </x-app-layout>
