@@ -1,10 +1,59 @@
 <x-app-layout>
-    <x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">{{ $propertyInspection->inspection_number }}</h1></x-slot>
+    <x-slot name="header">
+        <x-mv.page-header
+            eyebrow="Vistoria"
+            :title="$propertyInspection->inspection_number"
+            :description="$propertyInspection->housingUnit?->code"
+        />
+    </x-slot>
+
     <div class="space-y-6">
-        <div class="mv-card grid gap-3 md:grid-cols-4"><div><p class="text-xs text-ink-500">Tipo</p><p class="font-semibold">{{ $propertyInspection->inspection_type->label() }}</p></div><div><p class="text-xs text-ink-500">Estado</p><p class="font-semibold">{{ $propertyInspection->status->label() }}</p></div><div><p class="text-xs text-ink-500">Habitação</p><p class="font-semibold">{{ $propertyInspection->housingUnit?->code }}</p></div><div><p class="text-xs text-ink-500">Condição</p><p class="font-semibold">{{ $propertyInspection->general_condition?->label() ?? '-' }}</p></div></div>
-        <div class="mv-card"><p>{{ $propertyInspection->summary }}</p><p class="text-sm text-ink-500">{{ $propertyInspection->recommendations }}</p></div>
-        <form method="POST" action="{{ route('backoffice.inspections.complete', $propertyInspection) }}" class="mv-card grid gap-3">@csrf<select class="mv-input" name="general_condition"><option value="good">Boa</option><option value="acceptable">Aceitável</option><option value="requires_repair">Requer reparação</option><option value="poor">Má</option><option value="critical">Crítica</option></select><textarea class="mv-input" name="summary" placeholder="Resumo da vistoria" required></textarea><textarea class="mv-input" name="recommendations" placeholder="Recomendações"></textarea><button class="mv-button-secondary">Concluir vistoria</button></form>
-        <div class="flex flex-wrap gap-3"><form method="POST" action="{{ route('backoffice.inspections.validate', $propertyInspection) }}">@csrf<button class="mv-button-secondary">Validar</button></form><form method="POST" action="{{ route('backoffice.inspections.reports.generate', $propertyInspection) }}">@csrf<button class="mv-button-primary">Gerar auto</button></form></div>
-        <div class="mv-card"><h2 class="font-semibold">Checklist</h2>@foreach ($propertyInspection->items as $item)<p class="mt-2 text-sm">{{ $item->label }} · {{ $item->condition?->label() ?? 'Sem avaliação' }}</p>@endforeach</div>
+        <div class="grid gap-3 md:grid-cols-4">
+            <x-mv.stat-card label="Tipo" :value="$propertyInspection->inspection_type->label()" />
+            <x-mv.stat-card label="Estado" :value="$propertyInspection->status->label()" />
+            <x-mv.stat-card label="Habitação" :value="$propertyInspection->housingUnit?->code ?? '-'" />
+            <x-mv.stat-card label="Condição" :value="$propertyInspection->general_condition?->label() ?? '-'" />
+        </div>
+
+        <x-mv.section title="Resumo">
+            <p class="text-sm leading-6 text-ink-700">{{ $propertyInspection->summary }}</p>
+            <p class="mt-2 text-sm text-ink-500">{{ $propertyInspection->recommendations }}</p>
+        </x-mv.section>
+
+        <form method="POST" action="{{ route('backoffice.inspections.complete', $propertyInspection) }}" class="space-y-6">
+            @csrf
+
+            <x-mv.section title="Concluir vistoria">
+                <div class="grid gap-3">
+                    <select class="mv-input" name="general_condition">
+                        <option value="good">Boa</option>
+                        <option value="acceptable">Aceitável</option>
+                        <option value="requires_repair">Requer reparação</option>
+                        <option value="poor">Má</option>
+                        <option value="critical">Crítica</option>
+                    </select>
+                    <textarea class="mv-input" name="summary" placeholder="Resumo da vistoria" required></textarea>
+                    <textarea class="mv-input" name="recommendations" placeholder="Recomendações"></textarea>
+                    <button class="mv-button-secondary">Concluir vistoria</button>
+                </div>
+            </x-mv.section>
+        </form>
+
+        <div class="flex flex-wrap gap-3">
+            <form method="POST" action="{{ route('backoffice.inspections.validate', $propertyInspection) }}">
+                @csrf
+                <button class="mv-button-secondary">Validar</button>
+            </form>
+            <form method="POST" action="{{ route('backoffice.inspections.reports.generate', $propertyInspection) }}">
+                @csrf
+                <button class="mv-button-primary">Gerar auto</button>
+            </form>
+        </div>
+
+        <x-mv.section title="Checklist">
+            @foreach ($propertyInspection->items as $item)
+                <p class="mt-2 text-sm">{{ $item->label }} · {{ $item->condition?->label() ?? 'Sem avaliação' }}</p>
+            @endforeach
+        </x-mv.section>
     </div>
 </x-app-layout>
