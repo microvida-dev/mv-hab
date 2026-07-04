@@ -1,15 +1,23 @@
 <x-app-layout>
-    <x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Contrato {{ $contract->contract_number }}</h1></x-slot>
+    <x-slot name="header">
+        <x-mv.page-header
+            eyebrow="Contrato"
+            :title="'Contrato '.$contract->contract_number"
+            :description="$contract->housingUnit?->address ?? 'Morada não registada.'"
+        />
+    </x-slot>
+
     <div class="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:px-8">
-        <div class="mv-card">
-            <dl class="grid gap-4 md:grid-cols-3">
-                <div><dt class="text-xs text-ink-500">Estado</dt><dd class="font-semibold">{{ $contract->status?->label() ?? $contract->status }}</dd></div>
-                <div><dt class="text-xs text-ink-500">Renda mensal</dt><dd class="font-semibold">{{ number_format((float) $contract->monthly_rent, 2, ',', '.') }} EUR</dd></div>
-                <div><dt class="text-xs text-ink-500">Habitação</dt><dd class="font-semibold">{{ $contract->housingUnit?->code }}</dd></div>
-            </dl>
-        </div>
-        <div class="mv-card">
-            <p class="text-sm text-ink-600">{{ $contract->housingUnit?->address ?? 'Morada não registada.' }}</p>
-        </div>
+        <x-mv.section title="Dados do contrato">
+            <div class="grid gap-4 md:grid-cols-3">
+                <x-mv.stat-card label="Estado" :value="$contract->status?->label() ?? $contract->status" />
+                <x-mv.stat-card label="Renda mensal" :value="number_format((float) $contract->monthly_rent, 2, ',', '.').' EUR'" />
+                <x-mv.stat-card label="Habitação" :value="$contract->housingUnit?->code ?? '-'" />
+            </div>
+        </x-mv.section>
+
+        <x-mv.alert>
+            {{ $contract->housingUnit?->address ?? 'Morada não registada.' }}
+        </x-mv.alert>
     </div>
 </x-app-layout>

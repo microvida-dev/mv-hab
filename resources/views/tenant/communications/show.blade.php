@@ -1,39 +1,43 @@
 <x-app-layout>
     <x-slot name="header">
-        <h1 class="text-xl font-semibold text-ink-900">
-            {{ $tenantCommunication->subject }}
-        </h1>
+        <x-mv.page-header
+            eyebrow="Comunicação"
+            :title="$tenantCommunication->subject"
+            description="Histórico de mensagens desta comunicação."
+        />
     </x-slot>
 
     <div class="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:px-8">
-        <div class="mv-card">
-            <p class="text-sm text-ink-500">
-                {{ $tenantCommunication->status?->label() }}
-            </p>
+        <x-mv.section title="Mensagens">
+            <x-mv.badge>{{ $tenantCommunication->status?->label() }}</x-mv.badge>
 
-            @foreach ($tenantCommunication->messages as $message)
-                <div class="mt-4 rounded-2xl border border-ink-100 p-4">
-                    <p class="text-xs text-ink-500">
-                        {{ $message->sender_type }} · {{ $message->created_at?->format('d/m/Y H:i') }}
-                    </p>
+            <div class="mt-5 space-y-4">
+                @foreach ($tenantCommunication->messages as $message)
+                    <div class="rounded-2xl border border-ink-100 p-4">
+                        <p class="text-xs text-ink-500">
+                            {{ $message->sender_type }} · {{ $message->created_at?->format('d/m/Y H:i') }}
+                        </p>
 
-                    <p class="mt-2 text-sm text-ink-700">
-                        {{ $message->body }}
-                    </p>
-                </div>
-            @endforeach
-        </div>
+                        <p class="mt-2 text-sm leading-6 text-ink-700">
+                            {{ $message->body }}
+                        </p>
+                    </div>
+                @endforeach
+            </div>
+        </x-mv.section>
 
         <form
             method="POST"
             action="{{ route('tenant.communications.messages.store', $tenantCommunication) }}"
-            class="mv-card grid gap-5"
+            class="space-y-6"
         >
             @csrf
 
-            <x-ui.field label="Responder" for="body" name="body" required>
-                <x-ui.textarea id="body" name="body" rows="4" required />
-            </x-ui.field>
+            <x-mv.section title="Responder">
+                <x-ui.field label="Responder" for="body" name="body" required>
+                    <x-ui.textarea id="body" name="body" rows="4" required />
+                </x-ui.field>
+            </x-mv.section>
 
             <div class="flex justify-end">
                 <button class="mv-button-primary" type="submit">
