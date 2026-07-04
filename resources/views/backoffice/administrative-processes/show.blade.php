@@ -1,13 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-semibold text-mvhab-primary">Processo administrativo</p>
-                <h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $process->process_number }}</h1>
-                <p class="mt-1 text-sm text-ink-500">{{ $process->application->application_number }} · {{ $process->contest?->title }}</p>
-            </div>
-            <span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $process->status->label() }}</span>
-        </div>
+        <x-mv.page-header
+            eyebrow="Processo administrativo"
+            :title="$process->process_number"
+            :description="$process->application->application_number.' · '.$process->contest?->title"
+        >
+            <x-slot name="actions">
+                <x-mv.badge>{{ $process->status->label() }}</x-mv.badge>
+            </x-slot>
+        </x-mv.page-header>
     </x-slot>
 
     <div class="py-8">
@@ -15,13 +16,13 @@
             <x-flash-message />
 
             <section class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <div class="mv-surface p-5"><p class="text-sm text-ink-500">Candidato</p><p class="mt-2 font-semibold text-ink-900">{{ $process->application->adhesionRegistration->full_name }}</p></div>
-                <div class="mv-surface p-5"><p class="text-sm text-ink-500">Programa</p><p class="mt-2 font-semibold text-ink-900">{{ $process->program?->name ?? '—' }}</p></div>
-                <div class="mv-surface p-5"><p class="text-sm text-ink-500">Receção</p><p class="mt-2 font-semibold text-ink-900">{{ $process->received_at?->format('d/m/Y H:i') ?? '—' }}</p></div>
-                <div class="mv-surface p-5"><p class="text-sm text-ink-500">Técnico responsável</p><p class="mt-2 font-semibold text-ink-900">{{ $process->assignedTo?->name ?? 'Por atribuir' }}</p></div>
+                <x-mv.stat-card label="Candidato" :value="$process->application->adhesionRegistration->full_name" />
+                <x-mv.stat-card label="Programa" :value="$process->program?->name ?? '—'" />
+                <x-mv.stat-card label="Receção" :value="$process->received_at?->format('d/m/Y H:i') ?? '—'" />
+                <x-mv.stat-card label="Técnico responsável" :value="$process->assignedTo?->name ?? 'Por atribuir'" />
             </section>
 
-            <section class="mv-surface p-6">
+            <x-mv.section title="Operação do processo">
                 <div class="grid gap-4 lg:grid-cols-2">
                     <form method="POST" action="{{ route('backoffice.administrative-processes.assign', $process) }}" class="space-y-3">
                         @csrf
@@ -41,12 +42,11 @@
                         <form method="POST" action="{{ route('backoffice.administrative-processes.start-eligibility-review', $process) }}">@csrf<button class="mv-button-secondary">Análise de requisitos</button></form>
                     </div>
                 </div>
-            </section>
+            </x-mv.section>
 
             <section class="grid gap-6 lg:grid-cols-2">
-                <div class="mv-surface p-6">
+                <x-mv.section title="Candidatura e elegibilidade">
                     <div class="flex items-start justify-between gap-4">
-                        <h2 class="text-lg font-semibold text-ink-900">Candidatura e elegibilidade</h2>
                         <a href="{{ route('backoffice.applications.show', $process->application) }}" class="text-sm font-semibold text-mvhab-primary">Ver candidatura</a>
                     </div>
                     <dl class="mt-4 space-y-3 text-sm">
@@ -54,42 +54,31 @@
                         <div><dt class="text-ink-500">Rendimento mensal declarado</dt><dd class="font-semibold text-ink-900">{{ number_format($process->application->household->incomeRecords->sum('monthly_amount'), 2, ',', '.') }} €</dd></div>
                         <div><dt class="text-ink-500">Última verificação</dt><dd class="font-semibold text-ink-900">{{ $process->application->latestEligibilityCheck?->result?->label() ?? 'Sem verificação formal' }}</dd></div>
                     </dl>
-                </div>
+                </x-mv.section>
 
-                <div class="mv-surface p-6">
+                <x-mv.section title="Condições para pontuação" description="A candidatura só entra no snapshot quando todas as condições estiverem cumpridas.">
                     <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <h2 class="text-lg font-semibold text-ink-900">Condições para pontuação</h2>
-                            <p class="mt-1 text-sm text-ink-500">A candidatura só entra no snapshot quando todas as condições estiverem cumpridas.</p>
-                        </div>
-                        <span class="rounded-2xl px-2.5 py-1 text-xs font-semibold {{ $scoringReadiness['ready'] ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800' }}">
+                        <x-mv.badge :tone="$scoringReadiness['ready'] ? 'success' : 'warning'">
                             {{ $scoringReadiness['ready'] ? 'Pronta' : 'Bloqueada' }}
-                        </span>
+                        </x-mv.badge>
                     </div>
 
                     <div class="mt-4 space-y-3">
                         @foreach ($scoringReadiness['items'] as $item)
-                            <div class="rounded-2xl border {{ $item['passed'] ? 'border-emerald-100 bg-emerald-50/60' : 'border-amber-100 bg-amber-50/60' }} p-3">
-                                <div class="flex items-start gap-3">
-                                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold {{ $item['passed'] ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white' }}">
-                                        {{ $item['passed'] ? 'OK' : '!' }}
-                                    </span>
-                                    <div>
-                                        <p class="text-sm font-semibold text-ink-900">{{ $item['label'] }}</p>
-                                        <p class="mt-1 text-xs leading-5 text-ink-600">{{ $item['detail'] }}</p>
-                                    </div>
-                                </div>
-                            </div>
+                            <x-mv.check-card
+                                :label="$item['label']"
+                                :detail="$item['detail']"
+                                :passed="$item['passed']"
+                            />
                         @endforeach
                     </div>
-                </div>
+                </x-mv.section>
 
             </section>
 
             <section class="grid gap-6 lg:grid-cols-2">
-                <div class="mv-surface p-6">
+                <x-mv.section title="Ações processuais">
                     <div class="flex items-start justify-between gap-4">
-                        <h2 class="text-lg font-semibold text-ink-900">Ações processuais</h2>
                         <a href="{{ route('backoffice.administrative-processes.timeline', $process) }}" class="text-sm font-semibold text-mvhab-primary">Cronologia</a>
                     </div>
                     <div class="mt-4 flex flex-wrap gap-3">
@@ -98,15 +87,11 @@
                         <a href="{{ route('backoffice.administrative-decisions.create-admission', $process) }}" class="mv-button-primary">Propor admissão</a>
                         <a href="{{ route('backoffice.administrative-decisions.create-non-admission', $process) }}" class="mv-button-secondary">Propor não admissão</a>
                     </div>
-                </div>
+                </x-mv.section>
             </section>
 
-            <section class="mv-surface p-6">
+            <x-mv.section title="Decisões administrativas" description="Acompanhe propostas de admissão, não admissão e respetiva aprovação.">
                 <div class="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                        <h2 class="text-lg font-semibold text-ink-900">Decisões administrativas</h2>
-                        <p class="mt-1 text-sm text-ink-500">Acompanhe propostas de admissão, não admissão e respetiva aprovação.</p>
-                    </div>
                     <a href="{{ route('backoffice.administrative-decisions.create-admission', $process) }}" class="mv-button-secondary">Propor admissão</a>
                 </div>
 
@@ -127,7 +112,7 @@
 
                             <div class="flex flex-wrap items-center gap-3">
                                 @if ($decision->status !== \App\Enums\AdministrativeDecisionStatus::Approved)
-                                    <span class="rounded-2xl bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">Aprovação pendente</span>
+                                    <x-mv.badge tone="warning">Aprovação pendente</x-mv.badge>
                                 @endif
 
                                 @can('view', $decision)
@@ -139,11 +124,10 @@
                         <p class="py-4 text-sm text-ink-500">Ainda não existem decisões administrativas registadas para este processo.</p>
                     @endforelse
                 </div>
-            </section>
+            </x-mv.section>
 
             <section class="grid gap-6 lg:grid-cols-2">
-                <div class="mv-surface p-6">
-                    <h2 class="text-lg font-semibold text-ink-900">Pedidos de aperfeiçoamento</h2>
+                <x-mv.section title="Pedidos de aperfeiçoamento">
                     <div class="mt-4 divide-y divide-ink-100">
                         @forelse ($process->correctionRequests as $request)
                             <div class="py-4 text-sm">
@@ -155,10 +139,9 @@
                             <p class="py-4 text-sm text-ink-500">Sem pedidos registados.</p>
                         @endforelse
                     </div>
-                </div>
+                </x-mv.section>
 
-                <div class="mv-surface p-6">
-                    <h2 class="text-lg font-semibold text-ink-900">Notas internas</h2>
+                <x-mv.section title="Notas internas">
                     <form method="POST" action="{{ route('backoffice.administrative-notes.store', $process) }}" class="mt-4 space-y-3">
                         @csrf
                         <textarea name="body" rows="3" class="mv-input w-full" placeholder="Nota interna"></textarea>
@@ -169,11 +152,10 @@
                             <p class="py-3 text-sm text-ink-700">{{ $note->body }}</p>
                         @endforeach
                     </div>
-                </div>
+                </x-mv.section>
             </section>
 
-            <section class="mv-surface p-6">
-                <h2 class="text-lg font-semibold text-ink-900">Tarefas administrativas</h2>
+            <x-mv.section title="Tarefas administrativas">
                 <form method="POST" action="{{ route('backoffice.administrative-tasks.store', $process) }}" class="mt-4 grid gap-3 lg:grid-cols-4">
                     @csrf
                     <input name="title" class="mv-input" placeholder="Título">
@@ -189,7 +171,7 @@
                         </div>
                     @endforeach
                 </div>
-            </section>
+            </x-mv.section>
         </div>
     </div>
 </x-app-layout>
