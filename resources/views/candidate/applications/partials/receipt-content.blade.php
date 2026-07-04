@@ -1,4 +1,4 @@
-<section class="mv-surface p-6">
+<x-mv.section>
     <div class="grid gap-5 sm:grid-cols-2">
         <div>
             <p class="text-xs font-semibold uppercase text-ink-500">Número da candidatura</p>
@@ -25,10 +25,9 @@
             <p class="mt-2 font-semibold text-ink-900">{{ $application->program->name }}</p>
         </div>
     </div>
-</section>
+</x-mv.section>
 
-<section class="mv-surface p-6">
-    <h2 class="text-lg font-semibold text-ink-900">Resumo submetido</h2>
+<x-mv.section title="Resumo submetido">
     <div class="mt-4 grid gap-4 sm:grid-cols-3">
         <x-mv.stat-card
             label="Membros"
@@ -45,16 +44,15 @@
             :value="$application->applicationDocuments->count()"
         />
     </div>
-</section>
+</x-mv.section>
 
-<section class="mv-surface p-6">
-    <h2 class="text-lg font-semibold text-ink-900">Documentos associados</h2>
+<x-mv.section title="Documentos associados">
     <div class="mt-4 divide-y divide-ink-100 border-y border-ink-100">
         @foreach ($application->applicationDocuments as $document)
             <div class="flex justify-between gap-4 py-3 text-sm">
                 <span class="font-semibold text-ink-900">{{ $document->documentType->name }}</span>
-                <span class="text-ink-500">{{ $document->status_at_submission->label() }}</span>
+                <x-mv.badge>{{ $document->status_at_submission->label() }}</x-mv.badge>
             </div>
         @endforeach
     </div>
-</section>
+</x-mv.section>

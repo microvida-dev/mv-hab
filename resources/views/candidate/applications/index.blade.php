@@ -28,7 +28,7 @@
                     </a>
                 </x-mv.section>
             @else
-                <section class="mv-surface overflow-hidden">
+                <x-mv.section padding="p-0" class="overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-ink-100 text-sm">
                             <thead class="bg-ink-50 text-left text-xs font-semibold uppercase text-ink-500">
@@ -50,7 +50,7 @@
                                             <p class="mt-1 text-xs text-ink-500">{{ $application->program->name }}</p>
                                         </td>
                                         <td class="px-5 py-4">
-                                            <span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">{{ $application->status->label() }}</span>
+                                            <x-mv.badge>{{ $application->status->label() }}</x-mv.badge>
                                         </td>
                                         <td class="px-5 py-4 text-ink-600">{{ $application->created_at->format('d/m/Y H:i') }}</td>
                                         <td class="px-5 py-4 text-ink-600">{{ $application->submitted_at?->format('d/m/Y H:i') ?? '—' }}</td>
@@ -62,7 +62,7 @@
                             </tbody>
                         </table>
                     </div>
-                </section>
+                </x-mv.section>
 
                 {{ $applications->links() }}
             @endif

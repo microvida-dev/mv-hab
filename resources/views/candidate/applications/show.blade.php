@@ -6,9 +6,9 @@
             :description="$application->contest->title"
         >
             <x-slot name="actions">
-                <span class="rounded-2xl bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">
+                <x-mv.badge>
                     {{ $application->status->label() }}
-                </span>
+                </x-mv.badge>
             </x-slot>
         </x-mv.page-header>
     </x-slot>
@@ -47,19 +47,15 @@
                         : 'Ainda existem passos por concluir'"
                 >
                     <div class="flex flex-wrap items-center justify-between gap-4">
-                        <span @class([
-                            'rounded-2xl px-3 py-1.5 text-sm font-semibold',
-                            'bg-mvhab-surface text-mvhab-primary' => $readiness['ready'],
-                            'bg-signal-50 text-signal-700' => ! $readiness['ready'],
-                        ])>
+                        <x-mv.badge :tone="$readiness['ready'] ? 'success' : 'warning'">
                             {{ collect($readiness['checks'])->where('passed', true)->count() }}
                             /
                             {{ count($readiness['checks']) }}
                             concluídos
-                        </span>
+                        </x-mv.badge>
                     </div>
 
-                    <div class="mt-5 h-2 overflow-hidden rounded-2xl bg-ink-100">
+                    <div class="mt-5 h-2 overflow-hidden rounded-2xl bg-ink-50">
                         <div
                             class="h-full bg-mvhab-primary transition-all duration-300"
                             style="width: {{ count($readiness['checks']) > 0
@@ -71,8 +67,8 @@
                     <div class="mt-5 grid gap-3 sm:grid-cols-2">
                         @foreach ($readiness['checks'] as $check)
                             <x-mv.check-card
-                                :label="$check['label']"
-                                :detail="$check['detail']"
+                                :label="$check['label'] ?? $check['key'] ?? 'Verificação'"
+                                :detail="$check['detail'] ?? null"
                                 :passed="$check['passed']"
                             />
                         @endforeach
