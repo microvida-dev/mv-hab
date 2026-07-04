@@ -1,13 +1,20 @@
 <x-app-layout>
-    <x-slot name="header"><h1 class="text-xl font-semibold text-ink-900">Fatura {{ $tenantInvoice->invoice_number }}</h1></x-slot>
+    <x-slot name="header">
+        <x-mv.page-header
+            eyebrow="Fatura de inquilino"
+            :title="$tenantInvoice->invoice_number"
+            :description="$tenantInvoice->tenant?->name"
+        />
+    </x-slot>
+
     <div class="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:px-8">
-        <div class="mv-card">
-            <dl class="grid gap-4 md:grid-cols-4">
-                <div><dt class="text-xs text-ink-500">Inquilino</dt><dd class="font-semibold">{{ $tenantInvoice->tenant?->name }}</dd></div>
-                <div><dt class="text-xs text-ink-500">Estado</dt><dd class="font-semibold">{{ $tenantInvoice->status?->label() }}</dd></div>
-                <div><dt class="text-xs text-ink-500">Vencimento</dt><dd class="font-semibold">{{ $tenantInvoice->due_date?->format('d/m/Y') }}</dd></div>
-                <div><dt class="text-xs text-ink-500">Em aberto</dt><dd class="font-semibold">{{ number_format((float) $tenantInvoice->amount_outstanding, 2, ',', '.') }} EUR</dd></div>
-            </dl>
-        </div>
+        <x-mv.section title="Resumo da fatura">
+            <div class="grid gap-4 md:grid-cols-4">
+                <x-mv.stat-card label="Inquilino" :value="$tenantInvoice->tenant?->name ?? '-'" />
+                <x-mv.stat-card label="Estado" :value="$tenantInvoice->status?->label() ?? '-'" />
+                <x-mv.stat-card label="Vencimento" :value="$tenantInvoice->due_date?->format('d/m/Y') ?? '-'" />
+                <x-mv.stat-card label="Em aberto" :value="number_format((float) $tenantInvoice->amount_outstanding, 2, ',', '.').' EUR'" />
+            </div>
+        </x-mv.section>
     </div>
 </x-app-layout>
