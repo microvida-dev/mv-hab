@@ -10,7 +10,7 @@
 
     <x-slot name="header">
         <x-mv.page-header
-            eyebrow="Caixa de trabalho municipal"
+            eyebrow="Tarefas municipais"
             :title="$title"
             description="Filtre e acompanhe tarefas operacionais por estado, prioridade, tipo e prazo."
         >

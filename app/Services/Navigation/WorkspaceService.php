@@ -473,7 +473,7 @@ class WorkspaceService
         return [
             $this->group('Operação Municipal', [
                 $this->item('Agenda Municipal', 'backoffice.agenda.index', 'backoffice.agenda.*', 'work_tasks.view'),
-                $this->item('Caixa de trabalho', 'backoffice.work-tasks.my', 'backoffice.work-tasks.*', 'work_tasks.view', null, WorkTask::class),
+                $this->item('Tarefas', 'backoffice.work-tasks.my', 'backoffice.work-tasks.*', 'work_tasks.view', null, WorkTask::class),
                 $this->item('Produtividade', 'backoffice.productivity.index', 'backoffice.productivity.*', 'work_tasks.view'),
             ]),
             $this->group('Espaços de Trabalho', array_map(

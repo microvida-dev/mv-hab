@@ -10,7 +10,7 @@
     $navigationGroups = $isCandidate ? $candidateNavigation['groups'] : [
         'Operação' => [
             ['label' => 'Painel Principal', 'route' => 'dashboard', 'active' => 'dashboard', 'icon' => 'dashboard'],
-            ['label' => 'Caixa de trabalho', 'route' => 'backoffice.work-tasks.my', 'active' => 'backoffice.work-tasks.*', 'icon' => 'check', 'model' => \App\Models\WorkTask::class],
+            ['label' => 'Tarefas', 'route' => 'backoffice.work-tasks.my', 'active' => 'backoffice.work-tasks.*', 'icon' => 'check', 'model' => \App\Models\WorkTask::class],
             ['label' => 'Exploração pós-atribuição', 'route' => 'backoffice.tenant-operations.dashboard', 'active' => 'backoffice.tenant-operations.*', 'icon' => 'home', 'model' => \App\Models\LandlordDashboardSnapshot::class],
         ],
         'Programas' => [

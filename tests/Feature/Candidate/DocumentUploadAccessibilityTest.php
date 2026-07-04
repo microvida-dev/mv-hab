@@ -14,7 +14,7 @@ class DocumentUploadAccessibilityTest extends TestCase
         $this->assertStringContainsString('for="issue_date"', $view);
         $this->assertStringContainsString('for="expiry_date"', $view);
         $this->assertStringContainsString('for="file"', $view);
-        $this->assertStringContainsString('type="file"', $view);
+        $this->assertStringContainsString('<x-mv.file-input', $view);
         $this->assertStringContainsString('Formatos permitidos', $view);
         $this->assertStringContainsString('$errors->get(\'file\')', $view);
         $this->assertStringContainsString('enctype="multipart/form-data"', $view);
