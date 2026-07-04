@@ -1,5 +1,45 @@
 <x-app-layout>
-    <x-slot name="header"><div><p class="text-sm font-semibold text-mvhab-primary">Audiência</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $hearing->hearing_number }}</h1></div></x-slot>
-    <div class="py-8"><div class="mx-auto max-w-5xl space-y-6 px-4 sm:px-6 lg:px-8"><div class="mv-surface p-6"><p class="text-sm text-ink-500">{{ $hearing->status->label() }} · {{ $hearing->hearing_type->label() }} · prazo {{ $hearing->deadline_at->format('d/m/Y H:i') }}</p><h2 class="mt-4 font-semibold">{{ $hearing->subject }}</h2><p class="mt-2 whitespace-pre-line text-sm">{{ $hearing->message }}</p></div><div class="flex gap-2"><form method="POST" action="{{ route('backoffice.hearings.issue', $hearing) }}">@csrf<x-primary-button>Emitir</x-primary-button></form><form method="POST" action="{{ route('backoffice.hearings.close', $hearing) }}">@csrf<x-secondary-button>Fechar</x-secondary-button></form></div>@foreach($hearing->submissions as $submission)<div class="mv-surface p-4"><p class="text-sm">{{ $submission->submission_text }}</p><form method="POST" action="{{ route('backoffice.hearing-submissions.accept', $submission) }}" class="mt-3">@csrf<x-secondary-button>Aceitar pronúncia</x-secondary-button></form></div>@endforeach</div></div>
-</x-app-layout>
+    <x-slot name="header">
+        <x-mv.page-header
+            eyebrow="Audiência"
+            :title="$hearing->hearing_number"
+            description="Detalhe da audiência e pronúncias recebidas do candidato."
+        />
+    </x-slot>
 
+    <div class="py-8">
+        <div class="mx-auto max-w-5xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <x-mv.section title="Resumo da audiência">
+                <div class="flex flex-wrap gap-2">
+                    <x-mv.badge>{{ $hearing->status->label() }}</x-mv.badge>
+                    <x-mv.badge>{{ $hearing->hearing_type->label() }}</x-mv.badge>
+                    <x-mv.badge>Prazo {{ $hearing->deadline_at->format('d/m/Y H:i') }}</x-mv.badge>
+                </div>
+
+                <h2 class="mt-4 font-semibold">{{ $hearing->subject }}</h2>
+                <p class="mt-2 whitespace-pre-line text-sm">{{ $hearing->message }}</p>
+            </x-mv.section>
+
+            <div class="flex gap-2">
+                <form method="POST" action="{{ route('backoffice.hearings.issue', $hearing) }}">
+                    @csrf
+                    <button type="submit" class="mv-button-primary">Emitir</button>
+                </form>
+                <form method="POST" action="{{ route('backoffice.hearings.close', $hearing) }}">
+                    @csrf
+                    <button type="submit" class="mv-button-secondary">Fechar</button>
+                </form>
+            </div>
+
+            @foreach ($hearing->submissions as $submission)
+                <x-mv.section title="Pronúncia recebida">
+                    <p class="text-sm">{{ $submission->submission_text }}</p>
+                    <form method="POST" action="{{ route('backoffice.hearing-submissions.accept', $submission) }}" class="mt-3">
+                        @csrf
+                        <button type="submit" class="mv-button-secondary">Aceitar pronúncia</button>
+                    </form>
+                </x-mv.section>
+            @endforeach
+        </div>
+    </div>
+</x-app-layout>

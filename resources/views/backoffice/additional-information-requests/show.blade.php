@@ -1,5 +1,34 @@
 <x-app-layout>
-    <x-slot name="header"><div><p class="text-sm font-semibold text-civic-700">Pedido complementar</p><h1 class="mt-1 text-2xl font-semibold text-ink-900">{{ $additionalInformationRequest->request_number }}</h1></div></x-slot>
-    <div class="py-8"><div class="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8"><div class="rounded-md border border-ink-100 bg-white p-6"><p class="text-sm text-ink-500">{{ $additionalInformationRequest->status->label() }} · Prazo {{ $additionalInformationRequest->deadline_at->format('d/m/Y H:i') }}</p><h2 class="mt-4 font-semibold">{{ $additionalInformationRequest->subject }}</h2><p class="mt-2 whitespace-pre-line text-sm">{{ $additionalInformationRequest->message }}</p></div><div class="flex gap-2"><form method="POST" action="{{ route('backoffice.additional-information-requests.close', $additionalInformationRequest) }}">@csrf<x-secondary-button>Fechar</x-secondary-button></form><form method="POST" action="{{ route('backoffice.additional-information-requests.mark-overdue', $additionalInformationRequest) }}">@csrf<x-secondary-button>Marcar vencido</x-secondary-button></form></div></div></div>
-</x-app-layout>
+    <x-slot name="header">
+        <x-mv.page-header
+            eyebrow="Pedido complementar"
+            :title="$additionalInformationRequest->request_number"
+            description="Acompanhamento do pedido de informação adicional associado à reclamação."
+        />
+    </x-slot>
 
+    <div class="py-8">
+        <div class="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
+            <x-mv.section title="Pedido">
+                <div class="flex flex-wrap gap-2">
+                    <x-mv.badge>{{ $additionalInformationRequest->status->label() }}</x-mv.badge>
+                    <x-mv.badge>Prazo {{ $additionalInformationRequest->deadline_at->format('d/m/Y H:i') }}</x-mv.badge>
+                </div>
+
+                <h2 class="mt-4 font-semibold">{{ $additionalInformationRequest->subject }}</h2>
+                <p class="mt-2 whitespace-pre-line text-sm">{{ $additionalInformationRequest->message }}</p>
+            </x-mv.section>
+
+            <div class="flex gap-2">
+                <form method="POST" action="{{ route('backoffice.additional-information-requests.close', $additionalInformationRequest) }}">
+                    @csrf
+                    <button type="submit" class="mv-button-secondary">Fechar</button>
+                </form>
+                <form method="POST" action="{{ route('backoffice.additional-information-requests.mark-overdue', $additionalInformationRequest) }}">
+                    @csrf
+                    <button type="submit" class="mv-button-secondary">Marcar vencido</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
