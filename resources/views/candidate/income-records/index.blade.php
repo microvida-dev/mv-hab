@@ -1,16 +1,17 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-semibold text-mvhab-primary">Etapa 3 de 4</p>
-                <h1 class="mt-1 text-2xl font-semibold text-ink-900">Rendimentos</h1>
-                <p class="mt-1 text-sm text-ink-500">Declare os rendimentos de cada membro ou assinale a ausência de rendimentos.</p>
-            </div>
-            <a href="{{ route('candidate.income-records.create') }}" class="mv-button-primary">
-                <x-ui-icon name="plus" class="h-4 w-4" />
-                Adicionar rendimento
-            </a>
-        </div>
+        <x-mv.page-header
+            eyebrow="Etapa 3 de 4"
+            title="Rendimentos"
+            description="Declare os rendimentos de cada membro ou assinale a ausência de rendimentos."
+        >
+            <x-slot name="actions">
+                <a href="{{ route('candidate.income-records.create') }}" class="mv-button-primary">
+                    <x-ui-icon name="plus" class="h-4 w-4" />
+                    Adicionar rendimento
+                </a>
+            </x-slot>
+        </x-mv.page-header>
     </x-slot>
 
     <x-candidate.registration-stepper :registration="$household->adhesionRegistration->loadMissing(['household.members.incomeRecords', 'currentHousingSituation'])" />
@@ -20,18 +21,18 @@
             <x-flash-message />
 
             <section class="grid gap-4 sm:grid-cols-3">
-                <div class="mv-surface p-5">
-                    <p class="text-sm text-ink-500">Mensal total</p>
-                    <p class="mt-2 text-2xl font-semibold text-ink-900">{{ number_format($totals['monthly'], 2, ',', '.') }} €</p>
-                </div>
-                <div class="mv-surface p-5">
-                    <p class="text-sm text-ink-500">Anual total</p>
-                    <p class="mt-2 text-2xl font-semibold text-ink-900">{{ number_format($totals['annual'], 2, ',', '.') }} €</p>
-                </div>
-                <div class="mv-surface p-5">
-                    <p class="text-sm text-ink-500">Média mensal por membro</p>
-                    <p class="mt-2 text-2xl font-semibold text-ink-900">{{ number_format($household->members->count() ? $totals['monthly'] / $household->members->count() : 0, 2, ',', '.') }} €</p>
-                </div>
+                <x-mv.stat-card
+                    label="Mensal total"
+                    :value="number_format($totals['monthly'], 2, ',', '.') . ' €'"
+                />
+                <x-mv.stat-card
+                    label="Anual total"
+                    :value="number_format($totals['annual'], 2, ',', '.') . ' €'"
+                />
+                <x-mv.stat-card
+                    label="Média mensal por membro"
+                    :value="number_format($household->members->count() ? $totals['monthly'] / $household->members->count() : 0, 2, ',', '.') . ' €'"
+                />
             </section>
 
             <section class="space-y-4">
@@ -49,13 +50,13 @@
                         </div>
 
                         @if ($member->has_no_income)
-                            <div class="mt-4 rounded-2xl bg-ink-50 p-4 text-sm text-ink-600">
+                            <x-mv.alert class="mt-4">
                                 Sem rendimentos declarados{{ $member->no_income_reason ? ': '.$member->no_income_reason : '.' }}
-                            </div>
+                            </x-mv.alert>
                         @elseif ($member->incomeRecords->isEmpty())
-                            <div class="mt-4 rounded-2xl border border-dashed border-ink-200 p-4 text-sm text-ink-600">
+                            <x-mv.alert class="mt-4">
                                 Ainda não declarou rendimentos para este membro.
-                            </div>
+                            </x-mv.alert>
                         @else
                             <div class="mt-4 grid gap-3 md:grid-cols-2">
                                 @foreach ($member->incomeRecords as $record)
@@ -81,14 +82,16 @@
                         @endif
                     </article>
                 @empty
-                    <div class="mv-surface p-6">
-                        <h2 class="font-semibold text-ink-900">Ainda não existem membros no agregado.</h2>
-                        <p class="mt-2 text-sm text-ink-600">Adicione primeiro os membros do agregado para poder declarar rendimentos.</p>
-                    </div>
+                    <x-mv.alert>
+                        <strong>Ainda não existem membros no agregado.</strong>
+                        <span class="mt-1 block">Adicione primeiro os membros do agregado para poder declarar rendimentos.</span>
+                    </x-mv.alert>
                 @endforelse
             </section>
 
-            <p class="text-xs leading-5 text-ink-500">Os valores apresentados resultam dos dados declarados e servem apenas para preparação do registo. A elegibilidade será avaliada posteriormente.</p>
+            <x-mv.alert>
+                Os valores apresentados resultam dos dados declarados e servem apenas para preparação do registo. A elegibilidade será avaliada posteriormente.
+            </x-mv.alert>
         </div>
     </div>
 </x-app-layout>
