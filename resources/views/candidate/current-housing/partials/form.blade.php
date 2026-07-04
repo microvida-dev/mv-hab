@@ -1,7 +1,5 @@
 <div class="space-y-8">
-    <section>
-        <h2 class="text-base font-semibold text-ink-900">Situação e localização</h2>
-
+    <x-mv.section title="Situação e localização">
         <div class="mt-4 grid gap-5 md:grid-cols-2">
             <x-ui.field for="housing_status" name="housing_status" label="Situação habitacional" required>
                 <x-ui.select id="housing_status" name="housing_status" required>
@@ -65,11 +63,9 @@
                 />
             </x-ui.field>
         </div>
-    </section>
+    </x-mv.section>
 
-    <section class="border-t border-ink-100 pt-7">
-        <h2 class="text-base font-semibold text-ink-900">Características e encargos</h2>
-
+    <x-mv.section title="Características e encargos">
         <div class="mt-4 grid gap-5 md:grid-cols-2">
             <x-ui.field for="current_housing_typology" name="current_housing_typology" label="Tipologia">
                 <x-ui.input
@@ -133,11 +129,9 @@
                 />
             </x-ui.field>
         </div>
-    </section>
+    </x-mv.section>
 
-    <section class="border-t border-ink-100 pt-7">
-        <h2 class="text-base font-semibold text-ink-900">Indicadores declarados</h2>
-
+    <x-mv.section title="Indicadores declarados">
         <div class="mt-4 grid gap-3 sm:grid-cols-2">
             @foreach ([
                 'resides_in_municipality' => 'Reside no município',
@@ -158,9 +152,9 @@
                 />
             @endforeach
         </div>
-    </section>
+    </x-mv.section>
 
-    <section class="border-t border-ink-100 pt-7">
+    <x-mv.section title="Motivo e observações">
         <x-ui.field for="request_reason" name="request_reason" label="Motivo do pedido">
             <x-ui.textarea id="request_reason" name="request_reason" rows="5">{{ old('request_reason', $situation?->request_reason) }}</x-ui.textarea>
         </x-ui.field>
@@ -168,5 +162,5 @@
         <x-ui.field for="additional_notes" name="additional_notes" label="Observações adicionais" class="mt-5">
             <x-ui.textarea id="additional_notes" name="additional_notes" rows="4">{{ old('additional_notes', $situation?->additional_notes) }}</x-ui.textarea>
         </x-ui.field>
-    </section>
+    </x-mv.section>
 </div>

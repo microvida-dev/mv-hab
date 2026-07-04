@@ -1,15 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-semibold text-mvhab-primary">Etapa 4 de 4</p>
-                <h1 class="mt-1 text-2xl font-semibold text-ink-900">Habitação atual</h1>
-                <p class="mt-1 text-sm text-ink-500">Descreva a situação habitacional atual do agregado.</p>
-            </div>
-            <a href="{{ route('candidate.current-housing.edit') }}" class="mv-button-primary">
-                {{ $situation ? 'Editar situação' : 'Preencher situação' }}
-            </a>
-        </div>
+        <x-mv.page-header
+            eyebrow="Etapa 4 de 4"
+            title="Habitação atual"
+            description="Descreva a situação habitacional atual do agregado."
+        >
+            <x-slot name="actions">
+                <a href="{{ route('candidate.current-housing.edit') }}" class="mv-button-primary">
+                    {{ $situation ? 'Editar situação' : 'Preencher situação' }}
+                </a>
+            </x-slot>
+        </x-mv.page-header>
     </x-slot>
 
     <x-candidate.registration-stepper :registration="$registration->loadMissing(['household.members.incomeRecords', 'currentHousingSituation'])" />
@@ -19,15 +20,15 @@
             <x-flash-message />
 
             @if (! $situation)
-                <section class="mv-surface p-6">
-                    <h2 class="text-xl font-semibold text-ink-900">Ainda não preencheu a sua situação habitacional atual.</h2>
-                    <p class="mt-2 max-w-2xl text-sm leading-6 text-ink-600">Esta informação ajuda o município a compreender o contexto habitacional do agregado.</p>
+                <x-mv.section
+                    title="Ainda não preencheu a sua situação habitacional atual."
+                    description="Esta informação ajuda o município a compreender o contexto habitacional do agregado."
+                >
                     <a href="{{ route('candidate.current-housing.edit') }}" class="mv-button-primary mt-5">Preencher situação</a>
-                </section>
+                </x-mv.section>
             @else
                 <section class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-                    <div class="mv-surface p-6">
-                        <h2 class="text-xl font-semibold text-ink-900">{{ $situation->housing_status->label() }}</h2>
+                    <x-mv.section :title="$situation->housing_status->label()">
                         <dl class="mt-6 grid gap-5 sm:grid-cols-2">
                             <div>
                                 <dt class="text-sm text-ink-500">Município atual</dt>
@@ -50,11 +51,19 @@
                                 <dd class="mt-1 whitespace-pre-line text-sm leading-6 text-ink-900">{{ $situation->request_reason ?: 'Não indicado' }}</dd>
                             </div>
                         </dl>
-                    </div>
+                    </x-mv.section>
 
-                    <aside class="mv-surface p-5">
-                        <h2 class="font-semibold text-ink-900">Indicadores declarados</h2>
-                        <ul class="mt-4 space-y-3 text-sm text-ink-600">
+                    <aside class="space-y-4">
+                        <x-mv.stat-card
+                            label="Renda mensal atual"
+                            :value="$situation->current_monthly_rent !== null ? number_format((float) $situation->current_monthly_rent, 2, ',', '.') . ' €' : 'Não indicada'"
+                        />
+                        <x-mv.stat-card
+                            label="Taxa de esforço"
+                            :value="$effortRate !== null ? number_format($effortRate, 1, ',', '.') . '%' : 'Não calculável'"
+                        />
+
+                        <x-mv.section title="Indicadores declarados" padding="p-5">
                             @foreach ([
                                 [$situation->resides_in_municipality, 'Reside no município'],
                                 [$situation->works_in_municipality, 'Trabalha no município'],
@@ -64,14 +73,16 @@
                                 [$situation->has_high_rent_burden, 'Encargo habitacional elevado'],
                             ] as [$active, $label])
                                 @if ($active)
-                                    <li class="flex gap-2"><x-ui-icon name="check" class="h-4 w-4 shrink-0 text-mvhab-primary" />{{ $label }}</li>
+                                    <x-mv.check-card :label="$label" :passed="true" class="mt-3" />
                                 @endif
                             @endforeach
-                        </ul>
+                        </x-mv.section>
                     </aside>
                 </section>
 
-                <p class="text-xs leading-5 text-ink-500">Esta informação é declarativa e preparatória. Não representa uma decisão de elegibilidade.</p>
+                <x-mv.alert>
+                    Esta informação é declarativa e preparatória. Não representa uma decisão de elegibilidade.
+                </x-mv.alert>
             @endif
         </div>
     </div>
