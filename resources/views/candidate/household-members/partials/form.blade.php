@@ -3,8 +3,7 @@
 @endphp
 
 <div class="space-y-8">
-    <section>
-        <h2 class="text-base font-semibold text-ink-900">Identificação</h2>
+    <x-mv.section title="Identificação">
         <div class="mt-4 grid gap-5 md:grid-cols-2">
             <div class="md:col-span-2">
                 <x-input-label for="full_name" value="Nome completo *" />
@@ -49,10 +48,9 @@
                 <x-text-input id="marital_status" name="marital_status" class="mt-1 block w-full" :value="old('marital_status', $member?->marital_status)" />
             </div>
         </div>
-    </section>
+    </x-mv.section>
 
-    <section class="border-t border-ink-100 pt-7">
-        <h2 class="text-base font-semibold text-ink-900">Situação profissional</h2>
+    <x-mv.section title="Situação profissional">
         <div class="mt-4 grid gap-5 md:grid-cols-2">
             <div>
                 <x-input-label for="professional_status" value="Situação profissional" />
@@ -88,10 +86,9 @@
                 <x-text-input id="workplace_municipality" name="workplace_municipality" class="mt-1 block w-full" :value="old('workplace_municipality', $member?->workplace_municipality)" />
             </div>
         </div>
-    </section>
+    </x-mv.section>
 
-    <section class="border-t border-ink-100 pt-7">
-        <h2 class="text-base font-semibold text-ink-900">Condições do membro</h2>
+    <x-mv.section title="Condições do membro">
         <div class="mt-4 grid gap-3 sm:grid-cols-2">
             @foreach ([
                 'works_in_municipality' => 'Trabalha no município',
@@ -126,11 +123,11 @@
                 <x-input-error :messages="$errors->get('no_income_reason')" class="mt-2" />
             </div>
         </div>
-    </section>
+    </x-mv.section>
 
-    <section class="border-t border-ink-100 pt-7">
+    <x-mv.section title="Observações">
         <x-input-label for="notes" value="Observações" />
         <textarea id="notes" name="notes" rows="4" class="mv-input mt-1 w-full">{{ old('notes', $member?->notes) }}</textarea>
         <x-input-error :messages="$errors->get('notes')" class="mt-2" />
-    </section>
+    </x-mv.section>
 </div>

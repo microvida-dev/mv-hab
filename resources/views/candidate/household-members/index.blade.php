@@ -1,16 +1,17 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-semibold text-mvhab-primary">Agregado familiar</p>
-                <h1 class="mt-1 text-2xl font-semibold text-ink-900">Membros do agregado</h1>
-                <p class="mt-1 text-sm text-ink-500">{{ $household->members->count() }} membro(s) registado(s)</p>
-            </div>
-            <a href="{{ route('candidate.household-members.create') }}" class="mv-button-primary">
-                <x-ui-icon name="plus" class="h-4 w-4" />
-                Adicionar membro
-            </a>
-        </div>
+        <x-mv.page-header
+            eyebrow="Agregado familiar"
+            title="Membros do agregado"
+            :description="$household->members->count() . ' membro(s) registado(s)'"
+        >
+            <x-slot name="actions">
+                <a href="{{ route('candidate.household-members.create') }}" class="mv-button-primary">
+                    <x-ui-icon name="plus" class="h-4 w-4" />
+                    Adicionar membro
+                </a>
+            </x-slot>
+        </x-mv.page-header>
     </x-slot>
 
     <x-candidate.registration-stepper :registration="$household->adhesionRegistration->loadMissing(['household.members.incomeRecords', 'currentHousingSituation'])" />
@@ -19,6 +20,21 @@
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
             <x-input-error :messages="$errors->get('member')" />
+
+            <div class="grid gap-4 sm:grid-cols-3">
+                <x-mv.stat-card
+                    label="Membros"
+                    :value="$household->members->count()"
+                />
+                <x-mv.stat-card
+                    label="Dependentes"
+                    :value="$household->members->where('is_dependent', true)->count()"
+                />
+                <x-mv.stat-card
+                    label="Rendimento mensal"
+                    :value="number_format((float) $household->monthly_income, 2, ',', '.') . ' €'"
+                />
+            </div>
 
             <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 @forelse ($household->members as $member)
@@ -29,7 +45,7 @@
                                 <p class="mt-1 text-sm text-ink-500">{{ $member->relationship->label() }}</p>
                             </div>
                             @if ($member->is_applicant)
-                                <span class="rounded-2xl bg-mvhab-surface px-2 py-1 text-xs font-semibold text-mvhab-primary">Requerente</span>
+                                <x-mv.badge tone="success">Requerente</x-mv.badge>
                             @endif
                         </div>
 
@@ -56,10 +72,10 @@
                         </div>
                     </article>
                 @empty
-                    <div class="mv-surface p-6 md:col-span-2 xl:col-span-3">
-                        <h2 class="font-semibold text-ink-900">Ainda não adicionou elementos ao agregado.</h2>
-                        <p class="mt-2 text-sm leading-6 text-ink-600">Adicione os elementos que vivem consigo ou que fazem parte da sua futura candidatura habitacional.</p>
-                    </div>
+                    <x-mv.alert class="md:col-span-2 xl:col-span-3">
+                        <strong>Ainda não adicionou elementos ao agregado.</strong>
+                        <span class="mt-1 block">Adicione os elementos que vivem consigo ou que fazem parte da sua futura candidatura habitacional.</span>
+                    </x-mv.alert>
                 @endforelse
             </section>
 

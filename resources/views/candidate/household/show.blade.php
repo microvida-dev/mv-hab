@@ -1,15 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-semibold text-mvhab-primary">Etapa 2 de 4</p>
-                <h1 class="mt-1 text-2xl font-semibold text-ink-900">Agregado familiar</h1>
-                <p class="mt-1 text-sm text-ink-500">Indique as pessoas que integram o seu agregado habitacional.</p>
-            </div>
+        <x-mv.page-header
+            eyebrow="Etapa 2 de 4"
+            title="Agregado familiar"
+            description="Indique as pessoas que integram o seu agregado habitacional."
+        >
             @if ($household)
-                <a href="{{ route('candidate.household.edit') }}" class="mv-button-secondary">Editar dados gerais</a>
+                <x-slot name="actions">
+                    <a href="{{ route('candidate.household.edit') }}" class="mv-button-secondary">Editar dados gerais</a>
+                </x-slot>
             @endif
-        </div>
+        </x-mv.page-header>
     </x-slot>
 
     <x-candidate.registration-stepper :registration="$registration->loadMissing(['household.members.incomeRecords', 'currentHousingSituation'])" />
@@ -19,10 +20,11 @@
             <x-flash-message />
 
             @if (! $household)
-                <section class="mv-surface p-6">
+                <x-mv.section
+                    title="Crie o seu agregado"
+                    description="Ao criar o agregado, o requerente principal será sincronizado com os dados do Registo de Adesão. Poderá depois adicionar os restantes membros."
+                >
                     <div class="max-w-2xl">
-                        <h2 class="text-xl font-semibold text-ink-900">Crie o seu agregado</h2>
-                        <p class="mt-2 text-sm leading-6 text-ink-600">Ao criar o agregado, o requerente principal será sincronizado com os dados do Registo de Adesão. Poderá depois adicionar os restantes membros.</p>
                         <form method="POST" action="{{ route('candidate.household.store') }}" class="mt-6">
                             @csrf
                             <input type="hidden" name="household_type" value="family">
@@ -32,10 +34,10 @@
                             </button>
                         </form>
                     </div>
-                </section>
+                </x-mv.section>
             @else
                 <section class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-                    <div class="mv-surface p-6">
+                    <x-mv.section>
                         <div class="flex flex-wrap items-center justify-between gap-4">
                             <div>
                                 <h2 class="text-xl font-semibold text-ink-900">{{ $household->name }}</h2>
@@ -56,7 +58,7 @@
                                             <p class="mt-1 text-sm text-ink-500">{{ $member->relationship->label() }} · {{ $member->age() ?? 'Idade por indicar' }}</p>
                                         </div>
                                         @if ($member->is_applicant)
-                                            <span class="rounded-2xl bg-mvhab-surface px-2 py-1 text-xs font-semibold text-mvhab-primary">Requerente</span>
+                                            <x-mv.badge tone="success">Requerente</x-mv.badge>
                                         @endif
                                     </div>
                                     <p class="mt-3 text-sm text-ink-600">
@@ -67,24 +69,21 @@
                         </div>
 
                         <a href="{{ route('candidate.household-members.index') }}" class="mv-button-secondary mt-6">Gerir membros</a>
-                    </div>
+                    </x-mv.section>
 
-                    <aside class="mv-surface p-5">
-                        <h2 class="font-semibold text-ink-900">Resumo</h2>
-                        <dl class="mt-4 space-y-4 text-sm">
-                            <div>
-                                <dt class="text-ink-500">Dependentes</dt>
-                                <dd class="mt-1 font-semibold text-ink-900">{{ $household->members->where('is_dependent', true)->count() }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-ink-500">Estudantes</dt>
-                                <dd class="mt-1 font-semibold text-ink-900">{{ $household->members->where('is_student', true)->count() }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-ink-500">Rendimento mensal</dt>
-                                <dd class="mt-1 font-semibold text-ink-900">{{ number_format((float) $household->monthly_income, 2, ',', '.') }} €</dd>
-                            </div>
-                        </dl>
+                    <aside class="space-y-4">
+                        <x-mv.stat-card
+                            label="Dependentes"
+                            :value="$household->members->where('is_dependent', true)->count()"
+                        />
+                        <x-mv.stat-card
+                            label="Estudantes"
+                            :value="$household->members->where('is_student', true)->count()"
+                        />
+                        <x-mv.stat-card
+                            label="Rendimento mensal"
+                            :value="number_format((float) $household->monthly_income, 2, ',', '.') . ' €'"
+                        />
                     </aside>
                 </section>
             @endif
