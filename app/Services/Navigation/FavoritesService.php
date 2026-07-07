@@ -15,7 +15,7 @@ class FavoritesService
     {
         return NavigationFavorite::query()
             ->where('user_id', $user->id)
-            ->latest()
+            ->orderBy('created_at')
             ->get()
             ->filter(fn (NavigationFavorite $favorite): bool => $this->isVisible($user, $favorite))
             ->take($limit)
