@@ -312,6 +312,8 @@ Route::middleware('auth')->group(function () {
             ->name('navigation.favorites.store');
         Route::delete('/navigation/favorites/{navigationFavorite}', [NavigationFavoriteController::class, 'destroy'])
             ->name('navigation.favorites.destroy');
+        Route::put('/navigation/favorites/reorder', [NavigationFavoriteController::class, 'reorder'])
+            ->name('navigation.favorites.reorder');
     });
 
     Route::prefix('area-candidato')

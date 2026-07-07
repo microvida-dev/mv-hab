@@ -8,6 +8,7 @@ use App\Models\NavigationFavorite;
 use App\Services\Navigation\FavoritesService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Http\Requests\Navigation\ReorderNavigationFavoritesRequest;
 
 class FavoriteController extends Controller
 {
@@ -28,5 +29,15 @@ class FavoriteController extends Controller
         $favorites->remove($this->authenticatedUser($request), $navigationFavorite);
 
         return back()->with('success', 'Favorito removido.');
+    }
+
+    public function reorder(ReorderNavigationFavoritesRequest $request, FavoritesService $favorites): RedirectResponse
+    {
+        $favorites->reorder(
+            $this->authenticatedUser($request),
+            array_map('intval', $request->validated('favorites')),
+        );
+
+        return back()->with('success', 'Ordem dos favoritos atualizada.');
     }
 }
