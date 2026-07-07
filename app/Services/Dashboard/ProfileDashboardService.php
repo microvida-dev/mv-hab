@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\Navigation\FavoritesService;
 use App\Services\Navigation\RecentItemsService;
 use App\Services\Navigation\WorkspaceService;
+use App\Services\Navigation\WorkspacePreferenceService;
 
 class ProfileDashboardService
 {
@@ -18,6 +19,7 @@ class ProfileDashboardService
         private readonly WorkspaceService $workspaces,
         private readonly FavoritesService $favorites,
         private readonly RecentItemsService $recentItems,
+        private readonly WorkspacePreferenceService $workspacePreferences,
     ) {}
 
     /**
@@ -41,6 +43,7 @@ class ProfileDashboardService
             'quick_actions' => $this->quickActions->forUser($user),
             'deadlines' => $this->deadlines->forUser($user),
             'notifications_summary' => $this->notificationsSummary(),
+            'workspace_preferences' => $this->workspacePreferences->payloadFor($user),
         ];
     }
 

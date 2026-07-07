@@ -471,6 +471,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ApplicationSimulationInconsistency::class);
     }
 
+    /** @return HasOne<UserWorkspacePreference, $this> */
+    public function workspacePreference(): HasOne
+    {
+        return $this->hasOne(UserWorkspacePreference::class);
+    }
+
     /**
      * @param  string|array<int, string>  $roles
      */
