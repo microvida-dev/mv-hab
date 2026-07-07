@@ -270,6 +270,7 @@ use App\Http\Controllers\Tenant\InvoiceController as TenantInvoiceController;
 use App\Http\Controllers\Tenant\MaintenanceRequestController as TenantMaintenanceRequestController;
 use App\Http\Controllers\Tenant\PaymentController as TenantPaymentController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Navigation\WorkspacePreferenceController as NavigationWorkspacePreferenceController;
 
 Route::get('/', PublicPortalController::class)->name('public.portal');
 Route::get('/sitemap.xml', [PublicSitemapController::class, 'sitemap'])->name('public.sitemap');
@@ -314,6 +315,8 @@ Route::middleware('auth')->group(function () {
             ->name('navigation.favorites.destroy');
         Route::put('/navigation/favorites/reorder', [NavigationFavoriteController::class, 'reorder'])
             ->name('navigation.favorites.reorder');
+        Route::put('/navigation/workspace-preferences', [NavigationWorkspacePreferenceController::class, 'update'])
+            ->name('navigation.workspace-preferences.update');
     });
 
     Route::prefix('area-candidato')
