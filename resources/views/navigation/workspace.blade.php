@@ -19,36 +19,34 @@
                 </div>
             </div>
 
-            <form method="POST" action="{{ route('navigation.favorites.store') }}">
-                @csrf
-                <input type="hidden" name="workspace_key" value="{{ $workspace['key'] }}">
-                <div class="flex flex-wrap gap-2">
-                    <form method="POST" action="{{ route('navigation.favorites.store') }}">
-                        @csrf
-                        <input type="hidden" name="workspace_key" value="{{ $workspace['key'] }}">
-                        <x-ui.action-button type="submit">
-                            <x-mv-icon name="check" size="sm" />
-                            <span>Fixar espaço</span>
-                        </x-ui.action-button>
-                    </form>
+            <div class="flex flex-wrap gap-2">
+                <form method="POST" action="{{ route('navigation.favorites.store') }}">
+                    @csrf
 
-                    <form method="POST" action="{{ route('navigation.workspace-preferences.update') }}">
-                        @csrf
-                        @method('PUT')
+                    <input type="hidden" name="workspace_key" value="{{ $workspace['key'] }}">
 
-                        <input type="hidden" name="preferred_workspace" value="{{ $workspace['key'] }}">
+                    <x-ui.action-button type="submit">
+                        <x-mv-icon name="check" size="sm" />
+                        <span>Fixar espaço</span>
+                    </x-ui.action-button>
+                </form>
 
-                        <x-ui.action-button type="submit">
-                            <x-mv-icon name="dashboard" size="sm" />
-                            <span>
-                                {{ ($workspacePreferences['preferred_workspace'] ?? null) === $workspace['key']
-                                    ? 'Espaço inicial'
-                                    : 'Definir inicial' }}
-                            </span>
-                        </x-ui.action-button>
-                    </form>
-                </div>
-            </form>
+                <form method="POST" action="{{ route('navigation.workspace-preferences.update') }}">
+                    @csrf
+                    @method('PUT')
+
+                    <input type="hidden" name="preferred_workspace" value="{{ $workspace['key'] }}">
+
+                    <x-ui.action-button type="submit">
+                        <x-mv-icon name="dashboard" size="sm" />
+                        <span>
+                            {{ ($workspacePreferences['preferred_workspace'] ?? null) === $workspace['key']
+                                ? 'Espaço inicial'
+                                : 'Definir inicial' }}
+                        </span>
+                    </x-ui.action-button>
+                </form>
+            </div>
         </div>
     </x-slot>
 

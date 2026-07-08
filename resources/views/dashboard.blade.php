@@ -50,8 +50,9 @@
             {{-- Navegação avançada --}}
             <div class="mt-8">
                 <x-dashboard.operations.workspace-section
-                    :workspaces="$workspaces"
-                    :favorites="$favorites"
+                    :workspaces="$dashboard['workspaces'] ?? []"
+                    :favorites="$dashboard['favorites'] ?? []"
+                    :workspace-intelligence="$dashboard['workspace_intelligence'] ?? []"
                 />
             </div>
 

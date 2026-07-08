@@ -35,5 +35,8 @@ class ProfileDashboardServiceTest extends TestCase
         $this->assertNotEmpty($payload['metrics']);
         $this->assertNotEmpty($payload['quick_actions']);
         $this->assertNotEmpty($payload['widgets']);
+        $this->assertArrayHasKey('workspace_intelligence', $payload);
+        $this->assertArrayHasKey('summary', $payload['workspace_intelligence']);
+        $this->assertArrayHasKey('workspaces', $payload['workspace_intelligence']);
     }
 }

@@ -83,4 +83,27 @@ class WorkspacePreferenceTest extends TestCase
 
         return $user;
     }
+
+    public function test_dashboard_highlights_preferred_workspace(): void
+    {
+        $administrator = $this->userWithRole('administrator');
+
+        UserWorkspacePreference::query()->create([
+            'user_id' => $administrator->id,
+            'preferred_workspace' => 'concursos',
+            'collapsed_groups' => [],
+            'hidden_modules' => [],
+            'dashboard_layout' => [],
+            'workspace_layout' => [],
+            'settings' => [],
+        ]);
+
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Espaço inicial')
+            ->assertSee('Concursos')
+            ->assertSee('Entrar no workspace');
+    }
 }
