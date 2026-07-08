@@ -43,5 +43,8 @@ class ProfileDashboardServiceTest extends TestCase
         $this->assertSame('Foco técnico', $payload['adaptive_dashboard']['headline']);
         $this->assertArrayHasKey('focus_metrics', $payload['adaptive_dashboard']);
         $this->assertArrayHasKey('primary_action', $payload['adaptive_dashboard']);
+        $this->assertArrayHasKey('priority_queue', $payload);
+        $this->assertArrayHasKey('items', $payload['priority_queue']);
+        $this->assertArrayHasKey('summary', $payload['priority_queue']);
     }
 }

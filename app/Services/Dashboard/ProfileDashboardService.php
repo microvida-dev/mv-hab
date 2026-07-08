@@ -38,6 +38,7 @@ class ProfileDashboardService
         $metrics = $this->metrics->forUser($user);
         $quickActions = $this->quickActions->forUser($user);
         $deadlines = $this->deadlines->forUser($user);
+        $adaptiveDashboard = $this->adaptiveDashboard($user, $metrics, $widgets, $quickActions, $deadlines, $workspaceIntelligence);
 
         return [
             'greeting' => $this->greeting($user),
@@ -48,7 +49,8 @@ class ProfileDashboardService
             'favorites' => $favorites,
             'recent_items' => $recentItems,
             'workspace_intelligence' => $workspaceIntelligence,
-            'adaptive_dashboard' => $this->adaptiveDashboard($user, $metrics, $widgets, $quickActions, $deadlines, $workspaceIntelligence),
+            'adaptive_dashboard' => $adaptiveDashboard,
+            'priority_queue' => $this->priorityQueue($adaptiveDashboard, $deadlines, $widgets, $metrics, $quickActions),
             'search_groups' => $this->workspaces->searchGroups($user),
             'widgets' => $widgets,
             'metrics' => $metrics,
@@ -406,6 +408,191 @@ class ProfileDashboardService
             'warning' => 'Atenção recomendada',
             'success' => 'Operação estável',
             default => 'Sem leitura de risco',
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $adaptiveDashboard
+     * @param  array<int, array<string, mixed>>  $deadlines
+     * @param  array<int, array<string, mixed>>  $widgets
+     * @param  array<int, array<string, mixed>>  $metrics
+     * @param  array<int, array<string, mixed>>  $quickActions
+     * @return array<string, mixed>
+     */
+    private function priorityQueue(
+        array $adaptiveDashboard,
+        array $deadlines,
+        array $widgets,
+        array $metrics,
+        array $quickActions,
+    ): array {
+        $items = collect()
+            ->merge($this->deadlinePriorityItems($deadlines))
+            ->merge($this->widgetPriorityItems($widgets))
+            ->merge($this->metricPriorityItems($metrics))
+            ->merge($this->actionPriorityItems($adaptiveDashboard, $quickActions))
+            ->unique('key')
+            ->sortBy(fn (array $item): string => str_pad((string) data_get($item, 'weight', 99), 3, '0', STR_PAD_LEFT).'|'.data_get($item, 'title', ''))
+            ->take(6)
+            ->values();
+
+        return [
+            'items' => $items->all(),
+            'summary' => [
+                'count' => $items->count(),
+                'critical' => $items->where('priority', 'critical')->count(),
+                'high' => $items->where('priority', 'high')->count(),
+                'label' => $items->isEmpty()
+                    ? 'Sem prioridades ativas'
+                    : $items->count().' prioridade(s)',
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $deadlines
+     * @return array<int, array<string, mixed>>
+     */
+    private function deadlinePriorityItems(array $deadlines): array
+    {
+        return collect($deadlines)
+            ->filter(fn (array $deadline): bool => (int) data_get($deadline, 'count', 0) > 0)
+            ->map(fn (array $deadline): array => [
+                'key' => 'deadline_'.data_get($deadline, 'key', md5(json_encode($deadline) ?: 'deadline')),
+                'source' => 'Prazo',
+                'title' => (string) data_get($deadline, 'label', 'Prazo operacional'),
+                'description' => (string) data_get($deadline, 'description', ''),
+                'count' => (int) data_get($deadline, 'count', 0),
+                'icon' => 'calendar',
+                'tone' => (string) data_get($deadline, 'tone', 'warning'),
+                'priority' => $this->priorityFromTone((string) data_get($deadline, 'tone', 'warning')),
+                'href' => $this->routeHref(data_get($deadline, 'route')),
+                'cta' => 'Abrir alerta',
+                'weight' => $this->weightFromTone((string) data_get($deadline, 'tone', 'warning')),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $widgets
+     * @return array<int, array<string, mixed>>
+     */
+    private function widgetPriorityItems(array $widgets): array
+    {
+        return collect($widgets)
+            ->filter(fn (array $widget): bool => in_array(data_get($widget, 'priority'), ['critical', 'high', 'medium'], true))
+            ->map(fn (array $widget): array => [
+                'key' => 'widget_'.data_get($widget, 'key', md5(json_encode($widget) ?: 'widget')),
+                'source' => 'Widget',
+                'title' => (string) data_get($widget, 'title', 'Widget operacional'),
+                'description' => (string) data_get($widget, 'description', ''),
+                'count' => data_get($widget, 'value'),
+                'icon' => (string) data_get($widget, 'icon', 'dashboard'),
+                'tone' => (string) data_get($widget, 'tone', 'neutral'),
+                'priority' => (string) data_get($widget, 'priority', 'medium'),
+                'href' => data_get($widget, 'href'),
+                'cta' => (string) data_get($widget, 'cta', 'Abrir'),
+                'weight' => $this->weightFromPriority((string) data_get($widget, 'priority', 'medium')),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $metrics
+     * @return array<int, array<string, mixed>>
+     */
+    private function metricPriorityItems(array $metrics): array
+    {
+        return collect($metrics)
+            ->filter(fn (array $metric): bool => (int) data_get($metric, 'value', 0) > 0)
+            ->filter(fn (array $metric): bool => in_array(data_get($metric, 'tone'), ['danger', 'warning'], true))
+            ->map(fn (array $metric): array => [
+                'key' => 'metric_'.data_get($metric, 'key', md5(json_encode($metric) ?: 'metric')),
+                'source' => 'Indicador',
+                'title' => (string) data_get($metric, 'label', 'Indicador operacional'),
+                'description' => (string) data_get($metric, 'description', ''),
+                'count' => (int) data_get($metric, 'value', 0),
+                'icon' => 'dashboard',
+                'tone' => (string) data_get($metric, 'tone', 'warning'),
+                'priority' => $this->priorityFromTone((string) data_get($metric, 'tone', 'warning')),
+                'href' => $this->routeHref(data_get($metric, 'route')),
+                'cta' => 'Abrir indicador',
+                'weight' => $this->weightFromTone((string) data_get($metric, 'tone', 'warning')) + 5,
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $adaptiveDashboard
+     * @param  array<int, array<string, mixed>>  $quickActions
+     * @return array<int, array<string, mixed>>
+     */
+    private function actionPriorityItems(array $adaptiveDashboard, array $quickActions): array
+    {
+        $primaryAction = data_get($adaptiveDashboard, 'primary_action');
+
+        if (! is_array($primaryAction)) {
+            $primaryAction = collect($quickActions)->first();
+        }
+
+        if (! is_array($primaryAction)) {
+            return [];
+        }
+
+        $route = data_get($primaryAction, 'route');
+        $parameters = data_get($primaryAction, 'parameters', []);
+
+        return [[
+            'key' => 'action_primary',
+            'source' => 'Ação',
+            'title' => (string) data_get($primaryAction, 'label', 'Ação principal'),
+            'description' => (string) data_get($primaryAction, 'description', ''),
+            'count' => null,
+            'icon' => 'arrow-right',
+            'tone' => 'primary',
+            'priority' => 'medium',
+            'href' => data_get($primaryAction, 'href') ?: $this->routeHref($route, is_array($parameters) ? $parameters : []),
+            'cta' => 'Abrir prioridade',
+            'weight' => 70,
+        ]];
+    }
+
+    /**
+     * @param  mixed  $route
+     * @param  array<string, mixed>  $parameters
+     */
+    private function routeHref(mixed $route, array $parameters = []): ?string
+    {
+        return is_string($route) && Route::has($route)
+            ? route($route, $parameters)
+            : null;
+    }
+
+    private function priorityFromTone(string $tone): string
+    {
+        return match ($tone) {
+            'danger' => 'critical',
+            'warning' => 'high',
+            'primary', 'info', 'civic' => 'medium',
+            default => 'low',
+        };
+    }
+
+    private function weightFromTone(string $tone): int
+    {
+        return $this->weightFromPriority($this->priorityFromTone($tone));
+    }
+
+    private function weightFromPriority(string $priority): int
+    {
+        return match ($priority) {
+            'critical' => 10,
+            'high' => 20,
+            'medium' => 40,
+            default => 70,
         };
     }
 }

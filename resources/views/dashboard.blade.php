@@ -16,6 +16,11 @@
                 :adaptive-dashboard="$dashboard['adaptive_dashboard'] ?? []"
             />
 
+            {{-- Fila prioritária --}}
+            <x-dashboard.operations.priority-queue
+                :queue="$dashboard['priority_queue'] ?? []"
+            />
+
             {{-- Indicadores principais --}}
             <x-dashboard.operations.summary
                 :summary="$operationsSummary"
