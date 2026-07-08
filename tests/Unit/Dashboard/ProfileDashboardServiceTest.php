@@ -38,5 +38,10 @@ class ProfileDashboardServiceTest extends TestCase
         $this->assertArrayHasKey('workspace_intelligence', $payload);
         $this->assertArrayHasKey('summary', $payload['workspace_intelligence']);
         $this->assertArrayHasKey('workspaces', $payload['workspace_intelligence']);
+        $this->assertArrayHasKey('adaptive_dashboard', $payload);
+        $this->assertSame('municipal_technician', $payload['adaptive_dashboard']['profile']);
+        $this->assertSame('Foco técnico', $payload['adaptive_dashboard']['headline']);
+        $this->assertArrayHasKey('focus_metrics', $payload['adaptive_dashboard']);
+        $this->assertArrayHasKey('primary_action', $payload['adaptive_dashboard']);
     }
 }

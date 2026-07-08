@@ -6,7 +6,15 @@
             <x-flash-message />
 
             {{-- Hero --}}
-            <x-dashboard.operations.hero :user="Auth::user()" />
+            <x-dashboard.operations.hero
+                :user="Auth::user()"
+                :adaptive-dashboard="$dashboard['adaptive_dashboard'] ?? []"
+            />
+
+            {{-- Foco adaptativo --}}
+            <x-dashboard.operations.adaptive-focus
+                :adaptive-dashboard="$dashboard['adaptive_dashboard'] ?? []"
+            />
 
             {{-- Indicadores principais --}}
             <x-dashboard.operations.summary

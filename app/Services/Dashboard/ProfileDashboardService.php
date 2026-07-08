@@ -7,6 +7,7 @@ use App\Services\Navigation\FavoritesService;
 use App\Services\Navigation\RecentItemsService;
 use App\Services\Navigation\WorkspaceService;
 use App\Services\Navigation\WorkspacePreferenceService;
+use Illuminate\Support\Facades\Route;
 
 class ProfileDashboardService
 {
@@ -29,20 +30,30 @@ class ProfileDashboardService
     {
         $user->loadMissing(['roles', 'municipalTeams']);
 
+        $workspaces = $this->workspaces->availableFor($user);
+        $favorites = $this->favorites->forUser($user);
+        $recentItems = $this->recentItems->forUser($user);
+        $workspaceIntelligence = $this->workspaceIntelligence($user);
+        $widgets = $this->widgets->forUser($user);
+        $metrics = $this->metrics->forUser($user);
+        $quickActions = $this->quickActions->forUser($user);
+        $deadlines = $this->deadlines->forUser($user);
+
         return [
             'greeting' => $this->greeting($user),
             'profile_label' => $this->authorization->profileLabel($user),
             'profile_keys' => $this->authorization->profileKeys($user),
             'team_names' => $this->teamNames($user),
-            'workspaces' => $this->workspaces->availableFor($user),
-            'favorites' => $this->favorites->forUser($user),
-            'recent_items' => $this->recentItems->forUser($user),
-            'workspace_intelligence' => $this->workspaceIntelligence($user),
+            'workspaces' => $workspaces,
+            'favorites' => $favorites,
+            'recent_items' => $recentItems,
+            'workspace_intelligence' => $workspaceIntelligence,
+            'adaptive_dashboard' => $this->adaptiveDashboard($user, $metrics, $widgets, $quickActions, $deadlines, $workspaceIntelligence),
             'search_groups' => $this->workspaces->searchGroups($user),
-            'widgets' => $this->widgets->forUser($user),
-            'metrics' => $this->metrics->forUser($user),
-            'quick_actions' => $this->quickActions->forUser($user),
-            'deadlines' => $this->deadlines->forUser($user),
+            'widgets' => $widgets,
+            'metrics' => $metrics,
+            'quick_actions' => $quickActions,
+            'deadlines' => $deadlines,
             'notifications_summary' => $this->notificationsSummary(),
             'workspace_preferences' => $this->workspacePreferences->payloadFor($user),
         ];
@@ -151,5 +162,250 @@ class ProfileDashboardService
                 ->flatMap(fn (array $group): array => $group['items'] ?? [])
                 ->count(),
         ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $metrics
+     * @param  array<int, array<string, mixed>>  $widgets
+     * @param  array<int, array<string, mixed>>  $quickActions
+     * @param  array<int, array<string, mixed>>  $deadlines
+     * @param  array<string, mixed>  $workspaceIntelligence
+     * @return array<string, mixed>
+     */
+    private function adaptiveDashboard(
+        User $user,
+        array $metrics,
+        array $widgets,
+        array $quickActions,
+        array $deadlines,
+        array $workspaceIntelligence,
+    ): array {
+        $profile = $this->authorization->primaryProfile($user);
+        $context = $this->adaptiveContext($profile);
+        $riskLevel = $this->riskLevel($deadlines);
+
+        return [
+            'profile' => $profile,
+            'profile_label' => $this->authorization->profileLabel($user),
+            'eyebrow' => $context['eyebrow'],
+            'headline' => $context['headline'],
+            'description' => $context['description'],
+            'icon' => $context['icon'],
+            'tone' => $context['tone'],
+            'risk_level' => $riskLevel,
+            'risk_label' => $this->riskLabel($riskLevel),
+            'primary_workspace_label' => data_get($workspaceIntelligence, 'summary.preferred_label'),
+            'primary_action' => $this->primaryActionPayload($quickActions, $context['action_labels']),
+            'focus_metrics' => $this->pickByKeys($metrics, $context['metric_keys']),
+            'priority_widgets' => $this->pickByKeys($widgets, $context['widget_keys']),
+            'summary' => [
+                'active_deadlines' => collect($deadlines)
+                    ->filter(fn (array $deadline): bool => (int) data_get($deadline, 'count', 0) > 0)
+                    ->count(),
+                'available_actions' => count($quickActions),
+                'available_widgets' => count($widgets),
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function adaptiveContext(string $profile): array
+    {
+        return match ($profile) {
+            'administrator' => [
+                'eyebrow' => 'Administração municipal',
+                'headline' => 'Visão global da operação',
+                'description' => 'Acompanhe segurança, equipas, riscos e produtividade transversal da plataforma.',
+                'icon' => 'security',
+                'tone' => 'info',
+                'metric_keys' => ['security_alerts', 'active_users', 'active_teams', 'overdue_tasks'],
+                'widget_keys' => ['admin_security', 'admin_operations'],
+                'action_labels' => ['Rever segurança', 'Tarefas', 'Relatórios municipais'],
+            ],
+            'municipal_technician' => [
+                'eyebrow' => 'Operação técnica',
+                'headline' => 'Foco técnico',
+                'description' => 'Documentos, candidaturas, aperfeiçoamentos e SLA operacional.',
+                'icon' => 'document',
+                'tone' => 'warning',
+                'metric_keys' => ['pending_documents', 'pending_applications', 'assigned_tasks', 'overdue_tasks'],
+                'widget_keys' => ['technical_review'],
+                'action_labels' => ['Rever documentos', 'Abrir candidaturas', 'Ver tarefas'],
+            ],
+            'jury' => [
+                'eyebrow' => 'Júri e decisão',
+                'headline' => 'Classificação e listas',
+                'description' => 'Priorize pontuação, reclamações, listas provisórias e decisões do procedimento.',
+                'icon' => 'contest',
+                'tone' => 'primary',
+                'metric_keys' => ['pending_applications', 'pending_complaints', 'overdue_tasks'],
+                'widget_keys' => ['jury_decision'],
+                'action_labels' => ['Classificar processos', 'Ver listas', 'Ver reclamações'],
+            ],
+            'legal_manager' => [
+                'eyebrow' => 'Validação jurídica',
+                'headline' => 'Contratos e audiência prévia',
+                'description' => 'Acompanhe contratos, reclamações, pareceres e prazos jurídicos.',
+                'icon' => 'contract',
+                'tone' => 'info',
+                'metric_keys' => ['pending_contracts', 'pending_complaints', 'overdue_tasks'],
+                'widget_keys' => ['legal_review'],
+                'action_labels' => ['Rever contratos', 'Reclamações jurídicas', 'Audiência prévia'],
+            ],
+            'financial_manager' => [
+                'eyebrow' => 'Gestão financeira',
+                'headline' => 'Pagamentos e rendas',
+                'description' => 'Controle pagamentos, rendas manuais e contratos com impacto financeiro.',
+                'icon' => 'payment',
+                'tone' => 'info',
+                'metric_keys' => ['pending_payments', 'pending_rents', 'pending_contracts'],
+                'widget_keys' => ['financial_control'],
+                'action_labels' => ['Ver pagamentos', 'Ver rendas', 'Ver contratos'],
+            ],
+            'housing_manager' => [
+                'eyebrow' => 'Gestão habitacional',
+                'headline' => 'Fogos, ocupação e visitas',
+                'description' => 'Acompanhe disponibilidade, contratos operacionais e visitas aos fogos.',
+                'icon' => 'housing',
+                'tone' => 'primary',
+                'metric_keys' => ['available_housing', 'upcoming_visits', 'pending_contracts'],
+                'widget_keys' => ['housing_operations'],
+                'action_labels' => ['Ver fogos', 'Criar visitas abertas', 'Ver contratos'],
+            ],
+            'maintenance_manager' => [
+                'eyebrow' => 'Manutenção',
+                'headline' => 'Pedidos urgentes e intervenções',
+                'description' => 'Priorize pedidos críticos, vistorias e tarefas vencidas.',
+                'icon' => 'maintenance',
+                'tone' => 'warning',
+                'metric_keys' => ['urgent_maintenance', 'scheduled_inspections', 'overdue_tasks'],
+                'widget_keys' => ['maintenance_operations'],
+                'action_labels' => ['Pedidos urgentes', 'Ver vistorias', 'Tarefas vencidas'],
+            ],
+            'inspection_manager' => [
+                'eyebrow' => 'Vistorias',
+                'headline' => 'Agenda técnica e autos',
+                'description' => 'Acompanhe vistorias agendadas, histórico técnico e tarefas de inspeção.',
+                'icon' => 'inspection',
+                'tone' => 'info',
+                'metric_keys' => ['scheduled_inspections', 'urgent_maintenance', 'assigned_tasks'],
+                'widget_keys' => ['inspection_operations'],
+                'action_labels' => ['Vistorias agendadas', 'Tarefas de vistoria', 'Histórico de imóveis'],
+            ],
+            'support_agent' => [
+                'eyebrow' => 'Atendimento',
+                'headline' => 'Apoio ao candidato',
+                'description' => 'Centralize tickets, visitas, contactos pendentes e FAQ operacional.',
+                'icon' => 'support',
+                'tone' => 'primary',
+                'metric_keys' => ['open_tickets', 'upcoming_visits', 'pending_documents'],
+                'widget_keys' => ['candidate_support'],
+                'action_labels' => ['Tickets abertos', 'Visitas marcadas', 'FAQ operacional'],
+            ],
+            'auditor' => [
+                'eyebrow' => 'Auditoria',
+                'headline' => 'Rastreabilidade e conformidade',
+                'description' => 'Consulte eventos, acessos sensíveis, pedidos RGPD e relatórios autorizados.',
+                'icon' => 'security',
+                'tone' => 'neutral',
+                'metric_keys' => ['recent_audit_events', 'rgpd_requests', 'security_alerts'],
+                'widget_keys' => ['audit_readonly'],
+                'action_labels' => ['Ver auditoria', 'Acessos sensíveis', 'Relatórios'],
+            ],
+            default => [
+                'eyebrow' => 'Backoffice municipal',
+                'headline' => 'Painel operacional',
+                'description' => 'Acompanhe os módulos disponíveis e continue a operação municipal.',
+                'icon' => 'dashboard',
+                'tone' => 'neutral',
+                'metric_keys' => ['assigned_tasks', 'pending_documents', 'pending_applications'],
+                'widget_keys' => [],
+                'action_labels' => [],
+            ],
+        };
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $items
+     * @param  array<int, string>  $keys
+     * @return array<int, array<string, mixed>>
+     */
+    private function pickByKeys(array $items, array $keys, int $limit = 4): array
+    {
+        $collection = collect($items);
+
+        $picked = collect($keys)
+            ->map(fn (string $key): ?array => $collection->firstWhere('key', $key))
+            ->filter()
+            ->values();
+
+        if ($picked->isEmpty()) {
+            return $collection->take($limit)->values()->all();
+        }
+
+        return $picked->take($limit)->values()->all();
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $actions
+     * @param  array<int, string>  $labels
+     * @return array<string, mixed>|null
+     */
+    private function primaryActionPayload(array $actions, array $labels): ?array
+    {
+        $collection = collect($actions);
+
+        $action = collect($labels)
+            ->map(fn (string $label): ?array => $collection->firstWhere('label', $label))
+            ->filter()
+            ->first();
+
+        $action ??= $collection->first();
+
+        if (! is_array($action)) {
+            return null;
+        }
+
+        $route = data_get($action, 'route');
+        $parameters = data_get($action, 'parameters', []);
+
+        return [
+            'label' => (string) data_get($action, 'label', 'Abrir'),
+            'description' => (string) data_get($action, 'description', ''),
+            'href' => is_string($route) && Route::has($route)
+                ? route($route, is_array($parameters) ? $parameters : [])
+                : null,
+        ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $deadlines
+     */
+    private function riskLevel(array $deadlines): string
+    {
+        $active = collect($deadlines)
+            ->filter(fn (array $deadline): bool => (int) data_get($deadline, 'count', 0) > 0);
+
+        if ($active->contains(fn (array $deadline): bool => data_get($deadline, 'tone') === 'danger')) {
+            return 'danger';
+        }
+
+        if ($active->isNotEmpty()) {
+            return 'warning';
+        }
+
+        return 'success';
+    }
+
+    private function riskLabel(string $riskLevel): string
+    {
+        return match ($riskLevel) {
+            'danger' => 'Atenção crítica',
+            'warning' => 'Atenção recomendada',
+            'success' => 'Operação estável',
+            default => 'Sem leitura de risco',
+        };
     }
 }
