@@ -20,7 +20,7 @@
     $quickActionItems = collect($quickActions)->take(5)->values();
 @endphp
 
-<aside class="space-y-5">
+<aside class="space-y-5 xl:sticky xl:top-6 xl:self-start">
     <section class="mv-card p-5">
         <p class="text-xs font-semibold uppercase tracking-wide text-mvhab-primary">
             Centro de produtividade
@@ -146,8 +146,8 @@
         <div class="divide-y divide-ink-100">
             @forelse ($favoriteItems as $favorite)
                 <a
-                    href="{{ route($favorite->route_name, $favorite->route_parameters ?? []) }}"
-                    class="flex items-center gap-3 px-5 py-3 text-sm font-semibold text-ink-700 transition hover:bg-ink-50 hover:text-ink-950"
+                        href="{{ route($favorite->route_name, $favorite->route_parameters ?? []) }}"
+                        class="flex items-center gap-3 px-5 py-3 text-sm font-semibold text-ink-700 transition hover:bg-ink-50 hover:text-ink-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-inset"
                 >
                     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
                         <x-mv-icon name="favorite" size="xs" />
@@ -180,7 +180,7 @@
             @forelse ($recentVisibleItems as $item)
                 <a
                     href="{{ route($item->route_name, $item->route_parameters ?? []) }}"
-                    class="flex items-center gap-3 px-5 py-3 text-sm text-ink-700 transition hover:bg-ink-50 hover:text-ink-950"
+                    class="flex items-center gap-3 px-5 py-3 text-sm text-ink-700 transition hover:bg-ink-50 hover:text-ink-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-inset"
                 >
                     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
                         <x-mv-icon name="clock" size="xs" />
