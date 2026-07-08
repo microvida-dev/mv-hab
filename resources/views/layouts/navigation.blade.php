@@ -200,7 +200,7 @@
 
 <aside
     :class="sidebarCollapsed ? 'w-28' : 'w-72'"
-    class="fixed inset-y-0 left-0 z-40 hidden flex-col overflow-hidden border-r border-ink-100 bg-ink-50 transition-all duration-300 lg:flex"
+    class="fixed inset-y-0 left-0 z-40 hidden flex-col overflow-visible border-r border-ink-100 bg-ink-50 transition-all duration-300 lg:flex"
 >
     <div
         class="relative flex h-20 items-center border-b border-ink-100"
@@ -284,7 +284,7 @@
                 </form>
             </div>
         @else
-            <x-dropdown align="right" width="48">
+            <x-dropdown align="side" width="56">
                 <x-slot name="trigger">
                     <button
                         class="flex w-full items-center rounded-2xl border border-ink-100 bg-mvhab-surface px-3 py-3 text-left transition hover:bg-mvhab-surface"
