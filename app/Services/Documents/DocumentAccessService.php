@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Str;
 
 class DocumentAccessService
 {
@@ -81,6 +82,7 @@ class DocumentAccessService
         $disposition = (new ResponseHeaderBag)->makeDisposition(
             ResponseHeaderBag::DISPOSITION_ATTACHMENT,
             $version->original_filename,
+            $this->asciiFilename($version->original_filename, 'documento-'.$submission->id),
         );
 
         return response()->stream(static function () use ($stream): void {
@@ -97,6 +99,84 @@ class DocumentAccessService
         ]);
     }
 
+    public function preview(DocumentSubmission $submission, User $actor): StreamedResponse
+    {
+        $version = $submission->currentVersion;
+
+        abort_if($version === null, 404);
+        abort_unless(Storage::disk($version->storage_disk)->exists($version->storage_path), 404);
+
+        $mimeType = $version->mime_type ?: 'application/octet-stream';
+
+        abort_unless($this->isPreviewableMimeType($mimeType), 415);
+
+        $log = $this->record($submission, DocumentAccessAction::Preview, $version, $actor);
+
+        $this->access->record(AccessLogType::DocumentView, $actor, $submission, 200, [
+            'mode' => 'preview',
+        ]);
+
+        $this->sensitiveAccess->record(
+            $actor,
+            $submission,
+            'preview',
+            $submission->user,
+            'highly_sensitive',
+            'Pré-visualização documental autorizada.'
+        );
+
+        $this->audit->record(
+            'document.previewed',
+            $submission,
+            AuditEventCategory::Documents,
+            AuditEventSeverity::Warning,
+            'Documento pré-visualizado.',
+            metadata: [
+                'document_version_id' => $version->id,
+                'document_access_log_id' => $log->id,
+                'filename' => $version->original_filename,
+                'mime_type' => $mimeType,
+            ],
+            subject: $submission->user,
+            actor: $actor,
+        );
+
+        $stream = Storage::disk($version->storage_disk)->readStream($version->storage_path);
+
+        abort_if($stream === null, 404);
+
+        $disposition = (new ResponseHeaderBag)->makeDisposition(
+            ResponseHeaderBag::DISPOSITION_INLINE,
+            $version->original_filename,
+            $this->asciiFilename($version->original_filename, 'documento-'.$submission->id),
+        );
+
+        return response()->stream(static function () use ($stream): void {
+            fpassthru($stream);
+
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }, 200, [
+            'Content-Disposition' => $disposition,
+            'Content-Type' => $mimeType,
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'Cache-Control' => 'private, no-store, max-age=0, must-revalidate',
+            'Pragma' => 'no-cache',
+        ]);
+    }
+
+    private function isPreviewableMimeType(string $mimeType): bool
+    {
+        return in_array($mimeType, [
+            'application/pdf',
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+        ], true);
+    }
+
     public function denied(DocumentSubmission $submission, User $actor, string $action): void
     {
         $this->access->record(AccessLogType::DocumentView, $actor, $submission, 403, [
@@ -106,6 +186,25 @@ class DocumentAccessService
         $this->audit->record('document_access_denied', $submission, AuditEventCategory::Documents, AuditEventSeverity::Security, 'Acesso documental negado por policy.', metadata: [
             'action' => $action,
         ], subject: $submission->user, actor: $actor);
+    }
+
+    private function asciiFilename(?string $filename, string $fallback): string
+    {
+        $candidate = trim((string) $filename);
+
+        if ($candidate === '') {
+            $candidate = $fallback;
+        }
+
+        $ascii = Str::ascii($candidate);
+        $ascii = preg_replace('/[^A-Za-z0-9._-]+/', '-', $ascii) ?: $fallback;
+        $ascii = trim($ascii, '.-_');
+
+        if ($ascii === '') {
+            $ascii = $fallback;
+        }
+
+        return Str::limit($ascii, 180, '');
     }
 
     private function request(): ?Request

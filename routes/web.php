@@ -855,6 +855,8 @@ Route::middleware('auth')->group(function () {
                     ->name('document-reviews.index');
                 Route::get('document-reviews/{documentSubmission}', [AdminDocumentReviewController::class, 'show'])
                     ->name('document-reviews.show');
+                Route::get('document-reviews/{documentSubmission}/preview', [AdminDocumentReviewController::class, 'preview'])
+                    ->name('document-reviews.preview');
                 Route::post('document-reviews/{documentSubmission}/under-review', [AdminDocumentReviewController::class, 'underReview'])
                     ->name('document-reviews.under-review');
                 Route::post('document-reviews/{documentSubmission}/validate', [AdminDocumentReviewController::class, 'validateDocument'])

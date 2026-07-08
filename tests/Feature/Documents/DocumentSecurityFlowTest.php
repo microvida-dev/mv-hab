@@ -42,7 +42,7 @@ class DocumentSecurityFlowTest extends TestCase
                 'document_type_id' => $requiredDocument->document_type_id,
                 'required_document_id' => $requiredDocument->id,
                 'household_member_id' => $member->id,
-                'file' => UploadedFile::fake()->create('identificacao-s19.pdf', 100, 'application/pdf'),
+                'file' => UploadedFile::fake()->create('Cartão de identidade 04_10_2022.pdf', 100, 'application/pdf'),
                 'storage_path' => 'public/leak.pdf',
                 'status' => DocumentStatus::Validated->value,
             ])
@@ -74,6 +74,21 @@ class DocumentSecurityFlowTest extends TestCase
                 'internal_notes' => 'Nota interna não visível ao candidato.',
             ])
             ->assertRedirect(route('admin.document-reviews.show', $submission));
+
+        $this->actingAs($technician)
+            ->get(route('admin.document-reviews.preview', $submission))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
+
+        $this->assertDatabaseHas('document_access_logs', [
+            'document_submission_id' => $submission->id,
+            'action' => 'preview',
+        ]);
+
+        $this->assertDatabaseHas('audit_events', [
+            'event_code' => 'document.previewed',
+        ]);
 
         $this->actingAs($candidate)
             ->get(route('candidate.documents.show', $submission->fresh()))
@@ -174,5 +189,43 @@ class DocumentSecurityFlowTest extends TestCase
         $user->assignRole($role);
 
         return $user;
+    }
+
+    public function test_candidate_cannot_preview_another_candidates_document_in_admin_review(): void
+    {
+        Storage::fake('local');
+
+        [$candidate, $registration, $household] = $this->candidateWithDocumentContext();
+        [$otherCandidate] = $this->candidateWithDocumentContext('other-preview');
+
+        $requiredDocument = $this->requiredDocument('documento_identificacao');
+        $member = $household->members()->firstOrFail();
+
+        $this->actingAs($candidate)
+            ->post(route('candidate.documents.store'), [
+                'document_type_id' => $requiredDocument->document_type_id,
+                'required_document_id' => $requiredDocument->id,
+                'household_member_id' => $member->id,
+                'file' => UploadedFile::fake()->create('identificacao-preview.pdf', 100, 'application/pdf'),
+            ])
+            ->assertRedirect();
+
+        $submission = DocumentSubmission::query()
+            ->where('adhesion_registration_id', $registration->id)
+            ->latest('id')
+            ->firstOrFail();
+
+        $this->actingAs($otherCandidate)
+            ->get(route('admin.document-reviews.preview', $submission))
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('document_access_logs', [
+            'document_submission_id' => $submission->id,
+            'action' => 'preview',
+        ]);
+
+        $this->assertDatabaseMissing('audit_events', [
+            'event_code' => 'document.previewed',
+        ]);
     }
 }

@@ -116,6 +116,19 @@ class DocumentReviewController extends Controller
             ->with('success', 'Documento rejeitado.');
     }
 
+    public function preview(Request $request, DocumentSubmission $documentSubmission): StreamedResponse
+    {
+        if (Gate::denies('view', $documentSubmission)) {
+            $this->accessService->denied($documentSubmission, $this->authenticatedUser($request), 'preview');
+            abort(403);
+        }
+
+        return $this->accessService->preview(
+            $documentSubmission->load('currentVersion'),
+            $this->authenticatedUser($request),
+        );
+    }
+
     public function download(Request $request, DocumentSubmission $documentSubmission): StreamedResponse
     {
         if (Gate::denies('download', $documentSubmission)) {
