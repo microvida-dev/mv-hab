@@ -44,7 +44,10 @@ class ProfileDashboardWidgetsTest extends TestCase
             ->assertSee('Tarefas atribuídas')
             ->assertSee('Tarefas da equipa')
             ->assertSee('Tarefas vencidas')
-            ->assertSee('Documentos pendentes');
+            ->assertSee('Documentos pendentes')
+            ->assertSee('Abrir revisão')
+            ->assertSee('Prioridade Alta')
+            ->assertSee('SLA');
     }
 
     private function userWithRole(string $role): User

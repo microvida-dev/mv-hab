@@ -114,23 +114,14 @@
         :default-open="false"
         :summary="[count($widgets).' widget(s)']"
     >
-        <div class="divide-y divide-ink-100">
+        <div class="space-y-3 p-5">
             @forelse ($widgets as $widget)
-                <div class="px-5 py-3">
-                    <p class="text-sm font-semibold text-ink-900">
-                        {{ $widget['title'] }}
-                    </p>
-                    <p class="mt-1 text-xs leading-5 text-ink-500">
-                        {{ $widget['description'] }}
-                    </p>
-                </div>
+                <x-dashboard.widgets.intelligent-card :widget="$widget" />
             @empty
-                <div class="p-5">
-                    <x-dashboard.empty-state
-                        title="Sem foco específico"
-                        description="O perfil atual não tem widgets adicionais."
-                    />
-                </div>
+                <x-dashboard.empty-state
+                    title="Sem foco específico"
+                    description="O perfil atual não tem widgets adicionais."
+                />
             @endforelse
         </div>
     </x-dashboard.operations.expandable-panel>
