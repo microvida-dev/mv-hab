@@ -40,6 +40,7 @@ return [
                 'document_number' => ['type' => DocumentAiExtractedFieldType::Identifier, 'label' => 'Número', 'sensitive' => true, 'health_data' => false, 'required' => true],
                 'expiry_date' => ['type' => DocumentAiExtractedFieldType::Date, 'label' => 'Validade', 'sensitive' => true, 'health_data' => false, 'required' => true],
                 'nationality' => ['type' => DocumentAiExtractedFieldType::String, 'label' => 'Nacionalidade', 'sensitive' => true, 'health_data' => false, 'required' => false],
+                'nif' => ['type' => DocumentAiExtractedFieldType::Identifier, 'label' => 'NIF', 'sensitive' => true, 'health_data' => false, 'required' => false],
             ],
         ],
         DocumentAiDocumentType::Irs->value => [

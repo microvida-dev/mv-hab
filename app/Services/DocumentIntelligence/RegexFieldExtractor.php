@@ -104,6 +104,8 @@ class RegexFieldExtractor
     {
         return match ($schema->documentType) {
             DocumentAiDocumentType::Irs => $this->extractIrsField($text, $key),
+            DocumentAiDocumentType::CartaoCidadao => $this->extractCitizenCardField($text, $key),
+            DocumentAiDocumentType::TituloResidencia => $this->extractResidenceCardField($text, $key),
             default => null,
         };
     }
@@ -154,6 +156,132 @@ class RegexFieldExtractor
     private function normalizeWhitespace(string $text): string
     {
         return trim((string) preg_replace('/\s+/u', ' ', $text));
+    }
+
+    private function extractCitizenCardField(string $text, string $key): ?string
+    {
+        $text = $this->normalizeWhitespace($text);
+
+        return match ($key) {
+            'name' => $this->extractCitizenCardName($text),
+
+            'birth_date' => $this->firstDateMatch($text, [
+                '/\bPRT\s+(?<day>\d{2})\s+(?<month>\d{2})\s+(?<year>\d{4})\s+DATA\s+DE\s+VALIDADE/iu',
+                '/DATE\s+OF\s+BIRTH.*?\b(?<day>\d{2})\s+(?<month>\d{2})\s+(?<year>\d{4})\b/iu',
+            ]),
+
+            'document_number' => $this->firstMatch($text, [
+                '/DOCUMENT\s+No.*?No\.?\s*(?<value>\d{8}\s*[A-Z0-9]{4})\b/iu',
+                '/\b(?<value>\d{8}\s?[A-Z0-9]{4})\b/iu',
+            ]),
+
+            'expiry_date' => $this->firstDateMatch($text, [
+                '/\b(?<day>\d{2})(?<month>\d{2})\s*(?<year>20\d{2})\s+EXPIRY\s+DATE\b/iu',
+                '/DATA\s+DE\s+VALIDADE.*?\b(?<day>\d{2})\s*(?<month>\d{2})\s*(?<year>20\d{2})\b/iu',
+            ]),
+
+            'nif' => $this->firstMatch($text, [
+                '/(?:NIDENTIFICACAO\s+FISCAL|NIDENTIFICAÇÃO\s+FISCAL|IDENTIFICACAO\s+FISCAL|IDENTIFICAÇÃO\s+FISCAL|TAX\s+No\.?).*?\b(?<value>\d{9})\b/iu',
+            ]),
+
+            'nationality' => $this->firstMatch($text, [
+                '/\b(?<value>PRT)\s+\d{2}\s+\d{2}\s+\d{4}\b/iu',
+            ]),
+
+            default => null,
+        };
+    }
+
+    private function extractCitizenCardName(string $text): ?string
+    {
+        $surname = $this->firstMatch($text, [
+            '/APELIDOS.*?SURNAME\s+(?<value>[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]+(?:\s+[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]+){0,4})\s+NOME/iu',
+        ]);
+
+        $given = $this->firstMatch($text, [
+            '/NOME\s+(?:SGVEN\s+)?NAME\s+(?<value>[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]+(?:\s+[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]+){0,5})\s+SEXO/iu',
+        ]);
+
+        $name = trim(implode(' ', array_filter([$given, $surname])));
+
+        if ($name !== '') {
+            return $this->cleanPersonName($name);
+        }
+
+        return $this->firstMatch($text, [
+            '/([A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]+<+[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]+<<[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]+<+[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]+)/iu',
+        ]);
+    }
+
+    private function extractResidenceCardField(string $text, string $key): ?string
+    {
+        $text = $this->normalizeWhitespace($text);
+
+        return match ($key) {
+            'name' => $this->extractResidenceCardName($text),
+
+            'document_number' => $this->firstMatch($text, [
+                '/CARTAO\s+DE\s+RESID(?:E|Ê)?NCIA\s+(?<value>[A-Z0-9]{6,20})\b/iu',
+                '/CARTÃO\s+DE\s+RESID(?:E|Ê)?NCIA\s+(?<value>[A-Z0-9]{6,20})\b/iu',
+            ]),
+
+            'expiry_date' => $this->firstDateMatch($text, [
+                '/VALIDO\s+ATE\s*(?<day>\d{2})\s*(?<month>\d{2})\s*(?<year>20\d{2})/iu',
+                '/VÁLIDO\s+ATÉ\s*(?<day>\d{2})\s*(?<month>\d{2})\s*(?<year>20\d{2})/iu',
+            ]),
+
+            'nationality' => $this->firstMatch($text, [
+                '/\b(?<value>UE)\b/iu',
+            ]),
+
+            'nif' => $this->firstMatch($text, [
+                '/(?:N\.?º?\s*IDENTIFICA[CÇ][AÃ]O\s+FISCAL|IDENTIFICA[CÇ][AÃ]O\s+FISCAL|TAX\s+No\.?)\s*(?<value>\d{9})\b/iu',
+                '/\b(?<value>[12356789]\d{8})\b/iu',
+            ]),
+
+            default => null,
+        };
+    }
+
+    private function extractResidenceCardName(string $text): ?string
+    {
+        $value = $this->firstMatch($text, [
+            '/\b(?<value>[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]{3,}(?:\s+[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]{2,}){2,8})\s+(?:EU\s+){2,}.*?\bVALIDO\b/iu',
+            '/NOME.*?(?<value>[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]{3,}(?:\s+[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]{2,}){2,8})\s+VALIDO/iu',
+        ]);
+
+        return $value !== null ? $this->cleanPersonName($value) : null;
+    }
+
+    /**
+     * @param  list<string>  $patterns
+     */
+    private function firstDateMatch(string $text, array $patterns): ?string
+    {
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $text, $matches) === 1) {
+                $day = str_pad((string) ($matches['day'] ?? ''), 2, '0', STR_PAD_LEFT);
+                $month = str_pad((string) ($matches['month'] ?? ''), 2, '0', STR_PAD_LEFT);
+                $year = (string) ($matches['year'] ?? '');
+
+                if (preg_match('/^\d{2}$/', $day) === 1
+                    && preg_match('/^\d{2}$/', $month) === 1
+                    && preg_match('/^\d{4}$/', $year) === 1) {
+                    return "{$day}/{$month}/{$year}";
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function cleanPersonName(string $value): string
+    {
+        $value = str_replace(['<', '«'], ' ', $value);
+        $value = preg_replace('/\b(?:EU|ED|FU|EUE|SIVA|SGVEN|NAME|NOME)\b/u', ' ', $value) ?? $value;
+        $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
+
+        return trim($value);
     }
 
     /**

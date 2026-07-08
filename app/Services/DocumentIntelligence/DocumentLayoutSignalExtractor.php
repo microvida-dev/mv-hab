@@ -16,6 +16,41 @@ class DocumentLayoutSignalExtractor
 
         $this->scoreWhen($scores, $signals, DocumentAiDocumentType::Iban, preg_match('/\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b/i', $text) === 1, 'layout:iban_pattern', 3);
         $this->scoreWhen($scores, $signals, DocumentAiDocumentType::CartaoCidadao, preg_match('/\b\d{8}\s?\d?\s?[A-Z0-9]{2}\d\b/i', $text) === 1, 'layout:civil_id_pattern', 2);
+        $this->scoreWhen(
+            $scores,
+            $signals,
+            DocumentAiDocumentType::CartaoCidadao,
+            str_contains($normalized, 'cartao de cidadao')
+                || str_contains($normalized, 'citizen card')
+                || (
+                    str_contains($normalized, 'portuguese republic')
+                    && (str_contains($normalized, 'document no') || str_contains($normalized, 'tax no'))
+                )
+                || (
+                    str_contains($normalized, 'date of birth')
+                    && str_contains($normalized, 'expiry date')
+                    && str_contains($normalized, 'tax no')
+                ),
+            'layout:citizen_card_identity_terms',
+            4
+        );
+
+        $this->scoreWhen(
+            $scores,
+            $signals,
+            DocumentAiDocumentType::TituloResidencia,
+            str_contains($normalized, 'cartao de residencia')
+                || str_contains($normalized, 'cartao de residncia')
+                || str_contains($normalized, 'residence card')
+                || str_contains($normalized, 'family member of a union citizen')
+                || str_contains($normalized, 'carte de sejour')
+                || (
+                    str_contains($normalized, 'valido ate')
+                    && str_contains($normalized, 'tipo do titulo')
+                ),
+            'layout:residence_card_terms',
+            4
+        );
         $this->scoreWhen($scores, $signals, DocumentAiDocumentType::Passaporte, preg_match('/\b(passport|passaporte).{0,40}\b[A-Z]{1,2}\d{6,8}\b/i', $text) === 1, 'layout:passport_number', 2);
         $this->scoreWhen($scores, $signals, DocumentAiDocumentType::Irs, str_contains($normalized, 'modelo 3') && str_contains($normalized, 'anexo'), 'layout:irs_model3_annex', 2);
         $this->scoreWhen($scores, $signals, DocumentAiDocumentType::NotaLiquidacao, str_contains($normalized, 'demonstracao de liquidacao') || str_contains($normalized, 'nota de liquidacao'), 'layout:tax_liquidation_title', 3);
