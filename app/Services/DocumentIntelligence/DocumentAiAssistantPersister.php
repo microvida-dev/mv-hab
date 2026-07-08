@@ -17,13 +17,13 @@ use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
 use Illuminate\Support\Facades\DB;
+use App\Enums\DocumentAiRiskFlagCode;
 
 class DocumentAiAssistantPersister
 {
     public function __construct(
         private readonly AuditLogger $auditLogger,
     ) {}
-
     /**
      * @param  list<DocumentAiRiskFlag>  $flags
      * @param  list<DocumentAiSuggestionDraft>  $suggestions
@@ -48,6 +48,8 @@ class DocumentAiAssistantPersister
                 'calculated_at' => now(),
             ]);
             $score->save();
+
+            $this->deleteObsoleteFlags($analysis, $flags);
 
             foreach ($flags as $flag) {
                 $this->persistFlag($analysis, $flag);
@@ -83,6 +85,34 @@ class DocumentAiAssistantPersister
 
             return $score;
         });
+    }
+
+    /**
+     * Remove flags geridos pelo assistente IA que deixaram de ser emitidos no reprocessamento.
+     *
+     * @param  list<DocumentAiRiskFlag>  $flags
+     */
+    private function deleteObsoleteFlags(DocumentAiAnalysis $analysis, array $flags): void
+    {
+        $currentCodes = array_map(
+            static fn (DocumentAiRiskFlag $flag): string => $flag->code->value,
+            $flags
+        );
+
+        $managedCodes = array_map(
+            static fn (DocumentAiRiskFlagCode $code): string => $code->value,
+            DocumentAiRiskFlagCode::cases()
+        );
+
+        $query = DocumentAiFlag::query()
+            ->where('document_ai_analysis_id', $analysis->id)
+            ->whereIn('code', $managedCodes);
+
+        if ($currentCodes !== []) {
+            $query->whereNotIn('code', $currentCodes);
+        }
+
+        $query->delete();
     }
 
     private function persistFlag(DocumentAiAnalysis $analysis, DocumentAiRiskFlag $flag): void

@@ -36,8 +36,17 @@ class DocumentAiScoreCalculator
             static fn (DocumentAiRiskFlag $flag): int => max(0, $flag->scoreImpact),
             $flags
         ));
-        $score = $this->clamp(array_sum($components) - min(85, $penalty));
+
+       /*
+        * As flags já impactam o score através do componente "risk" e, em alguns casos,
+        * através dos componentes de OCR/extração. Evita-se dupla penalização operacional.
+        * Apenas riscos bloqueantes reduzem diretamente o score final.
+        */
+        $directPenalty = $this->directPenalty($flags);
+
+        $score = $this->clamp(array_sum($components) - $directPenalty);
         $label = DocumentAiScoreLabel::fromScore($score);
+
         $requiresReview = $score < (int) config('document-ai-score.thresholds.manual_review_score_below', 75)
             || collect($flags)->contains(fn (DocumentAiRiskFlag $flag): bool => $flag->requiresManualReview);
 
@@ -149,6 +158,30 @@ class DocumentAiScoreCalculator
         ));
 
         return max(0, $weight - min($weight, (int) round($penalty / 5)));
+    }
+
+    /**
+     * @param  list<DocumentAiRiskFlag>  $flags
+     */
+    private function directPenalty(array $flags): int
+    {
+        $blockingCodes = [
+            DocumentAiRiskFlagCode::DocumentExpired,
+            DocumentAiRiskFlagCode::DocumentUnreadable,
+            DocumentAiRiskFlagCode::NifMismatch,
+            DocumentAiRiskFlagCode::NameMismatch,
+            DocumentAiRiskFlagCode::IncomeIncompatible,
+            DocumentAiRiskFlagCode::EmptyDocument,
+        ];
+
+        $penalty = array_sum(array_map(
+            static fn (DocumentAiRiskFlag $flag): int => in_array($flag->code, $blockingCodes, true)
+                ? max(0, $flag->scoreImpact)
+                : 0,
+            $flags
+        ));
+
+        return min(70, $penalty);
     }
 
     private function averageFieldConfidence(DocumentAiAnalysis $analysis): float

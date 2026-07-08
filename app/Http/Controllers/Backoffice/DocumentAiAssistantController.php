@@ -67,7 +67,10 @@ class DocumentAiAssistantController extends Controller
         return view('backoffice.document-ai.assistant.show', [
             'analysis' => $analysis,
             'score' => $score,
-            'flags' => $analysis->flags->sortByDesc('score_impact')->values(),
+            'flags' => $analysis->flags
+                ->filter(fn ($flag): bool => (int) $flag->score_impact > 0)
+                ->sortByDesc('score_impact')
+                ->values(),
             'suggestions' => $analysis->suggestions->sortBy('status')->values(),
         ]);
     }

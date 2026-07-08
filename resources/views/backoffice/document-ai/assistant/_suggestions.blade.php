@@ -1,3 +1,10 @@
+@php
+    $suggestionFlagLabel = static function (?string $code): string {
+        return \App\Enums\DocumentAiRiskFlagCode::tryFrom((string) $code)?->label()
+            ?? str((string) $code)->replace('_', ' ')->headline();
+    };
+@endphp
+
 <section class="mv-surface p-6">
     <div class="mb-4">
         <h2 class="text-lg font-semibold text-ink-900">Sugestões de aperfeiçoamento</h2>
@@ -9,7 +16,7 @@
             <article class="mv-surface p-4">
                 <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <p class="text-sm font-semibold text-ink-900">{{ str_replace('_', ' ', $suggestion->flag_code) }}</p>
+                        <p class="text-sm font-semibold text-ink-900">{{ $suggestionFlagLabel($suggestion->flag_code) }}</p>
                         <p class="text-xs text-ink-500">{{ $suggestion->severity->label() }} · {{ $suggestion->status->label() }}</p>
                     </div>
                     <div class="flex flex-wrap gap-2">

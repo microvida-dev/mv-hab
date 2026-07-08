@@ -1,3 +1,14 @@
+@php
+    $componentLabels = [
+        'ocr' => 'Leitura OCR',
+        'classification' => 'Classificação',
+        'extraction' => 'Extração',
+        'consistency' => 'Coerência',
+        'risk' => 'Risco',
+        'penalty' => 'Impacto dos alertas',
+    ];
+@endphp
+
 <section class="mv-surface p-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -16,7 +27,7 @@
         <div class="mt-6 grid gap-3 md:grid-cols-5">
             @foreach (($score->components ?? []) as $component => $value)
                 <div class="mv-surface p-3">
-                    <p class="text-xs font-semibold uppercase text-ink-500">{{ str_replace('_', ' ', $component) }}</p>
+                    <p class="text-xs font-semibold uppercase text-ink-500">{{ $componentLabels[$component] ?? str($component)->replace('_', ' ')->headline() }}</p>
                     <p class="mt-1 text-xl font-semibold text-ink-900">{{ $value }}</p>
                 </div>
             @endforeach
