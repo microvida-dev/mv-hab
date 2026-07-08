@@ -12,22 +12,13 @@
                 :productivity="$productivity"
             />
 
-            <x-search.universal-search :groups="$searchGroups" />
-
             <x-dashboard.profile-dashboard :dashboard="$dashboard" />
 
             <x-dashboard.operations.action-center :productivity="$productivity" />
 
-            <x-dashboard.operations.workspace-section
-                :workspaces="$workspaces"
-                :favorites="$favorites"
-            />
-
             <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
                 <div class="space-y-6">
                     <x-dashboard.operations.today :items="$todayOperations" :timeline="$operationsTimeline ?? []" />
-
-                    <x-dashboard.operations.action-section :quick-actions="$quickActions" />
 
                     <x-dashboard.operations.deadlines :items="$dashboard['deadlines'] ?? []" />
 
@@ -38,8 +29,15 @@
                     :widgets="$dashboard['widgets'] ?? []"
                     :favorites="$favorites"
                     :recent-items="$recentItems"
+                    :quick-actions="$quickActions"
+                    :search-groups="$searchGroups"
                 />
             </section>
+
+            <x-dashboard.operations.workspace-section
+                :workspaces="$workspaces"
+                :favorites="$favorites"
+            />
         </div>
     </div>
 </x-app-layout>

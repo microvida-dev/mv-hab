@@ -2,7 +2,15 @@
     'quickActions' => [],
 ])
 
-<section class="mv-card">
+<x-dashboard.operations.expandable-panel
+    id="quick-actions"
+    eyebrow="Produtividade"
+    title="Ações rápidas"
+    icon="arrow-right"
+    :summary="[
+        count($quickActions) . ' ações disponíveis',
+    ]"
+>
     <div class="border-b border-ink-100 px-5 py-4">
         <x-ui.section-header title="Ações rápidas" />
     </div>
@@ -19,4 +27,4 @@
             </div>
         @endforelse
     </div>
-</section>
+</x-dashboard.operations.expandable-panel>

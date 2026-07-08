@@ -2,11 +2,18 @@
     'items' => [],
 ])
 
-<section class="mv-card">
-    <div class="border-b border-ink-100 px-5 py-4">
-        <x-ui.section-header title="Alertas e prazos" />
-    </div>
-
+<x-dashboard.operations.expandable-panel
+    id="deadlines"
+    eyebrow="Prazos"
+    title="Alertas e prazos"
+    description="Prazos processuais e alertas que requerem acompanhamento."
+    icon="calendar"
+    :default-open="false"
+    :summary="[
+        count($items).' alerta(s)',
+        count($items) > 0 ? 'Requer acompanhamento' : 'Sem alertas ativos',
+    ]"
+>
     <div class="divide-y divide-ink-100">
         @forelse ($items as $alert)
             <x-dashboard.deadline-alert :alert="$alert" />
@@ -19,4 +26,4 @@
             </div>
         @endforelse
     </div>
-</section>
+</x-dashboard.operations.expandable-panel>
