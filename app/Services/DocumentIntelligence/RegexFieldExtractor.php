@@ -6,6 +6,7 @@ use App\Data\DocumentIntelligence\DocumentExtractionFlag;
 use App\Data\DocumentIntelligence\DocumentExtractionSchema;
 use App\Data\DocumentIntelligence\ExtractedDocumentField;
 use App\Enums\DocumentAiExtractionSource;
+use App\Enums\DocumentAiDocumentType;
 
 class RegexFieldExtractor
 {
@@ -22,7 +23,8 @@ class RegexFieldExtractor
         $allLabels = array_values(array_unique(array_merge(...array_values($labels))));
 
         foreach ($schema->fields as $key => $definition) {
-            $raw = $this->extractByLabels($ocrText, $labels[$key] ?? [$definition['label']], $allLabels);
+            $raw = $this->extractSpecialized($ocrText, $schema, (string) $key)
+                ?? $this->extractByLabels($ocrText, $labels[$key] ?? [$definition['label']], $allLabels);
             $normalization = $this->normalizer->normalize($key, $definition['type'], $raw);
             $required = (bool) $definition['required'];
             $missingRequired = $raw === null && $required;
@@ -96,6 +98,62 @@ class RegexFieldExtractor
         ];
 
         return array_intersect_key($base, $schema->fields);
+    }
+
+    private function extractSpecialized(string $text, DocumentExtractionSchema $schema, string $key): ?string
+    {
+        return match ($schema->documentType) {
+            DocumentAiDocumentType::Irs => $this->extractIrsField($text, $key),
+            default => null,
+        };
+    }
+
+    private function extractIrsField(string $text, string $key): ?string
+    {
+        $text = $this->normalizeWhitespace($text);
+
+        return match ($key) {
+            'fiscal_year' => $this->firstMatch($text, [
+                '/\bAno\b.*?\b(?<value>20\d{2})\b/iu',
+                '/Comprovativo\s+Mod\.?3\s+IRS\s*:\s*\d{9}(?:\s*,\s*\d{9})?\s*\/\s*(?<value>20\d{2})\s*\//iu',
+            ]),
+
+            'nif' => $this->firstMatch($text, [
+                '/N\.?\s*º\s+de\s+Contribuinte\s*:\s*(?<value>\d{9})\b/iu',
+                '/Comprovativo\s+Mod\.?3\s+IRS\s*:\s*(?<value>\d{9})\b/iu',
+                '/Sujeito\s+Passivo\s+A\s+NIF\s+GRAU\s+F\.?A\.?\s+[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ\s]+?\s+\d{2}\s+(?<value>\d{9})\b/iu',
+            ]),
+
+            'taxpayer_name' => $this->firstMatch($text, [
+                '/Sujeito\s+Passivo\s+A\s+NIF\s+GRAU\s+F\.?A\.?\s+(?<value>[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ\s]+?)\s+\d{2}\s+\d{9}\b/iu',
+                '/NOME\s+DO\s+SUJEITO\s+PASSIVO.*?Sujeito\s+Passivo\s+A.*?(?<value>[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ\s]+?)\s+\d{2}\s+\d{9}\b/iu',
+            ]),
+
+            default => null,
+        };
+    }
+
+    /**
+     * @param  list<string>  $patterns
+     */
+    private function firstMatch(string $text, array $patterns): ?string
+    {
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $text, $matches) === 1) {
+                $value = trim((string) ($matches['value'] ?? ''));
+
+                if ($value !== '') {
+                    return $value;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizeWhitespace(string $text): string
+    {
+        return trim((string) preg_replace('/\s+/u', ' ', $text));
     }
 
     /**

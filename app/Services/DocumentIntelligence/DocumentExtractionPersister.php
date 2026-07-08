@@ -12,6 +12,7 @@ use App\Models\DocumentAiField;
 use App\Models\DocumentAiFlag;
 use App\Models\DocumentAiProcessingLog;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 
 class DocumentExtractionPersister
 {
@@ -151,11 +152,26 @@ class DocumentExtractionPersister
         }
     }
 
+    private function deleteStructuredExtractionFlags(DocumentAiAnalysis $analysis): void
+    {
+        DocumentAiFlag::query()
+            ->where('document_ai_analysis_id', $analysis->id)
+            ->where(function (Builder $query): void {
+                $query
+                    ->where('code', 'missing_required_field')
+                    ->orWhere('code', 'invalid_nif_format')
+                    ->orWhere('details->category', 'structured_extraction');
+            })
+            ->delete();
+    }
+
     /**
      * @param  list<DocumentExtractionFlag>  $flags
      */
     private function recordFlags(DocumentAiAnalysis $analysis, array $flags): void
     {
+        $this->deleteStructuredExtractionFlags($analysis);
+
         foreach ($flags as $flag) {
             $record = new DocumentAiFlag([
                 'code' => $flag->code,
