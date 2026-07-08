@@ -20,7 +20,7 @@
 >
     <button
         type="button"
-        class="flex w-full items-start justify-between gap-4 px-5 py-4 text-left transition hover:bg-mvhab-surface/60 focus:outline-none focus:ring-4 focus:ring-mvhab-primary/10"
+        class="group flex w-full items-start justify-between gap-4 px-5 py-4 text-left transition hover:bg-mvhab-surface/60 focus:outline-none focus:ring-4 focus:ring-mvhab-primary/10"
         x-on:click="toggle()"
         x-bind:aria-expanded="open.toString()"
     >
@@ -42,35 +42,44 @@
                     {{ $title }}
                 </span>
 
-                <span x-show="open" x-cloak>
-                    @if($description)
-                        <span class="mt-1 block text-sm text-ink-500">
-                            {{ $description }}
-                        </span>
-                    @endif
-                </span>
+                @if($description)
+                    <span
+                        class="mt-1 block text-sm text-ink-500"
+                        x-show="open"
+                        x-cloak
+                    >
+                        {{ $description }}
+                    </span>
+                @endif
 
-                @if(!empty($summary))
-                    <span class="mt-3 flex flex-wrap gap-2" x-show="!open" x-cloak>
+                @if(count($summary))
+                    <div
+                        class="mt-3 flex flex-wrap gap-2"
+                        x-show="!open"
+                        x-cloak
+                    >
                         @foreach($summary as $item)
                             <span class="rounded-full bg-ink-50 px-2.5 py-1 text-xs font-semibold text-ink-600">
                                 {{ $item }}
                             </span>
                         @endforeach
-                    </span>
+                    </div>
                 @endif
             </span>
         </span>
 
         <span
-            class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-ink-500 ring-1 ring-ink-100 transition duration-200"
-            x-bind:class="open ? 'rotate-180' : ''"
+            class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-ink-500 ring-1 ring-ink-100 transition-transform duration-200 group-hover:bg-mvhab-surface"
+            x-bind:class="open ? '' : '-rotate-180'"
         >
             <x-mv-icon name="chevron" size="sm" />
         </span>
     </button>
 
-    <div x-show="open" x-cloak>
+    <div
+        x-show="open"
+        x-cloak
+    >
         <div class="border-t border-ink-100">
             {{ $slot }}
         </div>

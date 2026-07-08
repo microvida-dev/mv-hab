@@ -5,24 +5,36 @@
         <div class="mv-page-shell">
             <x-flash-message />
 
+            {{-- Hero --}}
             <x-dashboard.operations.hero :user="Auth::user()" />
 
+            {{-- Indicadores principais --}}
             <x-dashboard.operations.summary
                 :summary="$operationsSummary"
                 :productivity="$productivity"
             />
 
+            {{-- Resumo do perfil --}}
             <x-dashboard.profile-dashboard :dashboard="$dashboard" />
 
-            <x-dashboard.operations.action-center :productivity="$productivity" />
+            {{-- Centro operacional --}}
+            <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
 
-            <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
                 <div class="space-y-6">
-                    <x-dashboard.operations.today :items="$todayOperations" :timeline="$operationsTimeline ?? []" />
 
-                    <x-dashboard.operations.deadlines :items="$dashboard['deadlines'] ?? []" />
+                    <x-dashboard.operations.today
+                        :items="$todayOperations"
+                        :timeline="$operationsTimeline ?? []"
+                    />
 
-                    <x-dashboard.operations.notifications :summary="$dashboard['notifications_summary'] ?? null" />
+                    <x-dashboard.operations.deadlines
+                        :items="$dashboard['deadlines'] ?? []"
+                    />
+
+                    <x-dashboard.operations.notifications
+                        :summary="$dashboard['notifications_summary'] ?? null"
+                    />
+
                 </div>
 
                 <x-dashboard.operations.sidebar
@@ -32,12 +44,17 @@
                     :quick-actions="$quickActions"
                     :search-groups="$searchGroups"
                 />
+
             </section>
 
-            <x-dashboard.operations.workspace-section
-                :workspaces="$workspaces"
-                :favorites="$favorites"
-            />
+            {{-- Navegação avançada --}}
+            <div class="mt-8">
+                <x-dashboard.operations.workspace-section
+                    :workspaces="$workspaces"
+                    :favorites="$favorites"
+                />
+            </div>
+
         </div>
     </div>
 </x-app-layout>
