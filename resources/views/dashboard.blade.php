@@ -27,9 +27,6 @@
                 :productivity="$productivity"
             />
 
-            {{-- Resumo do perfil --}}
-            <x-dashboard.profile-dashboard :dashboard="$dashboard" />
-
             {{-- Centro operacional --}}
             <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
 
@@ -59,15 +56,6 @@
                 />
 
             </section>
-
-            {{-- Navegação avançada --}}
-            <div class="mt-8">
-                <x-dashboard.operations.workspace-section
-                    :workspaces="$dashboard['workspaces'] ?? []"
-                    :favorites="$dashboard['favorites'] ?? []"
-                    :workspace-intelligence="$dashboard['workspace_intelligence'] ?? []"
-                />
-            </div>
 
         </div>
     </div>

@@ -39,7 +39,6 @@ class ProfileDashboardWidgetsTest extends TestCase
         $this->actingAs($technician)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Gabinete Técnico')
             ->assertSee('Revisão técnica')
             ->assertSee('Tarefas atribuídas')
             ->assertSee('Tarefas da equipa')

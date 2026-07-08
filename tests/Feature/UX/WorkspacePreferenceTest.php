@@ -102,8 +102,6 @@ class WorkspacePreferenceTest extends TestCase
             ->withSession(['mfa.verified_at' => now()])
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Espaço inicial')
-            ->assertSee('Concursos')
-            ->assertSee('Entrar no workspace');
+            ->assertSee('Workspace recomendado: Concursos');
     }
 }
