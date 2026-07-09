@@ -3,8 +3,6 @@
 namespace App\Services\ProcedureMinutes;
 
 use App\Enums\ProcedureMinuteStatus;
-use App\Models\Application;
-use App\Models\Contest;
 use App\Models\ProcedureMinute;
 use App\Models\ProcedureTemplate;
 use App\Models\User;
@@ -31,13 +29,9 @@ class ProcedureMinuteService
     {
         return DB::transaction(function () use ($data, $actor): ProcedureMinute {
             $template = ProcedureTemplate::query()->findOrFail((int) $data['procedure_template_id']);
-            $application = isset($data['application_id']) ? Application::query()->find($data['application_id']) : null;
-            $contest = isset($data['contest_id']) ? Contest::query()->find($data['contest_id']) : $application?->contest;
-            $variables = $application instanceof Application
-                ? $this->variables->forApplication($application, $actor)
-                : ($contest instanceof Contest ? $this->variables->forContest($contest) : ['generated_at' => now()->format('d/m/Y H:i')]);
+            $payload = $this->payloadBuilder->build($data, $actor);
+            $variables = $this->variables->forProcedureMinutePayload($payload, $actor);
             $content = $this->renderer->render($template, $variables);
-            $payload = $this->payloadBuilder->build($data);
 
             $minute = new ProcedureMinute([
                 'title' => $data['title'] ?? 'Ata do procedimento',
@@ -47,9 +41,9 @@ class ProcedureMinuteService
             ]);
             $minute->forceFill([
                 'minute_number' => $this->number(),
-                'contest_id' => $contest?->id,
-                'program_id' => data_get($contest, 'program_id') ?? $application?->program_id,
-                'application_id' => $application?->id,
+                'contest_id' => data_get($payload, 'contest.id'),
+                'program_id' => data_get($payload, 'program.id'),
+                'application_id' => data_get($payload, 'application.id'),
                 'procedure_template_id' => $template->id,
                 'status' => ProcedureMinuteStatus::Generated,
                 'content_snapshot' => $content,

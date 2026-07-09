@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Backoffice;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ApproveProcedureMinuteRequest;
 use App\Http\Requests\GenerateProcedureMinuteRequest;
+use App\Models\Application;
+use App\Models\Contest;
 use App\Models\ProcedureMinute;
 use App\Models\ProcedureTemplate;
 use App\Services\ProcedureMinutes\ProcedureMinuteService;
@@ -21,10 +23,22 @@ class ProcedureMinuteController extends Controller
     public function index(): View
     {
         Gate::authorize('viewAny', ProcedureMinute::class);
-        $minutes = ProcedureMinute::query()->latest()->paginate(20);
+        $minutes = ProcedureMinute::query()
+            ->with(['contest', 'application.user', 'template'])
+            ->latest()
+            ->paginate(20);
         $templates = ProcedureTemplate::query()->where('type', 'procedure_minute')->latest()->get();
+        $contests = Contest::query()
+            ->latest()
+            ->limit(100)
+            ->get(['id', 'code', 'title', 'status']);
+        $applications = Application::query()
+            ->with('user')
+            ->latest()
+            ->limit(100)
+            ->get(['id', 'application_number', 'user_id', 'contest_id', 'status']);
 
-        return view('backoffice.procedure-minutes.index', compact('minutes', 'templates'));
+        return view('backoffice.procedure-minutes.index', compact('minutes', 'templates', 'contests', 'applications'));
     }
 
     public function generate(GenerateProcedureMinuteRequest $request): RedirectResponse
@@ -38,6 +52,7 @@ class ProcedureMinuteController extends Controller
     public function show(ProcedureMinute $procedureMinute): View
     {
         Gate::authorize('view', $procedureMinute);
+        $procedureMinute->loadMissing(['contest', 'application.user', 'template']);
 
         return view('backoffice.procedure-minutes.show', compact('procedureMinute'));
     }
