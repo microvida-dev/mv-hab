@@ -19,6 +19,7 @@ class Municipality extends Model
         'contact_email',
         'settings',
         'active',
+        'official_logo_path',
     ];
 
     protected function casts(): array

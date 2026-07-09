@@ -72,4 +72,14 @@ class ProcedureMinuteController extends Controller
 
         return Storage::disk('local')->download($procedureMinute->file_path, $procedureMinute->minute_number.'.html');
     }
+
+    public function destroy(ProcedureMinute $procedureMinute): RedirectResponse
+    {
+        Gate::authorize('delete', $procedureMinute);
+
+        $this->minutes->delete($procedureMinute, auth()->user());
+
+        return to_route('backoffice.procedure-minutes.index')
+            ->with('success', 'Ata eliminada.');
+    }
 }

@@ -31,4 +31,11 @@ class ProcedureMinutePolicy
     {
         return $this->view($user, $minute);
     }
+
+    public function delete(User $user, ProcedureMinute $minute): bool
+    {
+        return $minute->approved_at === null
+            && ! $user->hasRole(['candidate', 'auditor'])
+            && $user->hasPermissionTo('documents', 'delete');
+    }
 }

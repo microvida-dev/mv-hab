@@ -1520,6 +1520,8 @@ Route::middleware('auth')->group(function () {
                     ->name('procedure-minutes.download');
                 Route::post('procedure-minutes/{procedureMinute}/approve', [BackofficeProcedureMinuteController::class, 'approve'])
                     ->name('procedure-minutes.approve');
+                Route::delete('procedure-minutes/{procedureMinute}', [BackofficeProcedureMinuteController::class, 'destroy'])
+                    ->name('procedure-minutes.destroy');
 
                 Route::get('document-templates', [BackofficeDocumentTemplateController::class, 'index'])->name('document-templates.index');
                 Route::get('document-templates/create', [BackofficeDocumentTemplateController::class, 'create'])->name('document-templates.create');

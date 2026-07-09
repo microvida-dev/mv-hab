@@ -144,6 +144,54 @@
                         <textarea name="observations" rows="4" class="mt-1 w-full rounded-xl border-ink-200 text-sm shadow-sm focus:border-mvhab-primary focus:ring-mvhab-primary">{{ old('observations') }}</textarea>
                     </label>
 
+                    <details open class="md:col-span-2 rounded-2xl border border-ink-100 bg-ink-50 p-4">
+                        <summary class="cursor-pointer text-sm font-semibold text-ink-800">
+                            Membros da ata
+                        </summary>
+
+                        <div class="mt-4 grid gap-4 md:grid-cols-2">
+                            <label class="text-sm font-semibold text-ink-700">
+                                Presidente — Nome
+                                <input name="jury_president_name" class="mt-1 w-full rounded-md border-ink-200" value="Ana Cristina dos Santos Vilaverde Carneiro">
+                            </label>
+
+                            <label class="text-sm font-semibold text-ink-700">
+                                Presidente — Cargo/Função
+                                <input name="jury_president_role" class="mt-1 w-full rounded-md border-ink-200" value="Técnica Superior Jurista">
+                            </label>
+
+                            <label class="text-sm font-semibold text-ink-700">
+                                Vogal 1 — Nome
+                                <input name="jury_vogal_1_name" class="mt-1 w-full rounded-md border-ink-200" value="Andreia Abreu do Rosário">
+                            </label>
+
+                            <label class="text-sm font-semibold text-ink-700">
+                                Vogal 1 — Cargo/Função
+                                <input name="jury_vogal_1_role" class="mt-1 w-full rounded-md border-ink-200" value="Técnica Superior em Geografia e Gestão do Território a exercer funções na DDSU - Divisão de Desenvolvimento Sustentável e Urbanismo">
+                            </label>
+
+                            <label class="text-sm font-semibold text-ink-700">
+                                Vogal 2 — Nome
+                                <input name="jury_vogal_2_name" class="mt-1 w-full rounded-md border-ink-200" value="Fernando Marques Tomás">
+                            </label>
+
+                            <label class="text-sm font-semibold text-ink-700">
+                                Vogal 2 — Cargo/Função
+                                <input name="jury_vogal_2_role" class="mt-1 w-full rounded-md border-ink-200" value="Chefe da DPGOM - Divisão de Planeamento e Gestão de Obras Municipais">
+                            </label>
+
+                            <label class="text-sm font-semibold text-ink-700">
+                                Vogal 3 — Nome
+                                <input name="jury_vogal_3_name" class="mt-1 w-full rounded-md border-ink-200" value="Maria João Café Ferreira">
+                            </label>
+
+                            <label class="text-sm font-semibold text-ink-700">
+                                Vogal 3 — Cargo/Função
+                                <input name="jury_vogal_3_role" class="mt-1 w-full rounded-md border-ink-200" value="Dirigente intermédia de 3.º grau da SGFPCO - Subunidade de Gestão Financeira, Patrimonial e Controlo Orçamental">
+                            </label>
+                        </div>
+                    </details>
+
                     <div class="md:col-span-2">
                         <button class="mv-button-primary" type="submit">Gerar ata</button>
                     </div>
@@ -176,9 +224,33 @@
                                     </td>
                                     <td>{{ $minute->generated_at?->format('d/m/Y H:i') ?? '—' }}</td>
                                     <td class="text-right">
-                                        <a class="font-semibold text-mvhab-primary" href="{{ route('backoffice.procedure-minutes.show', $minute) }}">
-                                            Abrir
-                                        </a>
+                                        <div class="inline-flex items-center gap-3">
+                                            <a
+                                                href="{{ route('backoffice.procedure-minutes.show', $minute) }}"
+                                                class="font-semibold text-mvhab-primary hover:underline"
+                                            >
+                                                Abrir
+                                            </a>
+
+                                            @can('delete', $minute)
+                                                <form
+                                                    method="POST"
+                                                    action="{{ route('backoffice.procedure-minutes.destroy', $minute) }}"
+                                                    class="inline"
+                                                    onsubmit="return confirm('Tem a certeza que pretende eliminar esta ata?');"
+                                                >
+                                                    @csrf
+                                                    @method('DELETE')
+
+                                                    <button
+                                                        type="submit"
+                                                        class="font-semibold text-red-600 hover:text-red-700"
+                                                    >
+                                                        Eliminar
+                                                    </button>
+                                                </form>
+                                            @endcan
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

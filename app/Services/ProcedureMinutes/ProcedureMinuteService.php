@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\ProcedureTemplates\TemplateRenderingService;
 use App\Services\ProcedureTemplates\TemplateVariableResolver;
+use App\Services\ProcedureMinutes\Renderers\AlcanenaAta01Renderer;
 use App\Support\AuditEvents;
 use Illuminate\Support\Facades\DB;
 
@@ -19,6 +20,7 @@ class ProcedureMinuteService
         private readonly ProcedureMinuteExportService $exporter,
         private readonly TemplateVariableResolver $variables,
         private readonly TemplateRenderingService $renderer,
+        private readonly AlcanenaAta01Renderer $alcanenaAta01Renderer,
         private readonly AuditLogger $auditLogger,
     ) {}
 
@@ -30,8 +32,13 @@ class ProcedureMinuteService
         return DB::transaction(function () use ($data, $actor): ProcedureMinute {
             $template = ProcedureTemplate::query()->findOrFail((int) $data['procedure_template_id']);
             $payload = $this->payloadBuilder->build($data, $actor);
-            $variables = $this->variables->forProcedureMinutePayload($payload, $actor);
-            $content = $this->renderer->render($template, $variables);
+
+            $content = $template->template_number === 'ALC-ATA-01-SERIACAO-INICIAL'
+                ? $this->alcanenaAta01Renderer->render($payload)
+                : $this->renderer->render(
+                    $template,
+                    $this->variables->forProcedureMinutePayload($payload, $actor)
+                );
 
             $minute = new ProcedureMinute([
                 'title' => $data['title'] ?? 'Ata do procedimento',
@@ -82,5 +89,18 @@ class ProcedureMinuteService
         } while (ProcedureMinute::withTrashed()->where('minute_number', $number)->exists());
 
         return $number;
+    }
+
+    public function delete(ProcedureMinute $minute, User $actor): void
+    {
+        $minute->delete();
+
+        $this->auditLogger->record(
+            AuditEvents::DELETE,
+            $minute,
+            'documents',
+            'procedure_minute_delete',
+            'Ata do procedimento eliminada.'
+        );
     }
 }

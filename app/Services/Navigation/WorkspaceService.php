@@ -286,6 +286,7 @@ class WorkspaceService
                         $this->item('Auditoria', 'backoffice.security.audit.events.index', 'backoffice.security.audit.*', 'audit_logs.view', null, AuditEvent::class),
                         $this->item('Acessos sensíveis', 'backoffice.security.audit.access-logs.index', 'backoffice.security.audit.access-logs.*', 'audit_logs.view', null, SensitiveDataAccessLog::class),
                         $this->item('RGPD', 'backoffice.security.privacy.requests.index', 'backoffice.security.privacy.*', 'privacy.view', null, DataSubjectRequest::class),
+                        $this->item('Minutas e Atas', 'backoffice.procedure-minutes.index', 'backoffice.procedure-minutes.*', 'documents.view'),
                         $this->item('IA documental', 'backoffice.document-ai.assistant.index', 'backoffice.document-ai.*', 'documents.view'),
                         $this->item('Comunicações', 'backoffice.communications.index', 'backoffice.communications.*', 'notifications.view'),
                     ]),
@@ -407,6 +408,7 @@ class WorkspaceService
             'backoffice.security.audit.access-logs.index' => 'lock',
             'backoffice.security.privacy.requests.index' => 'shield',
             'backoffice.document-ai.assistant.index' => 'ai',
+            'backoffice.procedure-minutes.index' => 'template',
             'backoffice.communications.index' => 'communication',
 
             'backoffice.users.index' => 'users',

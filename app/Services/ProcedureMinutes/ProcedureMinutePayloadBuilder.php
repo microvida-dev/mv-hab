@@ -48,6 +48,7 @@ class ProcedureMinutePayloadBuilder
             ],
             'municipal' => $this->buildMunicipal($data),
             'meeting' => $this->buildMeeting($data),
+            'ata' => $this->buildAtaFields($data, $applications),
             'manual_fields' => $this->buildManualFields($data),
             'program' => $this->buildProgram($contest instanceof Contest ? $contest->program : ($application instanceof Application ? $application->program : null)),
             'contest' => $this->buildContest($contest),
@@ -65,6 +66,11 @@ class ProcedureMinutePayloadBuilder
             'administrative_decisions' => $administrativeDecisions,
             'summary' => [
                 'applications_total' => count($applicationPayload),
+                'unique_candidates_total' => $applications
+                    ->pluck('user_id')
+                    ->filter()
+                    ->unique()
+                    ->count(),
                 'housing_units_total' => count($housingUnits),
                 'provisional_lists_total' => count($provisionalLists),
                 'definitive_lists_total' => count($definitiveLists),
@@ -206,6 +212,52 @@ class ProcedureMinutePayloadBuilder
             'time' => $this->nullableString($data['meeting_time'] ?? null),
             'location' => $this->nullableString($data['meeting_location'] ?? null),
             'subject' => $this->nullableString($data['subject'] ?? null),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  Collection<int, Application>  $applications
+     * @return array<string, mixed>
+     */
+    private function buildAtaFields(array $data, Collection $applications): array
+    {
+        return [
+            'minute_sequence' => $this->nullableString($data['minute_sequence'] ?? '1'),
+            'meeting_date_long' => $this->nullableString($data['meeting_date_long'] ?? null),
+            'meeting_time_long' => $this->nullableString($data['meeting_time_long'] ?? null),
+            'jury_appointment_reference' => $this->nullableString($data['jury_appointment_reference'] ?? null),
+            'opening_notice_number' => $this->nullableString($data['opening_notice_number'] ?? null),
+            'opening_notice_date' => $this->nullableString($data['opening_notice_date'] ?? null),
+            'submission_platform_url' => $this->nullableString($data['submission_platform_url'] ?? null),
+            'document_completion_deadline' => $this->nullableString($data['document_completion_deadline'] ?? null),
+            'exceptional_application_text' => $this->nullableString($data['exceptional_application_text'] ?? null),
+            'preference_instruction_text' => $this->nullableString($data['preference_instruction_text'] ?? null),
+            'unique_candidates_total' => $applications
+                ->pluck('user_id')
+                ->filter()
+                ->unique()
+                ->count(),
+            'manual_jury' => [
+                'president' => [
+                    'name' => $this->nullableString($data['jury_president_name'] ?? null),
+                    'role' => $this->nullableString($data['jury_president_role'] ?? null),
+                ],
+                'vogals' => array_values(array_filter([
+                    [
+                        'name' => $this->nullableString($data['jury_vogal_1_name'] ?? null),
+                        'role' => $this->nullableString($data['jury_vogal_1_role'] ?? null),
+                    ],
+                    [
+                        'name' => $this->nullableString($data['jury_vogal_2_name'] ?? null),
+                        'role' => $this->nullableString($data['jury_vogal_2_role'] ?? null),
+                    ],
+                    [
+                        'name' => $this->nullableString($data['jury_vogal_3_name'] ?? null),
+                        'role' => $this->nullableString($data['jury_vogal_3_role'] ?? null),
+                    ],
+                ], fn (array $member): bool => $member['name'] !== null || $member['role'] !== null)),
+            ],
         ];
     }
 
