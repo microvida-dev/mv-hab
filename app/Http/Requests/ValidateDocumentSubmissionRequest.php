@@ -8,7 +8,10 @@ class ValidateDocumentSubmissionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('review', $this->route('documentSubmission')) ?? false;
+        return $this->user()?->can(
+            'reviewBackoffice',
+            $this->route('documentSubmission'),
+        ) ?? false;
     }
 
     /**

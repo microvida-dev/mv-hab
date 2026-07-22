@@ -65,18 +65,20 @@ class DocumentSecurityFlowTest extends TestCase
             ->assertOk();
 
         $this->actingAs($technician)
-            ->get(route('admin.document-reviews.download', $submission))
+            ->withSession([
+                'mfa.verified_at' => now(),
+            ]);
+
+        $this->get(route('admin.document-reviews.download', $submission))
             ->assertOk();
 
-        $this->actingAs($technician)
-            ->post(route('admin.document-reviews.reject', $submission), [
-                'rejection_reason' => 'Documento fictício ilegível para regressão Sprint 19.',
-                'internal_notes' => 'Nota interna não visível ao candidato.',
-            ])
+        $this->post(route('admin.document-reviews.reject', $submission), [
+            'rejection_reason' => 'Documento fictício ilegível para regressão Sprint 19.',
+            'internal_notes' => 'Nota interna não visível ao candidato.',
+        ])
             ->assertRedirect(route('admin.document-reviews.show', $submission));
 
-        $this->actingAs($technician)
-            ->get(route('admin.document-reviews.preview', $submission))
+        $this->get(route('admin.document-reviews.preview', $submission))
             ->assertOk()
             ->assertHeader('Content-Type', 'application/pdf')
             ->assertHeader('X-Content-Type-Options', 'nosniff');

@@ -8,7 +8,10 @@ class RejectDocumentSubmissionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('reject', $this->route('documentSubmission')) ?? false;
+        return $this->user()?->can(
+            'rejectBackoffice',
+            $this->route('documentSubmission'),
+        ) ?? false;
     }
 
     /**

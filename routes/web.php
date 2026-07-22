@@ -851,21 +851,124 @@ Route::middleware('auth')->group(function () {
                 Route::resource('required-documents', AdminRequiredDocumentController::class)
                     ->parameters(['required-documents' => 'requiredDocument'])
                     ->except(['show']);
-                Route::get('document-reviews', [AdminDocumentReviewController::class, 'index'])
+                Route::get(
+                    'document-reviews',
+                    [AdminDocumentReviewController::class, 'index'],
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('document-reviews.index');
-                Route::get('document-reviews/{documentSubmission}', [AdminDocumentReviewController::class, 'show'])
+
+                Route::get(
+                    'document-reviews/{documentSubmission}',
+                    [AdminDocumentReviewController::class, 'show'],
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('document-reviews.show');
-                Route::get('document-reviews/{documentSubmission}/preview', [AdminDocumentReviewController::class, 'preview'])
+
+                Route::get(
+                    'document-reviews/{documentSubmission}/preview',
+                    [AdminDocumentReviewController::class, 'preview'],
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('document-reviews.preview');
-                Route::post('document-reviews/{documentSubmission}/under-review', [AdminDocumentReviewController::class, 'underReview'])
+
+                Route::post(
+                    'document-reviews/{documentSubmission}/under-review',
+                    [AdminDocumentReviewController::class, 'underReview'],
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.approve',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('document-reviews.under-review');
-                Route::post('document-reviews/{documentSubmission}/validate', [AdminDocumentReviewController::class, 'validateDocument'])
+
+                Route::post(
+                    'document-reviews/{documentSubmission}/validate',
+                    [AdminDocumentReviewController::class, 'validateDocument'],
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.approve',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('document-reviews.validate');
-                Route::post('document-reviews/{documentSubmission}/reject', [AdminDocumentReviewController::class, 'reject'])
+
+                Route::post(
+                    'document-reviews/{documentSubmission}/reject',
+                    [AdminDocumentReviewController::class, 'reject'],
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.reject',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('document-reviews.reject');
-                Route::post('document-reviews/{documentSubmission}/document-ai', [AdminDocumentReviewController::class, 'runDocumentAi'])
+
+                Route::post(
+                    'document-reviews/{documentSubmission}/document-ai',
+                    [AdminDocumentReviewController::class, 'runDocumentAi'],
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.approve',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('document-reviews.document-ai');
-                Route::get('document-reviews/{documentSubmission}/download', [AdminDocumentReviewController::class, 'download'])
+
+                Route::get(
+                    'document-reviews/{documentSubmission}/download',
+                    [AdminDocumentReviewController::class, 'download'],
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('document-reviews.download');
             });
 

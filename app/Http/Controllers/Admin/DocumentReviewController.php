@@ -28,7 +28,7 @@ class DocumentReviewController extends Controller
 
     public function index(Request $request): View
     {
-        Gate::authorize('viewAny', DocumentSubmission::class);
+        Gate::authorize('viewAnyBackoffice', DocumentSubmission::class);
 
         $filters = [
             'search' => trim((string) $request->query('search', '')),
@@ -149,8 +149,13 @@ class DocumentReviewController extends Controller
 
     public function show(Request $request, DocumentSubmission $documentSubmission): View
     {
-        if (Gate::denies('view', $documentSubmission)) {
-            $this->accessService->denied($documentSubmission, $this->authenticatedUser($request), 'view');
+        if (Gate::denies('viewBackoffice', $documentSubmission)) {
+            $this->accessService->denied(
+                $documentSubmission,
+                $this->authenticatedUser($request),
+                'view',
+            );
+
             abort(403);
         }
 
@@ -173,7 +178,7 @@ class DocumentReviewController extends Controller
 
     public function runDocumentAi(Request $request, DocumentSubmission $documentSubmission): RedirectResponse
     {
-        Gate::authorize('review', $documentSubmission);
+        Gate::authorize('reviewBackoffice', $documentSubmission);
 
         $analysis = $this->documentAiManualAnalysis->execute(
             $documentSubmission,
@@ -410,8 +415,13 @@ class DocumentReviewController extends Controller
 
     public function preview(Request $request, DocumentSubmission $documentSubmission): StreamedResponse
     {
-        if (Gate::denies('view', $documentSubmission)) {
-            $this->accessService->denied($documentSubmission, $this->authenticatedUser($request), 'preview');
+        if (Gate::denies('viewBackoffice', $documentSubmission)) {
+            $this->accessService->denied(
+                $documentSubmission,
+                $this->authenticatedUser($request),
+                'preview',
+            );
+
             abort(403);
         }
 
@@ -423,8 +433,13 @@ class DocumentReviewController extends Controller
 
     public function download(Request $request, DocumentSubmission $documentSubmission): StreamedResponse
     {
-        if (Gate::denies('download', $documentSubmission)) {
-            $this->accessService->denied($documentSubmission, $this->authenticatedUser($request), 'download');
+        if (Gate::denies('downloadBackoffice', $documentSubmission)) {
+            $this->accessService->denied(
+                $documentSubmission,
+                $this->authenticatedUser($request),
+                'download',
+            );
+
             abort(403);
         }
 

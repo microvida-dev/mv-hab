@@ -73,4 +73,40 @@ class DocumentSubmissionPolicy
         return $user->hasRole('candidate')
             && $documentSubmission->adhesionRegistration?->user_id === $user->id;
     }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view');
+    }
+
+    public function viewBackoffice(
+        User $user,
+        DocumentSubmission $documentSubmission,
+    ): bool {
+        return $this->viewAnyBackoffice($user);
+    }
+
+    public function downloadBackoffice(
+        User $user,
+        DocumentSubmission $documentSubmission,
+    ): bool {
+        return $this->viewBackoffice($user, $documentSubmission);
+    }
+
+    public function reviewBackoffice(
+        User $user,
+        DocumentSubmission $documentSubmission,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'approve');
+    }
+
+    public function rejectBackoffice(
+        User $user,
+        DocumentSubmission $documentSubmission,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'reject');
+    }
 }
