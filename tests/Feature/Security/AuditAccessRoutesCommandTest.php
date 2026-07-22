@@ -32,20 +32,39 @@ class AuditAccessRoutesCommandTest extends TestCase
         $this->assertArrayHasKey('summary', $payload);
         $this->assertArrayHasKey('routes', $payload);
         $this->assertGreaterThan(0, $payload['summary']['total_routes']);
-        $this->assertSame(1103, $payload['summary']['fixed_role_routes']);
-        $this->assertSame(882, $payload['summary']['backoffice_fixed_role_routes']);
-        $this->assertSame(220, $payload['summary']['candidate_fixed_role_routes']);
-        $this->assertSame(0, $payload['summary']['permission_middleware_routes']);
+
         $this->assertSame(
-            760,
+            1100,
+            $payload['summary']['fixed_role_routes'],
+        );
+
+        $this->assertSame(
+            879,
+            $payload['summary']['backoffice_fixed_role_routes'],
+        );
+
+        $this->assertSame(
+            220,
+            $payload['summary']['candidate_fixed_role_routes'],
+        );
+
+        $this->assertSame(
+            3,
+            $payload['summary']['permission_middleware_routes'],
+        );
+
+        $this->assertSame(
+            757,
             $payload['summary']['backoffice_fixed_role_without_active_backoffice'],
         );
+
         $this->assertSame(
-            760,
+            757,
             $payload['summary']['backoffice_fixed_role_without_mfa_backoffice'],
         );
+
         $this->assertSame(
-            760,
+            757,
             $payload['summary']['backoffice_fixed_role_without_log_backoffice'],
         );
 
@@ -53,22 +72,51 @@ class AuditAccessRoutesCommandTest extends TestCase
             ->firstWhere('name', 'backoffice.application-intake.index');
 
         $this->assertNotNull($applicationIntake);
-        $this->assertTrue($applicationIntake['uses_fixed_role_middleware']);
-        $this->assertTrue($applicationIntake['is_backoffice_role_route']);
+
+        $this->assertFalse(
+            $applicationIntake['uses_fixed_role_middleware'],
+        );
+
+        $this->assertFalse(
+            $applicationIntake['is_backoffice_role_route'],
+        );
+
         $this->assertSame(
-            [
-                'administrator',
-                'municipal_technician',
-                'jury',
-                'financial_manager',
-                'maintenance_manager',
-                'auditor',
-            ],
+            [],
             $applicationIntake['roles'],
         );
-        $this->assertContains('active.backoffice', $applicationIntake['missing_backoffice_guards']);
-        $this->assertContains('mfa.backoffice', $applicationIntake['missing_backoffice_guards']);
-        $this->assertContains('log.backoffice', $applicationIntake['missing_backoffice_guards']);
+
+        $this->assertContains(
+            'permission:administrative_processes.create',
+            $applicationIntake['permission_middleware'],
+        );
+
+        $this->assertSame(
+            [
+                'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor',
+            ],
+            $applicationIntake['excluded_middleware'],
+        );
+
+        $this->assertContains(
+            'active.backoffice',
+            $applicationIntake['middleware'],
+        );
+
+        $this->assertContains(
+            'mfa.backoffice',
+            $applicationIntake['middleware'],
+        );
+
+        $this->assertContains(
+            'log.backoffice',
+            $applicationIntake['middleware'],
+        );
+
+        $this->assertSame(
+            [],
+            $applicationIntake['missing_backoffice_guards'],
+        );
 
         $candidateRoute = collect($payload['routes'])
             ->firstWhere('name', 'candidate.applications.create');
@@ -100,6 +148,7 @@ class AuditAccessRoutesCommandTest extends TestCase
         );
 
         $this->assertNotEmpty($payload['routes']);
+
         $this->assertTrue(
             collect($payload['routes'])
                 ->every(

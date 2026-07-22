@@ -91,7 +91,15 @@ class AuditAccessRoutes extends Command
      */
     private function routeRow(Route $route): array
     {
-        $middleware = array_values($route->gatherMiddleware());
+        $declaredMiddleware = array_values($route->gatherMiddleware());
+        $excludedMiddleware = array_values($route->excludedMiddleware());
+
+        $middleware = array_values(
+            app('router')->resolveMiddleware(
+                $declaredMiddleware,
+                $excludedMiddleware,
+            )
+        );
 
         $roleMiddleware = collect($middleware)
             ->first(fn (string $item): bool => str_starts_with($item, 'role:'));
@@ -111,6 +119,8 @@ class AuditAccessRoutes extends Command
             'methods' => array_values(array_diff($route->methods(), ['HEAD'])),
             'action' => $route->getActionName(),
             'middleware' => $middleware,
+            'declared_middleware' => $declaredMiddleware,
+            'excluded_middleware' => $excludedMiddleware,
             'role_middleware' => $roleMiddleware,
             'roles' => $roles,
             'permission_middleware' => $permissionMiddleware,

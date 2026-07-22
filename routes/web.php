@@ -1249,12 +1249,31 @@ Route::middleware('auth')->group(function () {
                 Route::post('audiencias-previas/{preliminaryHearingSubmission}/decidir', [BackofficePreliminaryHearingSubmissionController::class, 'decide'])
                     ->name('preliminary-hearings.decide');
 
-                Route::get('application-intake', [BackofficeApplicationIntakeController::class, 'index'])
-                    ->name('application-intake.index');
-                Route::post('application-intake/{application}/create-process', [BackofficeApplicationIntakeController::class, 'createProcess'])
-                    ->name('application-intake.create-process');
-                Route::post('application-intake/create-processes-batch', [BackofficeApplicationIntakeController::class, 'createProcessesBatch'])
-                    ->name('application-intake.create-processes-batch');
+                Route::middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'permission:administrative_processes.create',
+                ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->group(function (): void {
+                        Route::get(
+                            'application-intake',
+                            [BackofficeApplicationIntakeController::class, 'index']
+                        )->name('application-intake.index');
+
+                        Route::post(
+                            'application-intake/{application}/create-process',
+                            [BackofficeApplicationIntakeController::class, 'createProcess']
+                        )->name('application-intake.create-process');
+
+                        Route::post(
+                            'application-intake/create-processes-batch',
+                            [BackofficeApplicationIntakeController::class, 'createProcessesBatch']
+                        )->name('application-intake.create-processes-batch');
+                    });
 
                 Route::get('administrative-processes', [BackofficeAdministrativeProcessController::class, 'index'])
                     ->name('administrative-processes.index');

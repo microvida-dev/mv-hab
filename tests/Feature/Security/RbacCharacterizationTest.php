@@ -149,51 +149,40 @@ class RbacCharacterizationTest extends TestCase
         $this->assertTrue($mfa->requiresMfa($municipalTechnician));
     }
 
-    public function test_application_routes_expose_fixed_role_middleware_in_current_route_definition(): void
+    public function test_application_intake_routes_exclude_fixed_role_and_use_permission_middleware(): void
     {
         $route = Route::getRoutes()
             ->getByName('backoffice.application-intake.index');
 
         $this->assertNotNull($route);
 
-        $middleware = $route->gatherMiddleware();
-
-        $roleMiddleware = collect($middleware)
-            ->first(
-                fn (string $item): bool => str_starts_with($item, 'role:')
-            );
-
-        $this->assertIsString($roleMiddleware);
-
-        $roles = explode(
-            ',',
-            str($roleMiddleware)->after('role:')->toString()
+        $this->assertContains(
+            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor',
+            $route->excludedMiddleware(),
         );
 
-        $this->assertSame(
-            [
-                'administrator',
-                'municipal_technician',
-                'jury',
-                'financial_manager',
-                'maintenance_manager',
-                'auditor',
-            ],
-            $roles,
+        $middleware = app('router')->resolveMiddleware(
+            $route->gatherMiddleware(),
+            $route->excludedMiddleware(),
         );
 
         $this->assertSame(
             [
                 'web',
                 'auth',
-                'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor',
+                'active.backoffice',
+                'mfa.backoffice',
+                'log.backoffice',
+                'permission:administrative_processes.create',
             ],
             $middleware,
         );
 
-        $this->assertNotContains('active.backoffice', $middleware);
-        $this->assertNotContains('mfa.backoffice', $middleware);
-        $this->assertNotContains('log.backoffice', $middleware);
+        $this->assertFalse(
+            collect($middleware)->contains(
+                fn (string $item): bool => str_starts_with($item, 'role:')
+            ),
+        );
     }
 
     public function test_document_review_routes_use_a_narrower_fixed_role_list_than_the_main_backoffice(): void
