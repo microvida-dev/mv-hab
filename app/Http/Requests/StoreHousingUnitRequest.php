@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\HousingUnitStatus;
+use App\Models\HousingUnit;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +12,7 @@ class StoreHousingUnitRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows('createBackoffice', HousingUnit::class);
     }
 
     /**

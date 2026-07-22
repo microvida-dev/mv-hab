@@ -66,6 +66,7 @@ class Sprint12AllocationTest extends TestCase
         $housingUnit = HousingUnit::factory()->create(['typology' => 'T2', 'bedrooms' => 2]);
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.allocation.contest-housing-units.store'), [
                 'program_id' => $program->id,
                 'contest_id' => $contest->id,
@@ -85,16 +86,19 @@ class Sprint12AllocationTest extends TestCase
         ]);
 
         $otherContest = Contest::factory()->for($program)->open()->create();
-        $this->post(route('backoffice.allocation.contest-housing-units.store'), [
-            'program_id' => $program->id,
-            'contest_id' => $otherContest->id,
-            'housing_unit_id' => $housingUnit->id,
-            'typology' => 'T2',
-            'bedrooms' => 2,
-            'min_occupants' => 1,
-            'max_occupants' => 4,
-            'accessible' => '0',
-        ])->assertSessionHasErrors('housing_unit_id');
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
+            ->post(route('backoffice.allocation.contest-housing-units.store'), [
+                'program_id' => $program->id,
+                'contest_id' => $otherContest->id,
+                'housing_unit_id' => $housingUnit->id,
+                'typology' => 'T2',
+                'bedrooms' => 2,
+                'min_occupants' => 1,
+                'max_occupants' => 4,
+                'accessible' => '0',
+            ])
+            ->assertSessionHasErrors('housing_unit_id');
     }
 
     public function test_candidate_can_store_own_housing_preferences_and_cannot_edit_another_candidate_application(): void

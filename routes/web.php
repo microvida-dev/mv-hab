@@ -2367,15 +2367,132 @@ Route::middleware('auth')->group(function () {
                 Route::post('official-documents/{generatedOfficialDocument}/cancel', [BackofficeGeneratedOfficialDocumentController::class, 'cancel'])->name('official-documents.cancel');
 
                 Route::prefix('allocation')->name('allocation.')->group(function () {
-                    Route::get('contest-housing-units', [BackofficeContestHousingUnitController::class, 'index'])->name('contest-housing-units.index');
-                    Route::get('contest-housing-units/create', [BackofficeContestHousingUnitController::class, 'create'])->name('contest-housing-units.create');
-                    Route::post('contest-housing-units', [BackofficeContestHousingUnitController::class, 'store'])->name('contest-housing-units.store');
-                    Route::get('contest-housing-units/{contestHousingUnit}', [BackofficeContestHousingUnitController::class, 'show'])->name('contest-housing-units.show');
-                    Route::get('contest-housing-units/{contestHousingUnit}/edit', [BackofficeContestHousingUnitController::class, 'edit'])->name('contest-housing-units.edit');
-                    Route::match(['put', 'patch'], 'contest-housing-units/{contestHousingUnit}', [BackofficeContestHousingUnitController::class, 'update'])->name('contest-housing-units.update');
-                    Route::delete('contest-housing-units/{contestHousingUnit}', [BackofficeContestHousingUnitController::class, 'destroy'])->name('contest-housing-units.destroy');
-                    Route::post('contest-housing-units/{contestHousingUnit}/mark-available', [BackofficeContestHousingUnitController::class, 'markAvailable'])->name('contest-housing-units.mark-available');
-                    Route::post('contest-housing-units/{contestHousingUnit}/mark-unavailable', [BackofficeContestHousingUnitController::class, 'markUnavailable'])->name('contest-housing-units.mark-unavailable');
+                    Route::get('contest-housing-units', [BackofficeContestHousingUnitController::class, 'index'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('contest-housing-units.index');
+
+                    Route::get('contest-housing-units/create', [BackofficeContestHousingUnitController::class, 'create'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('contest-housing-units.create');
+
+                    Route::post('contest-housing-units', [BackofficeContestHousingUnitController::class, 'store'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('contest-housing-units.store');
+
+                    Route::get(
+                        'contest-housing-units/{contestHousingUnit}',
+                        [BackofficeContestHousingUnitController::class, 'show'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('contest-housing-units.show');
+
+                    Route::get(
+                        'contest-housing-units/{contestHousingUnit}/edit',
+                        [BackofficeContestHousingUnitController::class, 'edit'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('contest-housing-units.edit');
+
+                    Route::match(
+                        ['put', 'patch'],
+                        'contest-housing-units/{contestHousingUnit}',
+                        [BackofficeContestHousingUnitController::class, 'update'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('contest-housing-units.update');
+
+                    Route::delete(
+                        'contest-housing-units/{contestHousingUnit}',
+                        [BackofficeContestHousingUnitController::class, 'destroy'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('contest-housing-units.destroy');
+
+                    Route::post(
+                        'contest-housing-units/{contestHousingUnit}/mark-available',
+                        [BackofficeContestHousingUnitController::class, 'markAvailable'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('contest-housing-units.mark-available');
+
+                    Route::post(
+                        'contest-housing-units/{contestHousingUnit}/mark-unavailable',
+                        [BackofficeContestHousingUnitController::class, 'markUnavailable'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('contest-housing-units.mark-unavailable');
 
                     Route::get('typology-rules', [BackofficeTypologyAdequacyRuleController::class, 'index'])->name('typology-rules.index');
                     Route::get('typology-rules/create', [BackofficeTypologyAdequacyRuleController::class, 'create'])->name('typology-rules.create');
@@ -2815,7 +2932,93 @@ Route::middleware('auth')->group(function () {
 
             Route::resource('citizens', CitizenController::class);
             Route::resource('households', HouseholdController::class);
-            Route::resource('housing-units', HousingUnitController::class);
+            Route::get('housing-units', [HousingUnitController::class, 'index'])
+                ->middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'permission:housing_units.view',
+                ])
+                ->withoutMiddleware(
+                    'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                )
+                ->name('housing-units.index');
+
+            Route::get('housing-units/create', [HousingUnitController::class, 'create'])
+                ->middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'permission:housing_units.create',
+                ])
+                ->withoutMiddleware(
+                    'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                )
+                ->name('housing-units.create');
+
+            Route::post('housing-units', [HousingUnitController::class, 'store'])
+                ->middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'permission:housing_units.create',
+                ])
+                ->withoutMiddleware(
+                    'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                )
+                ->name('housing-units.store');
+
+            Route::get('housing-units/{housing_unit}', [HousingUnitController::class, 'show'])
+                ->middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'permission:housing_units.view',
+                ])
+                ->withoutMiddleware(
+                    'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                )
+                ->name('housing-units.show');
+
+            Route::get('housing-units/{housing_unit}/edit', [HousingUnitController::class, 'edit'])
+                ->middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'permission:housing_units.update',
+                ])
+                ->withoutMiddleware(
+                    'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                )
+                ->name('housing-units.edit');
+
+            Route::match(
+                ['put', 'patch'],
+                'housing-units/{housing_unit}',
+                [HousingUnitController::class, 'update'],
+            )
+                ->middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'permission:housing_units.update',
+                ])
+                ->withoutMiddleware(
+                    'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                )
+                ->name('housing-units.update');
+
+            Route::delete('housing-units/{housing_unit}', [HousingUnitController::class, 'destroy'])
+                ->middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'permission:housing_units.delete',
+                ])
+                ->withoutMiddleware(
+                    'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                )
+                ->name('housing-units.destroy');
             Route::resource('applications', HousingApplicationController::class);
             Route::resource('contracts', ContractController::class);
             Route::resource('payments', PaymentController::class);

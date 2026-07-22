@@ -21,7 +21,7 @@ class ContestHousingUnitController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('viewAny', ContestHousingUnit::class);
+        Gate::authorize('viewAnyBackoffice', ContestHousingUnit::class);
 
         return view('backoffice.allocation.contest-housing-units.index', [
             'units' => ContestHousingUnit::query()->with(['contest', 'housingUnit'])->latest()->paginate(15),
@@ -30,22 +30,29 @@ class ContestHousingUnitController extends Controller
 
     public function create(): View
     {
-        Gate::authorize('create', ContestHousingUnit::class);
+        Gate::authorize('createBackoffice', ContestHousingUnit::class);
 
         return view('backoffice.allocation.contest-housing-units.create', $this->formData());
     }
 
     public function store(StoreContestHousingUnitRequest $request): RedirectResponse
     {
-        Gate::authorize('create', ContestHousingUnit::class);
-        $unit = $this->service->create($request->validated(), $this->authenticatedUser($request));
+        Gate::authorize('createBackoffice', ContestHousingUnit::class);
 
-        return to_route('backoffice.allocation.contest-housing-units.show', $unit)->with('success', 'Habitação associada ao concurso.');
+        $unit = $this->service->create(
+            $request->validated(),
+            $this->authenticatedUser($request),
+        );
+
+        return to_route(
+            'backoffice.allocation.contest-housing-units.show',
+            $unit,
+        )->with('success', 'Habitação associada ao concurso.');
     }
 
     public function show(ContestHousingUnit $contestHousingUnit): View
     {
-        Gate::authorize('view', $contestHousingUnit);
+        Gate::authorize('viewBackoffice', $contestHousingUnit);
         $contestHousingUnit->load(['contest', 'program', 'housingUnit', 'allocations.candidate']);
 
         return view('backoffice.allocation.contest-housing-units.show', compact('contestHousingUnit'));
@@ -53,38 +60,47 @@ class ContestHousingUnitController extends Controller
 
     public function edit(ContestHousingUnit $contestHousingUnit): View
     {
-        Gate::authorize('update', $contestHousingUnit);
+        Gate::authorize('updateBackoffice', $contestHousingUnit);
 
         return view('backoffice.allocation.contest-housing-units.edit', $this->formData() + compact('contestHousingUnit'));
     }
 
-    public function update(UpdateContestHousingUnitRequest $request, ContestHousingUnit $contestHousingUnit): RedirectResponse
-    {
-        Gate::authorize('update', $contestHousingUnit);
+    public function update(
+        UpdateContestHousingUnitRequest $request,
+        ContestHousingUnit $contestHousingUnit,
+    ): RedirectResponse {
+        Gate::authorize('updateBackoffice', $contestHousingUnit);
+
         $this->service->update($contestHousingUnit, $request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.allocation.contest-housing-units.show', $contestHousingUnit)->with('success', 'Habitação atualizada.');
     }
 
-    public function destroy(Request $request, ContestHousingUnit $contestHousingUnit): RedirectResponse
-    {
-        Gate::authorize('delete', $contestHousingUnit);
+    public function destroy(
+        Request $request,
+        ContestHousingUnit $contestHousingUnit,
+    ): RedirectResponse {
+        Gate::authorize('deleteBackoffice', $contestHousingUnit);
         $this->service->remove($contestHousingUnit, $this->authenticatedUser($request));
 
         return to_route('backoffice.allocation.contest-housing-units.index')->with('success', 'Habitação removida.');
     }
 
-    public function markAvailable(Request $request, ContestHousingUnit $contestHousingUnit): RedirectResponse
-    {
-        Gate::authorize('update', $contestHousingUnit);
+    public function markAvailable(
+        Request $request,
+        ContestHousingUnit $contestHousingUnit,
+    ): RedirectResponse {
+        Gate::authorize('updateBackoffice', $contestHousingUnit);
         $this->service->markAvailable($contestHousingUnit, $this->authenticatedUser($request));
 
         return back()->with('success', 'Habitação marcada como disponível.');
     }
 
-    public function markUnavailable(Request $request, ContestHousingUnit $contestHousingUnit): RedirectResponse
-    {
-        Gate::authorize('update', $contestHousingUnit);
+    public function markUnavailable(
+        Request $request,
+        ContestHousingUnit $contestHousingUnit,
+    ): RedirectResponse {
+        Gate::authorize('updateBackoffice', $contestHousingUnit);
         $this->service->markUnavailable($contestHousingUnit, $this->authenticatedUser($request));
 
         return back()->with('success', 'Habitação marcada como indisponível.');

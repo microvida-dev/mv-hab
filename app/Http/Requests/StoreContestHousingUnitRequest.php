@@ -3,14 +3,19 @@
 namespace App\Http\Requests;
 
 use App\Enums\ContestHousingUnitStatus;
+use App\Models\ContestHousingUnit;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class StoreContestHousingUnitRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows(
+            'createBackoffice',
+            ContestHousingUnit::class,
+        );
     }
 
     /**
