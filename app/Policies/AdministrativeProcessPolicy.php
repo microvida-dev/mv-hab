@@ -44,4 +44,23 @@ class AdministrativeProcessPolicy
     {
         return $this->canAccess($user, self::MODULE, 'audit') || $this->view($user, $administrativeProcess);
     }
+
+    public function viewBackoffice(
+        User $user,
+        AdministrativeProcess $administrativeProcess,
+    ): bool {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view');
+    }
+
+    public function auditBackoffice(
+        User $user,
+        AdministrativeProcess $administrativeProcess,
+    ): bool {
+        return ! $user->hasRole('candidate')
+            && (
+                $this->canAccess($user, self::MODULE, 'audit')
+                || $this->canAccess($user, self::MODULE, 'view')
+            );
+    }
 }

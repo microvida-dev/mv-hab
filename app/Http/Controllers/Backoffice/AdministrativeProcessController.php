@@ -58,7 +58,7 @@ class AdministrativeProcessController extends Controller
 
     public function show(AdministrativeProcess $administrativeProcess): View
     {
-        Gate::authorize('view', $administrativeProcess);
+        Gate::authorize('viewBackoffice', $administrativeProcess);
 
         $administrativeProcess->load([
             'application.adhesionRegistration',
@@ -123,7 +123,7 @@ class AdministrativeProcessController extends Controller
 
     public function timeline(AdministrativeProcess $administrativeProcess): View
     {
-        Gate::authorize('audit', $administrativeProcess);
+        Gate::authorize('auditBackoffice', $administrativeProcess);
 
         return view('backoffice.administrative-processes.timeline', [
             'process' => $administrativeProcess,
