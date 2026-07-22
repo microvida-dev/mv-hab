@@ -34,12 +34,12 @@ class AuditAccessRoutesCommandTest extends TestCase
         $this->assertGreaterThan(0, $payload['summary']['total_routes']);
 
         $this->assertSame(
-            1100,
+            1096,
             $payload['summary']['fixed_role_routes'],
         );
 
         $this->assertSame(
-            879,
+            875,
             $payload['summary']['backoffice_fixed_role_routes'],
         );
 
@@ -49,22 +49,22 @@ class AuditAccessRoutesCommandTest extends TestCase
         );
 
         $this->assertSame(
-            3,
+            7,
             $payload['summary']['permission_middleware_routes'],
         );
 
         $this->assertSame(
-            757,
+            753,
             $payload['summary']['backoffice_fixed_role_without_active_backoffice'],
         );
 
         $this->assertSame(
-            757,
+            753,
             $payload['summary']['backoffice_fixed_role_without_mfa_backoffice'],
         );
 
         $this->assertSame(
-            757,
+            753,
             $payload['summary']['backoffice_fixed_role_without_log_backoffice'],
         );
 
@@ -117,6 +117,54 @@ class AuditAccessRoutesCommandTest extends TestCase
             [],
             $applicationIntake['missing_backoffice_guards'],
         );
+
+        $applicationReviewRoutes = collect($payload['routes'])
+            ->whereIn('name', [
+                'backoffice.application-reviews.create',
+                'backoffice.application-reviews.store',
+                'backoffice.application-reviews.show',
+                'backoffice.application-reviews.complete',
+            ])
+            ->keyBy('name');
+
+        $this->assertCount(4, $applicationReviewRoutes);
+
+        $expectedPermissions = [
+            'backoffice.application-reviews.create'
+                => 'permission:administrative_processes.create',
+            'backoffice.application-reviews.store'
+                => 'permission:administrative_processes.create',
+            'backoffice.application-reviews.show'
+                => 'permission:administrative_processes.view',
+            'backoffice.application-reviews.complete'
+                => 'permission:administrative_processes.update',
+        ];
+
+        foreach ($expectedPermissions as $routeName => $permissionMiddleware) {
+            $route = $applicationReviewRoutes->get($routeName);
+
+            $this->assertNotNull($route);
+            $this->assertFalse($route['uses_fixed_role_middleware']);
+            $this->assertFalse($route['is_backoffice_role_route']);
+            $this->assertSame([], $route['roles']);
+
+            $this->assertContains(
+                $permissionMiddleware,
+                $route['permission_middleware'],
+            );
+
+            $this->assertSame(
+                [
+                    'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor',
+                ],
+                $route['excluded_middleware'],
+            );
+
+            $this->assertContains('active.backoffice', $route['middleware']);
+            $this->assertContains('mfa.backoffice', $route['middleware']);
+            $this->assertContains('log.backoffice', $route['middleware']);
+            $this->assertSame([], $route['missing_backoffice_guards']);
+        }
 
         $candidateRoute = collect($payload['routes'])
             ->firstWhere('name', 'candidate.applications.create');

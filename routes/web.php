@@ -1290,14 +1290,42 @@ Route::middleware('auth')->group(function () {
                 Route::get('administrative-processes/{administrativeProcess}/timeline', [BackofficeAdministrativeProcessController::class, 'timeline'])
                     ->name('administrative-processes.timeline');
 
-                Route::get('administrative-processes/{administrativeProcess}/reviews/create', [BackofficeApplicationReviewController::class, 'create'])
-                    ->name('application-reviews.create');
-                Route::post('administrative-processes/{administrativeProcess}/reviews', [BackofficeApplicationReviewController::class, 'store'])
-                    ->name('application-reviews.store');
-                Route::get('application-reviews/{applicationReview}', [BackofficeApplicationReviewController::class, 'show'])
-                    ->name('application-reviews.show');
-                Route::post('application-reviews/{applicationReview}/complete', [BackofficeApplicationReviewController::class, 'complete'])
-                    ->name('application-reviews.complete');
+                Route::middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->group(function (): void {
+                        Route::middleware('permission:administrative_processes.create')
+                            ->group(function (): void {
+                                Route::get(
+                                    'administrative-processes/{administrativeProcess}/reviews/create',
+                                    [BackofficeApplicationReviewController::class, 'create']
+                                )->name('application-reviews.create');
+
+                                Route::post(
+                                    'administrative-processes/{administrativeProcess}/reviews',
+                                    [BackofficeApplicationReviewController::class, 'store']
+                                )->name('application-reviews.store');
+                            });
+
+                        Route::get(
+                            'application-reviews/{applicationReview}',
+                            [BackofficeApplicationReviewController::class, 'show']
+                        )
+                            ->middleware('permission:administrative_processes.view')
+                            ->name('application-reviews.show');
+
+                        Route::post(
+                            'application-reviews/{applicationReview}/complete',
+                            [BackofficeApplicationReviewController::class, 'complete']
+                        )
+                            ->middleware('permission:administrative_processes.update')
+                            ->name('application-reviews.complete');
+                    });
 
                 Route::get('administrative-processes/{administrativeProcess}/correction-requests', [BackofficeCorrectionRequestController::class, 'index'])
                     ->name('correction-requests.index');
