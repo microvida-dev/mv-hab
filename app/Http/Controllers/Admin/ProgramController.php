@@ -19,7 +19,7 @@ class ProgramController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('viewAny', Program::class);
+        Gate::authorize('viewAnyBackoffice', Program::class);
 
         $programs = Program::query()
             ->with('municipality')
@@ -32,7 +32,7 @@ class ProgramController extends Controller
 
     public function create(): View
     {
-        Gate::authorize('create', Program::class);
+        Gate::authorize('createBackoffice', Program::class);
 
         $municipalities = Municipality::query()->where('active', true)->orderBy('name')->get();
 
@@ -49,7 +49,7 @@ class ProgramController extends Controller
 
     public function show(Program $program): View
     {
-        Gate::authorize('view', $program);
+        Gate::authorize('viewBackoffice', $program);
 
         $program->load(['municipality', 'rules', 'contests']);
 
@@ -58,7 +58,7 @@ class ProgramController extends Controller
 
     public function edit(Program $program): View
     {
-        Gate::authorize('update', $program);
+        Gate::authorize('updateBackoffice', $program);
 
         $program->load('rules');
         $municipalities = Municipality::query()->where('active', true)->orderBy('name')->get();
@@ -76,7 +76,7 @@ class ProgramController extends Controller
 
     public function publish(Request $request, Program $program): RedirectResponse
     {
-        Gate::authorize('publish', $program);
+        Gate::authorize('publishBackoffice', $program);
 
         $this->programService->publish($program, $this->authenticatedUser($request));
 
@@ -85,7 +85,7 @@ class ProgramController extends Controller
 
     public function destroy(Program $program): RedirectResponse
     {
-        Gate::authorize('delete', $program);
+        Gate::authorize('deleteBackoffice', $program);
 
         $this->programService->delete($program);
 

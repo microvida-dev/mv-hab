@@ -140,24 +140,26 @@ class Sprint3PortalProgramsTest extends TestCase
         $administrator = $this->administrator();
         $municipality = Municipality::factory()->create();
 
-        $response = $this->actingAs($administrator)->post(route('admin.programs.store'), [
-            'municipality_id' => $municipality->id,
-            'name' => 'Programa de Arrendamento Municipal',
-            'slug' => '',
-            'summary' => 'Programa público municipal destinado a apoiar o acesso a habitação.',
-            'description' => 'Descrição institucional do programa para consulta pública.',
-            'legal_basis' => 'Regulamento municipal aplicável.',
-            'starts_at' => today()->toDateString(),
-            'ends_at' => today()->addYear()->toDateString(),
-            'status' => ProgramStatus::Published->value,
-            'rules' => [
-                [
-                    'title' => 'Âmbito',
-                    'description' => 'Condições gerais de participação no programa.',
-                    'effective_from' => today()->toDateString(),
-                    'effective_until' => today()->addYear()->toDateString(),
+        $response = $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
+            ->post(route('admin.programs.store'), [
+                'municipality_id' => $municipality->id,
+                'name' => 'Programa de Arrendamento Municipal',
+                'slug' => '',
+                'summary' => 'Programa público municipal destinado a apoiar o acesso a habitação.',
+                'description' => 'Descrição institucional do programa para consulta pública.',
+                'legal_basis' => 'Regulamento municipal aplicável.',
+                'starts_at' => today()->toDateString(),
+                'ends_at' => today()->addYear()->toDateString(),
+                'status' => ProgramStatus::Published->value,
+                'rules' => [
+                    [
+                        'title' => 'Âmbito',
+                        'description' => 'Condições gerais de participação no programa.',
+                        'effective_from' => today()->toDateString(),
+                        'effective_until' => today()->addYear()->toDateString(),
+                    ],
                 ],
-            ],
         ]);
 
         $program = Program::query()->where('name', 'Programa de Arrendamento Municipal')->firstOrFail();
@@ -180,6 +182,7 @@ class Sprint3PortalProgramsTest extends TestCase
         $program = Program::factory()->create();
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.programs.publish', $program))
             ->assertSessionHasErrors('program');
 
@@ -191,27 +194,29 @@ class Sprint3PortalProgramsTest extends TestCase
         $administrator = $this->administrator();
         $program = Program::factory()->published()->create();
 
-        $response = $this->actingAs($administrator)->post(route('admin.contests.store'), [
-            'program_id' => $program->id,
-            'code' => 'CAA-TEST-2026',
-            'slug' => '',
-            'title' => 'Concurso Municipal de Teste',
-            'summary' => 'Concurso institucional de teste sem dados pessoais.',
-            'description' => 'Descrição pública do concurso municipal.',
-            'application_instructions' => 'Consulte os prazos antes de preparar a candidatura.',
-            'opens_at' => now()->subDay()->format('Y-m-d H:i:s'),
-            'closes_at' => now()->addMonth()->format('Y-m-d H:i:s'),
-            'status' => ContestStatus::Published->value,
-            'deadlines' => [
-                [
-                    'type' => ContestDeadlineType::Applications->value,
-                    'label' => 'Prazo de candidatura',
-                    'starts_at' => now()->subDay()->format('Y-m-d H:i:s'),
-                    'ends_at' => now()->addMonth()->format('Y-m-d H:i:s'),
-                    'description' => 'Período oficial para apresentação de candidatura.',
+        $response = $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
+            ->post(route('admin.contests.store'), [
+                'program_id' => $program->id,
+                'code' => 'CAA-TEST-2026',
+                'slug' => '',
+                'title' => 'Concurso Municipal de Teste',
+                'summary' => 'Concurso institucional de teste sem dados pessoais.',
+                'description' => 'Descrição pública do concurso municipal.',
+                'application_instructions' => 'Consulte os prazos antes de preparar a candidatura.',
+                'opens_at' => now()->subDay()->format('Y-m-d H:i:s'),
+                'closes_at' => now()->addMonth()->format('Y-m-d H:i:s'),
+                'status' => ContestStatus::Published->value,
+                'deadlines' => [
+                    [
+                        'type' => ContestDeadlineType::Applications->value,
+                        'label' => 'Prazo de candidatura',
+                        'starts_at' => now()->subDay()->format('Y-m-d H:i:s'),
+                        'ends_at' => now()->addMonth()->format('Y-m-d H:i:s'),
+                        'description' => 'Período oficial para apresentação de candidatura.',
+                    ],
                 ],
-            ],
-            'jury_members' => [],
+                'jury_members' => [],
         ]);
 
         $contest = Contest::query()->where('code', 'CAA-TEST-2026')->firstOrFail();
@@ -221,6 +226,7 @@ class Sprint3PortalProgramsTest extends TestCase
         $this->assertSame(1, $contest->deadlines()->count());
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.contests.publish', $contest))
             ->assertRedirect();
 
@@ -244,6 +250,7 @@ class Sprint3PortalProgramsTest extends TestCase
         $program = Program::factory()->published()->create();
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.contests.store'), [
                 'program_id' => $program->id,
                 'code' => 'CAA-INVALID-DATES',

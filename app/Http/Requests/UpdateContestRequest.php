@@ -11,7 +11,10 @@ class UpdateContestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return Gate::allows('update', $this->route('contest'));
+        return Gate::allows(
+            'updateBackoffice',
+            $this->route('contest'),
+        );
     }
 
     /**

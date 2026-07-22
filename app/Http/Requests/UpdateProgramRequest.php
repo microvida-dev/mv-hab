@@ -10,7 +10,10 @@ class UpdateProgramRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return Gate::allows('update', $this->route('program'));
+        return Gate::allows(
+            'updateBackoffice',
+            $this->route('program'),
+        );
     }
 
     /**

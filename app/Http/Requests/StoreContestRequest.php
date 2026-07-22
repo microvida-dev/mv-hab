@@ -12,7 +12,7 @@ class StoreContestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return Gate::allows('create', Contest::class);
+        return Gate::allows('createBackoffice', Contest::class);
     }
 
     /**

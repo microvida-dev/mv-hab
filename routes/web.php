@@ -837,13 +837,205 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
         ->group(function () {
             Route::prefix('admin')->name('admin.')->group(function () {
+                Route::get('programs', [AdminProgramController::class, 'index'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:programs.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('programs.index');
+
+                Route::get('programs/create', [AdminProgramController::class, 'create'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:programs.create',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('programs.create');
+
+                Route::post('programs', [AdminProgramController::class, 'store'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:programs.create',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('programs.store');
+
+                Route::get('programs/{program}', [AdminProgramController::class, 'show'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:programs.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('programs.show');
+
+                Route::get('programs/{program}/edit', [AdminProgramController::class, 'edit'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:programs.update',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('programs.edit');
+
+                Route::match(
+                    ['put', 'patch'],
+                    'programs/{program}',
+                    [AdminProgramController::class, 'update'],
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:programs.update',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('programs.update');
+
+                Route::delete('programs/{program}', [AdminProgramController::class, 'destroy'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:programs.delete',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('programs.destroy');
+
                 Route::post('programs/{program}/publish', [AdminProgramController::class, 'publish'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:programs.publish',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('programs.publish');
-                Route::resource('programs', AdminProgramController::class);
+
+                Route::get('contests', [AdminContestController::class, 'index'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:contests.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('contests.index');
+
+                Route::get('contests/create', [AdminContestController::class, 'create'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:contests.create',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('contests.create');
+
+                Route::post('contests', [AdminContestController::class, 'store'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:contests.create',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('contests.store');
+
+                Route::get('contests/{contest}', [AdminContestController::class, 'show'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:contests.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('contests.show');
+
+                Route::get('contests/{contest}/edit', [AdminContestController::class, 'edit'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:contests.update',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('contests.edit');
+
+                Route::match(
+                    ['put', 'patch'],
+                    'contests/{contest}',
+                    [AdminContestController::class, 'update'],
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:contests.update',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('contests.update');
+
+                Route::delete('contests/{contest}', [AdminContestController::class, 'destroy'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:contests.delete',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('contests.destroy');
 
                 Route::post('contests/{contest}/publish', [AdminContestController::class, 'publish'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:contests.publish',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('contests.publish');
-                Route::resource('contests', AdminContestController::class);
 
                 Route::get('document-types', [AdminDocumentTypeController::class, 'index'])
                     ->middleware([

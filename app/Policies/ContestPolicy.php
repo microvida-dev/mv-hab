@@ -41,4 +41,40 @@ class ContestPolicy
     {
         return $this->canAccess($user, self::MODULE, 'publish');
     }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view');
+    }
+
+    public function viewBackoffice(User $user, Contest $contest): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view');
+    }
+
+    public function createBackoffice(User $user): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'create');
+    }
+
+    public function updateBackoffice(User $user, Contest $contest): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'update');
+    }
+
+    public function deleteBackoffice(User $user, Contest $contest): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'delete');
+    }
+
+    public function publishBackoffice(User $user, Contest $contest): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'publish');
+    }
 }
