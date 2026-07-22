@@ -1265,12 +1265,6 @@ Route::middleware('auth')->group(function () {
                     )
                     ->name('applications.document-dossier.generate');
 
-                Route::patch(
-                    'document-dossiers/{documentDossier}',
-                    [BackofficeDocumentDossierController::class, 'update']
-                )
-                    ->name('document-dossiers.update');
-
                 Route::get(
                     'document-dossiers/{documentDossier}/download',
                     [BackofficeDocumentDossierController::class, 'download']
