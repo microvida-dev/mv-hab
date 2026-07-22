@@ -4,14 +4,19 @@ namespace App\Http\Requests;
 
 use App\Enums\AllocationMethod;
 use App\Enums\AllocationRuleSetStatus;
+use App\Models\AllocationRuleSet;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class StoreAllocationRuleSetRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows(
+            'createBackoffice',
+            AllocationRuleSet::class,
+        );
     }
 
     /**

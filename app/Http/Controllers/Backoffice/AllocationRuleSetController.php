@@ -19,7 +19,7 @@ class AllocationRuleSetController extends Controller
 {
     public function index(): View
     {
-        Gate::authorize('viewAny', AllocationRuleSet::class);
+        Gate::authorize('viewAnyBackoffice', AllocationRuleSet::class);
 
         return view('backoffice.allocation.rule-sets.index', [
             'ruleSets' => AllocationRuleSet::query()->with(['program', 'contest'])->latest()->paginate(15),
@@ -28,21 +28,21 @@ class AllocationRuleSetController extends Controller
 
     public function show(AllocationRuleSet $allocationRuleSet): View
     {
-        Gate::authorize('view', $allocationRuleSet);
+        Gate::authorize('viewBackoffice', $allocationRuleSet);
 
         return view('backoffice.allocation.rule-sets.show', compact('allocationRuleSet'));
     }
 
     public function create(): View
     {
-        Gate::authorize('create', AllocationRuleSet::class);
+        Gate::authorize('createBackoffice', AllocationRuleSet::class);
 
         return view('backoffice.allocation.rule-sets.create', $this->formData());
     }
 
     public function store(StoreAllocationRuleSetRequest $request): RedirectResponse
     {
-        Gate::authorize('create', AllocationRuleSet::class);
+        Gate::authorize('createBackoffice', AllocationRuleSet::class);
         $ruleSet = new AllocationRuleSet($request->validated());
         $ruleSet->forceFill(['created_by' => $this->authenticatedUser($request)->id, 'updated_by' => $this->authenticatedUser($request)->id])->save();
 
@@ -51,14 +51,14 @@ class AllocationRuleSetController extends Controller
 
     public function edit(AllocationRuleSet $allocationRuleSet): View
     {
-        Gate::authorize('update', $allocationRuleSet);
+        Gate::authorize('updateBackoffice', $allocationRuleSet);
 
         return view('backoffice.allocation.rule-sets.edit', $this->formData() + compact('allocationRuleSet'));
     }
 
     public function update(UpdateAllocationRuleSetRequest $request, AllocationRuleSet $allocationRuleSet): RedirectResponse
     {
-        Gate::authorize('update', $allocationRuleSet);
+        Gate::authorize('updateBackoffice', $allocationRuleSet);
         $allocationRuleSet->fill($request->validated());
         $allocationRuleSet->forceFill(['updated_by' => $this->authenticatedUser($request)->id])->save();
 
@@ -67,7 +67,7 @@ class AllocationRuleSetController extends Controller
 
     public function activate(Request $request, AllocationRuleSet $allocationRuleSet): RedirectResponse
     {
-        Gate::authorize('update', $allocationRuleSet);
+        Gate::authorize('approveBackoffice', $allocationRuleSet);
         $allocationRuleSet->forceFill(['status' => AllocationRuleSetStatus::Active, 'updated_by' => $this->authenticatedUser($request)->id])->save();
 
         return back()->with('success', 'Regra ativada.');
@@ -75,7 +75,7 @@ class AllocationRuleSetController extends Controller
 
     public function archive(Request $request, AllocationRuleSet $allocationRuleSet): RedirectResponse
     {
-        Gate::authorize('update', $allocationRuleSet);
+        Gate::authorize('updateBackoffice', $allocationRuleSet);
         $allocationRuleSet->forceFill(['status' => AllocationRuleSetStatus::Archived, 'updated_by' => $this->authenticatedUser($request)->id])->save();
 
         return back()->with('success', 'Regra arquivada.');
@@ -83,7 +83,7 @@ class AllocationRuleSetController extends Controller
 
     public function duplicate(Request $request, AllocationRuleSet $allocationRuleSet): RedirectResponse
     {
-        Gate::authorize('create', AllocationRuleSet::class);
+        Gate::authorize('createBackoffice', AllocationRuleSet::class);
         $copy = $allocationRuleSet->replicate(['status']);
         $copy->name = $allocationRuleSet->name.' (cópia)';
         $copy->forceFill([

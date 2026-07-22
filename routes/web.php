@@ -2831,15 +2831,105 @@ Route::middleware('auth')->group(function () {
                         )
                         ->name('typology-rules.deactivate');
 
-                    Route::get('rule-sets', [BackofficeAllocationRuleSetController::class, 'index'])->name('rule-sets.index');
-                    Route::get('rule-sets/create', [BackofficeAllocationRuleSetController::class, 'create'])->name('rule-sets.create');
-                    Route::post('rule-sets', [BackofficeAllocationRuleSetController::class, 'store'])->name('rule-sets.store');
-                    Route::get('rule-sets/{allocationRuleSet}', [BackofficeAllocationRuleSetController::class, 'show'])->name('rule-sets.show');
-                    Route::get('rule-sets/{allocationRuleSet}/edit', [BackofficeAllocationRuleSetController::class, 'edit'])->name('rule-sets.edit');
-                    Route::match(['put', 'patch'], 'rule-sets/{allocationRuleSet}', [BackofficeAllocationRuleSetController::class, 'update'])->name('rule-sets.update');
-                    Route::post('rule-sets/{allocationRuleSet}/activate', [BackofficeAllocationRuleSetController::class, 'activate'])->name('rule-sets.activate');
-                    Route::post('rule-sets/{allocationRuleSet}/archive', [BackofficeAllocationRuleSetController::class, 'archive'])->name('rule-sets.archive');
-                    Route::post('rule-sets/{allocationRuleSet}/duplicate', [BackofficeAllocationRuleSetController::class, 'duplicate'])->name('rule-sets.duplicate');
+                    Route::get('rule-sets', [BackofficeAllocationRuleSetController::class, 'index'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('rule-sets.index');
+                    Route::get('rule-sets/create', [BackofficeAllocationRuleSetController::class, 'create'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('rule-sets.create');
+                    Route::post('rule-sets', [BackofficeAllocationRuleSetController::class, 'store'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('rule-sets.store');
+                    Route::get('rule-sets/{allocationRuleSet}', [BackofficeAllocationRuleSetController::class, 'show'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('rule-sets.show');
+                    Route::get('rule-sets/{allocationRuleSet}/edit', [BackofficeAllocationRuleSetController::class, 'edit'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('rule-sets.edit');
+                    Route::match(['put', 'patch'], 'rule-sets/{allocationRuleSet}', [BackofficeAllocationRuleSetController::class, 'update'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('rule-sets.update');
+                    Route::post('rule-sets/{allocationRuleSet}/activate', [BackofficeAllocationRuleSetController::class, 'activate'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.approve',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('rule-sets.activate');
+                    Route::post('rule-sets/{allocationRuleSet}/archive', [BackofficeAllocationRuleSetController::class, 'archive'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('rule-sets.archive');
+                    Route::post('rule-sets/{allocationRuleSet}/duplicate', [BackofficeAllocationRuleSetController::class, 'duplicate'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('rule-sets.duplicate');
 
                     Route::get('runs', [BackofficeAllocationRunController::class, 'index'])->name('runs.index');
                     Route::get('runs/create', [BackofficeAllocationRunController::class, 'create'])->name('runs.create');
