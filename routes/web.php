@@ -1336,15 +1336,75 @@ Route::middleware('auth')->group(function () {
                         'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
                     )
                     ->name('applications.public-status.update');
-                Route::get('documentos-adicionais/pedidos', [BackofficeAdditionalDocumentRequestController::class, 'index'])
+                Route::get(
+                    'documentos-adicionais/pedidos',
+                    [BackofficeAdditionalDocumentRequestController::class, 'index']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.view,applications.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('additional-document-requests.index');
-                Route::post('applications/{application}/documentos-adicionais/pedidos', [BackofficeAdditionalDocumentRequestController::class, 'store'])
+                Route::post(
+                    'applications/{application}/documentos-adicionais/pedidos',
+                    [BackofficeAdditionalDocumentRequestController::class, 'store']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.create,applications.update',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('additional-document-requests.store');
-                Route::get('documentos-adicionais/submissoes', [BackofficeAdditionalDocumentSubmissionController::class, 'index'])
+                Route::get(
+                    'documentos-adicionais/submissoes',
+                    [BackofficeAdditionalDocumentSubmissionController::class, 'index']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.view,applications.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('additional-document-submissions.index');
-                Route::get('documentos-adicionais/submissoes/{additionalDocumentSubmission}', [BackofficeAdditionalDocumentSubmissionController::class, 'show'])
+                Route::get(
+                    'documentos-adicionais/submissoes/{additionalDocumentSubmission}',
+                    [BackofficeAdditionalDocumentSubmissionController::class, 'show']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.view,applications.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('additional-document-submissions.show');
-                Route::post('documentos-adicionais/submissoes/{additionalDocumentSubmission}/decidir', [BackofficeAdditionalDocumentSubmissionController::class, 'decide'])
+                Route::post(
+                    'documentos-adicionais/submissoes/{additionalDocumentSubmission}/decidir',
+                    [BackofficeAdditionalDocumentSubmissionController::class, 'decide']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.approve,documents.reject',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('additional-document-submissions.decide');
                 Route::get('documentos/ia/classificacoes', [BackofficeDocumentAiClassificationController::class, 'index'])
                     ->name('document-ai.classifications.index');

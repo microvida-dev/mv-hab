@@ -17,7 +17,7 @@ class AdditionalDocumentRequestController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('viewAny', AdditionalDocumentRequest::class);
+        Gate::authorize('viewAnyBackoffice', AdditionalDocumentRequest::class);
 
         return view('backoffice.additional-document-requests.index', [
             'requests' => AdditionalDocumentRequest::query()->with(['application', 'user'])->latest()->paginate(20),
@@ -26,7 +26,7 @@ class AdditionalDocumentRequestController extends Controller
 
     public function store(StoreAdditionalDocumentRequestRequest $request, Application $application): RedirectResponse
     {
-        Gate::authorize('create', AdditionalDocumentRequest::class);
+        Gate::authorize('createBackoffice', AdditionalDocumentRequest::class);
         $this->service->create($application, $this->authenticatedUser($request), $request->validated());
 
         return back()->with('success', 'Pedido de documento adicional criado.');

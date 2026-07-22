@@ -26,4 +26,22 @@ class AdditionalDocumentRequestPolicy
     {
         return $user->hasPermissionTo('documents', 'update') || $user->hasPermissionTo('applications', 'update');
     }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && (
+                $user->hasPermissionTo('documents', 'view')
+                || $user->hasPermissionTo('applications', 'view')
+            );
+    }
+
+    public function createBackoffice(User $user): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && (
+                $user->hasPermissionTo('documents', 'create')
+                || $user->hasPermissionTo('applications', 'update')
+            );
+    }
 }
