@@ -39,6 +39,12 @@ class ApplicationPolicy
             && $this->canAccess($user, self::MODULE, 'view');
     }
 
+    public function updateBackoffice(User $user, Application $application): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'update');
+    }
+
     public function auditBackoffice(User $user, Application $application): bool
     {
         return ! $user->hasRole('candidate')

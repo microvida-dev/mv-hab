@@ -133,6 +133,53 @@ class ApplicationBackofficePolicyTest extends TestCase
         );
     }
 
+    public function test_custom_role_with_update_permission_can_update_backoffice_application(): void
+    {
+        $user = $this->userWithCustomRole([
+            'applications.update',
+        ]);
+
+        $application = Application::factory()->create();
+
+        $this->assertTrue(
+            $user->can('updateBackoffice', $application),
+        );
+    }
+
+    public function test_candidate_cannot_update_backoffice_application_even_with_permission(): void
+    {
+        $user = $this->userWithSystemRoleAndPermissions(
+            roleName: 'candidate',
+            permissions: [
+                'applications.update',
+            ],
+        );
+
+        $application = Application::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $this->assertFalse(
+            $user->can('updateBackoffice', $application),
+        );
+    }
+
+    public function test_auditor_cannot_update_backoffice_application_even_with_permission(): void
+    {
+        $user = $this->userWithSystemRoleAndPermissions(
+            roleName: 'auditor',
+            permissions: [
+                'applications.update',
+            ],
+        );
+
+        $application = Application::factory()->create();
+
+        $this->assertFalse(
+            $user->can('updateBackoffice', $application),
+        );
+    }
+
     /**
      * @param list<string> $permissions
      */

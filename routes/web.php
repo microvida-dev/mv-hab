@@ -1290,6 +1290,15 @@ Route::middleware('auth')->group(function () {
                     'applications/{application}/process-confirmations',
                     [BackofficeProcessConfirmationController::class, 'generate']
                 )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:applications.update,applications.approve',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('applications.process-confirmations.generate');
                 Route::get(
                     'applications/{application}/timeline',
@@ -1305,9 +1314,33 @@ Route::middleware('auth')->group(function () {
                         'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
                     )
                     ->name('applications.timeline');
-                Route::get('applications/{application}/public-status', [BackofficeApplicationPublicStatusController::class, 'show'])
+                Route::get(
+                    'applications/{application}/public-status',
+                    [BackofficeApplicationPublicStatusController::class, 'show']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:applications.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('applications.public-status.show');
-                Route::put('applications/{application}/public-status', [BackofficeApplicationPublicStatusController::class, 'update'])
+                Route::put(
+                    'applications/{application}/public-status',
+                    [BackofficeApplicationPublicStatusController::class, 'update']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:applications.update',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('applications.public-status.update');
                 Route::get('documentos-adicionais/pedidos', [BackofficeAdditionalDocumentRequestController::class, 'index'])
                     ->name('additional-document-requests.index');
@@ -1760,11 +1793,47 @@ Route::middleware('auth')->group(function () {
                 Route::post('generated-procedure-documents/{generatedProcedureDocument}/issue', [BackofficeGeneratedProcedureDocumentController::class, 'issue'])
                     ->name('generated-documents.issue');
 
-                Route::get('process-confirmations', [BackofficeProcessConfirmationController::class, 'index'])
+                Route::get(
+                    'process-confirmations',
+                    [BackofficeProcessConfirmationController::class, 'index']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:applications.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('process-confirmations.index');
-                Route::get('process-confirmations/{processConfirmation}', [BackofficeProcessConfirmationController::class, 'show'])
+                Route::get(
+                    'process-confirmations/{processConfirmation}',
+                    [BackofficeProcessConfirmationController::class, 'show']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:applications.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('process-confirmations.show');
-                Route::post('process-confirmations/{processConfirmation}/send', [BackofficeProcessConfirmationController::class, 'send'])
+                Route::post(
+                    'process-confirmations/{processConfirmation}/send',
+                    [BackofficeProcessConfirmationController::class, 'send']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:applications.update,applications.approve',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('process-confirmations.send');
 
                 Route::get('procedure-minutes', [BackofficeProcedureMinuteController::class, 'index'])

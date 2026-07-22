@@ -34,12 +34,12 @@ class AuditAccessRoutesCommandTest extends TestCase
         $this->assertGreaterThan(0, $payload['summary']['total_routes']);
 
         $this->assertSame(
-            1080,
+            1074,
             $payload['summary']['fixed_role_routes'],
         );
 
         $this->assertSame(
-            859,
+            853,
             $payload['summary']['backoffice_fixed_role_routes'],
         );
 
@@ -49,22 +49,22 @@ class AuditAccessRoutesCommandTest extends TestCase
         );
 
         $this->assertSame(
-            23,
+            29,
             $payload['summary']['permission_middleware_routes'],
         );
 
         $this->assertSame(
-            737,
+            731,
             $payload['summary']['backoffice_fixed_role_without_active_backoffice'],
         );
 
         $this->assertSame(
-            737,
+            731,
             $payload['summary']['backoffice_fixed_role_without_mfa_backoffice'],
         );
 
         $this->assertSame(
-            737,
+            731,
             $payload['summary']['backoffice_fixed_role_without_log_backoffice'],
         );
 
@@ -345,6 +345,65 @@ class AuditAccessRoutesCommandTest extends TestCase
 
         foreach ($artifactPermissions as $routeName => $permissionMiddleware) {
             $route = $artifactRoutes->get($routeName);
+
+            $this->assertNotNull($route);
+            $this->assertFalse($route['uses_fixed_role_middleware']);
+            $this->assertFalse($route['is_backoffice_role_route']);
+            $this->assertSame([], $route['roles']);
+
+            $this->assertContains(
+                $permissionMiddleware,
+                $route['permission_middleware'],
+            );
+
+            $this->assertSame(
+                [
+                    'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor',
+                ],
+                $route['excluded_middleware'],
+            );
+
+            $this->assertContains('active.backoffice', $route['middleware']);
+            $this->assertContains('mfa.backoffice', $route['middleware']);
+            $this->assertContains('log.backoffice', $route['middleware']);
+            $this->assertSame([], $route['missing_backoffice_guards']);
+        }
+
+        $processTrackingRoutes = collect($payload['routes'])
+            ->whereIn('name', [
+                'backoffice.applications.public-status.show',
+                'backoffice.applications.public-status.update',
+                'backoffice.applications.process-confirmations.generate',
+                'backoffice.process-confirmations.index',
+                'backoffice.process-confirmations.show',
+                'backoffice.process-confirmations.send',
+            ])
+            ->keyBy('name');
+
+        $this->assertCount(6, $processTrackingRoutes);
+
+        $processTrackingPermissions = [
+            'backoffice.applications.public-status.show'
+                => 'permission:applications.view',
+
+            'backoffice.applications.public-status.update'
+                => 'permission:applications.update',
+
+            'backoffice.applications.process-confirmations.generate'
+                => 'permission:applications.update,applications.approve',
+
+            'backoffice.process-confirmations.index'
+                => 'permission:applications.view',
+
+            'backoffice.process-confirmations.show'
+                => 'permission:applications.view',
+
+            'backoffice.process-confirmations.send'
+                => 'permission:applications.update,applications.approve',
+        ];
+
+        foreach ($processTrackingPermissions as $routeName => $permissionMiddleware) {
+            $route = $processTrackingRoutes->get($routeName);
 
             $this->assertNotNull($route);
             $this->assertFalse($route['uses_fixed_role_middleware']);
