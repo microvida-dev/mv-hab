@@ -3124,36 +3124,99 @@ Route::middleware('auth')->group(function () {
                         ->name('offers.mark-expired');
 
                     Route::get('lotteries', [BackofficeLotteryRunController::class, 'index'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('lotteries.index');
 
                     Route::get('lotteries/create', [BackofficeLotteryRunController::class, 'create'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('lotteries.create');
 
                     Route::post('lotteries', [BackofficeLotteryRunController::class, 'store'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('lotteries.store');
 
                     Route::get(
                         'lotteries/{lotteryRun}',
                         [BackofficeLotteryRunController::class, 'show'],
                     )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('lotteries.show');
 
                     Route::post(
                         'lotteries/{lotteryRun}/run',
                         [BackofficeLotteryRunController::class, 'run'],
                     )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('lotteries.run');
 
                     Route::post(
                         'lotteries/{lotteryRun}/lock',
                         [BackofficeLotteryRunController::class, 'lock'],
                     )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.approve',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('lotteries.lock');
 
                     Route::get(
                         'lotteries/{lotteryRun}/audit',
                         [BackofficeLotteryRunController::class, 'audit'],
                     )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.audit',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('lotteries.audit');
 
                     Route::get('reserve-lists', [BackofficeReserveListController::class, 'index'])

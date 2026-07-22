@@ -2,13 +2,18 @@
 
 namespace App\Http\Requests;
 
+use App\Models\LotteryRun;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
 class RunLotteryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows(
+            'createBackoffice',
+            LotteryRun::class,
+        );
     }
 
     /**

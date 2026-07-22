@@ -20,7 +20,7 @@ class LotteryRunController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('viewAny', LotteryRun::class);
+        Gate::authorize('viewAnyBackoffice', LotteryRun::class);
 
         return view('backoffice.allocation.lotteries.index', [
             'lotteries' => LotteryRun::query()
@@ -32,7 +32,7 @@ class LotteryRunController extends Controller
 
     public function create(): View
     {
-        Gate::authorize('create', LotteryRun::class);
+        Gate::authorize('createBackoffice', LotteryRun::class);
 
         return view('backoffice.allocation.lotteries.create', [
             'runs' => AllocationRun::query()
@@ -45,7 +45,7 @@ class LotteryRunController extends Controller
     public function store(
         RunLotteryRequest $request
     ): RedirectResponse {
-        Gate::authorize('create', LotteryRun::class);
+        Gate::authorize('createBackoffice', LotteryRun::class);
 
         /** @var array{allocation_run_id:int} $data */
         $data = $request->validated();
@@ -73,7 +73,7 @@ class LotteryRunController extends Controller
     public function show(
         LotteryRun $lotteryRun
     ): View {
-        Gate::authorize('view', $lotteryRun);
+        Gate::authorize('viewBackoffice', $lotteryRun);
 
         $lotteryRun->load([
             'allocationRun',
@@ -92,7 +92,7 @@ class LotteryRunController extends Controller
     public function run(
         LotteryRun $lotteryRun
     ): RedirectResponse {
-        Gate::authorize('update', $lotteryRun);
+        Gate::authorize('updateBackoffice', $lotteryRun);
 
         return to_route(
             'backoffice.allocation.lotteries.show',
@@ -107,7 +107,7 @@ class LotteryRunController extends Controller
         LockLotteryRunRequest $request,
         LotteryRun $lotteryRun
     ): RedirectResponse {
-        Gate::authorize('update', $lotteryRun);
+        Gate::authorize('approveBackoffice', $lotteryRun);
 
         $this->lotteryService->lock(
             $lotteryRun,
@@ -123,7 +123,7 @@ class LotteryRunController extends Controller
     public function audit(
         LotteryRun $lotteryRun
     ): View {
-        Gate::authorize('audit', $lotteryRun);
+        Gate::authorize('auditBackoffice', $lotteryRun);
 
         $lotteryRun->load([
             'participants.candidate',
