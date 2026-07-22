@@ -3261,11 +3261,61 @@ Route::middleware('auth')->group(function () {
                         )
                         ->name('reserve-lists.call-next');
 
-                    Route::get('reports', [BackofficeAllocationReportController::class, 'index'])->name('reports.index');
-                    Route::post('reports', [BackofficeAllocationReportController::class, 'store'])->name('reports.store');
-                    Route::get('reports/{allocationReport}', [BackofficeAllocationReportController::class, 'show'])->name('reports.show');
-                    Route::post('reports/{allocationReport}/approve', [BackofficeAllocationReportController::class, 'approve'])->name('reports.approve');
-                    Route::get('reports/{allocationReport}/download', [BackofficeAllocationReportController::class, 'download'])->name('reports.download');
+                    Route::get('reports', [BackofficeAllocationReportController::class, 'index'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('reports.index');
+                    Route::post('reports', [BackofficeAllocationReportController::class, 'store'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('reports.store');
+                    Route::get('reports/{allocationReport}', [BackofficeAllocationReportController::class, 'show'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('reports.show');
+                    Route::post('reports/{allocationReport}/approve', [BackofficeAllocationReportController::class, 'approve'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.approve',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('reports.approve');
+                    Route::get('reports/{allocationReport}/download', [BackofficeAllocationReportController::class, 'download'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.export',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('reports.download');
                 });
 
                 Route::prefix('contracts')->name('contracts.')->group(function () {
