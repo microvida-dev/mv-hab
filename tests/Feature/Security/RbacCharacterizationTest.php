@@ -1,0 +1,262 @@
+<?php
+
+namespace Tests\Feature\Security;
+
+use App\Models\Permission;
+use App\Models\Role;
+use App\Models\User;
+use App\Services\Navigation\WorkspaceService;
+use App\Services\Security\MfaEnforcementService;
+use Database\Seeders\SystemAccessSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
+use Tests\TestCase;
+
+class RbacCharacterizationTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(SystemAccessSeeder::class);
+    }
+
+    public function test_custom_roles_resolve_exact_module_action_and_global_wildcards(): void
+    {
+        $exact = $this->userWithCustomRole(
+            roleName: 'custom_application_viewer',
+            permissions: ['applications.view'],
+        );
+
+        $moduleWildcard = $this->userWithCustomRole(
+            roleName: 'custom_document_operator',
+            permissions: ['documents.*'],
+        );
+
+        $actionWildcard = $this->userWithCustomRole(
+            roleName: 'custom_cross_module_viewer',
+            permissions: ['*.view'],
+        );
+
+        $globalWildcard = $this->userWithCustomRole(
+            roleName: 'custom_full_access',
+            permissions: ['*'],
+        );
+
+        $this->assertTrue($exact->hasPermission('applications.view'));
+        $this->assertFalse($exact->hasPermission('applications.update'));
+
+        $this->assertTrue($moduleWildcard->hasPermission('documents.view'));
+        $this->assertTrue($moduleWildcard->hasPermission('documents.approve'));
+        $this->assertFalse($moduleWildcard->hasPermission('applications.view'));
+
+        $this->assertTrue($actionWildcard->hasPermission('applications.view'));
+        $this->assertTrue($actionWildcard->hasPermission('documents.view'));
+        $this->assertFalse($actionWildcard->hasPermission('documents.approve'));
+
+        $this->assertTrue($globalWildcard->hasPermission('settings.delete'));
+        $this->assertTrue($globalWildcard->hasPermission('applications.export'));
+    }
+
+    public function test_permissions_are_aggregated_across_multiple_custom_roles(): void
+    {
+        $user = User::factory()->create(['status' => 'active']);
+
+        $this->assignCustomRole($user, 'application_intake_operator', [
+            'applications.view',
+            'applications.create',
+            'applications.update',
+        ]);
+
+        $this->assignCustomRole($user, 'application_export_operator', [
+            'reports.view',
+            'reports.export',
+            'exports.view',
+            'exports.create',
+            'exports.download',
+        ]);
+
+        $this->assertTrue($user->hasPermission('applications.view'));
+        $this->assertTrue($user->hasPermission('applications.update'));
+        $this->assertTrue($user->hasPermission('reports.export'));
+        $this->assertTrue($user->hasPermission('exports.download'));
+        $this->assertFalse($user->hasPermission('finance.view'));
+    }
+
+    public function test_custom_role_with_valid_permission_is_still_blocked_by_fixed_route_role_names(): void
+    {
+        $user = $this->userWithCustomRole(
+            roleName: 'application_intake_operator',
+            permissions: [
+                'applications.view',
+                'administrative_processes.view',
+            ],
+        );
+
+        $this->assertTrue($user->hasPermission('applications.view'));
+        $this->assertTrue($user->hasPermission('administrative_processes.view'));
+
+        $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('backoffice.application-intake.index'))
+            ->assertForbidden();
+    }
+
+    public function test_workspace_service_accepts_permission_but_http_route_rejects_custom_role_name(): void
+    {
+        $user = $this->userWithCustomRole(
+            roleName: 'document_review_operator',
+            permissions: ['documents.view'],
+        );
+
+        $workspace = app(WorkspaceService::class)
+            ->authorizedWorkspace($user, 'atendimento');
+
+        $this->assertIsArray($workspace);
+        $this->assertSame('atendimento', $workspace['key']);
+
+        $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('workspaces.show', 'atendimento'))
+            ->assertForbidden();
+    }
+
+    public function test_mfa_is_currently_triggered_by_sensitive_role_names_or_manual_flag_not_permissions(): void
+    {
+        $mfa = app(MfaEnforcementService::class);
+
+        $customSensitiveUser = $this->userWithCustomRole(
+            roleName: 'custom_sensitive_document_reviewer',
+            permissions: [
+                'documents.view',
+                'documents.approve',
+                'applications.export',
+                'reports.export_sensitive',
+            ],
+        );
+
+        $this->assertFalse($mfa->requiresMfa($customSensitiveUser));
+
+        $customSensitiveUser->forceFill(['mfa_required' => true])->save();
+
+        $this->assertTrue($mfa->requiresMfa($customSensitiveUser->refresh()));
+
+        $municipalTechnician = User::factory()->create(['status' => 'active']);
+        $municipalTechnician->assignRole('municipal_technician');
+
+        $this->assertTrue($mfa->requiresMfa($municipalTechnician));
+    }
+
+    public function test_application_routes_expose_fixed_role_middleware_in_current_route_definition(): void
+    {
+        $route = Route::getRoutes()
+            ->getByName('backoffice.application-intake.index');
+
+        $this->assertNotNull($route);
+
+        $middleware = $route->gatherMiddleware();
+
+        $roleMiddleware = collect($middleware)
+            ->first(
+                fn (string $item): bool => str_starts_with($item, 'role:')
+            );
+
+        $this->assertIsString($roleMiddleware);
+
+        $roles = explode(
+            ',',
+            str($roleMiddleware)->after('role:')->toString()
+        );
+
+        $this->assertSame(
+            [
+                'administrator',
+                'municipal_technician',
+                'jury',
+                'financial_manager',
+                'maintenance_manager',
+                'auditor',
+            ],
+            $roles,
+        );
+
+        $this->assertSame(
+            [
+                'web',
+                'auth',
+                'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor',
+            ],
+            $middleware,
+        );
+
+        $this->assertNotContains('active.backoffice', $middleware);
+        $this->assertNotContains('mfa.backoffice', $middleware);
+        $this->assertNotContains('log.backoffice', $middleware);
+    }
+
+    public function test_document_review_routes_use_a_narrower_fixed_role_list_than_the_main_backoffice(): void
+    {
+        $route = Route::getRoutes()->getByName('admin.document-reviews.index');
+
+        $this->assertNotNull($route);
+
+        $middleware = $route->gatherMiddleware();
+
+        $this->assertContains(
+            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor',
+            $middleware,
+        );
+        $this->assertNotContains('active.backoffice', $middleware);
+        $this->assertNotContains('mfa.backoffice', $middleware);
+        $this->assertNotContains('log.backoffice', $middleware);
+    }
+
+    /**
+     * @param  list<string>  $permissions
+     */
+    private function userWithCustomRole(string $roleName, array $permissions): User
+    {
+        $user = User::factory()->create(['status' => 'active']);
+
+        $this->assignCustomRole($user, $roleName, $permissions);
+
+        return $user;
+    }
+
+    /**
+     * @param  list<string>  $permissions
+     */
+    private function assignCustomRole(User $user, string $roleName, array $permissions): Role
+    {
+        $role = Role::query()->create([
+            'name' => $roleName,
+            'label' => str($roleName)->replace('_', ' ')->title()->toString(),
+            'scope' => 'municipal',
+            'is_system' => false,
+        ]);
+
+        $permissionIds = collect($permissions)
+            ->map(function (string $permission): int {
+                [$module, $action] = str_contains($permission, '.')
+                    ? explode('.', $permission, 2)
+                    : [$permission, $permission];
+
+                return Permission::query()->firstOrCreate(
+                    ['name' => $permission],
+                    [
+                        'module' => $module,
+                        'action' => $action,
+                        'description' => 'Permissão criada apenas para caracterização do RBAC.',
+                    ],
+                )->getKey();
+            })
+            ->values();
+
+        $role->permissions()->sync($permissionIds);
+        $user->roles()->syncWithoutDetaching([$role->id]);
+
+        return $role;
+    }
+}
