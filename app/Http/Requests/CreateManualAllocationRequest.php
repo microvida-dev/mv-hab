@@ -2,13 +2,18 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Allocation;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
 class CreateManualAllocationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows(
+            'createBackoffice',
+            Allocation::class,
+        );
     }
 
     /**

@@ -20,7 +20,7 @@ class AllocationOfferController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('viewAny', AllocationOffer::class);
+        Gate::authorize('viewAnyBackoffice', AllocationOffer::class);
 
         return view('backoffice.allocation.offers.index', [
             'offers' => AllocationOffer::query()
@@ -32,7 +32,7 @@ class AllocationOfferController extends Controller
 
     public function show(AllocationOffer $allocationOffer): View
     {
-        Gate::authorize('view', $allocationOffer);
+        Gate::authorize('viewBackoffice', $allocationOffer);
         $allocationOffer->load(['candidate', 'allocation.contest', 'allocation.program', 'housingUnit', 'contestHousingUnit']);
 
         return view('backoffice.allocation.offers.show', compact('allocationOffer'));
@@ -40,7 +40,7 @@ class AllocationOfferController extends Controller
 
     public function issue(IssueAllocationOfferRequest $request, AllocationOffer $allocationOffer): RedirectResponse
     {
-        Gate::authorize('update', $allocationOffer);
+        Gate::authorize('updateBackoffice', $allocationOffer);
         $this->offerService->issue($allocationOffer, $this->authenticatedUser($request));
 
         return back()->with('success', 'Oferta emitida.');
@@ -48,7 +48,7 @@ class AllocationOfferController extends Controller
 
     public function markExpired(IssueAllocationOfferRequest $request, AllocationOffer $allocationOffer): RedirectResponse
     {
-        Gate::authorize('update', $allocationOffer);
+        Gate::authorize('updateBackoffice', $allocationOffer);
         $this->responseService->expire($allocationOffer, $this->authenticatedUser($request));
 
         return back()->with('success', 'Oferta marcada como expirada.');

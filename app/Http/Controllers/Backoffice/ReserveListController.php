@@ -17,7 +17,7 @@ class ReserveListController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('viewAny', ReserveList::class);
+        Gate::authorize('viewAnyBackoffice', ReserveList::class);
 
         return view('backoffice.allocation.reserve-lists.index', [
             'reserveLists' => ReserveList::query()->with(['contest', 'allocationRun'])->latest()->paginate(15),
@@ -26,7 +26,7 @@ class ReserveListController extends Controller
 
     public function show(ReserveList $reserveList): View
     {
-        Gate::authorize('view', $reserveList);
+        Gate::authorize('viewBackoffice', $reserveList);
         $reserveList->load(['allocationRun', 'contest', 'entries.candidate', 'entries.application']);
 
         return view('backoffice.allocation.reserve-lists.show', compact('reserveList'));
@@ -34,7 +34,7 @@ class ReserveListController extends Controller
 
     public function callNext(CallNextReserveCandidateRequest $request, ReserveList $reserveList): RedirectResponse
     {
-        Gate::authorize('update', $reserveList);
+        Gate::authorize('updateBackoffice', $reserveList);
 
         $validated = $request->validated();
 

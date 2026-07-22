@@ -31,4 +31,22 @@ class AllocationOfferPolicy
     {
         return $user->hasRole('candidate') && $offer->user_id === $user->id && $this->canAccess($user, 'allocations', 'update');
     }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, 'allocations', 'view');
+    }
+
+    public function viewBackoffice(User $user, AllocationOffer $offer): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, 'allocations', 'view');
+    }
+
+    public function updateBackoffice(User $user, AllocationOffer $offer): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'allocations', 'update');
+    }
 }

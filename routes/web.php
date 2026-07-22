@@ -17,6 +17,7 @@ use App\Http\Controllers\Backoffice\AdministrativeProcessController as Backoffic
 use App\Http\Controllers\Backoffice\AdministrativeProcessNoteController as BackofficeAdministrativeProcessNoteController;
 use App\Http\Controllers\Backoffice\AdministrativeTaskController as BackofficeAdministrativeTaskController;
 use App\Http\Controllers\Backoffice\AdministrativeWorkflowConfigController as BackofficeAdministrativeWorkflowConfigController;
+use App\Http\Controllers\Backoffice\AgendaController;
 use App\Http\Controllers\Backoffice\AllocationController as BackofficeAllocationController;
 use App\Http\Controllers\Backoffice\AllocationOfferController as BackofficeAllocationOfferController;
 use App\Http\Controllers\Backoffice\AllocationReportController as BackofficeAllocationReportController;
@@ -247,6 +248,7 @@ use App\Http\Controllers\HousingUnitController;
 use App\Http\Controllers\MaintenanceRequestController;
 use App\Http\Controllers\Navigation\FavoriteController as NavigationFavoriteController;
 use App\Http\Controllers\Navigation\WorkspaceController as NavigationWorkspaceController;
+use App\Http\Controllers\Navigation\WorkspacePreferenceController as NavigationWorkspacePreferenceController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicArea\PublishedResultListController;
@@ -270,7 +272,6 @@ use App\Http\Controllers\Tenant\InvoiceController as TenantInvoiceController;
 use App\Http\Controllers\Tenant\MaintenanceRequestController as TenantMaintenanceRequestController;
 use App\Http\Controllers\Tenant\PaymentController as TenantPaymentController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Navigation\WorkspacePreferenceController as NavigationWorkspacePreferenceController;
 
 Route::get('/', PublicPortalController::class)->name('public.portal');
 Route::get('/sitemap.xml', [PublicSitemapController::class, 'sitemap'])->name('public.sitemap');
@@ -767,7 +768,7 @@ Route::middleware('auth')->group(function () {
             Route::get('productivity', BackofficeProductivityController::class)
                 ->name('productivity.index');
 
-            Route::get('agenda', [\App\Http\Controllers\Backoffice\AgendaController::class, 'index'])
+            Route::get('agenda', [AgendaController::class, 'index'])
                 ->name('agenda.index');
 
             Route::get('work-tasks/dashboard', BackofficeWorkTaskDashboardController::class)
@@ -2778,27 +2779,194 @@ Route::middleware('auth')->group(function () {
                     Route::post('runs/{allocationRun}/lock', [BackofficeAllocationRunController::class, 'lock'])->name('runs.lock');
                     Route::post('runs/{allocationRun}/cancel', [BackofficeAllocationRunController::class, 'cancel'])->name('runs.cancel');
 
-                    Route::get('allocations', [BackofficeAllocationController::class, 'index'])->name('allocations.index');
-                    Route::get('allocations/manual/create', [BackofficeAllocationController::class, 'createManual'])->name('allocations.manual-create');
-                    Route::post('allocations/manual', [BackofficeAllocationController::class, 'storeManual'])->name('allocations.manual-store');
-                    Route::get('allocations/{allocation}', [BackofficeAllocationController::class, 'show'])->name('allocations.show');
+                    Route::get('allocations', [BackofficeAllocationController::class, 'index'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('allocations.index');
 
-                    Route::get('offers', [BackofficeAllocationOfferController::class, 'index'])->name('offers.index');
-                    Route::get('offers/{allocationOffer}', [BackofficeAllocationOfferController::class, 'show'])->name('offers.show');
-                    Route::post('offers/{allocationOffer}/issue', [BackofficeAllocationOfferController::class, 'issue'])->name('offers.issue');
-                    Route::post('offers/{allocationOffer}/mark-expired', [BackofficeAllocationOfferController::class, 'markExpired'])->name('offers.mark-expired');
+                    Route::get(
+                        'allocations/manual/create',
+                        [BackofficeAllocationController::class, 'createManual'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('allocations.manual-create');
 
-                    Route::get('lotteries', [BackofficeLotteryRunController::class, 'index'])->name('lotteries.index');
-                    Route::get('lotteries/create', [BackofficeLotteryRunController::class, 'create'])->name('lotteries.create');
-                    Route::post('lotteries', [BackofficeLotteryRunController::class, 'store'])->name('lotteries.store');
-                    Route::get('lotteries/{lotteryRun}', [BackofficeLotteryRunController::class, 'show'])->name('lotteries.show');
-                    Route::post('lotteries/{lotteryRun}/run', [BackofficeLotteryRunController::class, 'run'])->name('lotteries.run');
-                    Route::post('lotteries/{lotteryRun}/lock', [BackofficeLotteryRunController::class, 'lock'])->name('lotteries.lock');
-                    Route::get('lotteries/{lotteryRun}/audit', [BackofficeLotteryRunController::class, 'audit'])->name('lotteries.audit');
+                    Route::post(
+                        'allocations/manual',
+                        [BackofficeAllocationController::class, 'storeManual'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('allocations.manual-store');
 
-                    Route::get('reserve-lists', [BackofficeReserveListController::class, 'index'])->name('reserve-lists.index');
-                    Route::get('reserve-lists/{reserveList}', [BackofficeReserveListController::class, 'show'])->name('reserve-lists.show');
-                    Route::post('reserve-lists/{reserveList}/call-next', [BackofficeReserveListController::class, 'callNext'])->name('reserve-lists.call-next');
+                    Route::get(
+                        'allocations/{allocation}',
+                        [BackofficeAllocationController::class, 'show'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('allocations.show');
+
+                    Route::get('offers', [BackofficeAllocationOfferController::class, 'index'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('offers.index');
+
+                    Route::get(
+                        'offers/{allocationOffer}',
+                        [BackofficeAllocationOfferController::class, 'show'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('offers.show');
+
+                    Route::post(
+                        'offers/{allocationOffer}/issue',
+                        [BackofficeAllocationOfferController::class, 'issue'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('offers.issue');
+
+                    Route::post(
+                        'offers/{allocationOffer}/mark-expired',
+                        [BackofficeAllocationOfferController::class, 'markExpired'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('offers.mark-expired');
+
+                    Route::get('lotteries', [BackofficeLotteryRunController::class, 'index'])
+                        ->name('lotteries.index');
+
+                    Route::get('lotteries/create', [BackofficeLotteryRunController::class, 'create'])
+                        ->name('lotteries.create');
+
+                    Route::post('lotteries', [BackofficeLotteryRunController::class, 'store'])
+                        ->name('lotteries.store');
+
+                    Route::get(
+                        'lotteries/{lotteryRun}',
+                        [BackofficeLotteryRunController::class, 'show'],
+                    )
+                        ->name('lotteries.show');
+
+                    Route::post(
+                        'lotteries/{lotteryRun}/run',
+                        [BackofficeLotteryRunController::class, 'run'],
+                    )
+                        ->name('lotteries.run');
+
+                    Route::post(
+                        'lotteries/{lotteryRun}/lock',
+                        [BackofficeLotteryRunController::class, 'lock'],
+                    )
+                        ->name('lotteries.lock');
+
+                    Route::get(
+                        'lotteries/{lotteryRun}/audit',
+                        [BackofficeLotteryRunController::class, 'audit'],
+                    )
+                        ->name('lotteries.audit');
+
+                    Route::get('reserve-lists', [BackofficeReserveListController::class, 'index'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('reserve-lists.index');
+
+                    Route::get(
+                        'reserve-lists/{reserveList}',
+                        [BackofficeReserveListController::class, 'show'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('reserve-lists.show');
+
+                    Route::post(
+                        'reserve-lists/{reserveList}/call-next',
+                        [BackofficeReserveListController::class, 'callNext'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('reserve-lists.call-next');
 
                     Route::get('reports', [BackofficeAllocationReportController::class, 'index'])->name('reports.index');
                     Route::post('reports', [BackofficeAllocationReportController::class, 'store'])->name('reports.store');
