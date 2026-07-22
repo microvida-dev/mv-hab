@@ -12,7 +12,7 @@ class StoreDocumentTypeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', DocumentType::class) ?? false;
+        return $this->user()?->can('createBackoffice', DocumentType::class) ?? false;
     }
 
     /**

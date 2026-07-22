@@ -12,7 +12,7 @@ class StoreRequiredDocumentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', RequiredDocument::class) ?? false;
+        return $this->user()?->can('createBackoffice', RequiredDocument::class) ?? false;
     }
 
     /**

@@ -24,7 +24,7 @@ class RequiredDocumentController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('viewAny', RequiredDocument::class);
+        Gate::authorize('viewAnyBackoffice', RequiredDocument::class);
 
         $requiredDocuments = RequiredDocument::query()
             ->with(['documentType', 'program', 'contest'])
@@ -37,7 +37,7 @@ class RequiredDocumentController extends Controller
 
     public function create(): View
     {
-        Gate::authorize('create', RequiredDocument::class);
+        Gate::authorize('createBackoffice', RequiredDocument::class);
 
         return view('admin.required-documents.create', $this->formData());
     }
@@ -60,7 +60,7 @@ class RequiredDocumentController extends Controller
 
     public function edit(RequiredDocument $requiredDocument): View
     {
-        Gate::authorize('update', $requiredDocument);
+        Gate::authorize('updateBackoffice', $requiredDocument);
 
         return view('admin.required-documents.edit', [
             'requiredDocument' => $requiredDocument,
@@ -86,7 +86,7 @@ class RequiredDocumentController extends Controller
 
     public function destroy(Request $request, RequiredDocument $requiredDocument): RedirectResponse
     {
-        Gate::authorize('delete', $requiredDocument);
+        Gate::authorize('deleteBackoffice', $requiredDocument);
         $requiredDocument->delete();
         $this->auditLogger->record(
             event: AuditEvents::DELETE,

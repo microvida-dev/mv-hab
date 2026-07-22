@@ -845,12 +845,160 @@ Route::middleware('auth')->group(function () {
                     ->name('contests.publish');
                 Route::resource('contests', AdminContestController::class);
 
-                Route::resource('document-types', AdminDocumentTypeController::class)
-                    ->parameters(['document-types' => 'documentType'])
-                    ->except(['show']);
-                Route::resource('required-documents', AdminRequiredDocumentController::class)
-                    ->parameters(['required-documents' => 'requiredDocument'])
-                    ->except(['show']);
+                Route::get('document-types', [AdminDocumentTypeController::class, 'index'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('document-types.index');
+
+                Route::get('document-types/create', [AdminDocumentTypeController::class, 'create'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.create',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('document-types.create');
+
+                Route::post('document-types', [AdminDocumentTypeController::class, 'store'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.create',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('document-types.store');
+
+                Route::get('document-types/{documentType}/edit', [AdminDocumentTypeController::class, 'edit'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.update',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('document-types.edit');
+
+                Route::match(['put', 'patch'], 'document-types/{documentType}', [AdminDocumentTypeController::class, 'update'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.update',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('document-types.update');
+
+                Route::delete('document-types/{documentType}', [AdminDocumentTypeController::class, 'destroy'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.delete',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('document-types.destroy');
+
+                Route::get('required-documents', [AdminRequiredDocumentController::class, 'index'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('required-documents.index');
+
+                Route::get('required-documents/create', [AdminRequiredDocumentController::class, 'create'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.create',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('required-documents.create');
+
+                Route::post('required-documents', [AdminRequiredDocumentController::class, 'store'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.create',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('required-documents.store');
+
+                Route::get(
+                    'required-documents/{requiredDocument}/edit',
+                    [AdminRequiredDocumentController::class, 'edit'],
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.update',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('required-documents.edit');
+
+                Route::match(
+                    ['put', 'patch'],
+                    'required-documents/{requiredDocument}',
+                    [AdminRequiredDocumentController::class, 'update'],
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.update',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('required-documents.update');
+
+                Route::delete(
+                    'required-documents/{requiredDocument}',
+                    [AdminRequiredDocumentController::class, 'destroy'],
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.delete',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('required-documents.destroy');
+
                 Route::get(
                     'document-reviews',
                     [AdminDocumentReviewController::class, 'index'],

@@ -11,7 +11,7 @@ class UpdateRequiredDocumentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('update', $this->route('requiredDocument')) ?? false;
+        return $this->user()?->ccan('updateBackoffice', $this->route('requiredDocument')) ?? false;
     }
 
     /**

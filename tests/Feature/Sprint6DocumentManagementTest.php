@@ -168,6 +168,7 @@ class Sprint6DocumentManagementTest extends TestCase
         $submission = $this->uploadIdentification($candidate, $household->members()->firstOrFail());
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-reviews.reject', $submission), [
                 'rejection_reason' => 'Documento ilegível.',
                 'internal_notes' => 'Nota reservada.',
@@ -199,12 +200,14 @@ class Sprint6DocumentManagementTest extends TestCase
         $submission = $this->uploadIdentification($candidate, $household->members()->firstOrFail());
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-reviews.under-review', $submission))
             ->assertRedirect(route('admin.document-reviews.show', $submission));
 
         $this->assertSame(DocumentStatus::UnderReview, $submission->fresh()->status);
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-reviews.validate', $submission), [
                 'internal_notes' => 'Documento verificado.',
             ])
@@ -224,12 +227,14 @@ class Sprint6DocumentManagementTest extends TestCase
         );
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-reviews.reject', $secondSubmission), [
                 'internal_notes' => 'Sem motivo visível.',
             ])
             ->assertSessionHasErrors('rejection_reason');
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-reviews.reject', $secondSubmission), [
                 'rejection_reason' => 'Documento não corresponde ao tipo solicitado.',
                 'internal_notes' => 'Nota reservada ao backoffice.',
@@ -259,6 +264,7 @@ class Sprint6DocumentManagementTest extends TestCase
         ];
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-types.store'), $payload)
             ->assertRedirect(route('admin.document-types.index'));
 
@@ -268,6 +274,7 @@ class Sprint6DocumentManagementTest extends TestCase
         ]);
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-types.store'), $payload)
             ->assertSessionHasErrors('code');
     }
@@ -285,6 +292,7 @@ class Sprint6DocumentManagementTest extends TestCase
         ]);
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.required-documents.store'), [
                 'document_type_id' => $documentType->id,
                 'program_id' => $program->id,
