@@ -3,12 +3,16 @@
 namespace App\Http\Requests\Backoffice\PublicPortal;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
 class UpdateHousingUnitImageRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows(
+            'updateBackoffice',
+            $this->route('image'),
+        );
     }
 
     /**

@@ -81,4 +81,22 @@ class HousingUnitPolicy
         return ! $user->hasRole(['candidate', 'auditor'])
             && $this->canAccess($user, self::MODULE, 'delete');
     }
+
+    public function updatePublicProfileBackoffice(User $user, HousingUnit $housingUnit): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'update');
+    }
+
+    public function publishPublicProfileBackoffice(User $user, HousingUnit $housingUnit): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'update');
+    }
+
+    public function previewPublicProfileBackoffice(User $user, HousingUnit $housingUnit): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view');
+    }
 }

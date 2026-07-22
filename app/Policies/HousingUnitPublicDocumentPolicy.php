@@ -36,4 +36,26 @@ class HousingUnitPublicDocumentPolicy
     {
         return $this->canAccess($user, self::MODULE, 'delete') || $this->canAccess($user, self::MODULE, 'update');
     }
+
+    public function createBackoffice(User $user): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'update');
+    }
+
+    public function updateBackoffice(
+        User $user,
+        HousingUnitPublicDocument $housingUnitPublicDocument,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'update');
+    }
+
+    public function deleteBackoffice(
+        User $user,
+        HousingUnitPublicDocument $housingUnitPublicDocument,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'update');
+    }
 }

@@ -1531,36 +1531,186 @@ Route::middleware('auth')->group(function () {
                 });
 
                 Route::prefix('public-portal')->name('public-portal.')->group(function () {
-                    Route::get('settings', [BackofficePublicPortalSettingController::class, 'edit'])->name('settings.edit');
-                    Route::match(['put', 'patch'], 'settings', [BackofficePublicPortalSettingController::class, 'update'])->name('settings.update');
+                    Route::get('settings', [BackofficePublicPortalSettingController::class, 'edit'])
+                        ->name('settings.edit');
+
+                    Route::match(
+                        ['put', 'patch'],
+                        'settings',
+                        [BackofficePublicPortalSettingController::class, 'update'],
+                    )
+                        ->name('settings.update');
 
                     Route::resource('links', BackofficePublicPortalLinkController::class)
                         ->parameters(['links' => 'link'])
                         ->except(['show']);
 
-                    Route::get('housing-units/{housingUnit}/edit', [BackofficePublicHousingUnitProfileController::class, 'edit'])
+                    Route::get(
+                        'housing-units/{housingUnit}/edit',
+                        [BackofficePublicHousingUnitProfileController::class, 'edit'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:housing_units.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('housing-units.edit');
-                    Route::match(['put', 'patch'], 'housing-units/{housingUnit}', [BackofficePublicHousingUnitProfileController::class, 'update'])
+
+                    Route::match(
+                        ['put', 'patch'],
+                        'housing-units/{housingUnit}',
+                        [BackofficePublicHousingUnitProfileController::class, 'update'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:housing_units.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('housing-units.update');
-                    Route::post('housing-units/{housingUnit}/publish', [BackofficePublicHousingUnitProfileController::class, 'publish'])
+
+                    Route::post(
+                        'housing-units/{housingUnit}/publish',
+                        [BackofficePublicHousingUnitProfileController::class, 'publish'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:housing_units.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('housing-units.publish');
-                    Route::post('housing-units/{housingUnit}/unpublish', [BackofficePublicHousingUnitProfileController::class, 'unpublish'])
+
+                    Route::post(
+                        'housing-units/{housingUnit}/unpublish',
+                        [BackofficePublicHousingUnitProfileController::class, 'unpublish'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:housing_units.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('housing-units.unpublish');
-                    Route::get('housing-units/{housingUnit}/preview', [BackofficePublicHousingUnitProfileController::class, 'preview'])
+
+                    Route::get(
+                        'housing-units/{housingUnit}/preview',
+                        [BackofficePublicHousingUnitProfileController::class, 'preview'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:housing_units.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('housing-units.preview');
 
-                    Route::post('housing-units/{housingUnit}/images', [BackofficePublicHousingUnitImageController::class, 'store'])
+                    Route::post(
+                        'housing-units/{housingUnit}/images',
+                        [BackofficePublicHousingUnitImageController::class, 'store'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:housing_units.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('housing-units.images.store');
-                    Route::match(['put', 'patch'], 'images/{image}', [BackofficePublicHousingUnitImageController::class, 'update'])
+
+                    Route::match(
+                        ['put', 'patch'],
+                        'images/{image}',
+                        [BackofficePublicHousingUnitImageController::class, 'update'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:housing_units.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('images.update');
-                    Route::delete('images/{image}', [BackofficePublicHousingUnitImageController::class, 'destroy'])
+
+                    Route::delete(
+                        'images/{image}',
+                        [BackofficePublicHousingUnitImageController::class, 'destroy'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:housing_units.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('images.destroy');
 
-                    Route::post('housing-units/{housingUnit}/documents', [BackofficePublicHousingUnitDocumentController::class, 'store'])
+                    Route::post(
+                        'housing-units/{housingUnit}/documents',
+                        [BackofficePublicHousingUnitDocumentController::class, 'store'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:housing_units.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('housing-units.documents.store');
-                    Route::match(['put', 'patch'], 'documents/{document}', [BackofficePublicHousingUnitDocumentController::class, 'update'])
+
+                    Route::match(
+                        ['put', 'patch'],
+                        'documents/{document}',
+                        [BackofficePublicHousingUnitDocumentController::class, 'update'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:housing_units.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('documents.update');
-                    Route::delete('documents/{document}', [BackofficePublicHousingUnitDocumentController::class, 'destroy'])
+
+                    Route::delete(
+                        'documents/{document}',
+                        [BackofficePublicHousingUnitDocumentController::class, 'destroy'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:housing_units.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('documents.destroy');
                 });
 

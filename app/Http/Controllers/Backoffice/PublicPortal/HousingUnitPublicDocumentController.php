@@ -19,7 +19,7 @@ class HousingUnitPublicDocumentController extends Controller
         HousingUnit $housingUnit,
         PublicHousingPublicationService $publicationService,
     ): RedirectResponse {
-        Gate::authorize('updatePublicProfile', $housingUnit);
+        Gate::authorize('createBackoffice', HousingUnitPublicDocument::class);
 
         $publicationService->storeDocument(
             $housingUnit,
@@ -33,7 +33,7 @@ class HousingUnitPublicDocumentController extends Controller
 
     public function update(UpdateHousingUnitPublicDocumentRequest $request, HousingUnitPublicDocument $document): RedirectResponse
     {
-        Gate::authorize('update', $document);
+        Gate::authorize('updateBackoffice', $document);
 
         $data = $request->validated();
         $data['is_public'] = $request->boolean('is_public');
@@ -46,7 +46,7 @@ class HousingUnitPublicDocumentController extends Controller
 
     public function destroy(HousingUnitPublicDocument $document): RedirectResponse
     {
-        Gate::authorize('delete', $document);
+        Gate::authorize('deleteBackoffice', $document);
 
         Storage::disk($document->disk)->delete($document->path);
         $document->delete();
