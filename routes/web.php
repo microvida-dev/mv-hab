@@ -1162,9 +1162,33 @@ Route::middleware('auth')->group(function () {
                         ->name('audit.show');
                 });
 
-                Route::get('applications', [BackofficeApplicationController::class, 'index'])
+                Route::get(
+                    'applications',
+                    [BackofficeApplicationController::class, 'index']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:applications.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('applications.index');
-                Route::get('applications/{application}', [BackofficeApplicationController::class, 'show'])
+                Route::get(
+                    'applications/{application}',
+                    [BackofficeApplicationController::class, 'show']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:applications.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('applications.show');
                 Route::get('applications/{application}/report', [BackofficeApplicationReportController::class, 'show'])
                     ->name('applications.report.show');
@@ -1182,7 +1206,19 @@ Route::middleware('auth')->group(function () {
                     ->name('document-dossiers.download');
                 Route::post('applications/{application}/process-confirmations', [BackofficeProcessConfirmationController::class, 'generate'])
                     ->name('applications.process-confirmations.generate');
-                Route::get('applications/{application}/timeline', [BackofficeProcessTimelineController::class, 'show'])
+                Route::get(
+                    'applications/{application}/timeline',
+                    [BackofficeProcessTimelineController::class, 'show']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:applications.audit,applications.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('applications.timeline');
                 Route::get('applications/{application}/public-status', [BackofficeApplicationPublicStatusController::class, 'show'])
                     ->name('applications.public-status.show');

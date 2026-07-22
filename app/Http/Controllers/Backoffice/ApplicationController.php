@@ -19,7 +19,7 @@ class ApplicationController extends Controller
 
     public function index(Request $request): View
     {
-        Gate::authorize('viewAny', Application::class);
+        Gate::authorize('viewAnyBackoffice', Application::class);
 
         $applications = Application::query()
             ->with(['user', 'contest', 'program'])
@@ -46,7 +46,7 @@ class ApplicationController extends Controller
 
     public function show(Application $application): View
     {
-        Gate::authorize('view', $application);
+        Gate::authorize('viewBackoffice', $application);
 
         $application->load([
             'user',

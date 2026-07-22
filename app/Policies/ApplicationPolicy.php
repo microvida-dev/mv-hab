@@ -27,6 +27,27 @@ class ApplicationPolicy
         return $this->canAccess($user, self::MODULE, 'view');
     }
 
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view');
+    }
+
+    public function viewBackoffice(User $user, Application $application): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view');
+    }
+
+    public function auditBackoffice(User $user, Application $application): bool
+    {
+        return ! $user->hasRole('candidate')
+            && (
+                $this->canAccess($user, self::MODULE, 'audit')
+                || $this->canAccess($user, self::MODULE, 'view')
+            );
+    }
+
     public function create(User $user): bool
     {
         return $user->hasRole('candidate')
