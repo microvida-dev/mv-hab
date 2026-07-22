@@ -7,6 +7,7 @@ use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\LogBackofficeAccess;
 use App\Http\Middleware\LogSensitiveResourceAccess;
 use App\Http\Middleware\RequireSensitivePermission;
+use App\Http\Middleware\RequirePermission;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'mfa.backoffice' => EnsureBackofficeMfaVerified::class,
             'password.policy' => EnforcePasswordPolicyOnChange::class,
             'role' => EnsureUserHasRole::class,
+            'permission' => RequirePermission::class,
             'log.backoffice' => LogBackofficeAccess::class,
             'log.sensitive' => LogSensitiveResourceAccess::class,
             'sensitive.permission' => RequireSensitivePermission::class,
