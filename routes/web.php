@@ -2931,13 +2931,83 @@ Route::middleware('auth')->group(function () {
                         )
                         ->name('rule-sets.duplicate');
 
-                    Route::get('runs', [BackofficeAllocationRunController::class, 'index'])->name('runs.index');
-                    Route::get('runs/create', [BackofficeAllocationRunController::class, 'create'])->name('runs.create');
-                    Route::post('runs', [BackofficeAllocationRunController::class, 'store'])->name('runs.store');
-                    Route::get('runs/{allocationRun}', [BackofficeAllocationRunController::class, 'show'])->name('runs.show');
-                    Route::post('runs/{allocationRun}/run', [BackofficeAllocationRunController::class, 'run'])->name('runs.run');
-                    Route::post('runs/{allocationRun}/lock', [BackofficeAllocationRunController::class, 'lock'])->name('runs.lock');
-                    Route::post('runs/{allocationRun}/cancel', [BackofficeAllocationRunController::class, 'cancel'])->name('runs.cancel');
+                    Route::get('runs', [BackofficeAllocationRunController::class, 'index'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('runs.index');
+                    Route::get('runs/create', [BackofficeAllocationRunController::class, 'create'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('runs.create');
+                    Route::post('runs', [BackofficeAllocationRunController::class, 'store'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('runs.store');
+                    Route::get('runs/{allocationRun}', [BackofficeAllocationRunController::class, 'show'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('runs.show');
+                    Route::post('runs/{allocationRun}/run', [BackofficeAllocationRunController::class, 'run'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('runs.run');
+                    Route::post('runs/{allocationRun}/lock', [BackofficeAllocationRunController::class, 'lock'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.approve',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('runs.lock');
+                    Route::post('runs/{allocationRun}/cancel', [BackofficeAllocationRunController::class, 'cancel'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.reject',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('runs.cancel');
 
                     Route::get('allocations', [BackofficeAllocationController::class, 'index'])
                         ->middleware([

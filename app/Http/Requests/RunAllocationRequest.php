@@ -3,14 +3,19 @@
 namespace App\Http\Requests;
 
 use App\Enums\AllocationMethod;
+use App\Models\AllocationRun;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class RunAllocationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows(
+            'createBackoffice',
+            AllocationRun::class,
+        );
     }
 
     /**

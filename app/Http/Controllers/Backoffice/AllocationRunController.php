@@ -22,7 +22,7 @@ class AllocationRunController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('viewAny', AllocationRun::class);
+        Gate::authorize('viewAnyBackoffice', AllocationRun::class);
 
         return view('backoffice.allocation.runs.index', [
             'runs' => AllocationRun::query()
@@ -38,7 +38,7 @@ class AllocationRunController extends Controller
 
     public function create(): View
     {
-        Gate::authorize('create', AllocationRun::class);
+        Gate::authorize('createBackoffice', AllocationRun::class);
 
         return view('backoffice.allocation.runs.create', [
             'definitiveLists' => DefinitiveList::query()
@@ -59,7 +59,7 @@ class AllocationRunController extends Controller
     public function store(
         RunAllocationRequest $request
     ): RedirectResponse {
-        Gate::authorize('create', AllocationRun::class);
+        Gate::authorize('createBackoffice', AllocationRun::class);
 
         $allocationRun = $this->engine->run(
             $request->validated(),
@@ -78,7 +78,7 @@ class AllocationRunController extends Controller
     public function show(
         AllocationRun $allocationRun
     ): View {
-        Gate::authorize('view', $allocationRun);
+        Gate::authorize('viewBackoffice', $allocationRun);
 
         $allocationRun->load([
             'contest',
@@ -101,7 +101,7 @@ class AllocationRunController extends Controller
     public function run(
         AllocationRun $allocationRun
     ): RedirectResponse {
-        Gate::authorize('update', $allocationRun);
+        Gate::authorize('updateBackoffice', $allocationRun);
 
         return to_route(
             'backoffice.allocation.runs.show',
@@ -115,7 +115,7 @@ class AllocationRunController extends Controller
     public function lock(
         AllocationRun $allocationRun
     ): RedirectResponse {
-        Gate::authorize('update', $allocationRun);
+        Gate::authorize('approveBackoffice', $allocationRun);
 
         $this->engine->lock(
             $allocationRun,
@@ -132,7 +132,7 @@ class AllocationRunController extends Controller
         CancelAllocationRequest $request,
         AllocationRun $allocationRun
     ): RedirectResponse {
-        Gate::authorize('update', $allocationRun);
+        Gate::authorize('rejectBackoffice', $allocationRun);
 
         $this->engine->cancel(
             $allocationRun,
