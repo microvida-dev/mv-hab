@@ -1307,22 +1307,62 @@ Route::middleware('auth')->group(function () {
                 Route::post(
                     'administrative-processes/{administrativeProcess}/assign',
                     [BackofficeAdministrativeProcessController::class, 'assign']
-                )->name('administrative-processes.assign');
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:administrative_processes.update',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('administrative-processes.assign');
 
                 Route::post(
                     'administrative-processes/{administrativeProcess}/start-preliminary-review',
                     [BackofficeAdministrativeProcessController::class, 'startPreliminaryReview']
-                )->name('administrative-processes.start-preliminary-review');
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:administrative_processes.update',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('administrative-processes.start-preliminary-review');
 
                 Route::post(
                     'administrative-processes/{administrativeProcess}/start-document-review',
                     [BackofficeAdministrativeProcessController::class, 'startDocumentReview']
-                )->name('administrative-processes.start-document-review');
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:administrative_processes.update',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('administrative-processes.start-document-review');
 
                 Route::post(
                     'administrative-processes/{administrativeProcess}/start-eligibility-review',
                     [BackofficeAdministrativeProcessController::class, 'startEligibilityReview']
-                )->name('administrative-processes.start-eligibility-review');
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:administrative_processes.update',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->name('administrative-processes.start-eligibility-review');
 
                 Route::get(
                     'administrative-processes/{administrativeProcess}/timeline',
