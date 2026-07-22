@@ -1275,7 +1275,19 @@ Route::middleware('auth')->group(function () {
                         )->name('application-intake.create-processes-batch');
                     });
 
-                Route::get('administrative-processes', [BackofficeAdministrativeProcessController::class, 'index'])
+                Route::get(
+                    'administrative-processes',
+                    [BackofficeAdministrativeProcessController::class, 'index']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:administrative_processes.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('administrative-processes.index');
                 Route::get('administrative-processes/{administrativeProcess}', [BackofficeAdministrativeProcessController::class, 'show'])
                     ->name('administrative-processes.show');

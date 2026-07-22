@@ -34,12 +34,12 @@ class AuditAccessRoutesCommandTest extends TestCase
         $this->assertGreaterThan(0, $payload['summary']['total_routes']);
 
         $this->assertSame(
-            1096,
+            1095,
             $payload['summary']['fixed_role_routes'],
         );
 
         $this->assertSame(
-            875,
+            874,
             $payload['summary']['backoffice_fixed_role_routes'],
         );
 
@@ -49,22 +49,22 @@ class AuditAccessRoutesCommandTest extends TestCase
         );
 
         $this->assertSame(
-            7,
+            8,
             $payload['summary']['permission_middleware_routes'],
         );
 
         $this->assertSame(
-            753,
+            752,
             $payload['summary']['backoffice_fixed_role_without_active_backoffice'],
         );
 
         $this->assertSame(
-            753,
+            752,
             $payload['summary']['backoffice_fixed_role_without_mfa_backoffice'],
         );
 
         $this->assertSame(
-            753,
+            752,
             $payload['summary']['backoffice_fixed_role_without_log_backoffice'],
         );
 
@@ -128,6 +128,56 @@ class AuditAccessRoutesCommandTest extends TestCase
             ->keyBy('name');
 
         $this->assertCount(4, $applicationReviewRoutes);
+
+        $administrativeProcessIndex = collect($payload['routes'])
+            ->firstWhere('name', 'backoffice.administrative-processes.index');
+
+        $this->assertNotNull($administrativeProcessIndex);
+
+        $this->assertFalse(
+            $administrativeProcessIndex['uses_fixed_role_middleware'],
+        );
+
+        $this->assertFalse(
+            $administrativeProcessIndex['is_backoffice_role_route'],
+        );
+
+        $this->assertSame(
+            [],
+            $administrativeProcessIndex['roles'],
+        );
+
+        $this->assertContains(
+            'permission:administrative_processes.view',
+            $administrativeProcessIndex['permission_middleware'],
+        );
+
+        $this->assertSame(
+            [
+                'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor',
+            ],
+            $administrativeProcessIndex['excluded_middleware'],
+        );
+
+        $this->assertContains(
+            'active.backoffice',
+            $administrativeProcessIndex['middleware'],
+        );
+
+        $this->assertContains(
+            'mfa.backoffice',
+            $administrativeProcessIndex['middleware'],
+        );
+
+        $this->assertContains(
+            'log.backoffice',
+            $administrativeProcessIndex['middleware'],
+        );
+
+        $this->assertSame(
+            [],
+            $administrativeProcessIndex['missing_backoffice_guards'],
+        );
 
         $expectedPermissions = [
             'backoffice.application-reviews.create'
