@@ -1190,21 +1190,106 @@ Route::middleware('auth')->group(function () {
                         'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
                     )
                     ->name('applications.show');
-                Route::get('applications/{application}/report', [BackofficeApplicationReportController::class, 'show'])
+                Route::get(
+                    'applications/{application}/report',
+                    [BackofficeApplicationReportController::class, 'show']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:reports.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('applications.report.show');
-                Route::post('applications/{application}/report', [BackofficeApplicationReportController::class, 'generate'])
+
+                Route::post(
+                    'applications/{application}/report',
+                    [BackofficeApplicationReportController::class, 'generate']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:reports.create,reports.export',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('applications.report.generate');
-                Route::get('application-reports/{applicationReport}/download', [BackofficeApplicationReportController::class, 'download'])
+
+                Route::get(
+                    'application-reports/{applicationReport}/download',
+                    [BackofficeApplicationReportController::class, 'download']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:reports.view,reports.export',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('application-reports.download');
-                Route::get('applications/{application}/document-dossier', [BackofficeDocumentDossierController::class, 'show'])
+
+                Route::get(
+                    'applications/{application}/document-dossier',
+                    [BackofficeDocumentDossierController::class, 'show']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('applications.document-dossier.show');
-                Route::post('applications/{application}/document-dossier', [BackofficeDocumentDossierController::class, 'generate'])
+
+                Route::post(
+                    'applications/{application}/document-dossier',
+                    [BackofficeDocumentDossierController::class, 'generate']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.create,documents.export',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('applications.document-dossier.generate');
-                Route::patch('document-dossiers/{documentDossier}', [BackofficeDocumentDossierController::class, 'update'])
+
+                Route::patch(
+                    'document-dossiers/{documentDossier}',
+                    [BackofficeDocumentDossierController::class, 'update']
+                )
                     ->name('document-dossiers.update');
-                Route::get('document-dossiers/{documentDossier}/download', [BackofficeDocumentDossierController::class, 'download'])
+
+                Route::get(
+                    'document-dossiers/{documentDossier}/download',
+                    [BackofficeDocumentDossierController::class, 'download']
+                )
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'permission:documents.view',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('document-dossiers.download');
-                Route::post('applications/{application}/process-confirmations', [BackofficeProcessConfirmationController::class, 'generate'])
+
+                Route::post(
+                    'applications/{application}/process-confirmations',
+                    [BackofficeProcessConfirmationController::class, 'generate']
+                )
                     ->name('applications.process-confirmations.generate');
                 Route::get(
                     'applications/{application}/timeline',
