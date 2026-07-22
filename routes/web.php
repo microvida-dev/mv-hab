@@ -1531,7 +1531,19 @@ Route::middleware('auth')->group(function () {
                 });
 
                 Route::prefix('public-portal')->name('public-portal.')->group(function () {
-                    Route::get('settings', [BackofficePublicPortalSettingController::class, 'edit'])
+                    Route::get(
+                        'settings',
+                        [BackofficePublicPortalSettingController::class, 'edit'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:settings.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('settings.edit');
 
                     Route::match(
@@ -1539,11 +1551,107 @@ Route::middleware('auth')->group(function () {
                         'settings',
                         [BackofficePublicPortalSettingController::class, 'update'],
                     )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:settings.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
                         ->name('settings.update');
 
-                    Route::resource('links', BackofficePublicPortalLinkController::class)
-                        ->parameters(['links' => 'link'])
-                        ->except(['show']);
+                    Route::get(
+                        'links',
+                        [BackofficePublicPortalLinkController::class, 'index'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:settings.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('links.index');
+
+                    Route::get(
+                        'links/create',
+                        [BackofficePublicPortalLinkController::class, 'create'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:settings.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('links.create');
+
+                    Route::post(
+                        'links',
+                        [BackofficePublicPortalLinkController::class, 'store'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:settings.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('links.store');
+
+                    Route::get(
+                        'links/{link}/edit',
+                        [BackofficePublicPortalLinkController::class, 'edit'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:settings.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('links.edit');
+
+                    Route::match(
+                        ['put', 'patch'],
+                        'links/{link}',
+                        [BackofficePublicPortalLinkController::class, 'update'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:settings.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('links.update');
+
+                    Route::delete(
+                        'links/{link}',
+                        [BackofficePublicPortalLinkController::class, 'destroy'],
+                    )
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:settings.delete',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('links.destroy');
 
                     Route::get(
                         'housing-units/{housingUnit}/edit',

@@ -14,7 +14,7 @@ class PublicPortalSettingController extends Controller
 {
     public function edit(PublicPortalSettingsService $settingsService): View
     {
-        Gate::authorize('viewAny', PublicPortalSetting::class);
+        Gate::authorize('viewAnyBackoffice', PublicPortalSetting::class);
 
         return view('backoffice.public-portal.settings.edit', [
             'settings' => $settingsService->all(),
@@ -22,9 +22,11 @@ class PublicPortalSettingController extends Controller
         ]);
     }
 
-    public function update(UpdatePublicPortalSettingsRequest $request, PublicPortalSettingsService $settingsService): RedirectResponse
-    {
-        Gate::authorize('updateAny', PublicPortalSetting::class);
+    public function update(
+        UpdatePublicPortalSettingsRequest $request,
+        PublicPortalSettingsService $settingsService,
+    ): RedirectResponse {
+        Gate::authorize('updateAnyBackoffice', PublicPortalSetting::class);
 
         $settingsService->updateMany($request->settings());
 

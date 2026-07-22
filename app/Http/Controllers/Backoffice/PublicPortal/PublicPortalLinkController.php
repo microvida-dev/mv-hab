@@ -14,48 +14,61 @@ class PublicPortalLinkController extends Controller
 {
     public function index(): View
     {
-        Gate::authorize('viewAny', PublicPortalLink::class);
+        Gate::authorize('viewAnyBackoffice', PublicPortalLink::class);
 
         return view('backoffice.public-portal.links.index', [
-            'links' => PublicPortalLink::query()->orderBy('sort_order')->orderBy('label')->paginate(20),
+            'links' => PublicPortalLink::query()
+                ->orderBy('sort_order')
+                ->orderBy('label')
+                ->paginate(20),
         ]);
     }
 
     public function create(): View
     {
-        Gate::authorize('create', PublicPortalLink::class);
+        Gate::authorize('createBackoffice', PublicPortalLink::class);
 
-        return view('backoffice.public-portal.links.create', ['link' => new PublicPortalLink]);
+        return view('backoffice.public-portal.links.create', [
+            'link' => new PublicPortalLink,
+        ]);
     }
 
     public function store(StorePublicPortalLinkRequest $request): RedirectResponse
     {
-        Gate::authorize('create', PublicPortalLink::class);
+        Gate::authorize('createBackoffice', PublicPortalLink::class);
 
-        PublicPortalLink::query()->create($this->normalizeBooleans($request->validated(), $request));
+        PublicPortalLink::query()->create(
+            $this->normalizeBooleans($request->validated(), $request),
+        );
 
-        return to_route('backoffice.public-portal.links.index')->with('success', 'Ligação pública criada.');
+        return to_route('backoffice.public-portal.links.index')
+            ->with('success', 'Ligação pública criada.');
     }
 
     public function edit(PublicPortalLink $link): View
     {
-        Gate::authorize('update', $link);
+        Gate::authorize('updateBackoffice', $link);
 
         return view('backoffice.public-portal.links.edit', compact('link'));
     }
 
-    public function update(UpdatePublicPortalLinkRequest $request, PublicPortalLink $link): RedirectResponse
-    {
-        Gate::authorize('update', $link);
+    public function update(
+        UpdatePublicPortalLinkRequest $request,
+        PublicPortalLink $link,
+    ): RedirectResponse {
+        Gate::authorize('updateBackoffice', $link);
 
-        $link->update($this->normalizeBooleans($request->validated(), $request));
+        $link->update(
+            $this->normalizeBooleans($request->validated(), $request),
+        );
 
-        return to_route('backoffice.public-portal.links.index')->with('success', 'Ligação pública atualizada.');
+        return to_route('backoffice.public-portal.links.index')
+            ->with('success', 'Ligação pública atualizada.');
     }
 
     public function destroy(PublicPortalLink $link): RedirectResponse
     {
-        Gate::authorize('delete', $link);
+        Gate::authorize('deleteBackoffice', $link);
 
         $link->delete();
 

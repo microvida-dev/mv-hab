@@ -36,4 +36,32 @@ class PublicPortalLinkPolicy
     {
         return $this->canAccess($user, self::MODULE, 'delete');
     }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view');
+    }
+
+    public function createBackoffice(User $user): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'create');
+    }
+
+    public function updateBackoffice(
+        User $user,
+        PublicPortalLink $publicPortalLink,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'update');
+    }
+
+    public function deleteBackoffice(
+        User $user,
+        PublicPortalLink $publicPortalLink,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'delete');
+    }
 }

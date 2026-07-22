@@ -2,13 +2,18 @@
 
 namespace App\Http\Requests\Backoffice\PublicPortal;
 
+use App\Models\PublicPortalLink;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePublicPortalLinkRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows(
+            'createBackoffice',
+            PublicPortalLink::class,
+        );
     }
 
     /**
