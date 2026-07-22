@@ -34,12 +34,12 @@ class AuditAccessRoutesCommandTest extends TestCase
         $this->assertGreaterThan(0, $payload['summary']['total_routes']);
 
         $this->assertSame(
-            986,
+            979,
             $payload['summary']['fixed_role_routes'],
         );
 
         $this->assertSame(
-            765,
+            758,
             $payload['summary']['backoffice_fixed_role_routes'],
         );
 
@@ -49,22 +49,22 @@ class AuditAccessRoutesCommandTest extends TestCase
         );
 
         $this->assertSame(
-            116,
+            123,
             $payload['summary']['permission_middleware_routes'],
         );
 
         $this->assertSame(
-            643,
+            636,
             $payload['summary']['backoffice_fixed_role_without_active_backoffice'],
         );
 
         $this->assertSame(
-            643,
+            636,
             $payload['summary']['backoffice_fixed_role_without_mfa_backoffice'],
         );
 
         $this->assertSame(
-            643,
+            636,
             $payload['summary']['backoffice_fixed_role_without_log_backoffice'],
         );
 
@@ -180,14 +180,10 @@ class AuditAccessRoutesCommandTest extends TestCase
         );
 
         $expectedPermissions = [
-            'backoffice.application-reviews.create'
-                => 'permission:administrative_processes.create',
-            'backoffice.application-reviews.store'
-                => 'permission:administrative_processes.create',
-            'backoffice.application-reviews.show'
-                => 'permission:administrative_processes.view',
-            'backoffice.application-reviews.complete'
-                => 'permission:administrative_processes.update',
+            'backoffice.application-reviews.create' => 'permission:administrative_processes.create',
+            'backoffice.application-reviews.store' => 'permission:administrative_processes.create',
+            'backoffice.application-reviews.show' => 'permission:administrative_processes.view',
+            'backoffice.application-reviews.complete' => 'permission:administrative_processes.update',
         ];
 
         foreach ($expectedPermissions as $routeName => $permissionMiddleware) {
@@ -226,11 +222,9 @@ class AuditAccessRoutesCommandTest extends TestCase
         $this->assertCount(2, $administrativeProcessBackofficeRoutes);
 
         $expectedPermissions = [
-            'backoffice.administrative-processes.show'
-                => 'permission:administrative_processes.view',
+            'backoffice.administrative-processes.show' => 'permission:administrative_processes.view',
 
-            'backoffice.administrative-processes.timeline'
-                => 'permission:administrative_processes.audit,administrative_processes.view',
+            'backoffice.administrative-processes.timeline' => 'permission:administrative_processes.audit,administrative_processes.view',
         ];
 
         foreach ($expectedPermissions as $routeName => $permissionMiddleware) {
@@ -274,14 +268,11 @@ class AuditAccessRoutesCommandTest extends TestCase
         $this->assertCount(3, $applicationBackofficeRoutes);
 
         $applicationBackofficePermissions = [
-            'backoffice.applications.index'
-                => 'permission:applications.view',
+            'backoffice.applications.index' => 'permission:applications.view',
 
-            'backoffice.applications.show'
-                => 'permission:applications.view',
+            'backoffice.applications.show' => 'permission:applications.view',
 
-            'backoffice.applications.timeline'
-                => 'permission:applications.audit,applications.view',
+            'backoffice.applications.timeline' => 'permission:applications.audit,applications.view',
         ];
 
         foreach ($applicationBackofficePermissions as $routeName => $permissionMiddleware) {
@@ -324,23 +315,17 @@ class AuditAccessRoutesCommandTest extends TestCase
         $this->assertCount(6, $artifactRoutes);
 
         $artifactPermissions = [
-            'backoffice.applications.report.show'
-                => 'permission:reports.view',
+            'backoffice.applications.report.show' => 'permission:reports.view',
 
-            'backoffice.applications.report.generate'
-                => 'permission:reports.create,reports.export',
+            'backoffice.applications.report.generate' => 'permission:reports.create,reports.export',
 
-            'backoffice.application-reports.download'
-                => 'permission:reports.view,reports.export',
+            'backoffice.application-reports.download' => 'permission:reports.view,reports.export',
 
-            'backoffice.applications.document-dossier.show'
-                => 'permission:documents.view',
+            'backoffice.applications.document-dossier.show' => 'permission:documents.view',
 
-            'backoffice.applications.document-dossier.generate'
-                => 'permission:documents.create,documents.export',
+            'backoffice.applications.document-dossier.generate' => 'permission:documents.create,documents.export',
 
-            'backoffice.document-dossiers.download'
-                => 'permission:documents.view',
+            'backoffice.document-dossiers.download' => 'permission:documents.view',
         ];
 
         foreach ($artifactPermissions as $routeName => $permissionMiddleware) {
@@ -383,23 +368,17 @@ class AuditAccessRoutesCommandTest extends TestCase
         $this->assertCount(6, $processTrackingRoutes);
 
         $processTrackingPermissions = [
-            'backoffice.applications.public-status.show'
-                => 'permission:applications.view',
+            'backoffice.applications.public-status.show' => 'permission:applications.view',
 
-            'backoffice.applications.public-status.update'
-                => 'permission:applications.update',
+            'backoffice.applications.public-status.update' => 'permission:applications.update',
 
-            'backoffice.applications.process-confirmations.generate'
-                => 'permission:applications.update,applications.approve',
+            'backoffice.applications.process-confirmations.generate' => 'permission:applications.update,applications.approve',
 
-            'backoffice.process-confirmations.index'
-                => 'permission:applications.view',
+            'backoffice.process-confirmations.index' => 'permission:applications.view',
 
-            'backoffice.process-confirmations.show'
-                => 'permission:applications.view',
+            'backoffice.process-confirmations.show' => 'permission:applications.view',
 
-            'backoffice.process-confirmations.send'
-                => 'permission:applications.update,applications.approve',
+            'backoffice.process-confirmations.send' => 'permission:applications.update,applications.approve',
         ];
 
         foreach ($processTrackingPermissions as $routeName => $permissionMiddleware) {
@@ -441,20 +420,15 @@ class AuditAccessRoutesCommandTest extends TestCase
         $this->assertCount(5, $additionalDocumentRoutes);
 
         $additionalDocumentPermissions = [
-            'backoffice.additional-document-requests.index'
-                => 'permission:documents.view,applications.view',
+            'backoffice.additional-document-requests.index' => 'permission:documents.view,applications.view',
 
-            'backoffice.additional-document-requests.store'
-                => 'permission:documents.create,applications.update',
+            'backoffice.additional-document-requests.store' => 'permission:documents.create,applications.update',
 
-            'backoffice.additional-document-submissions.index'
-                => 'permission:documents.view,applications.view',
+            'backoffice.additional-document-submissions.index' => 'permission:documents.view,applications.view',
 
-            'backoffice.additional-document-submissions.show'
-                => 'permission:documents.view,applications.view',
+            'backoffice.additional-document-submissions.show' => 'permission:documents.view,applications.view',
 
-            'backoffice.additional-document-submissions.decide'
-                => 'permission:documents.approve,documents.reject',
+            'backoffice.additional-document-submissions.decide' => 'permission:documents.approve,documents.reject',
         ];
 
         foreach ($additionalDocumentPermissions as $routeName => $permissionMiddleware) {
@@ -499,29 +473,21 @@ class AuditAccessRoutesCommandTest extends TestCase
         $this->assertCount(8, $documentReviewRoutes);
 
         $documentReviewPermissions = [
-            'admin.document-reviews.index'
-                => 'permission:documents.view',
+            'admin.document-reviews.index' => 'permission:documents.view',
 
-            'admin.document-reviews.show'
-                => 'permission:documents.view',
+            'admin.document-reviews.show' => 'permission:documents.view',
 
-            'admin.document-reviews.preview'
-                => 'permission:documents.view',
+            'admin.document-reviews.preview' => 'permission:documents.view',
 
-            'admin.document-reviews.download'
-                => 'permission:documents.view',
+            'admin.document-reviews.download' => 'permission:documents.view',
 
-            'admin.document-reviews.under-review'
-                => 'permission:documents.approve',
+            'admin.document-reviews.under-review' => 'permission:documents.approve',
 
-            'admin.document-reviews.validate'
-                => 'permission:documents.approve',
+            'admin.document-reviews.validate' => 'permission:documents.approve',
 
-            'admin.document-reviews.reject'
-                => 'permission:documents.reject',
+            'admin.document-reviews.reject' => 'permission:documents.reject',
 
-            'admin.document-reviews.document-ai'
-                => 'permission:documents.approve',
+            'admin.document-reviews.document-ai' => 'permission:documents.approve',
         ];
 
         foreach ($documentReviewPermissions as $routeName => $permissionMiddleware) {

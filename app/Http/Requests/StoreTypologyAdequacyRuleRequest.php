@@ -2,13 +2,18 @@
 
 namespace App\Http\Requests;
 
+use App\Models\TypologyAdequacyRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
 class StoreTypologyAdequacyRuleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows(
+            'createBackoffice',
+            TypologyAdequacyRule::class,
+        );
     }
 
     /**

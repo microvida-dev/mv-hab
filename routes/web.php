@@ -2753,13 +2753,83 @@ Route::middleware('auth')->group(function () {
                         )
                         ->name('contest-housing-units.mark-unavailable');
 
-                    Route::get('typology-rules', [BackofficeTypologyAdequacyRuleController::class, 'index'])->name('typology-rules.index');
-                    Route::get('typology-rules/create', [BackofficeTypologyAdequacyRuleController::class, 'create'])->name('typology-rules.create');
-                    Route::post('typology-rules', [BackofficeTypologyAdequacyRuleController::class, 'store'])->name('typology-rules.store');
-                    Route::get('typology-rules/{typologyAdequacyRule}/edit', [BackofficeTypologyAdequacyRuleController::class, 'edit'])->name('typology-rules.edit');
-                    Route::match(['put', 'patch'], 'typology-rules/{typologyAdequacyRule}', [BackofficeTypologyAdequacyRuleController::class, 'update'])->name('typology-rules.update');
-                    Route::post('typology-rules/{typologyAdequacyRule}/activate', [BackofficeTypologyAdequacyRuleController::class, 'activate'])->name('typology-rules.activate');
-                    Route::post('typology-rules/{typologyAdequacyRule}/deactivate', [BackofficeTypologyAdequacyRuleController::class, 'deactivate'])->name('typology-rules.deactivate');
+                    Route::get('typology-rules', [BackofficeTypologyAdequacyRuleController::class, 'index'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('typology-rules.index');
+                    Route::get('typology-rules/create', [BackofficeTypologyAdequacyRuleController::class, 'create'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('typology-rules.create');
+                    Route::post('typology-rules', [BackofficeTypologyAdequacyRuleController::class, 'store'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('typology-rules.store');
+                    Route::get('typology-rules/{typologyAdequacyRule}/edit', [BackofficeTypologyAdequacyRuleController::class, 'edit'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('typology-rules.edit');
+                    Route::match(['put', 'patch'], 'typology-rules/{typologyAdequacyRule}', [BackofficeTypologyAdequacyRuleController::class, 'update'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('typology-rules.update');
+                    Route::post('typology-rules/{typologyAdequacyRule}/activate', [BackofficeTypologyAdequacyRuleController::class, 'activate'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('typology-rules.activate');
+                    Route::post('typology-rules/{typologyAdequacyRule}/deactivate', [BackofficeTypologyAdequacyRuleController::class, 'deactivate'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:allocations.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('typology-rules.deactivate');
 
                     Route::get('rule-sets', [BackofficeAllocationRuleSetController::class, 'index'])->name('rule-sets.index');
                     Route::get('rule-sets/create', [BackofficeAllocationRuleSetController::class, 'create'])->name('rule-sets.create');

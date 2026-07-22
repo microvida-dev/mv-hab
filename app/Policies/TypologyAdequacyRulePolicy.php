@@ -20,13 +20,31 @@ class TypologyAdequacyRulePolicy
         return $this->viewAny($user);
     }
 
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, 'allocations', 'view');
+    }
+
     public function create(User $user): bool
     {
         return ! $user->hasRole(['candidate', 'auditor']) && $this->canAccess($user, 'allocations', 'create');
     }
 
+    public function createBackoffice(User $user): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'allocations', 'create');
+    }
+
     public function update(User $user, TypologyAdequacyRule $rule): bool
     {
         return ! $user->hasRole(['candidate', 'auditor']) && $this->canAccess($user, 'allocations', 'update');
+    }
+
+    public function updateBackoffice(User $user, TypologyAdequacyRule $rule): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'allocations', 'update');
     }
 }
