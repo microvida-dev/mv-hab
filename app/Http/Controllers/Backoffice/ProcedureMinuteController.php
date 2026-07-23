@@ -77,7 +77,7 @@ class ProcedureMinuteController extends Controller
     {
         Gate::authorize('delete', $procedureMinute);
 
-        $this->minutes->delete($procedureMinute, auth()->user());
+        $this->minutes->delete($procedureMinute, $this->currentUser());
 
         return to_route('backoffice.procedure-minutes.index')
             ->with('success', 'Ata eliminada.');
