@@ -2186,6 +2186,7 @@ Route::middleware('auth')->group(function () {
                         'active.backoffice',
                         'mfa.backoffice',
                         'log.backoffice',
+                        'municipality.feature:applications.review',
                         'permission:applications.audit,applications.view',
                     ])
                     ->withoutMiddleware(

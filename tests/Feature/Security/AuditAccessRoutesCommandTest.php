@@ -34,12 +34,12 @@ class AuditAccessRoutesCommandTest extends TestCase
         $this->assertGreaterThan(0, $payload['summary']['total_routes']);
 
         $this->assertSame(
-            928,
+            926,
             $payload['summary']['fixed_role_routes'],
         );
 
         $this->assertSame(
-            708,
+            706,
             $payload['summary']['backoffice_fixed_role_routes'],
         );
 
@@ -49,22 +49,22 @@ class AuditAccessRoutesCommandTest extends TestCase
         );
 
         $this->assertSame(
-            188,
+            195,
             $payload['summary']['permission_middleware_routes'],
         );
 
         $this->assertSame(
-            596,
+            594,
             $payload['summary']['backoffice_fixed_role_without_active_backoffice'],
         );
 
         $this->assertSame(
-            596,
+            594,
             $payload['summary']['backoffice_fixed_role_without_mfa_backoffice'],
         );
 
         $this->assertSame(
-            596,
+            594,
             $payload['summary']['backoffice_fixed_role_without_log_backoffice'],
         );
 
@@ -89,6 +89,11 @@ class AuditAccessRoutesCommandTest extends TestCase
         $this->assertContains(
             'permission:administrative_processes.create',
             $applicationIntake['permission_middleware'],
+        );
+
+        $this->assertContains(
+            'municipality.feature:applications.intake',
+            $applicationIntake['middleware'],
         );
 
         $this->assertSame(
@@ -209,6 +214,7 @@ class AuditAccessRoutesCommandTest extends TestCase
             $this->assertContains('active.backoffice', $route['middleware']);
             $this->assertContains('mfa.backoffice', $route['middleware']);
             $this->assertContains('log.backoffice', $route['middleware']);
+            $this->assertContains('municipality.feature:applications.review', $route['middleware']);
             $this->assertSame([], $route['missing_backoffice_guards']);
         }
 
@@ -298,6 +304,7 @@ class AuditAccessRoutesCommandTest extends TestCase
             $this->assertContains('active.backoffice', $route['middleware']);
             $this->assertContains('mfa.backoffice', $route['middleware']);
             $this->assertContains('log.backoffice', $route['middleware']);
+            $this->assertContains('municipality.feature:applications.review', $route['middleware']);
             $this->assertSame([], $route['missing_backoffice_guards']);
         }
 
@@ -351,6 +358,12 @@ class AuditAccessRoutesCommandTest extends TestCase
             $this->assertContains('active.backoffice', $route['middleware']);
             $this->assertContains('mfa.backoffice', $route['middleware']);
             $this->assertContains('log.backoffice', $route['middleware']);
+
+            if (str_contains($routeName, 'report')) {
+                $this->assertContains('municipality.feature:applications.export', $route['middleware']);
+                $this->assertContains('permission:applications.export', $route['permission_middleware']);
+            }
+
             $this->assertSame([], $route['missing_backoffice_guards']);
         }
 
@@ -513,6 +526,7 @@ class AuditAccessRoutesCommandTest extends TestCase
             $this->assertContains('active.backoffice', $route['middleware']);
             $this->assertContains('mfa.backoffice', $route['middleware']);
             $this->assertContains('log.backoffice', $route['middleware']);
+            $this->assertContains('municipality.feature:applications.review', $route['middleware']);
             $this->assertSame([], $route['missing_backoffice_guards']);
         }
 
