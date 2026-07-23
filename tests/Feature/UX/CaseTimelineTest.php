@@ -2,16 +2,19 @@
 
 namespace Tests\Feature\UX;
 
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\ProcessTimelineEvent;
 use App\Models\User;
 use App\Models\WorkTask;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class CaseTimelineTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -25,6 +28,7 @@ class CaseTimelineTest extends TestCase
     {
         $technician = $this->userWithRole('municipal_technician');
         $application = Application::factory()->submitted()->create();
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::cases());
 
         ProcessTimelineEvent::factory()->create([
             'application_id' => $application->id,
@@ -51,7 +55,11 @@ class CaseTimelineTest extends TestCase
 
     private function userWithRole(string $role): User
     {
-        $user = User::factory()->create(['status' => 'active']);
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
+            'status' => 'active',
+        ]);
         $user->assignRole($role);
 
         return $user;

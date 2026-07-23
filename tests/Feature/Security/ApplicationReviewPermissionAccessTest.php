@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Security;
 
+use App\Enums\FeatureKey;
 use App\Models\AdministrativeProcess;
 use App\Models\ApplicationReview;
 use App\Models\Permission;
@@ -10,10 +11,12 @@ use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class ApplicationReviewPermissionAccessTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     private const FIXED_ROLE_MIDDLEWARE =
@@ -29,14 +32,10 @@ class ApplicationReviewPermissionAccessTest extends TestCase
     public function test_application_review_routes_use_expected_permission_middleware(): void
     {
         $expected = [
-            'backoffice.application-reviews.create'
-                => 'permission:administrative_processes.create',
-            'backoffice.application-reviews.store'
-                => 'permission:administrative_processes.create',
-            'backoffice.application-reviews.show'
-                => 'permission:administrative_processes.view',
-            'backoffice.application-reviews.complete'
-                => 'permission:administrative_processes.update',
+            'backoffice.application-reviews.create' => 'permission:administrative_processes.create',
+            'backoffice.application-reviews.store' => 'permission:administrative_processes.create',
+            'backoffice.application-reviews.show' => 'permission:administrative_processes.view',
+            'backoffice.application-reviews.complete' => 'permission:administrative_processes.update',
         ];
 
         foreach ($expected as $routeName => $permissionMiddleware) {
@@ -64,6 +63,7 @@ class ApplicationReviewPermissionAccessTest extends TestCase
             $this->assertContains('active.backoffice', $middleware);
             $this->assertContains('mfa.backoffice', $middleware);
             $this->assertContains('log.backoffice', $middleware);
+            $this->assertContains('municipality.feature:applications.review', $middleware);
         }
     }
 
@@ -74,6 +74,8 @@ class ApplicationReviewPermissionAccessTest extends TestCase
         ]);
 
         $process = AdministrativeProcess::factory()->create();
+        $this->assignApplicationMunicipality($user, $process->application, FeatureKey::cases());
+        $process->update(['program_id' => $process->application->program_id]);
 
         $this->actingAs($user)
             ->get(route('backoffice.application-reviews.create', $process))
@@ -100,6 +102,7 @@ class ApplicationReviewPermissionAccessTest extends TestCase
         ]);
 
         $review = ApplicationReview::factory()->create();
+        $this->assignApplicationMunicipality($user, $review->application, FeatureKey::cases());
 
         $this->actingAs($user)
             ->get(route('backoffice.application-reviews.show', $review))
@@ -146,11 +149,13 @@ class ApplicationReviewPermissionAccessTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithCustomRole(array $permissions): User
     {
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
         $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
             'status' => 'active',
         ]);
 
@@ -177,7 +182,9 @@ class ApplicationReviewPermissionAccessTest extends TestCase
         string $roleName,
         string $permission,
     ): User {
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
         $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
             'status' => 'active',
         ]);
 

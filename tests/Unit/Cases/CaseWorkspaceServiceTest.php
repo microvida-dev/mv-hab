@@ -2,15 +2,18 @@
 
 namespace Tests\Unit\Cases;
 
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\User;
 use App\Services\Cases\CaseWorkspaceService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class CaseWorkspaceServiceTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -25,6 +28,7 @@ class CaseWorkspaceServiceTest extends TestCase
         $user = User::factory()->create(['status' => 'active']);
         $user->assignRole('municipal_technician');
         $application = Application::factory()->submitted()->create();
+        $this->assignApplicationMunicipality($user, $application, FeatureKey::cases());
 
         $payload = app(CaseWorkspaceService::class)->forApplication($user, $application);
 

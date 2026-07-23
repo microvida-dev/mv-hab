@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\UX;
 
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\DocumentSubmission;
 use App\Models\ProcessTimelineEvent;
@@ -41,6 +42,7 @@ class CaseWorkspaceRgpdTest extends TestCase
     {
         $technician = $this->userWithRole('municipal_technician');
         $application = Application::factory()->submitted()->create();
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::cases());
 
         ProcessTimelineEvent::factory()->create([
             'application_id' => $application->id,

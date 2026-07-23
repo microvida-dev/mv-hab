@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Security;
 
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\Permission;
 use App\Models\Role;
@@ -9,10 +10,12 @@ use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class ApplicationBackofficeRouteAccessTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     private const FIXED_ROLE_MIDDLEWARE =
@@ -91,7 +94,7 @@ class ApplicationBackofficeRouteAccessTest extends TestCase
             'applications.view',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $this->actingAs($user)
             ->get(route('backoffice.applications.show', $application))
@@ -104,7 +107,7 @@ class ApplicationBackofficeRouteAccessTest extends TestCase
             'applications.audit',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $this->actingAs($user)
             ->withSession(['mfa.verified_at' => now()])
@@ -118,7 +121,7 @@ class ApplicationBackofficeRouteAccessTest extends TestCase
             'applications.view',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $this->actingAs($user)
             ->get(route('backoffice.applications.timeline', $application))
@@ -181,7 +184,9 @@ class ApplicationBackofficeRouteAccessTest extends TestCase
      */
     private function userWithCustomRole(array $permissions): User
     {
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
         $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
             'status' => 'active',
         ]);
 
@@ -211,7 +216,9 @@ class ApplicationBackofficeRouteAccessTest extends TestCase
         string $roleName,
         array $permissions,
     ): User {
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
         $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
             'status' => 'active',
         ]);
 
@@ -229,5 +236,13 @@ class ApplicationBackofficeRouteAccessTest extends TestCase
         $user->roles()->attach($role);
 
         return $user;
+    }
+
+    private function applicationForUser(User $user): Application
+    {
+        $application = Application::factory()->create();
+        $application->program()->update(['municipality_id' => $user->municipality_id]);
+
+        return $application;
     }
 }

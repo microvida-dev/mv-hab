@@ -3,6 +3,7 @@
 namespace Tests\Feature\Documents;
 
 use App\Enums\DocumentStatus;
+use App\Enums\FeatureKey;
 use App\Enums\HousingStatus;
 use App\Enums\IncomeSourceType;
 use App\Models\AdhesionRegistration;
@@ -22,10 +23,12 @@ use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class DocumentSecurityFlowTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     public function test_private_document_upload_download_review_and_cross_candidate_blocking(): void
@@ -49,6 +52,7 @@ class DocumentSecurityFlowTest extends TestCase
             ->assertRedirect();
 
         $submission = DocumentSubmission::query()->firstOrFail();
+        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::cases());
         $this->assertSame($candidate->id, $submission->user_id);
         $this->assertSame(DocumentStatus::Submitted, $submission->status);
         $this->assertStringStartsWith('documents/'.$registration->id.'/'.$submission->id.'/1/', $submission->storage_path);

@@ -2,16 +2,19 @@
 
 namespace Tests\Feature\UX;
 
+use App\Enums\FeatureKey;
 use App\Models\DocumentSubmission;
 use App\Models\MunicipalTeam;
 use App\Models\User;
 use App\Models\WorkTask;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class PriorityOperationsQueueTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -34,7 +37,8 @@ class PriorityOperationsQueueTest extends TestCase
                 'due_at' => now()->subDay(),
             ]);
 
-        DocumentSubmission::factory()->create(['status' => 'submitted']);
+        $document = DocumentSubmission::factory()->create(['status' => 'submitted']);
+        $document->user()->update(['municipality_id' => $technician->municipality_id]);
 
         $this->actingAs($technician)
             ->get(route('dashboard'))
@@ -47,7 +51,11 @@ class PriorityOperationsQueueTest extends TestCase
 
     private function userWithRole(string $role): User
     {
-        $user = User::factory()->create(['status' => 'active']);
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
+            'status' => 'active',
+        ]);
         $user->assignRole($role);
 
         return $user;

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Security;
 
+use App\Enums\FeatureKey;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -10,10 +11,12 @@ use App\Services\Access\RoleManagementService;
 use App\Services\Security\MfaEnforcementService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class PermissionSensitiveMfaTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -114,7 +117,12 @@ class PermissionSensitiveMfaTest extends TestCase
     private function userWithCustomRole(string $name, array $permissionNames): User
     {
         $role = $this->customRole($name, $permissionNames);
-        $user = User::factory()->create(['status' => 'active', 'mfa_required' => false]);
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
+            'status' => 'active',
+            'mfa_required' => false,
+        ]);
         $user->roles()->attach($role);
 
         return $user;
@@ -145,7 +153,12 @@ class PermissionSensitiveMfaTest extends TestCase
 
     private function userWithSystemRole(string $name): User
     {
-        $user = User::factory()->create(['status' => 'active', 'mfa_required' => false]);
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
+            'status' => 'active',
+            'mfa_required' => false,
+        ]);
         $user->assignRole($name);
 
         return $user;

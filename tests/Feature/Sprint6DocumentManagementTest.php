@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\DocumentAppliesTo;
 use App\Enums\DocumentStatus;
+use App\Enums\FeatureKey;
 use App\Enums\HousingStatus;
 use App\Enums\IncomeSourceType;
 use App\Models\AdhesionRegistration;
@@ -25,10 +26,12 @@ use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class Sprint6DocumentManagementTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     public function test_document_pages_require_authentication_candidate_role_and_registration(): void
@@ -166,6 +169,7 @@ class Sprint6DocumentManagementTest extends TestCase
         [$candidate, , $household] = $this->candidateWithDocumentContext();
         $technician = $this->userWithRole('municipal_technician');
         $submission = $this->uploadIdentification($candidate, $household->members()->firstOrFail());
+        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::cases());
 
         $this->actingAs($technician)
             ->withSession(['mfa.verified_at' => now()])
@@ -198,6 +202,7 @@ class Sprint6DocumentManagementTest extends TestCase
         [$candidate, , $household] = $this->candidateWithDocumentContext();
         $technician = $this->userWithRole('municipal_technician');
         $submission = $this->uploadIdentification($candidate, $household->members()->firstOrFail());
+        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::cases());
 
         $this->actingAs($technician)
             ->withSession(['mfa.verified_at' => now()])

@@ -2,16 +2,19 @@
 
 namespace Tests\Feature\Security;
 
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class ApplicationBackofficePolicyTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -63,7 +66,7 @@ class ApplicationBackofficePolicyTest extends TestCase
             'applications.view',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $this->assertTrue(
             $user->can('viewBackoffice', $application),
@@ -94,7 +97,7 @@ class ApplicationBackofficePolicyTest extends TestCase
             'applications.audit',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $this->assertTrue(
             $user->can('auditBackoffice', $application),
@@ -107,7 +110,7 @@ class ApplicationBackofficePolicyTest extends TestCase
             'applications.view',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $this->assertTrue(
             $user->can('auditBackoffice', $application),
@@ -139,7 +142,7 @@ class ApplicationBackofficePolicyTest extends TestCase
             'applications.update',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $this->assertTrue(
             $user->can('updateBackoffice', $application),
@@ -181,11 +184,13 @@ class ApplicationBackofficePolicyTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithCustomRole(array $permissions): User
     {
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
         $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
             'status' => 'active',
         ]);
 
@@ -209,13 +214,15 @@ class ApplicationBackofficePolicyTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithSystemRoleAndPermissions(
         string $roleName,
         array $permissions,
     ): User {
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
         $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
             'status' => 'active',
         ]);
 
@@ -233,5 +240,13 @@ class ApplicationBackofficePolicyTest extends TestCase
         $user->roles()->attach($role);
 
         return $user;
+    }
+
+    private function applicationForUser(User $user): Application
+    {
+        $application = Application::factory()->create();
+        $application->program()->update(['municipality_id' => $user->municipality_id]);
+
+        return $application;
     }
 }

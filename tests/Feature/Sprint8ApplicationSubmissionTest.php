@@ -7,6 +7,7 @@ use App\Enums\ApplicationSnapshotType;
 use App\Enums\ApplicationStatus;
 use App\Enums\DocumentAppliesTo;
 use App\Enums\DocumentStatus;
+use App\Enums\FeatureKey;
 use App\Enums\HousingStatus;
 use App\Models\AdhesionRegistration;
 use App\Models\Application;
@@ -24,10 +25,12 @@ use Database\Seeders\IncomeSourceSeeder;
 use Database\Seeders\RequiredDocumentSeeder;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class Sprint8ApplicationSubmissionTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     public function test_candidate_application_pages_require_authentication_role_and_ownership(): void
@@ -268,6 +271,7 @@ class Sprint8ApplicationSubmissionTest extends TestCase
         [$candidate, , , , $contest] = $this->completeCandidateContext();
         $application = $this->submittedApplication($candidate, $contest);
         $technician = $this->userWithRole('municipal_technician');
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::cases());
 
         $this->actingAs($candidate)
             ->get(route('backoffice.applications.index'))

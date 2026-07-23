@@ -2,19 +2,20 @@
 
 namespace Tests\Feature\Security;
 
+use App\Enums\FeatureKey;
 use App\Models\Application;
-use App\Models\ApplicationReport;
-use App\Models\DocumentDossier;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class ApplicationArtifactRouteAccessTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     private const FIXED_ROLE_MIDDLEWARE =
@@ -30,26 +31,32 @@ class ApplicationArtifactRouteAccessTest extends TestCase
     public function test_artifact_routes_use_expected_permissions(): void
     {
         $expected = [
-            'backoffice.applications.report.show'
-                => 'permission:reports.view',
+            'backoffice.applications.report.show' => [
+                'permission:reports.view',
+                'permission:applications.export',
+                'municipality.feature:applications.export',
+            ],
 
-            'backoffice.applications.report.generate'
-                => 'permission:reports.create,reports.export',
+            'backoffice.applications.report.generate' => [
+                'permission:reports.create,reports.export',
+                'permission:applications.export',
+                'municipality.feature:applications.export',
+            ],
 
-            'backoffice.application-reports.download'
-                => 'permission:reports.view,reports.export',
+            'backoffice.application-reports.download' => [
+                'permission:reports.view,reports.export',
+                'permission:applications.export',
+                'municipality.feature:applications.export',
+            ],
 
-            'backoffice.applications.document-dossier.show'
-                => 'permission:documents.view',
+            'backoffice.applications.document-dossier.show' => ['permission:documents.view'],
 
-            'backoffice.applications.document-dossier.generate'
-                => 'permission:documents.create,documents.export',
+            'backoffice.applications.document-dossier.generate' => ['permission:documents.create,documents.export'],
 
-            'backoffice.document-dossiers.download'
-                => 'permission:documents.view',
+            'backoffice.document-dossiers.download' => ['permission:documents.view'],
         ];
 
-        foreach ($expected as $routeName => $permissionMiddleware) {
+        foreach ($expected as $routeName => $expectedMiddleware) {
             $route = Route::getRoutes()->getByName($routeName);
 
             $this->assertNotNull($route);
@@ -70,7 +77,9 @@ class ApplicationArtifactRouteAccessTest extends TestCase
                 ),
             );
 
-            $this->assertContains($permissionMiddleware, $middleware);
+            foreach ($expectedMiddleware as $expectedItem) {
+                $this->assertContains($expectedItem, $middleware);
+            }
             $this->assertContains('active.backoffice', $middleware);
             $this->assertContains('mfa.backoffice', $middleware);
             $this->assertContains('log.backoffice', $middleware);
@@ -81,11 +90,14 @@ class ApplicationArtifactRouteAccessTest extends TestCase
     {
         $user = $this->userWithCustomRole([
             'reports.view',
+            'applications.view',
+            'applications.export',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.applications.report.show', $application))
             ->assertOk();
     }
@@ -94,11 +106,14 @@ class ApplicationArtifactRouteAccessTest extends TestCase
     {
         $user = $this->userWithCustomRole([
             'reports.create',
+            'applications.view',
+            'applications.export',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.applications.report.show', $application))
             ->assertForbidden();
     }
@@ -107,11 +122,13 @@ class ApplicationArtifactRouteAccessTest extends TestCase
     {
         $user = $this->userWithCustomRole([
             'reports.create',
+            'applications.export',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $response = $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(
                 route('backoffice.applications.report.generate', $application),
                 [
@@ -131,7 +148,7 @@ class ApplicationArtifactRouteAccessTest extends TestCase
             'documents.view',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $this->actingAs($user)
             ->get(route(
@@ -147,7 +164,7 @@ class ApplicationArtifactRouteAccessTest extends TestCase
             'documents.view',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $this->actingAs($user)
             ->post(
@@ -170,7 +187,7 @@ class ApplicationArtifactRouteAccessTest extends TestCase
             'documents.create',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $response = $this->actingAs($user)
             ->post(
@@ -228,11 +245,13 @@ class ApplicationArtifactRouteAccessTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithCustomRole(array $permissions): User
     {
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
         $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
             'status' => 'active',
         ]);
 
@@ -256,13 +275,15 @@ class ApplicationArtifactRouteAccessTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithSystemRoleAndPermissions(
         string $roleName,
         array $permissions,
     ): User {
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
         $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
             'status' => 'active',
         ]);
 
@@ -280,5 +301,13 @@ class ApplicationArtifactRouteAccessTest extends TestCase
         $user->roles()->attach($role);
 
         return $user;
+    }
+
+    private function applicationForUser(User $user): Application
+    {
+        $application = Application::factory()->create();
+        $application->program()->update(['municipality_id' => $user->municipality_id]);
+
+        return $application;
     }
 }

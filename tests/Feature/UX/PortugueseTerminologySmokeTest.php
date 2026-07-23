@@ -2,14 +2,17 @@
 
 namespace Tests\Feature\UX;
 
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class PortugueseTerminologySmokeTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -38,6 +41,7 @@ class PortugueseTerminologySmokeTest extends TestCase
     {
         $technician = $this->userWithRole('municipal_technician');
         $application = Application::factory()->submitted()->create();
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::cases());
 
         $this->actingAs($technician)
             ->withSession(['mfa.verified_at' => now()])
@@ -51,7 +55,11 @@ class PortugueseTerminologySmokeTest extends TestCase
 
     private function userWithRole(string $role): User
     {
-        $user = User::factory()->create(['status' => 'active']);
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
+            'status' => 'active',
+        ]);
         $user->assignRole($role);
 
         return $user;

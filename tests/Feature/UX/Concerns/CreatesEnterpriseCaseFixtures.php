@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\UX\Concerns;
 
+use App\Enums\FeatureKey;
 use App\Models\AuditEvent;
 use App\Models\Complaint;
 use App\Models\Contest;
@@ -14,9 +15,12 @@ use App\Models\PropertyInspection;
 use App\Models\SupportTicket;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 
 trait CreatesEnterpriseCaseFixtures
 {
+    use InteractsWithMunicipalFeatures;
+
     protected function seedAccess(): void
     {
         $this->seed(SystemAccessSeeder::class);
@@ -24,7 +28,11 @@ trait CreatesEnterpriseCaseFixtures
 
     protected function userWithRole(string $role = 'administrator'): User
     {
-        $user = User::factory()->create(['status' => 'active']);
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
+            'status' => 'active',
+        ]);
         $user->assignRole($role);
 
         return $user;

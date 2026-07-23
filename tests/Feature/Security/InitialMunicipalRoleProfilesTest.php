@@ -4,6 +4,7 @@ namespace Tests\Feature\Security;
 
 use App\Enums\DocumentStatus;
 use App\Enums\ExportScope;
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\DocumentSubmission;
 use App\Models\EligibilityCheck;
@@ -20,10 +21,12 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class InitialMunicipalRoleProfilesTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     private const FULL_BACKOFFICE_ROLE_MIDDLEWARE =
@@ -78,6 +81,8 @@ class InitialMunicipalRoleProfilesTest extends TestCase
         $submission = DocumentSubmission::factory()->create([
             'status' => DocumentStatus::UnderReview->value,
         ]);
+        $application->program()->update(['municipality_id' => $operator->municipality_id]);
+        $submission->user()->update(['municipality_id' => $operator->municipality_id]);
 
         $this->asVerified($operator)
             ->get(route('dashboard'))
@@ -131,6 +136,9 @@ class InitialMunicipalRoleProfilesTest extends TestCase
             'status' => DocumentStatus::Submitted->value,
         ]);
         $eligibilityCheck = EligibilityCheck::factory()->create();
+        $validatedSubmission->user()->update(['municipality_id' => $analyst->municipality_id]);
+        $rejectedSubmission->user()->update(['municipality_id' => $analyst->municipality_id]);
+        $eligibilityCheck->program()->update(['municipality_id' => $analyst->municipality_id]);
 
         $this->asVerified($analyst)
             ->get(route('workspaces.show', 'concursos'))
@@ -341,7 +349,9 @@ class InitialMunicipalRoleProfilesTest extends TestCase
         ]);
         $role->permissions()->sync($template['permission_ids']);
 
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
         $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
             'status' => 'active',
             'mfa_required' => false,
         ]);

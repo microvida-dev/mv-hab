@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Security;
 
+use App\Enums\FeatureKey;
 use App\Models\ApplicationReport;
 use App\Models\DocumentDossier;
 use App\Models\Permission;
@@ -9,10 +10,12 @@ use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class ApplicationArtifactPolicyTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -29,6 +32,9 @@ class ApplicationArtifactPolicyTest extends TestCase
         ]);
 
         $report = ApplicationReport::factory()->create();
+        $report->application->program()->update([
+            'municipality_id' => $user->municipality_id,
+        ]);
 
         $this->assertTrue(
             $user->can('viewAny', ApplicationReport::class),
@@ -164,11 +170,13 @@ class ApplicationArtifactPolicyTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithCustomRole(array $permissions): User
     {
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
         $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
             'status' => 'active',
         ]);
 
@@ -192,13 +200,15 @@ class ApplicationArtifactPolicyTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithSystemRoleAndPermissions(
         string $roleName,
         array $permissions,
     ): User {
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
         $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
             'status' => 'active',
         ]);
 

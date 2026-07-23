@@ -7,6 +7,7 @@ use App\Enums\ApplicationStatus;
 use App\Enums\CorrectionRequestStatus;
 use App\Enums\CorrectionResponseStatus;
 use App\Enums\EligibilityResult;
+use App\Enums\FeatureKey;
 use App\Models\AdhesionRegistration;
 use App\Models\AdministrativeProcess;
 use App\Models\Application;
@@ -24,10 +25,12 @@ use App\Services\Administrative\CorrectionResponseService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class Sprint9AdministrativeWorkflowTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     public function test_access_to_administrative_backoffice_is_protected(): void
@@ -53,6 +56,7 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
     {
         [$candidate, $application] = $this->submittedApplicationContext();
         $technician = $this->userWithRole('municipal_technician');
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::cases());
 
         $this->actingAs($technician)
             ->withSession(['mfa.verified_at' => now()])

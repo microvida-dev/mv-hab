@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\DocumentDossierStatus;
+use App\Enums\FeatureKey;
 use App\Enums\GeneratedProcedureDocumentStatus;
 use App\Enums\InternalAlertStatus;
 use App\Enums\ListAutomationStatus;
@@ -25,10 +26,12 @@ use App\Services\ListAutomation\ListAutomationRunService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class Sprint24BackofficeOperationalTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -63,6 +66,7 @@ class Sprint24BackofficeOperationalTest extends TestCase
     {
         $admin = $this->userWithRole('administrator');
         $application = $this->submittedApplication();
+        $this->assignApplicationMunicipality($admin, $application, FeatureKey::cases());
 
         $this->actingAs($admin)
             ->withSession(['mfa.verified_at' => now()])

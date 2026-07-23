@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Security;
 
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\Permission;
 use App\Models\ProcessConfirmation;
@@ -10,10 +11,12 @@ use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class ApplicationProcessTrackingPermissionAccessTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     private const FIXED_ROLE_MIDDLEWARE =
@@ -29,23 +32,17 @@ class ApplicationProcessTrackingPermissionAccessTest extends TestCase
     public function test_process_tracking_routes_use_expected_permissions(): void
     {
         $expected = [
-            'backoffice.applications.public-status.show'
-                => 'permission:applications.view',
+            'backoffice.applications.public-status.show' => 'permission:applications.view',
 
-            'backoffice.applications.public-status.update'
-                => 'permission:applications.update',
+            'backoffice.applications.public-status.update' => 'permission:applications.update',
 
-            'backoffice.applications.process-confirmations.generate'
-                => 'permission:applications.update,applications.approve',
+            'backoffice.applications.process-confirmations.generate' => 'permission:applications.update,applications.approve',
 
-            'backoffice.process-confirmations.index'
-                => 'permission:applications.view',
+            'backoffice.process-confirmations.index' => 'permission:applications.view',
 
-            'backoffice.process-confirmations.show'
-                => 'permission:applications.view',
+            'backoffice.process-confirmations.show' => 'permission:applications.view',
 
-            'backoffice.process-confirmations.send'
-                => 'permission:applications.update,applications.approve',
+            'backoffice.process-confirmations.send' => 'permission:applications.update,applications.approve',
         ];
 
         foreach ($expected as $routeName => $permissionMiddleware) {
@@ -82,7 +79,7 @@ class ApplicationProcessTrackingPermissionAccessTest extends TestCase
             'applications.view',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $this->actingAs($user)
             ->get(route(
@@ -98,7 +95,7 @@ class ApplicationProcessTrackingPermissionAccessTest extends TestCase
             'applications.create',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $this->actingAs($user)
             ->get(route(
@@ -114,7 +111,7 @@ class ApplicationProcessTrackingPermissionAccessTest extends TestCase
             'applications.update',
         ]);
 
-        $application = Application::factory()->create();
+        $application = $this->applicationForUser($user);
 
         $response = $this->actingAs($user)
             ->put(route(
@@ -281,11 +278,13 @@ class ApplicationProcessTrackingPermissionAccessTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithCustomRole(array $permissions): User
     {
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
         $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
             'status' => 'active',
         ]);
 
@@ -309,13 +308,15 @@ class ApplicationProcessTrackingPermissionAccessTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithSystemRoleAndPermissions(
         string $roleName,
         array $permissions,
     ): User {
+        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
         $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
             'status' => 'active',
         ]);
 
@@ -333,5 +334,13 @@ class ApplicationProcessTrackingPermissionAccessTest extends TestCase
         $user->roles()->attach($role);
 
         return $user;
+    }
+
+    private function applicationForUser(User $user): Application
+    {
+        $application = Application::factory()->create();
+        $application->program()->update(['municipality_id' => $user->municipality_id]);
+
+        return $application;
     }
 }
