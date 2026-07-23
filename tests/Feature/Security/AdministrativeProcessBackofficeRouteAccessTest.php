@@ -3,17 +3,19 @@
 namespace Tests\Feature\Security;
 
 use App\Models\AdministrativeProcess;
+use App\Models\Application;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class AdministrativeProcessBackofficeRouteAccessTest extends TestCase
 {
-    use RefreshDatabase;
+    use InteractsWithMunicipalFeatures, RefreshDatabase;
 
     private const FIXED_ROLE_MIDDLEWARE =
         'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor';
@@ -66,7 +68,7 @@ class AdministrativeProcessBackofficeRouteAccessTest extends TestCase
             'administrative_processes.view',
         ]);
 
-        $process = AdministrativeProcess::factory()->create();
+        $process = $this->scopedProcessFor($user);
 
         $this->actingAs($user)
             ->get(route('backoffice.administrative-processes.show', $process))
@@ -79,7 +81,7 @@ class AdministrativeProcessBackofficeRouteAccessTest extends TestCase
             'administrative_processes.create',
         ]);
 
-        $process = AdministrativeProcess::factory()->create();
+        $process = $this->scopedProcessFor($user);
 
         $this->actingAs($user)
             ->get(route('backoffice.administrative-processes.show', $process))
@@ -92,7 +94,7 @@ class AdministrativeProcessBackofficeRouteAccessTest extends TestCase
             'administrative_processes.audit',
         ]);
 
-        $process = AdministrativeProcess::factory()->create();
+        $process = $this->scopedProcessFor($user);
 
         $this->actingAs($user)
             ->withSession(['mfa.verified_at' => now()])
@@ -106,7 +108,7 @@ class AdministrativeProcessBackofficeRouteAccessTest extends TestCase
             'administrative_processes.view',
         ]);
 
-        $process = AdministrativeProcess::factory()->create();
+        $process = $this->scopedProcessFor($user);
 
         $this->actingAs($user)
             ->get(route('backoffice.administrative-processes.timeline', $process))
@@ -122,9 +124,10 @@ class AdministrativeProcessBackofficeRouteAccessTest extends TestCase
             ],
         );
 
-        $process = AdministrativeProcess::factory()->create([
+        $process = $this->scopedProcessFor($user);
+        $process->forceFill([
             'user_id' => $user->id,
-        ]);
+        ])->save();
 
         $this->actingAs($user)
             ->get(route('backoffice.administrative-processes.show', $process))
@@ -141,9 +144,10 @@ class AdministrativeProcessBackofficeRouteAccessTest extends TestCase
             ],
         );
 
-        $process = AdministrativeProcess::factory()->create([
+        $process = $this->scopedProcessFor($user);
+        $process->forceFill([
             'user_id' => $user->id,
-        ]);
+        ])->save();
 
         $this->actingAs($user)
             ->get(route('backoffice.administrative-processes.timeline', $process))
@@ -176,6 +180,20 @@ class AdministrativeProcessBackofficeRouteAccessTest extends TestCase
         $user->roles()->attach($role);
 
         return $user;
+    }
+
+    private function scopedProcessFor(User $user): AdministrativeProcess
+    {
+        $application = Application::factory()->submitted()->create();
+        $municipality = $application->program()->firstOrFail()->municipality()->firstOrFail();
+
+        $this->assignMunicipality($user, $municipality);
+
+        return AdministrativeProcess::factory()->create([
+            'application_id' => $application->getKey(),
+            'program_id' => $application->program_id,
+            'contest_id' => $application->contest_id,
+        ]);
     }
 
     /**

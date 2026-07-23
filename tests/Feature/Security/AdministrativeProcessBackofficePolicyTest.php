@@ -3,16 +3,18 @@
 namespace Tests\Feature\Security;
 
 use App\Models\AdministrativeProcess;
+use App\Models\Application;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class AdministrativeProcessBackofficePolicyTest extends TestCase
 {
-    use RefreshDatabase;
+    use InteractsWithMunicipalFeatures, RefreshDatabase;
 
     protected function setUp(): void
     {
@@ -27,7 +29,7 @@ class AdministrativeProcessBackofficePolicyTest extends TestCase
             'administrative_processes.view',
         ]);
 
-        $process = AdministrativeProcess::factory()->create();
+        $process = $this->scopedProcessFor($user);
 
         $this->assertTrue(
             $user->can('viewBackoffice', $process),
@@ -40,7 +42,7 @@ class AdministrativeProcessBackofficePolicyTest extends TestCase
             'administrative_processes.create',
         ]);
 
-        $process = AdministrativeProcess::factory()->create();
+        $process = $this->scopedProcessFor($user);
 
         $this->assertFalse(
             $user->can('viewBackoffice', $process),
@@ -56,7 +58,7 @@ class AdministrativeProcessBackofficePolicyTest extends TestCase
             ],
         );
 
-        $process = AdministrativeProcess::factory()->create();
+        $process = $this->scopedProcessFor($user);
 
         $this->assertFalse(
             $user->can('viewBackoffice', $process),
@@ -69,7 +71,7 @@ class AdministrativeProcessBackofficePolicyTest extends TestCase
             'administrative_processes.audit',
         ]);
 
-        $process = AdministrativeProcess::factory()->create();
+        $process = $this->scopedProcessFor($user);
 
         $this->assertTrue(
             $user->can('auditBackoffice', $process),
@@ -82,7 +84,7 @@ class AdministrativeProcessBackofficePolicyTest extends TestCase
             'administrative_processes.view',
         ]);
 
-        $process = AdministrativeProcess::factory()->create();
+        $process = $this->scopedProcessFor($user);
 
         $this->assertTrue(
             $user->can('auditBackoffice', $process),
@@ -99,7 +101,7 @@ class AdministrativeProcessBackofficePolicyTest extends TestCase
             ],
         );
 
-        $process = AdministrativeProcess::factory()->create();
+        $process = $this->scopedProcessFor($user);
 
         $this->assertFalse(
             $user->can('auditBackoffice', $process),
@@ -135,6 +137,20 @@ class AdministrativeProcessBackofficePolicyTest extends TestCase
         $user->roles()->attach($role);
 
         return $user;
+    }
+
+    private function scopedProcessFor(User $user): AdministrativeProcess
+    {
+        $application = Application::factory()->submitted()->create();
+        $municipality = $application->program()->firstOrFail()->municipality()->firstOrFail();
+
+        $this->assignMunicipality($user, $municipality);
+
+        return AdministrativeProcess::factory()->create([
+            'application_id' => $application->getKey(),
+            'program_id' => $application->program_id,
+            'contest_id' => $application->contest_id,
+        ]);
     }
 
     /**
