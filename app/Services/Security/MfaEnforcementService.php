@@ -2,7 +2,10 @@
 
 namespace App\Services\Security;
 
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
+use App\Services\Access\PermissionCatalogService;
 
 class MfaEnforcementService
 {
@@ -18,9 +21,49 @@ class MfaEnforcementService
         'auditor',
     ];
 
+    public function __construct(private readonly PermissionCatalogService $permissions) {}
+
     public function requiresMfa(?User $user): bool
     {
-        return $user !== null && ($user->mfa_required || $user->hasRole(self::SENSITIVE_ROLES));
+        if ($user === null) {
+            return false;
+        }
+
+        if ($user->mfa_required) {
+            return true;
+        }
+
+        return $user->roles()
+            ->active()
+            ->with('permissions:id,name,module,action')
+            ->get()
+            ->contains(fn (Role $role): bool => $this->roleRequiresMfa($role));
+    }
+
+    public function roleRequiresMfa(Role $role): bool
+    {
+        if (! $role->isActive()) {
+            return false;
+        }
+
+        if ($this->isLegacySensitiveRole($role->name)) {
+            return true;
+        }
+
+        $role->loadMissing('permissions:id,name,module,action');
+
+        return $role->permissions->contains(
+            fn (Permission $permission): bool => $this->permissions->isSensitive(
+                $permission->name,
+                $permission->module,
+                $permission->action,
+            ),
+        );
+    }
+
+    public function isLegacySensitiveRole(string $roleName): bool
+    {
+        return in_array($roleName, self::SENSITIVE_ROLES, true);
     }
 
     public function hasConfirmedDevice(User $user): bool

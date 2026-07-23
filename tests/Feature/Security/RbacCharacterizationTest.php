@@ -123,7 +123,7 @@ class RbacCharacterizationTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_mfa_is_currently_triggered_by_sensitive_role_names_or_manual_flag_not_permissions(): void
+    public function test_mfa_is_triggered_by_sensitive_permissions_roles_or_manual_flag(): void
     {
         $mfa = app(MfaEnforcementService::class);
 
@@ -137,7 +137,7 @@ class RbacCharacterizationTest extends TestCase
             ],
         );
 
-        $this->assertFalse($mfa->requiresMfa($customSensitiveUser));
+        $this->assertTrue($mfa->requiresMfa($customSensitiveUser));
 
         $customSensitiveUser->forceFill(['mfa_required' => true])->save();
 

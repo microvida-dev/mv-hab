@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Policies\RoleAssignmentPolicy;
 use App\Policies\UserAdministrationPolicy;
+use App\Services\Security\MfaEnforcementService;
 use App\Services\Security\SessionRevocationService;
 use DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -17,21 +18,11 @@ use Illuminate\Support\Str;
 
 class UserAdministrationService
 {
-    private const MFA_REQUIRED_ROLES = [
-        'administrator',
-        'municipal_technician',
-        'jury',
-        'legal_manager',
-        'financial_manager',
-        'housing_manager',
-        'inspection_manager',
-        'auditor',
-    ];
-
     public function __construct(
         private readonly AccessChangeLogger $logger,
         private readonly UserAdministrationPolicy $userPolicy,
         private readonly RoleAssignmentPolicy $rolePolicy,
+        private readonly MfaEnforcementService $mfa,
         private readonly SessionRevocationService $sessions,
     ) {}
 
@@ -56,7 +47,8 @@ class UserAdministrationService
             $user->email_verified_at = now();
             $user->password = Str::password(40);
             $user->status = (string) ($data['status'] ?? 'active');
-            $user->mfa_required = (bool) ($data['mfa_required'] ?? false) || $this->roleRequiresMfa($role->name);
+            $user->mfa_required = (bool) ($data['mfa_required'] ?? false)
+                || $this->mfa->isLegacySensitiveRole($role->name);
             $user->internal_notes = $data['internal_notes'] ?? null;
             $user->save();
 
@@ -314,11 +306,6 @@ class UserAdministrationService
         if ($team instanceof MunicipalTeam && ! $team->isActive()) {
             throw new DomainException('Equipas inativas não podem receber novas atribuições.');
         }
-    }
-
-    private function roleRequiresMfa(string $roleName): bool
-    {
-        return in_array($roleName, self::MFA_REQUIRED_ROLES, true);
     }
 
     private function roleIsWithinActorPermissions(User $actor, Role $role): bool
