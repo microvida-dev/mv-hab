@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\DocumentAccessAction;
-use App\Enums\DocumentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RejectDocumentSubmissionRequest;
 use App\Http\Requests\ValidateDocumentSubmissionRequest;
@@ -538,16 +537,12 @@ class DocumentReviewController extends Controller
 
     private function reviewQueueStatusValue(DocumentSubmission $submission): string
     {
-        $status = $submission->status;
-
-        return $status instanceof DocumentStatus ? $status->value : '';
+        return $submission->status->value;
     }
 
     private function reviewQueueStatusLabel(DocumentSubmission $submission): string
     {
-        $status = $submission->status;
-
-        return $status instanceof DocumentStatus ? $status->label() : '';
+        return $submission->status->label();
     }
 
     public function preview(Request $request, DocumentSubmission $documentSubmission): StreamedResponse

@@ -151,7 +151,7 @@ class DocumentUploadService
                 description: 'Documento substituído pelo candidato.',
                 metadata: [
                     'actor_id' => $actor->id,
-                    'from_status' => $previousStatus?->value,
+                    'from_status' => $previousStatus->value,
                     'to_status' => DocumentStatus::Submitted->value,
                     'version' => $nextVersion,
                 ],
