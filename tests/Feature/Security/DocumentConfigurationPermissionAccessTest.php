@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Security;
 
+use App\Enums\DocumentAppliesTo;
+use App\Enums\RequiredDocumentConditionOperator;
 use App\Models\DocumentType;
 use App\Models\Permission;
 use App\Models\RequiredDocument;
@@ -108,6 +110,53 @@ class DocumentConfigurationPermissionAccessTest extends TestCase
             ->withSession(['mfa.verified_at' => now()])
             ->get(route('admin.required-documents.index'))
             ->assertForbidden();
+    }
+
+    public function test_required_document_update_respects_the_update_permission(): void
+    {
+        $documentType = DocumentType::factory()->create();
+        $requiredDocument = RequiredDocument::factory()->create();
+        $payload = [
+            'document_type_id' => $documentType->id,
+            'required_for' => DocumentAppliesTo::Application->value,
+            'condition_key' => 'application.is_submitted',
+            'condition_operator' => RequiredDocumentConditionOperator::IsTrue->value,
+            'condition_value' => null,
+            'is_required' => true,
+            'is_active' => true,
+            'instructions' => 'Documento obrigatório após submissão.',
+            'sort_order' => 20,
+        ];
+
+        $authorizedUser = $this->userWithCustomRole(['documents.update']);
+
+        $this->actingAs($authorizedUser)
+            ->withSession(['mfa.verified_at' => now()])
+            ->put(route('admin.required-documents.update', $requiredDocument), $payload)
+            ->assertRedirect(route('admin.required-documents.index'));
+
+        $this->assertDatabaseHas('required_documents', [
+            'id' => $requiredDocument->id,
+            'document_type_id' => $documentType->id,
+            'required_for' => DocumentAppliesTo::Application->value,
+            'condition_key' => 'application.is_submitted',
+            'sort_order' => 20,
+        ]);
+
+        $unauthorizedUser = $this->userWithCustomRole([]);
+
+        $this->actingAs($unauthorizedUser)
+            ->withSession(['mfa.verified_at' => now()])
+            ->put(route('admin.required-documents.update', $requiredDocument), [
+                ...$payload,
+                'condition_key' => 'unauthorized.change',
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('required_documents', [
+            'id' => $requiredDocument->id,
+            'condition_key' => 'unauthorized.change',
+        ]);
     }
 
     public function test_candidate_is_blocked_even_with_document_permissions(): void
