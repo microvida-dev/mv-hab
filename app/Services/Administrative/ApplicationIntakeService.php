@@ -7,6 +7,7 @@ use App\Enums\ApplicationStatus;
 use App\Models\AdministrativeProcess;
 use App\Models\Application;
 use App\Models\User;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -16,14 +17,15 @@ class ApplicationIntakeService
     public function __construct(
         private readonly AdministrativeProcessService $processService,
         private readonly AdministrativeTaskService $taskService,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
     /**
      * @return Builder<Application>
      */
-    public function pendingApplications(): Builder
+    public function pendingApplications(User $actor): Builder
     {
-        return Application::query()
+        return $this->municipalScope->applications(Application::query(), $actor)
             ->with(['user', 'program', 'contest'])
             ->whereIn('status', [
                 ApplicationStatus::Submitted->value,
@@ -55,7 +57,7 @@ class ApplicationIntakeService
      */
     public function createProcessesBatch(User $actor): Collection
     {
-        return $this->pendingApplications()
+        return $this->pendingApplications($actor)
             ->get()
             ->map(fn (Application $application) => $this->createProcess($application, $actor));
     }

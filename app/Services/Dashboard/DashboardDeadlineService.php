@@ -2,15 +2,21 @@
 
 namespace App\Services\Dashboard;
 
+use App\Enums\FeatureKey;
+use App\Models\DocumentSubmission;
 use App\Models\User;
 use App\Models\WorkTask;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class DashboardDeadlineService
 {
-    public function __construct(private readonly DashboardAuthorizationService $authorization) {}
+    public function __construct(
+        private readonly DashboardAuthorizationService $authorization,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
     /**
      * @return list<array<string, mixed>>
@@ -20,7 +26,7 @@ class DashboardDeadlineService
         return array_values(array_filter([
             $this->authorizedAlert($user, 'overdue_tasks', 'Tarefas vencidas', $this->countOverdueWorkTasks($user), 'SLA ultrapassado; requer triagem.', 'backoffice.work-tasks.overdue', 'work_tasks.view', 'danger'),
             $this->authorizedAlert($user, 'due_soon_tasks', 'Tarefas a vencer', $this->countDueSoonWorkTasks($user), 'Prazo nas próximas 48 horas.', 'backoffice.work-tasks.my', 'work_tasks.view', 'warning'),
-            $this->authorizedAlert($user, 'pending_documents', 'Documentos pendentes', $this->countRows('document_submissions', ['status' => ['submitted', 'under_review', 'missing', 'rejected']]), 'Validação documental por concluir.', 'admin.document-reviews.index', 'documents.view', 'warning'),
+            $this->authorizedAlert($user, 'pending_documents', 'Documentos pendentes', $this->countPendingDocuments($user), 'Validação documental por concluir.', 'admin.document-reviews.index', 'documents.view', 'warning', feature: FeatureKey::ApplicationReview),
             $this->authorizedAlert($user, 'pending_complaints', 'Reclamações pendentes', $this->countRows('complaints', ['status' => ['submitted', 'pending', 'under_review', 'open']]), 'Reclamações ou audiência prévia em aberto.', 'backoffice.complaints.index', 'complaints.view', 'warning'),
             $this->authorizedAlert($user, 'pending_contracts', 'Contratos pendentes', $this->countRows('contracts', ['status' => ['draft', 'pending_review', 'pending_signature', 'generated']]), 'Contratos a rever/formalizar.', 'backoffice.contracts.leases.index', 'contracts.view', 'civic'),
             $this->authorizedAlert($user, 'rgpd_requests', 'Pedidos RGPD', $this->countRows('data_subject_requests', ['status' => ['draft', 'pending', 'pending_dpo_approval', 'open']]), 'Pedidos de titular em aberto.', 'backoffice.security.privacy.requests.index', 'privacy.view', 'warning'),
@@ -79,6 +85,18 @@ class DashboardDeadlineService
             ->count();
     }
 
+    private function countPendingDocuments(User $user): int
+    {
+        if (! Schema::hasTable('document_submissions')) {
+            return 0;
+        }
+
+        return $this->municipalScope
+            ->documentSubmissions(DocumentSubmission::query(), $user)
+            ->whereIn('status', ['submitted', 'under_review', 'missing', 'rejected'])
+            ->count();
+    }
+
     private function visibleWorkTaskQuery(User $user): Builder
     {
         $query = DB::table('work_tasks');
@@ -133,11 +151,13 @@ class DashboardDeadlineService
         ?string $permission,
         string $tone,
         ?array $roles = null,
+        ?FeatureKey $feature = null,
     ): ?array {
         $item = array_filter([
             'route' => $route,
             'permission' => $permission,
             'roles' => $roles,
+            'feature' => $feature,
         ], fn (mixed $candidate): bool => $candidate !== null);
 
         if (! $this->authorization->canSeeItem($user, $item)) {

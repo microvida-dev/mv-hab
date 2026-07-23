@@ -2,20 +2,27 @@
 
 namespace Tests\Feature\UX;
 
+use App\Enums\FeatureKey;
+use App\Models\Municipality;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class ProfileDashboardTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
+
+    private Municipality $municipality;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
+        $this->municipality = $this->municipalityWithFeatures(FeatureKey::cases());
     }
 
     public function test_administrator_sees_transversal_profile_dashboard(): void
@@ -60,6 +67,7 @@ class ProfileDashboardTest extends TestCase
     private function userWithRole(string $role, string $name): User
     {
         $user = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
             'name' => $name,
             'status' => 'active',
         ]);

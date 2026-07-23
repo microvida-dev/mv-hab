@@ -2,23 +2,31 @@
 
 namespace Tests\Feature\Security;
 
+use App\Enums\FeatureKey;
+use App\Models\AdministrativeProcess;
+use App\Models\Municipality;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class ApplicationIntakePermissionAccessTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
+
+    private Municipality $municipality;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
+        $this->municipality = $this->municipalityWithFeatures([FeatureKey::ApplicationIntake]);
     }
 
     public function test_application_intake_routes_no_longer_use_fixed_role_middleware(): void
@@ -52,6 +60,7 @@ class ApplicationIntakePermissionAccessTest extends TestCase
             $this->assertContains('active.backoffice', $middleware);
             $this->assertContains('mfa.backoffice', $middleware);
             $this->assertContains('log.backoffice', $middleware);
+            $this->assertContains('municipality.feature:applications.intake', $middleware);
         }
     }
 
@@ -97,7 +106,7 @@ class ApplicationIntakePermissionAccessTest extends TestCase
         );
 
         $this->assertFalse(
-            $user->can('create', \App\Models\AdministrativeProcess::class),
+            $user->can('create', AdministrativeProcess::class),
         );
     }
 
@@ -119,6 +128,7 @@ class ApplicationIntakePermissionAccessTest extends TestCase
     private function userWithCustomRole(array $permissions): User
     {
         $user = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
             'status' => 'active',
         ]);
 
@@ -146,6 +156,7 @@ class ApplicationIntakePermissionAccessTest extends TestCase
         string $permission,
     ): User {
         $user = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
             'status' => 'active',
         ]);
 

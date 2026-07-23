@@ -2,14 +2,19 @@
 
 namespace App\Services\Dashboard;
 
+use App\Enums\FeatureKey;
 use App\Models\DocumentSubmission;
 use App\Models\User;
 use App\Models\WorkTask;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Support\Facades\Route;
 
 class DashboardWidgetRegistry
 {
-    public function __construct(private readonly DashboardAuthorizationService $authorization) {}
+    public function __construct(
+        private readonly DashboardAuthorizationService $authorization,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
     /**
      * @return array<int, array<string, mixed>>
@@ -24,6 +29,7 @@ class DashboardWidgetRegistry
 
         return collect($panels)
             ->unique('key')
+            ->filter(fn (array $panel): bool => $this->authorization->canSeeItem($user, $panel))
             ->values()
             ->all();
     }
@@ -61,23 +67,7 @@ class DashboardWidgetRegistry
                 ),
             ],
 
-            'municipal_technician' => [
-                $this->panel(
-                    key: 'technical_review',
-                    title: 'Revisão técnica',
-                    description: 'Candidaturas, documentos, aperfeiçoamentos e SLA.',
-                    icon: 'document',
-                    value: DocumentSubmission::query()->where('status', 'submitted')->count(),
-                    meta: 'Documentos pendentes',
-                    tone: DocumentSubmission::query()->where('status', 'submitted')->exists() ? 'warning' : 'success',
-                    priority: DocumentSubmission::query()->where('status', 'submitted')->exists() ? 'high' : 'low',
-                    href: $this->routeIfExists('admin.document-reviews.index'),
-                    cta: 'Abrir revisão',
-                    badges: [
-                        ['label' => 'SLA', 'tone' => 'warning'],
-                    ],
-                ),
-            ],
+            'municipal_technician' => [$this->technicalReviewPanel($user)],
 
             'jury' => [
                 $this->panel(
@@ -203,7 +193,34 @@ class DashboardWidgetRegistry
         };
     }
 
+    /** @return array<string, mixed> */
+    private function technicalReviewPanel(User $user): array
+    {
+        $pendingDocuments = $this->municipalScope
+            ->documentSubmissions(DocumentSubmission::query(), $user)
+            ->where('status', 'submitted')
+            ->count();
+
+        return $this->panel(
+            key: 'technical_review',
+            title: 'Revisão técnica',
+            description: 'Candidaturas, documentos, aperfeiçoamentos e SLA.',
+            icon: 'document',
+            value: $pendingDocuments,
+            meta: 'Documentos pendentes',
+            tone: $pendingDocuments > 0 ? 'warning' : 'success',
+            priority: $pendingDocuments > 0 ? 'high' : 'low',
+            href: $this->routeIfExists('admin.document-reviews.index'),
+            cta: 'Abrir revisão',
+            badges: [
+                ['label' => 'SLA', 'tone' => 'warning'],
+            ],
+            feature: FeatureKey::ApplicationReview,
+        );
+    }
+
     /**
+     * @param  list<array{label: string, tone: string}>  $badges
      * @return array<string, mixed>
      */
     private function panel(
@@ -218,6 +235,7 @@ class DashboardWidgetRegistry
         ?string $href = null,
         string $cta = 'Abrir',
         array $badges = [],
+        ?FeatureKey $feature = null,
     ): array {
         return [
             'key' => $key,
@@ -232,6 +250,7 @@ class DashboardWidgetRegistry
             'href' => $href,
             'cta' => $cta,
             'badges' => $badges,
+            'feature' => $feature,
         ];
     }
 

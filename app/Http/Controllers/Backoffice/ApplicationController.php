@@ -8,6 +8,7 @@ use App\Models\Application;
 use App\Models\Contest;
 use App\Models\Program;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -15,13 +16,18 @@ use Illuminate\Support\Facades\Gate;
 
 class ApplicationController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
     public function index(Request $request): View
     {
         Gate::authorize('viewAnyBackoffice', Application::class);
 
-        $applications = Application::query()
+        $user = $this->authenticatedUser($request);
+        $applications = $this->municipalScope
+            ->applications(Application::query(), $user)
             ->with(['user', 'contest', 'program'])
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->query('status')))
             ->when($request->filled('contest_id'), fn ($query) => $query->where('contest_id', $request->integer('contest_id')))
@@ -33,8 +39,14 @@ class ApplicationController extends Controller
             ->withQueryString();
 
         $statuses = ApplicationStatus::options();
-        $contests = Contest::query()->orderBy('title')->get(['id', 'title']);
-        $programs = Program::query()->orderBy('name')->get(['id', 'name']);
+        $contests = Contest::query()
+            ->whereHas('program', fn ($query) => $query->where('municipality_id', $user->municipality_id))
+            ->orderBy('title')
+            ->get(['id', 'title']);
+        $programs = Program::query()
+            ->where('municipality_id', $user->municipality_id)
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return view('backoffice.applications.index', compact(
             'applications',

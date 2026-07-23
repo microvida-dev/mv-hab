@@ -2,6 +2,7 @@
 
 namespace App\Services\Dashboard;
 
+use App\Enums\FeatureKey;
 use App\Models\User;
 
 class DashboardQuickActionService
@@ -39,8 +40,8 @@ class DashboardQuickActionService
                 $this->action('Tarefas', 'backoffice.work-tasks.dashboard', 'work_tasks.dashboard', 'Carga operacional e SLA.'),
             ],
             'municipal_technician' => [
-                $this->action('Rever documentos', 'admin.document-reviews.index', 'documents.view', 'Documentos pendentes e correções.'),
-                $this->action('Abrir candidaturas', 'backoffice.applications.index', 'applications.view', 'Candidaturas submetidas e em análise.'),
+                $this->action('Rever documentos', 'admin.document-reviews.index', 'documents.view', 'Documentos pendentes e correções.', feature: FeatureKey::ApplicationReview),
+                $this->action('Abrir candidaturas', 'backoffice.applications.index', 'applications.view', 'Candidaturas submetidas e em análise.', feature: FeatureKey::ApplicationReview),
                 $this->action('Ver tarefas', 'backoffice.work-tasks.my', 'work_tasks.view', 'Fila pessoal e SLA.'),
                 $this->action('Ver concursos', 'admin.contests.index', 'contests.view', 'Concursos e critérios configurados.'),
             ],
@@ -92,14 +93,21 @@ class DashboardQuickActionService
      * @param  list<string>|null  $roles
      * @return array<string, mixed>
      */
-    private function action(string $label, string $route, ?string $permission, string $description, ?array $roles = null): array
-    {
+    private function action(
+        string $label,
+        string $route,
+        ?string $permission,
+        string $description,
+        ?array $roles = null,
+        ?FeatureKey $feature = null,
+    ): array {
         return array_filter([
             'label' => $label,
             'route' => $route,
             'permission' => $permission,
             'description' => $description,
             'roles' => $roles,
+            'feature' => $feature,
         ], fn (mixed $value): bool => $value !== null);
     }
 }

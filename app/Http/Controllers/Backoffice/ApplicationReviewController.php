@@ -20,7 +20,7 @@ class ApplicationReviewController extends Controller
 
     public function create(AdministrativeProcess $administrativeProcess): View
     {
-        Gate::authorize('create', ApplicationReview::class);
+        Gate::authorize('createForProcess', [ApplicationReview::class, $administrativeProcess]);
 
         return view('backoffice.application-reviews.create', [
             'process' => $administrativeProcess,
@@ -31,7 +31,7 @@ class ApplicationReviewController extends Controller
 
     public function store(StoreApplicationReviewRequest $request, AdministrativeProcess $administrativeProcess): RedirectResponse
     {
-        Gate::authorize('create', ApplicationReview::class);
+        Gate::authorize('createForProcess', [ApplicationReview::class, $administrativeProcess]);
         $review = $this->reviewService->create($administrativeProcess, $request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.application-reviews.show', $review)

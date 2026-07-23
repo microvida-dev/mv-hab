@@ -1206,6 +1206,7 @@ Route::middleware('auth')->group(function () {
                         'active.backoffice',
                         'mfa.backoffice',
                         'log.backoffice',
+                        'municipality.feature:applications.review',
                         'permission:documents.view',
                     ])
                     ->withoutMiddleware(
@@ -1221,6 +1222,7 @@ Route::middleware('auth')->group(function () {
                         'active.backoffice',
                         'mfa.backoffice',
                         'log.backoffice',
+                        'municipality.feature:applications.review',
                         'permission:documents.view',
                     ])
                     ->withoutMiddleware(
@@ -1236,6 +1238,7 @@ Route::middleware('auth')->group(function () {
                         'active.backoffice',
                         'mfa.backoffice',
                         'log.backoffice',
+                        'municipality.feature:applications.review',
                         'permission:documents.view',
                     ])
                     ->withoutMiddleware(
@@ -1251,6 +1254,7 @@ Route::middleware('auth')->group(function () {
                         'active.backoffice',
                         'mfa.backoffice',
                         'log.backoffice',
+                        'municipality.feature:applications.review',
                         'permission:documents.approve',
                     ])
                     ->withoutMiddleware(
@@ -1266,6 +1270,7 @@ Route::middleware('auth')->group(function () {
                         'active.backoffice',
                         'mfa.backoffice',
                         'log.backoffice',
+                        'municipality.feature:applications.review',
                         'permission:documents.approve',
                     ])
                     ->withoutMiddleware(
@@ -1281,6 +1286,7 @@ Route::middleware('auth')->group(function () {
                         'active.backoffice',
                         'mfa.backoffice',
                         'log.backoffice',
+                        'municipality.feature:applications.review',
                         'permission:documents.reject',
                     ])
                     ->withoutMiddleware(
@@ -1296,6 +1302,7 @@ Route::middleware('auth')->group(function () {
                         'active.backoffice',
                         'mfa.backoffice',
                         'log.backoffice',
+                        'municipality.feature:applications.review',
                         'permission:documents.approve',
                     ])
                     ->withoutMiddleware(
@@ -1311,6 +1318,7 @@ Route::middleware('auth')->group(function () {
                         'active.backoffice',
                         'mfa.backoffice',
                         'log.backoffice',
+                        'municipality.feature:applications.review',
                         'permission:documents.view',
                     ])
                     ->withoutMiddleware(
@@ -2003,6 +2011,7 @@ Route::middleware('auth')->group(function () {
                             'active.backoffice',
                             'mfa.backoffice',
                             'log.backoffice',
+                            'municipality.feature:applications.review',
                             'permission:applications.view',
                         ])
                         ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
@@ -2037,6 +2046,7 @@ Route::middleware('auth')->group(function () {
                         'active.backoffice',
                         'mfa.backoffice',
                         'log.backoffice',
+                        'municipality.feature:applications.review',
                         'permission:applications.view',
                     ])
                     ->withoutMiddleware(
@@ -2051,6 +2061,7 @@ Route::middleware('auth')->group(function () {
                         'active.backoffice',
                         'mfa.backoffice',
                         'log.backoffice',
+                        'municipality.feature:applications.review',
                         'permission:applications.view',
                     ])
                     ->withoutMiddleware(
@@ -2065,7 +2076,9 @@ Route::middleware('auth')->group(function () {
                         'active.backoffice',
                         'mfa.backoffice',
                         'log.backoffice',
+                        'municipality.feature:applications.export',
                         'permission:reports.view',
+                        'permission:applications.export',
                     ])
                     ->withoutMiddleware(
                         'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
@@ -2080,7 +2093,9 @@ Route::middleware('auth')->group(function () {
                         'active.backoffice',
                         'mfa.backoffice',
                         'log.backoffice',
+                        'municipality.feature:applications.export',
                         'permission:reports.create,reports.export',
+                        'permission:applications.export',
                     ])
                     ->withoutMiddleware(
                         'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
@@ -2095,7 +2110,9 @@ Route::middleware('auth')->group(function () {
                         'active.backoffice',
                         'mfa.backoffice',
                         'log.backoffice',
+                        'municipality.feature:applications.export',
                         'permission:reports.view,reports.export',
+                        'permission:applications.export',
                     ])
                     ->withoutMiddleware(
                         'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
@@ -2328,6 +2345,7 @@ Route::middleware('auth')->group(function () {
                     'active.backoffice',
                     'mfa.backoffice',
                     'log.backoffice',
+                    'municipality.feature:applications.intake',
                     'permission:administrative_processes.create',
                 ])
                     ->withoutMiddleware(
@@ -2458,6 +2476,7 @@ Route::middleware('auth')->group(function () {
                     'active.backoffice',
                     'mfa.backoffice',
                     'log.backoffice',
+                    'municipality.feature:applications.review',
                 ])
                     ->withoutMiddleware(
                         'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
@@ -3759,6 +3778,7 @@ Route::middleware('auth')->group(function () {
                             'active.backoffice',
                             'mfa.backoffice',
                             'log.backoffice',
+                            'municipality.feature:applications.review',
                             'permission:eligibility.view',
                         ])
                         ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
@@ -3768,13 +3788,30 @@ Route::middleware('auth')->group(function () {
                             'active.backoffice',
                             'mfa.backoffice',
                             'log.backoffice',
+                            'municipality.feature:applications.review',
                             'permission:eligibility.view',
                         ])
                         ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                         ->name('checks.show');
                     Route::post('checks/{eligibilityCheck}/rerun', [BackofficeEligibilityCheckController::class, 'rerun'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'municipality.feature:applications.review',
+                            'permission:eligibility.update',
+                        ])
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                         ->name('checks.rerun');
                     Route::post('applications/{application}/run', [BackofficeEligibilityCheckController::class, 'runApplication'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'municipality.feature:applications.review',
+                            'permission:eligibility.create',
+                        ])
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                         ->name('applications.run');
                 });
 

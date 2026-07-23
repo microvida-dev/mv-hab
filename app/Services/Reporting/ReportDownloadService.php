@@ -10,6 +10,7 @@ use App\Models\ReportExport;
 use App\Models\ReportRun;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Security\AccessLogService;
 use App\Services\Security\SensitiveDataAccessService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -27,6 +28,7 @@ class ReportDownloadService
         private readonly Request $request,
         private readonly AccessLogService $accessLogs,
         private readonly SensitiveDataAccessService $sensitiveAccess,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
     public function download(ReportExport $export, User $user): StreamedResponse
@@ -42,7 +44,10 @@ class ReportDownloadService
             throw new FileNotFoundException('A exportação não tem relatório associado.');
         }
 
-        if (! $this->permissions->canExport($user, $definition, $export->scope)) {
+        if (
+            ! $this->permissions->canExport($user, $definition, $export->scope)
+            || ! $this->municipalScope->ownsReportExport($user, $export)
+        ) {
             throw new AuthorizationException;
         }
 

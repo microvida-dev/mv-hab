@@ -3,6 +3,8 @@
 namespace Tests\Feature\Reports;
 
 use App\Enums\ExportScope;
+use App\Enums\FeatureKey;
+use App\Models\Municipality;
 use App\Models\ReportAccessLog;
 use App\Models\ReportDefinition;
 use App\Models\ReportExport;
@@ -12,11 +14,15 @@ use Database\Seeders\ReportDefinitionSeeder;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class MunicipalExportsSecurityTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
+
+    private Municipality $municipality;
 
     protected function setUp(): void
     {
@@ -27,6 +33,7 @@ class MunicipalExportsSecurityTest extends TestCase
             SystemAccessSeeder::class,
             ReportDefinitionSeeder::class,
         ]);
+        $this->municipality = $this->municipalityWithFeatures(FeatureKey::cases());
     }
 
     public function test_csv_exporter_neutralizes_formula_injection(): void
@@ -64,7 +71,10 @@ class MunicipalExportsSecurityTest extends TestCase
 
     private function userWithRole(string $role): User
     {
-        $user = User::factory()->create(['status' => 'active']);
+        $user = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
+            'status' => 'active',
+        ]);
         $user->assignRole($role);
 
         return $user;

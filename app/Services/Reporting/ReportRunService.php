@@ -11,6 +11,7 @@ use App\Models\ReportDefinition;
 use App\Models\ReportRun;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -25,6 +26,7 @@ class ReportRunService
         private readonly ReportAccessLogger $access,
         private readonly SensitiveDataMaskingService $masking,
         private readonly AuditLogger $audit,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
     /**
@@ -42,6 +44,15 @@ class ReportRunService
         }
 
         $normalized = $this->filters->normalize($filters);
+
+        if ($this->permissions->isApplicationReport($definition)) {
+            if ($user->municipality_id === null) {
+                throw new AuthorizationException;
+            }
+
+            $normalized['municipality_id'] = (int) $user->municipality_id;
+            ksort($normalized);
+        }
 
         if (
             ! $user->hasRole('administrator')
@@ -133,7 +144,10 @@ class ReportRunService
             throw new RuntimeException('Execução de relatório sem definição associada.');
         }
 
-        if (! $this->permissions->canViewReport($user, $definition)) {
+        if (
+            ! $this->permissions->canViewReport($user, $definition)
+            || ! $this->municipalScope->ownsReportRun($user, $run)
+        ) {
             throw new AuthorizationException;
         }
 

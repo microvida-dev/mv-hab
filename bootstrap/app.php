@@ -3,11 +3,12 @@
 use App\Http\Middleware\BlockInactiveBackofficeUsers;
 use App\Http\Middleware\EnforcePasswordPolicyOnChange;
 use App\Http\Middleware\EnsureBackofficeMfaVerified;
+use App\Http\Middleware\EnsureMunicipalityFeatureIsEnabled;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\LogBackofficeAccess;
 use App\Http\Middleware\LogSensitiveResourceAccess;
-use App\Http\Middleware\RequireSensitivePermission;
 use App\Http\Middleware\RequirePermission;
+use App\Http\Middleware\RequireSensitivePermission;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'active.backoffice' => BlockInactiveBackofficeUsers::class,
             'mfa.backoffice' => EnsureBackofficeMfaVerified::class,
+            'municipality.feature' => EnsureMunicipalityFeatureIsEnabled::class,
             'password.policy' => EnforcePasswordPolicyOnChange::class,
             'role' => EnsureUserHasRole::class,
             'permission' => RequirePermission::class,

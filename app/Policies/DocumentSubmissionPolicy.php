@@ -6,12 +6,15 @@ use App\Enums\DocumentStatus;
 use App\Models\DocumentSubmission;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class DocumentSubmissionPolicy
 {
     use ChecksPermissions;
 
     private const MODULE = 'documents';
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -84,7 +87,8 @@ class DocumentSubmissionPolicy
         User $user,
         DocumentSubmission $documentSubmission,
     ): bool {
-        return $this->viewAnyBackoffice($user);
+        return $this->viewAnyBackoffice($user)
+            && $this->municipalScope->ownsDocumentSubmission($user, $documentSubmission);
     }
 
     public function downloadBackoffice(
@@ -99,7 +103,8 @@ class DocumentSubmissionPolicy
         DocumentSubmission $documentSubmission,
     ): bool {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, self::MODULE, 'approve');
+            && $this->canAccess($user, self::MODULE, 'approve')
+            && $this->municipalScope->ownsDocumentSubmission($user, $documentSubmission);
     }
 
     public function rejectBackoffice(
@@ -107,6 +112,7 @@ class DocumentSubmissionPolicy
         DocumentSubmission $documentSubmission,
     ): bool {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, self::MODULE, 'reject');
+            && $this->canAccess($user, self::MODULE, 'reject')
+            && $this->municipalScope->ownsDocumentSubmission($user, $documentSubmission);
     }
 }

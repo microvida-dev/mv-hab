@@ -2,23 +2,30 @@
 
 namespace Tests\Feature\UX;
 
+use App\Enums\FeatureKey;
 use App\Models\DocumentSubmission;
+use App\Models\Municipality;
 use App\Models\MunicipalTeam;
 use App\Models\User;
 use App\Models\WorkTask;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class ProfileDashboardWidgetsTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
+
+    private Municipality $municipality;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
+        $this->municipality = $this->municipalityWithFeatures(FeatureKey::cases());
     }
 
     public function test_dashboard_renders_profile_widgets_metrics_and_deadlines(): void
@@ -34,7 +41,11 @@ class ProfileDashboardWidgetsTest extends TestCase
                 'due_at' => now()->subDay(),
             ]);
 
-        DocumentSubmission::factory()->create(['status' => 'submitted']);
+        $candidate = User::factory()->create(['municipality_id' => $this->municipality->id]);
+        DocumentSubmission::factory()->create([
+            'user_id' => $candidate->id,
+            'status' => 'submitted',
+        ]);
 
         $this->actingAs($technician)
             ->get(route('dashboard'))
@@ -51,7 +62,10 @@ class ProfileDashboardWidgetsTest extends TestCase
 
     private function userWithRole(string $role): User
     {
-        $user = User::factory()->create(['status' => 'active']);
+        $user = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
+            'status' => 'active',
+        ]);
         $user->assignRole($role);
 
         return $user;

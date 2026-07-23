@@ -11,6 +11,7 @@ use App\Enums\EligibilityCriterionResult;
 use App\Enums\EligibilityOperator;
 use App\Enums\EligibilityResult;
 use App\Enums\EligibilityRuleSetStatus;
+use App\Enums\FeatureKey;
 use App\Models\AdhesionRegistration;
 use App\Models\Application;
 use App\Models\Contest;
@@ -24,6 +25,7 @@ use App\Models\EligibilityRuleSet;
 use App\Models\Household;
 use App\Models\HouseholdMember;
 use App\Models\IncomeRecord;
+use App\Models\Municipality;
 use App\Models\Program;
 use App\Models\RequiredDocument;
 use App\Models\User;
@@ -31,16 +33,24 @@ use App\Services\Eligibility\EligibilityCheckService;
 use App\Services\Eligibility\EligibilityRuleSetResolver;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class Sprint7EligibilityEngineTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
+
+    private Municipality $municipality;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed(SystemAccessSeeder::class);
+        $this->municipality = $this->municipalityWithFeatures([
+            FeatureKey::ApplicationIntake,
+            FeatureKey::ApplicationReview,
+        ]);
     }
 
     public function test_candidate_eligibility_area_requires_authentication_role_and_ownership(): void
@@ -460,6 +470,7 @@ class Sprint7EligibilityEngineTest extends TestCase
         $technician = $this->userWithRole('municipal_technician');
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.eligibility.applications.run', $application))
             ->assertRedirect();
 
@@ -497,7 +508,7 @@ class Sprint7EligibilityEngineTest extends TestCase
 
     private function userWithRole(string $role): User
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['municipality_id' => $this->municipality->id]);
         $user->assignRole($role);
 
         return $user;
@@ -526,7 +537,9 @@ class Sprint7EligibilityEngineTest extends TestCase
             'resides_in_municipality' => true,
             'works_in_municipality' => true,
         ]);
-        $program = Program::factory()->published()->create();
+        $program = Program::factory()->published()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         $contest = Contest::factory()->for($program)->open()->create();
 
         return [$candidate, $registration, $household, $member, $housing, $contest];

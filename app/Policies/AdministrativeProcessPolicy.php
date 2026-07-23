@@ -3,14 +3,18 @@
 namespace App\Policies;
 
 use App\Models\AdministrativeProcess;
+use App\Models\Application;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class AdministrativeProcessPolicy
 {
     use ChecksPermissions;
 
     private const MODULE = 'administrative_processes';
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -31,6 +35,12 @@ class AdministrativeProcessPolicy
     {
         return ! $user->hasRole(['candidate', 'auditor'])
             && $this->canAccess($user, self::MODULE, 'create');
+    }
+
+    public function createForApplication(User $user, Application $application): bool
+    {
+        return $this->create($user)
+            && $this->municipalScope->ownsApplication($user, $application);
     }
 
     public function update(User $user, AdministrativeProcess $administrativeProcess): bool

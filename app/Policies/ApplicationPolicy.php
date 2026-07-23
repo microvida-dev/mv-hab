@@ -5,12 +5,15 @@ namespace App\Policies;
 use App\Models\Application;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class ApplicationPolicy
 {
     use ChecksPermissions;
 
     private const MODULE = 'applications';
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -24,7 +27,8 @@ class ApplicationPolicy
                 && $this->canAccess($user, self::MODULE, 'view');
         }
 
-        return $this->canAccess($user, self::MODULE, 'view');
+        return $this->canAccess($user, self::MODULE, 'view')
+            && $this->municipalScope->ownsApplication($user, $application);
     }
 
     public function viewAnyBackoffice(User $user): bool
@@ -36,18 +40,21 @@ class ApplicationPolicy
     public function viewBackoffice(User $user, Application $application): bool
     {
         return ! $user->hasRole('candidate')
-            && $this->canAccess($user, self::MODULE, 'view');
+            && $this->canAccess($user, self::MODULE, 'view')
+            && $this->municipalScope->ownsApplication($user, $application);
     }
 
     public function updateBackoffice(User $user, Application $application): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, self::MODULE, 'update');
+            && $this->canAccess($user, self::MODULE, 'update')
+            && $this->municipalScope->ownsApplication($user, $application);
     }
 
     public function auditBackoffice(User $user, Application $application): bool
     {
         return ! $user->hasRole('candidate')
+            && $this->municipalScope->ownsApplication($user, $application)
             && (
                 $this->canAccess($user, self::MODULE, 'audit')
                 || $this->canAccess($user, self::MODULE, 'view')

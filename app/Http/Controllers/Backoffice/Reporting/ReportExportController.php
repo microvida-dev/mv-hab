@@ -8,22 +8,43 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Reporting\ExportReportRequest;
 use App\Models\ReportDefinition;
 use App\Models\ReportExport;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Reporting\ReportExportService;
+use App\Services\Reporting\ReportPermissionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 
 class ReportExportController extends Controller
 {
-    public function __construct(private readonly ReportExportService $exports) {}
+    public function __construct(
+        private readonly ReportExportService $exports,
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly ReportPermissionService $permissions,
+    ) {}
 
     public function index(): View
     {
         Gate::authorize('viewAny', ReportExport::class);
-        $allowed = ReportDefinition::query()->get()->filter(fn ($report) => $this->currentUser()->can('view', $report))->pluck('id');
+        $allowed = ReportDefinition::query()
+            ->get()
+            ->filter(function (ReportDefinition $report): bool {
+                if (! $this->currentUser()->can('view', $report)) {
+                    return false;
+                }
+
+                return ! $this->permissions->isApplicationReport($report)
+                    || $this->currentUser()->can('export', $report);
+            })
+            ->pluck('id');
 
         return view('backoffice.reports.exports.index', [
-            'exports' => ReportExport::query()->whereHas('run', fn ($query) => $query->whereIn('report_definition_id', $allowed))->with(['run.definition', 'user'])->latest()->paginate(30),
+            'exports' => $this->municipalScope
+                ->reportExports(ReportExport::query(), $this->currentUser())
+                ->whereHas('run', fn ($query) => $query->whereIn('report_definition_id', $allowed))
+                ->with(['run.definition', 'user'])
+                ->latest()
+                ->paginate(30),
         ]);
     }
 

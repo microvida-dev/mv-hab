@@ -2,15 +2,22 @@
 
 namespace App\Services\Dashboard;
 
+use App\Enums\FeatureKey;
+use App\Models\Application;
+use App\Models\DocumentSubmission;
 use App\Models\User;
 use App\Models\WorkTask;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class DashboardMetricService
 {
-    public function __construct(private readonly DashboardAuthorizationService $authorization) {}
+    public function __construct(
+        private readonly DashboardAuthorizationService $authorization,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
     /**
      * @return list<array<string, mixed>>
@@ -24,8 +31,8 @@ class DashboardMetricService
             $this->authorizedMetric($user, 'assigned_tasks', 'Tarefas atribuídas', $this->countWorkTasks($user, assignedOnly: true), 'Trabalho diretamente atribuído ao utilizador.', 'backoffice.work-tasks.my', 'work_tasks.view', 'civic'),
             $this->authorizedMetric($user, 'team_tasks', 'Tarefas da equipa', $this->countWorkTasks($user, teamOnly: true), 'Fila operacional das equipas do utilizador.', 'backoffice.work-tasks.team', 'work_tasks.view_team', 'civic'),
             $this->authorizedMetric($user, 'overdue_tasks', 'Tarefas vencidas', $this->countOverdueWorkTasks($user), 'Itens com SLA ultrapassado.', 'backoffice.work-tasks.overdue', 'work_tasks.view', 'danger'),
-            $this->authorizedMetric($user, 'pending_applications', 'Candidaturas pendentes', $this->countRows('applications', ['status' => ['submitted', 'under_review', 'requires_correction', 'correction_submitted']]), 'Candidaturas em análise ou correção.', 'backoffice.applications.index', 'applications.view', 'civic'),
-            $this->authorizedMetric($user, 'pending_documents', 'Documentos pendentes', $this->countRows('document_submissions', ['status' => ['missing', 'submitted', 'under_review', 'rejected', 'expired']]), 'Documentos a validar ou corrigir.', 'admin.document-reviews.index', 'documents.view', 'warning'),
+            $this->authorizedMetric($user, 'pending_applications', 'Candidaturas pendentes', $this->countPendingApplications($user), 'Candidaturas em análise ou correção.', 'backoffice.applications.index', 'applications.view', 'civic', feature: FeatureKey::ApplicationReview),
+            $this->authorizedMetric($user, 'pending_documents', 'Documentos pendentes', $this->countPendingDocuments($user), 'Documentos a validar ou corrigir.', 'admin.document-reviews.index', 'documents.view', 'warning', feature: FeatureKey::ApplicationReview),
             $this->authorizedMetric($user, 'pending_complaints', 'Reclamações pendentes', $this->countRows('complaints', ['status' => ['submitted', 'pending', 'under_review', 'open']]), 'Reclamações/audiência prévia a tratar.', 'backoffice.complaints.index', 'complaints.view', 'warning'),
             $this->authorizedMetric($user, 'pending_contracts', 'Contratos pendentes', $this->countRows('contracts', ['status' => ['draft', 'pending_review', 'pending_signature', 'generated']]), 'Contratos a rever ou formalizar.', 'backoffice.contracts.leases.index', 'contracts.view', 'civic'),
             $this->authorizedMetric($user, 'pending_rents', 'Rendas pendentes', $this->countRows('rent_installments', ['status' => ['pending', 'overdue', 'unpaid']]), 'Rendas manuais por liquidar.', 'backoffice.finance.installments.index', 'finance.view', 'warning'),
@@ -96,6 +103,30 @@ class DashboardMetricService
 
         return (int) DB::table($table)
             ->where($dateColumn, '>=', now()->subDays(7))
+            ->count();
+    }
+
+    private function countPendingApplications(User $user): int
+    {
+        if (! Schema::hasTable('applications')) {
+            return 0;
+        }
+
+        return $this->municipalScope
+            ->applications(Application::query(), $user)
+            ->whereIn('status', ['submitted', 'under_review', 'requires_correction', 'correction_submitted'])
+            ->count();
+    }
+
+    private function countPendingDocuments(User $user): int
+    {
+        if (! Schema::hasTable('document_submissions')) {
+            return 0;
+        }
+
+        return $this->municipalScope
+            ->documentSubmissions(DocumentSubmission::query(), $user)
+            ->whereIn('status', ['missing', 'submitted', 'under_review', 'rejected', 'expired'])
             ->count();
     }
 
@@ -194,11 +225,13 @@ class DashboardMetricService
         ?string $permission,
         string $tone,
         ?array $roles = null,
+        ?FeatureKey $feature = null,
     ): ?array {
         $item = array_filter([
             'route' => $route,
             'permission' => $permission,
             'roles' => $roles,
+            'feature' => $feature,
         ], fn (mixed $candidate): bool => $candidate !== null);
 
         if (! $this->authorization->canSeeItem($user, $item)) {

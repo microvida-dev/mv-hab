@@ -74,6 +74,7 @@ class ReportFilterService
         $dateColumn = str_contains($dateColumn, '.') ? $dateColumn : $table.'.'.$dateColumn;
 
         return $this->applyDates($query, $filters, $dateColumn)
+            ->when($filters['municipality_id'] ?? null, fn (Builder $builder, int $id) => $builder->whereHas('program', fn (Builder $program) => $program->where('municipality_id', $id)))
             ->when($filters['program_id'] ?? null, fn (Builder $builder, int $id) => $builder->where($table.'.program_id', $id))
             ->when($filters['contest_id'] ?? null, fn (Builder $builder, int $id) => $builder->where($table.'.contest_id', $id))
             ->when($filters['status'] ?? null, fn (Builder $builder, string $status) => $builder->where($table.'.status', $status));
@@ -89,6 +90,7 @@ class ReportFilterService
     public function applyThroughApplication(Builder $query, array $filters, string $dateColumn = 'created_at'): Builder
     {
         return $this->applyDates($query, $filters, $dateColumn)
+            ->when($filters['municipality_id'] ?? null, fn (Builder $builder, int $id) => $builder->whereHas('application.program', fn (Builder $program) => $program->where('municipality_id', $id)))
             ->when($filters['program_id'] ?? null, fn (Builder $builder, int $id) => $builder->whereHas('application', fn (Builder $application) => $application->where('program_id', $id)))
             ->when($filters['contest_id'] ?? null, fn (Builder $builder, int $id) => $builder->whereHas('application', fn (Builder $application) => $application->where('contest_id', $id)))
             ->when($filters['status'] ?? null, fn (Builder $builder, string $status) => $builder->where('status', $status));

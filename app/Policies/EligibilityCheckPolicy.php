@@ -6,10 +6,13 @@ use App\Models\Application;
 use App\Models\EligibilityCheck;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class EligibilityCheckPolicy
 {
     use ChecksPermissions;
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -23,7 +26,8 @@ class EligibilityCheckPolicy
                 && $this->canAccess($user, 'eligibility', 'view');
         }
 
-        return $this->viewAny($user);
+        return $this->viewAny($user)
+            && $this->municipalScope->ownsEligibilityCheck($user, $check);
     }
 
     public function runPreCheck(User $user): bool
@@ -35,12 +39,14 @@ class EligibilityCheckPolicy
     public function runFormal(User $user, Application $application): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, 'eligibility', 'create');
+            && $this->canAccess($user, 'eligibility', 'create')
+            && $this->municipalScope->ownsApplication($user, $application);
     }
 
     public function rerun(User $user, EligibilityCheck $check): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, 'eligibility', 'update');
+            && $this->canAccess($user, 'eligibility', 'update')
+            && $this->municipalScope->ownsEligibilityCheck($user, $check);
     }
 }

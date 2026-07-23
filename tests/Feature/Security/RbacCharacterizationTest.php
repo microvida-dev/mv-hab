@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Security;
 
+use App\Enums\FeatureKey;
+use App\Models\Municipality;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -10,17 +12,22 @@ use App\Services\Security\MfaEnforcementService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class RbacCharacterizationTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
+
+    private Municipality $municipality;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
+        $this->municipality = $this->municipalityWithFeatures(FeatureKey::cases());
     }
 
     public function test_custom_roles_resolve_exact_module_action_and_global_wildcards(): void
@@ -173,6 +180,7 @@ class RbacCharacterizationTest extends TestCase
                 'active.backoffice',
                 'mfa.backoffice',
                 'log.backoffice',
+                'municipality.feature:applications.intake',
                 'permission:administrative_processes.create',
             ],
             $middleware,
@@ -200,6 +208,7 @@ class RbacCharacterizationTest extends TestCase
         $this->assertContains('active.backoffice', $middleware);
         $this->assertContains('mfa.backoffice', $middleware);
         $this->assertContains('log.backoffice', $middleware);
+        $this->assertContains('municipality.feature:applications.review', $middleware);
     }
 
     /**
@@ -207,7 +216,10 @@ class RbacCharacterizationTest extends TestCase
      */
     private function userWithCustomRole(string $roleName, array $permissions): User
     {
-        $user = User::factory()->create(['status' => 'active']);
+        $user = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
+            'status' => 'active',
+        ]);
 
         $this->assignCustomRole($user, $roleName, $permissions);
 

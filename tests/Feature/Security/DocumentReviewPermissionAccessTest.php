@@ -3,9 +3,11 @@
 namespace Tests\Feature\Security;
 
 use App\Enums\DocumentStatus;
+use App\Enums\FeatureKey;
 use App\Models\DocumentAiAnalysis;
 use App\Models\DocumentSubmission;
 use App\Models\DocumentVersion;
+use App\Models\Municipality;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -15,20 +17,28 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Mockery\MockInterface;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class DocumentReviewPermissionAccessTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     private const FIXED_ROLE_MIDDLEWARE =
         'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor';
+
+    private Municipality $municipality;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
+        $this->municipality = $this->municipalityWithFeatures([
+            FeatureKey::ApplicationIntake,
+            FeatureKey::ApplicationReview,
+        ]);
         Storage::fake('local');
     }
 
@@ -80,6 +90,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
             $this->assertContains('active.backoffice', $middleware);
             $this->assertContains('mfa.backoffice', $middleware);
             $this->assertContains('log.backoffice', $middleware);
+            $this->assertContains('municipality.feature:applications.review', $middleware);
         }
     }
 
@@ -105,7 +116,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
     public function test_custom_role_with_documents_view_can_access_document_show(): void
     {
         $user = $this->userWithCustomRole(['documents.view']);
-        $submission = DocumentSubmission::factory()->create();
+        $submission = $this->submission();
 
         $this->actingAs($user)
             ->get(route('admin.document-reviews.show', $submission))
@@ -157,7 +168,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
     public function test_documents_view_alone_cannot_mark_document_under_review(): void
     {
         $user = $this->userWithCustomRole(['documents.view']);
-        $submission = DocumentSubmission::factory()->create();
+        $submission = $this->submission();
 
         $this->actingAs($user)
             ->withSession(['mfa.verified_at' => now()])
@@ -171,7 +182,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
     public function test_custom_role_with_documents_approve_can_mark_document_under_review(): void
     {
         $user = $this->userWithCustomRole(['documents.approve']);
-        $submission = DocumentSubmission::factory()->create();
+        $submission = $this->submission();
 
         $this->actingAs($user)
             ->withSession(['mfa.verified_at' => now()])
@@ -193,7 +204,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
     {
         $user = $this->userWithCustomRole(['documents.approve']);
 
-        $submission = DocumentSubmission::factory()->create([
+        $submission = $this->submission([
             'status' => DocumentStatus::UnderReview->value,
         ]);
 
@@ -216,7 +227,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
     public function test_custom_role_with_documents_reject_can_reject_document(): void
     {
         $user = $this->userWithCustomRole(['documents.reject']);
-        $submission = DocumentSubmission::factory()->create();
+        $submission = $this->submission();
 
         $this->actingAs($user)
             ->withSession(['mfa.verified_at' => now()])
@@ -240,7 +251,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
     public function test_custom_role_with_documents_approve_reaches_manual_ai_analysis(): void
     {
         $user = $this->userWithCustomRole(['documents.approve']);
-        $submission = DocumentSubmission::factory()->create();
+        $submission = $this->submission();
 
         $analysis = DocumentAiAnalysis::factory()->create([
             'document_submission_id' => $submission->id,
@@ -290,7 +301,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
             ],
         );
 
-        $submission = DocumentSubmission::factory()->create();
+        $submission = $this->submission();
 
         $this->actingAs($user)
             ->get(route('admin.document-reviews.index'))
@@ -318,7 +329,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
             ],
         );
 
-        $submission = DocumentSubmission::factory()->create();
+        $submission = $this->submission();
 
         $this->actingAs($user)
             ->withSession(['mfa.verified_at' => now()])
@@ -348,9 +359,17 @@ class DocumentReviewPermissionAccessTest extends TestCase
             ->assertForbidden();
     }
 
+    /** @param array<string, mixed> $attributes */
+    private function submission(array $attributes = []): DocumentSubmission
+    {
+        $candidate = User::factory()->create(['municipality_id' => $this->municipality->id]);
+
+        return DocumentSubmission::factory()->create($attributes + ['user_id' => $candidate->id]);
+    }
+
     private function submissionWithStoredVersion(): DocumentSubmission
     {
-        $submission = DocumentSubmission::factory()->create();
+        $submission = $this->submission();
 
         $path = 'documents/tests/document-'.$submission->id.'.pdf';
 
@@ -380,6 +399,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
     private function userWithCustomRole(array $permissions): User
     {
         $user = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
             'status' => 'active',
         ]);
 
@@ -410,6 +430,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
         array $permissions,
     ): User {
         $user = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
             'status' => 'active',
         ]);
 

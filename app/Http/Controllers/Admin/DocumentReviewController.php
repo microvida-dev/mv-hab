@@ -7,16 +7,17 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\RejectDocumentSubmissionRequest;
 use App\Http\Requests\ValidateDocumentSubmissionRequest;
 use App\Models\DocumentSubmission;
+use App\Models\DocumentType;
 use App\Services\DocumentIntelligence\DocumentAiManualAnalysisService;
 use App\Services\Documents\DocumentAccessService;
 use App\Services\Documents\DocumentReviewService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Illuminate\Support\Collection;
-use App\Models\DocumentType;
 
 class DocumentReviewController extends Controller
 {
@@ -24,6 +25,7 @@ class DocumentReviewController extends Controller
         private readonly DocumentReviewService $reviewService,
         private readonly DocumentAccessService $accessService,
         private readonly DocumentAiManualAnalysisService $documentAiManualAnalysis,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
     public function index(Request $request): View
@@ -40,7 +42,8 @@ class DocumentReviewController extends Controller
             'date_to' => (string) $request->query('date_to', ''),
         ];
 
-        $query = DocumentSubmission::query()
+        $query = $this->municipalScope
+            ->documentSubmissions(DocumentSubmission::query(), $this->authenticatedUser($request))
             ->with([
                 'documentType',
                 'requiredDocument',
