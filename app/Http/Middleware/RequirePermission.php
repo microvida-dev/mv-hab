@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\AccessDenialReason;
+use App\Exceptions\AccessDeniedException;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -16,15 +18,18 @@ final class RequirePermission
     ): Response {
         $user = $request->user();
 
-        abort_unless($user instanceof User, 403);
-        abort_if($permissions === [], 403);
+        if (! $user instanceof User || $permissions === []) {
+            throw new AccessDeniedException(AccessDenialReason::MissingPermission);
+        }
 
         $authorized = collect($permissions)
             ->contains(
                 fn (string $permission): bool => $user->hasPermission($permission)
             );
 
-        abort_unless($authorized, 403);
+        if (! $authorized) {
+            throw new AccessDeniedException(AccessDenialReason::MissingPermission);
+        }
 
         return $next($request);
     }

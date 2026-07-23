@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\AccessDenialReason;
+use App\Exceptions\AccessDeniedException;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -14,8 +16,25 @@ class EnsureUserHasRole
         $user = $request->user();
         $roleNames = array_values($roles);
 
-        abort_unless($user instanceof User && $user->hasRole($roleNames), 403);
+        if (! $user instanceof User || ! $user->hasRole($roleNames)) {
+            $reason = $user instanceof User
+                && $user->hasRole('candidate')
+                && $this->isMunicipalOperation($request)
+                    ? AccessDenialReason::CandidateBackofficeBoundary
+                    : AccessDenialReason::MissingPermission;
+
+            throw new AccessDeniedException($reason);
+        }
 
         return $next($request);
+    }
+
+    private function isMunicipalOperation(Request $request): bool
+    {
+        $routeName = (string) $request->route()?->getName();
+
+        return $request->is('backoffice/*', 'admin/*')
+            || str_starts_with($routeName, 'backoffice.')
+            || str_starts_with($routeName, 'admin.');
     }
 }

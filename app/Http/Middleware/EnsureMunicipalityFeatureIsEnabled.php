@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\AccessDenialReason;
 use App\Enums\FeatureKey;
+use App\Exceptions\AccessDeniedException;
 use App\Models\User;
 use App\Services\Entitlements\MunicipalityEntitlementService;
 use Closure;
@@ -24,13 +26,13 @@ class EnsureMunicipalityFeatureIsEnabled
         $user = $request->user();
 
         if (! $user instanceof User || $user->municipality_id === null) {
-            abort(403, 'Esta funcionalidade não está disponível para o Município atual.');
+            throw new AccessDeniedException(AccessDenialReason::FeatureUnavailable);
         }
 
         $user->loadMissing('municipality');
 
         if ($user->municipality === null || ! $this->entitlements->enabledFor($user->municipality, $feature)) {
-            abort(403, 'Esta funcionalidade não está disponível para o Município atual.');
+            throw new AccessDeniedException(AccessDenialReason::FeatureUnavailable);
         }
 
         return $next($request);
