@@ -9,6 +9,7 @@ use App\Models\DocumentTemplate;
 use App\Models\DocumentTemplateVersion;
 use App\Models\TemplateVariable;
 use App\Services\Documents\DocumentTemplateService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Notifications\TemplateRenderingService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -16,25 +17,34 @@ use Illuminate\Support\Facades\Gate;
 
 class DocumentTemplateController extends Controller
 {
-    public function __construct(private readonly DocumentTemplateService $service) {}
+    public function __construct(
+        private readonly DocumentTemplateService $service,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
     public function index(): View
     {
-        Gate::authorize('viewAny', DocumentTemplate::class);
+        Gate::authorize('viewAnyBackoffice', DocumentTemplate::class);
 
-        return view('backoffice.document-templates.index', ['templates' => DocumentTemplate::query()->with('activeVersion')->latest()->paginate(20)]);
+        return view('backoffice.document-templates.index', [
+            'templates' => $this->municipalScope
+                ->documentTemplates(DocumentTemplate::query(), $this->currentUser())
+                ->with('activeVersion')
+                ->latest()
+                ->paginate(20),
+        ]);
     }
 
     public function create(): View
     {
-        Gate::authorize('create', DocumentTemplate::class);
+        Gate::authorize('createBackoffice', DocumentTemplate::class);
 
         return view('backoffice.document-templates.create');
     }
 
     public function store(StoreDocumentTemplateRequest $request): RedirectResponse
     {
-        Gate::authorize('create', DocumentTemplate::class);
+        Gate::authorize('createBackoffice', DocumentTemplate::class);
         $template = $this->service->store($request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.document-templates.show', $template);
@@ -42,7 +52,7 @@ class DocumentTemplateController extends Controller
 
     public function show(DocumentTemplate $documentTemplate): View
     {
-        Gate::authorize('view', $documentTemplate);
+        Gate::authorize('viewBackoffice', $documentTemplate);
         $documentTemplate->load(['versions', 'activeVersion']);
 
         return view('backoffice.document-templates.show', compact('documentTemplate'));
@@ -50,14 +60,14 @@ class DocumentTemplateController extends Controller
 
     public function edit(DocumentTemplate $documentTemplate): View
     {
-        Gate::authorize('update', $documentTemplate);
+        Gate::authorize('updateBackoffice', $documentTemplate);
 
         return view('backoffice.document-templates.edit', compact('documentTemplate'));
     }
 
     public function update(UpdateDocumentTemplateRequest $request, DocumentTemplate $documentTemplate): RedirectResponse
     {
-        Gate::authorize('update', $documentTemplate);
+        Gate::authorize('updateBackoffice', $documentTemplate);
         $this->service->update($documentTemplate, $request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.document-templates.show', $documentTemplate);
@@ -65,7 +75,7 @@ class DocumentTemplateController extends Controller
 
     public function archive(DocumentTemplate $documentTemplate): RedirectResponse
     {
-        Gate::authorize('update', $documentTemplate);
+        Gate::authorize('archiveBackoffice', $documentTemplate);
         $this->service->archive($documentTemplate, $this->currentUser());
 
         return back()->with('success', 'Modelo arquivado.');
@@ -73,7 +83,7 @@ class DocumentTemplateController extends Controller
 
     public function preview(DocumentTemplate $documentTemplate, TemplateRenderingService $renderer): View
     {
-        Gate::authorize('view', $documentTemplate);
+        Gate::authorize('previewBackoffice', $documentTemplate);
         $version = $documentTemplate->activeVersion;
 
         if (! $version instanceof DocumentTemplateVersion) {

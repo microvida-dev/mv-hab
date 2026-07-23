@@ -2,13 +2,23 @@
 
 namespace App\Http\Requests;
 
+use App\Models\AnnualDocumentUpdateRequest;
+use App\Models\IncomeChangeDeclaration;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ReviewIncomeChangeDeclarationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $annualRequest = $this->route('annualDocumentUpdateRequest');
+        if ($annualRequest instanceof AnnualDocumentUpdateRequest) {
+            return $this->user()?->can('approveBackoffice', $annualRequest) === true;
+        }
+
+        $declaration = $this->route('incomeChangeDeclaration');
+
+        return $declaration instanceof IncomeChangeDeclaration
+            && $this->user()?->hasPermissionTo('finance', 'update') === true;
     }
 
     /**

@@ -2,13 +2,23 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ProcedureTemplate;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RenderProcedureTemplateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasPermissionTo('documents', 'view') === true;
+        $template = $this->route('procedureTemplate');
+        if (! $template instanceof ProcedureTemplate) {
+            return false;
+        }
+
+        $ability = $this->routeIs('backoffice.procedure-templates.documents.generate')
+            ? 'generateBackoffice'
+            : 'viewBackoffice';
+
+        return $this->user()?->can($ability, $template) === true;
     }
 
     /**

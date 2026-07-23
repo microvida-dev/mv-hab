@@ -5,12 +5,15 @@ namespace App\Policies;
 use App\Models\Contract;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class ContractPolicy
 {
     use ChecksPermissions;
 
     private const MODULE = 'contracts';
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -62,5 +65,12 @@ class ContractPolicy
     public function generateDocument(User $user, Contract $contract): bool
     {
         return $this->update($user, $contract);
+    }
+
+    public function generateBackoffice(User $user, Contract $contract): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'documents', 'generate')
+            && $this->municipalScope->ownsContract($user, $contract);
     }
 }

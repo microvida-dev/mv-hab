@@ -44,6 +44,13 @@ class DocumentTemplateVersionService
     {
         $this->assertUnused($version);
         $version->forceFill(['approved_by' => $actor->id, 'approved_at' => now()])->save();
+        $this->audit->record(
+            AuditEvents::APPROVE,
+            $version,
+            'documents',
+            'document_template_version_approved',
+            'Versão de modelo documental aprovada.',
+        );
 
         return $version->refresh();
     }

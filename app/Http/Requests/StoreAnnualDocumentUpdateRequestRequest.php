@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\AnnualDocumentUpdateRequest;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreAnnualDocumentUpdateRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can(
+            'createBackoffice',
+            AnnualDocumentUpdateRequest::class,
+        ) === true;
     }
 
     /**

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\ContractStatus;
 use App\Enums\DefaultNoticeStatus;
+use App\Enums\FeatureKey;
 use App\Enums\IncomeChangeStatus;
 use App\Enums\LeasePaymentStatus;
 use App\Enums\PaymentReceiptStatus;
@@ -25,10 +26,13 @@ use App\Services\Finance\RentScheduleService;
 use App\Services\Finance\TenantFinancialAccountService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class Sprint14FinanceTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     public function test_candidate_can_only_access_own_financial_account(): void
@@ -219,6 +223,11 @@ class Sprint14FinanceTest extends TestCase
 
         $this->assertSame(RentReviewStatus::Applied, $review->refresh()->status);
         $this->assertSame(275.0, (float) $context['contract']->refresh()->monthly_rent);
+        $this->assertTrue($context['manager']->hasPermission('documents.create'));
+        $this->assertTrue(Gate::forUser($context['manager'])->allows(
+            'createBackoffice',
+            AnnualDocumentUpdateRequest::class,
+        ));
 
         $this->actingAs($context['manager'])
             ->post(route('backoffice.finance.annual-document-updates.store'), [
@@ -238,6 +247,7 @@ class Sprint14FinanceTest extends TestCase
         $this->assertNotNull($request->refresh()->submitted_at);
     }
 
+    /** @return array{candidate: User, manager: User, contract: Contract} */
     private function financeContext(): array
     {
         $this->seed(SystemAccessSeeder::class);
@@ -249,6 +259,13 @@ class Sprint14FinanceTest extends TestCase
         $manager->assignRole('financial_manager');
 
         $program = Program::factory()->published()->create();
+        $municipality = $program->municipality()->firstOrFail();
+        $this->assignMunicipality($candidate, $municipality);
+        $this->assignMunicipality($manager, $municipality);
+        $this->enableMunicipalityFeature(
+            $municipality,
+            FeatureKey::ApplicationReview,
+        );
         $contract = Contract::factory()->create([
             'program_id' => $program->id,
             'user_id' => $candidate->id,

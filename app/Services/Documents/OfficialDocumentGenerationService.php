@@ -88,6 +88,13 @@ class OfficialDocumentGenerationService
             'issued_by' => $actor->id,
             'issued_at' => now(),
         ])->save();
+        $this->audit->record(
+            AuditEvents::APPROVE,
+            $document,
+            'documents',
+            'official_document_issued',
+            'Documento oficial emitido.',
+        );
 
         return $document->refresh();
     }
@@ -100,6 +107,13 @@ class OfficialDocumentGenerationService
             'cancelled_at' => now(),
             'cancellation_reason' => $reason,
         ])->save();
+        $this->audit->record(
+            AuditEvents::UPDATE,
+            $document,
+            'documents',
+            'official_document_cancelled',
+            'Documento oficial cancelado.',
+        );
 
         return $document->refresh();
     }

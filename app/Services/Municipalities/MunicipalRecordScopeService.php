@@ -5,11 +5,13 @@ namespace App\Services\Municipalities;
 use App\Models\AdministrativeProcess;
 use App\Models\AdministrativeProcessNote;
 use App\Models\AdministrativeTask;
+use App\Models\AnnualDocumentUpdateRequest;
 use App\Models\Application;
 use App\Models\ApplicationReport;
 use App\Models\ApplicationReview;
 use App\Models\ApplicationSimulationInconsistency;
 use App\Models\Citizen;
+use App\Models\Contest;
 use App\Models\Contract;
 use App\Models\CorrectionRequest;
 use App\Models\CorrectionResponse;
@@ -21,17 +23,25 @@ use App\Models\DocumentAiSuggestion;
 use App\Models\DocumentAiValidation;
 use App\Models\DocumentAiValidationRun;
 use App\Models\DocumentSubmission;
+use App\Models\DocumentTemplate;
+use App\Models\DocumentTemplateVersion;
 use App\Models\EligibilityCheck;
 use App\Models\FutureApplicationDataReuse;
+use App\Models\GeneratedOfficialDocument;
+use App\Models\GeneratedProcedureDocument;
 use App\Models\Household;
 use App\Models\HousingApplication;
+use App\Models\LeaseContractDocument;
+use App\Models\Program;
 use App\Models\ReportAccessLog;
 use App\Models\ReportDownloadLog;
 use App\Models\ReportExport;
 use App\Models\ReportRun;
 use App\Models\SimulationSession;
 use App\Models\SimulatorConfiguration;
+use App\Models\TenantFinancialAccount;
 use App\Models\User;
+use App\Services\Platform\PlatformOperatorScopeService;
 use Illuminate\Database\Eloquent\Builder;
 
 class MunicipalRecordScopeService
@@ -41,6 +51,10 @@ class MunicipalRecordScopeService
         'applications_by_contest',
         'application_status_summary',
     ];
+
+    public function __construct(
+        private readonly PlatformOperatorScopeService $platformScope,
+    ) {}
 
     /**
      * @param  Builder<Citizen>  $query
@@ -179,6 +193,68 @@ class MunicipalRecordScopeService
     public function ownsContract(User $user, Contract $contract): bool
     {
         return $this->contracts(Contract::query()->whereKey($contract), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<Program>  $query
+     * @return Builder<Program>
+     */
+    public function programs(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        return $this->directMunicipalScope($query, $user);
+    }
+
+    public function ownsProgram(User $user, Program $program): bool
+    {
+        return $this->programs(Program::query()->whereKey($program), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<Contest>  $query
+     * @return Builder<Contest>
+     */
+    public function contests(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereHas(
+            'program',
+            fn (Builder $program): Builder => $program
+                ->where('municipality_id', $user->municipality_id),
+        );
+    }
+
+    public function ownsContest(User $user, Contest $contest): bool
+    {
+        return $this->contests(Contest::query()->whereKey($contest), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function users(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        return $this->directMunicipalScope($query, $user);
+    }
+
+    public function ownsUser(User $actor, User $target): bool
+    {
+        return $this->users(User::query()->whereKey($target), $actor)->exists();
     }
 
     /**
@@ -435,6 +511,224 @@ class MunicipalRecordScopeService
     {
         return $this->documentSubmissions(
             DocumentSubmission::query()->whereKey($submission),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<DocumentTemplate>  $query
+     * @return Builder<DocumentTemplate>
+     */
+    public function documentTemplates(
+        Builder $query,
+        User $user,
+        bool $includeGlobalCatalog = true,
+    ): Builder {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $templates) use ($includeGlobalCatalog, $user): void {
+            $templates->where('municipality_id', $user->municipality_id);
+
+            if ($includeGlobalCatalog) {
+                $templates->orWhereNull('municipality_id');
+            }
+        });
+    }
+
+    public function ownsDocumentTemplate(
+        User $user,
+        DocumentTemplate $template,
+        bool $includeGlobalCatalog = true,
+    ): bool {
+        return $this->documentTemplates(
+            DocumentTemplate::query()->whereKey($template),
+            $user,
+            $includeGlobalCatalog,
+        )->exists();
+    }
+
+    public function canMutateDocumentTemplate(User $user, DocumentTemplate $template): bool
+    {
+        if ($template->municipality_id === null) {
+            return $this->platformScope->hasGlobalScope($user);
+        }
+
+        return $user->municipality_id !== null
+            && $template->municipality_id === $user->municipality_id;
+    }
+
+    public function ownsDocumentTemplateVersion(
+        User $user,
+        DocumentTemplateVersion $version,
+        bool $includeGlobalCatalog = true,
+    ): bool {
+        return DocumentTemplateVersion::query()
+            ->whereKey($version)
+            ->whereIn(
+                'document_template_id',
+                $this->documentTemplates(
+                    DocumentTemplate::query(),
+                    $user,
+                    $includeGlobalCatalog,
+                )->select('id'),
+            )
+            ->exists();
+    }
+
+    public function canMutateDocumentTemplateVersion(
+        User $user,
+        DocumentTemplateVersion $version,
+    ): bool {
+        $version->loadMissing('template');
+
+        return $version->template instanceof DocumentTemplate
+            && $this->canMutateDocumentTemplate($user, $version->template);
+    }
+
+    /**
+     * @param  Builder<GeneratedOfficialDocument>  $query
+     * @return Builder<GeneratedOfficialDocument>
+     */
+    public function generatedOfficialDocuments(
+        Builder $query,
+        User $user,
+    ): Builder {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $documents) use ($user): void {
+            $documents
+                ->whereHas('template', fn (Builder $templates): Builder => $templates
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('recipient', fn (Builder $recipients): Builder => $recipients
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('generatedBy', fn (Builder $generators): Builder => $generators
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsGeneratedOfficialDocument(
+        User $user,
+        GeneratedOfficialDocument $document,
+    ): bool {
+        return $this->generatedOfficialDocuments(
+            GeneratedOfficialDocument::query()->whereKey($document),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<GeneratedProcedureDocument>  $query
+     * @return Builder<GeneratedProcedureDocument>
+     */
+    public function generatedProcedureDocuments(
+        Builder $query,
+        User $user,
+    ): Builder {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $documents) use ($user): void {
+            $documents
+                ->whereHas('program', fn (Builder $programs): Builder => $programs
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('contest.program', fn (Builder $programs): Builder => $programs
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('application.program', fn (Builder $programs): Builder => $programs
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsGeneratedProcedureDocument(
+        User $user,
+        GeneratedProcedureDocument $document,
+    ): bool {
+        return $this->generatedProcedureDocuments(
+            GeneratedProcedureDocument::query()->whereKey($document),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<LeaseContractDocument>  $query
+     * @return Builder<LeaseContractDocument>
+     */
+    public function leaseContractDocuments(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'lease_contract_id',
+            $this->contracts(Contract::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsLeaseContractDocument(
+        User $user,
+        LeaseContractDocument $document,
+    ): bool {
+        return $this->leaseContractDocuments(
+            LeaseContractDocument::query()->whereKey($document),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<TenantFinancialAccount>  $query
+     * @return Builder<TenantFinancialAccount>
+     */
+    public function tenantFinancialAccounts(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'lease_contract_id',
+            $this->contracts(Contract::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsTenantFinancialAccount(
+        User $user,
+        TenantFinancialAccount $account,
+    ): bool {
+        return $this->tenantFinancialAccounts(
+            TenantFinancialAccount::query()->whereKey($account),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<AnnualDocumentUpdateRequest>  $query
+     * @return Builder<AnnualDocumentUpdateRequest>
+     */
+    public function annualDocumentUpdateRequests(
+        Builder $query,
+        User $user,
+    ): Builder {
+        return $query->whereIn(
+            'lease_contract_id',
+            $this->contracts(Contract::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsAnnualDocumentUpdateRequest(
+        User $user,
+        AnnualDocumentUpdateRequest $request,
+    ): bool {
+        return $this->annualDocumentUpdateRequests(
+            AnnualDocumentUpdateRequest::query()->whereKey($request),
             $user,
         )->exists();
     }

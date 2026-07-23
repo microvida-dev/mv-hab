@@ -42,6 +42,30 @@ class DocumentTemplate extends Model
         return $this->belongsTo(DocumentTemplateVersion::class, 'active_version_id');
     }
 
+    /** @return BelongsTo<Municipality, $this> */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
+    }
+
+    /** @return BelongsTo<Program, $this> */
+    public function program(): BelongsTo
+    {
+        return $this->belongsTo(Program::class);
+    }
+
+    /** @return BelongsTo<Contest, $this> */
+    public function contest(): BelongsTo
+    {
+        return $this->belongsTo(Contest::class);
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     /** @return HasMany<DocumentTemplateVersion, $this> */
     public function versions(): HasMany
     {

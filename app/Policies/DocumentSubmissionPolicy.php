@@ -27,7 +27,7 @@ class DocumentSubmissionPolicy
             return $this->owns($user, $documentSubmission);
         }
 
-        return $this->canAccess($user, self::MODULE, 'view');
+        return $this->viewBackoffice($user, $documentSubmission);
     }
 
     public function create(User $user): bool
@@ -62,13 +62,15 @@ class DocumentSubmissionPolicy
     public function review(User $user, DocumentSubmission $documentSubmission): bool
     {
         return ! $user->hasRole('candidate')
-            && $this->canAccess($user, self::MODULE, 'approve');
+            && $this->canAccess($user, self::MODULE, 'approve')
+            && $this->municipalScope->ownsDocumentSubmission($user, $documentSubmission);
     }
 
     public function reject(User $user, DocumentSubmission $documentSubmission): bool
     {
         return ! $user->hasRole('candidate')
-            && $this->canAccess($user, self::MODULE, 'reject');
+            && $this->canAccess($user, self::MODULE, 'reject')
+            && $this->municipalScope->ownsDocumentSubmission($user, $documentSubmission);
     }
 
     private function owns(User $user, DocumentSubmission $documentSubmission): bool

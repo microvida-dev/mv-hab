@@ -6,10 +6,13 @@ use App\Models\Contract;
 use App\Models\LeaseContractDocument;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class LeaseContractDocumentPolicy
 {
     use ChecksPermissions;
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function view(User $user, LeaseContractDocument $leaseContractDocument): bool
     {
@@ -33,5 +36,14 @@ class LeaseContractDocumentPolicy
     public function update(User $user, LeaseContractDocument $leaseContractDocument): bool
     {
         return ! $user->hasRole(['candidate', 'auditor']) && $this->canAccess($user, 'contracts', 'update');
+    }
+
+    public function downloadBackoffice(
+        User $user,
+        LeaseContractDocument $leaseContractDocument,
+    ): bool {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, 'documents', 'download')
+            && $this->municipalScope->ownsLeaseContractDocument($user, $leaseContractDocument);
     }
 }

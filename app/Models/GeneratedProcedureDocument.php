@@ -64,6 +64,22 @@ class GeneratedProcedureDocument extends Model
     }
 
     /**
+     * @return BelongsTo<Program, $this>
+     */
+    public function program(): BelongsTo
+    {
+        return $this->belongsTo(Program::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function generatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'generated_by');
+    }
+
+    /**
      * @return MorphTo<Model, $this>
      */
     public function related(): MorphTo

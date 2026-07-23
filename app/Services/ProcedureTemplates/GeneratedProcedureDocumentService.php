@@ -10,9 +10,13 @@ use App\Models\GeneratedProcedureDocument;
 use App\Models\ProcedureTemplate;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
+use App\Services\Platform\PlatformOperatorScopeService;
 use App\Support\AuditEvents;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class GeneratedProcedureDocumentService
 {
@@ -20,6 +24,8 @@ class GeneratedProcedureDocumentService
         private readonly TemplateRenderingService $renderer,
         private readonly TemplateVariableResolver $variables,
         private readonly AuditLogger $auditLogger,
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly PlatformOperatorScopeService $platformScope,
     ) {}
 
     /**
@@ -27,8 +33,34 @@ class GeneratedProcedureDocumentService
      */
     public function generate(ProcedureTemplate $template, array $context, User $actor): GeneratedProcedureDocument
     {
-        $application = isset($context['application_id']) ? Application::query()->find($context['application_id']) : null;
-        $contest = isset($context['contest_id']) ? Contest::query()->find($context['contest_id']) : $application?->contest;
+        $application = isset($context['application_id'])
+            ? $this->municipalScope
+                ->applications(Application::query(), $actor)
+                ->find($context['application_id'])
+            : null;
+        $contest = isset($context['contest_id'])
+            ? $this->municipalScope
+                ->contests(Contest::query(), $actor)
+                ->find($context['contest_id'])
+            : $application?->contest;
+        if (
+            (isset($context['application_id']) && ! $application instanceof Application)
+            || (isset($context['contest_id']) && ! $contest instanceof Contest)
+        ) {
+            throw ValidationException::withMessages([
+                'context' => 'O contexto processual indicado não pertence ao âmbito autorizado.',
+            ]);
+        }
+
+        if (
+            ! $application instanceof Application
+            && ! $contest instanceof Contest
+            && ! $this->platformScope->hasGlobalScope($actor)
+        ) {
+            throw ValidationException::withMessages([
+                'context' => 'Indique uma candidatura ou concurso autorizado.',
+            ]);
+        }
         $variables = $application instanceof Application
             ? $this->variables->forApplication($application, $actor)
             : ($contest instanceof Contest ? $this->variables->forContest($contest) : ['generated_at' => now()->format('d/m/Y H:i')]);
@@ -75,6 +107,32 @@ class GeneratedProcedureDocumentService
         $this->auditLogger->record(AuditEvents::APPROVE, $document, 'documents', 'generated_procedure_document_approve', 'Documento de procedimento aprovado.');
 
         return $document->refresh();
+    }
+
+    public function download(
+        GeneratedProcedureDocument $document,
+        User $actor,
+    ): StreamedResponse {
+        if (
+            $document->file_path === null
+            || ! Storage::disk('local')->exists($document->file_path)
+        ) {
+            abort(404);
+        }
+
+        $this->auditLogger->record(
+            AuditEvents::ACCESS,
+            $document,
+            'documents',
+            'generated_procedure_document_download',
+            'Download autorizado de documento de procedimento.',
+            metadata: ['actor_id' => $actor->id],
+        );
+
+        return Storage::disk('local')->download(
+            $document->file_path,
+            $document->document_number.'.html',
+        );
     }
 
     private function number(): string

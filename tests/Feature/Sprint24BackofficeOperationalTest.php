@@ -79,9 +79,13 @@ class Sprint24BackofficeOperationalTest extends TestCase
             ->assertRedirect(route('backoffice.applications.report.show', $application));
 
         $report = ApplicationReport::query()->firstOrFail();
-        Storage::disk('local')->assertExists($report->file_path);
-        $this->assertStringStartsWith('backoffice/application-reports/', (string) $report->file_path);
-        $this->assertStringContainsString('validação final compete aos serviços municipais', Storage::disk('local')->get($report->file_path));
+        $reportPath = $report->file_path;
+        $this->assertIsString($reportPath);
+        Storage::disk('local')->assertExists($reportPath);
+        $this->assertStringStartsWith('backoffice/application-reports/', $reportPath);
+        $reportContents = Storage::disk('local')->get($reportPath);
+        $this->assertIsString($reportContents);
+        $this->assertStringContainsString('validação final compete aos serviços municipais', $reportContents);
 
         $this->actingAs($admin)
             ->withSession(['mfa.verified_at' => now()])
@@ -94,8 +98,10 @@ class Sprint24BackofficeOperationalTest extends TestCase
             ->assertRedirect(route('backoffice.applications.document-dossier.show', $application));
 
         $dossier = DocumentDossier::query()->firstOrFail();
-        Storage::disk('local')->assertExists($dossier->file_path);
-        $this->assertStringStartsWith('backoffice/document-dossiers/', (string) $dossier->file_path);
+        $dossierPath = $dossier->file_path;
+        $this->assertIsString($dossierPath);
+        Storage::disk('local')->assertExists($dossierPath);
+        $this->assertStringStartsWith('backoffice/document-dossiers/', $dossierPath);
     }
 
     public function test_document_dossier_factory_uses_existing_status_enum(): void
@@ -109,6 +115,11 @@ class Sprint24BackofficeOperationalTest extends TestCase
     {
         $admin = $this->userWithRole('administrator');
         $application = $this->submittedApplication();
+        $this->assignApplicationMunicipality(
+            $admin,
+            $application,
+            FeatureKey::ApplicationReview,
+        );
 
         $this->actingAs($admin)
             ->withSession(['mfa.verified_at' => now()])
@@ -140,7 +151,9 @@ class Sprint24BackofficeOperationalTest extends TestCase
             ->assertRedirect();
 
         $document = GeneratedProcedureDocument::query()->firstOrFail();
-        Storage::disk('local')->assertExists($document->file_path);
+        $documentPath = $document->file_path;
+        $this->assertIsString($documentPath);
+        Storage::disk('local')->assertExists($documentPath);
 
         $this->actingAs($admin)
             ->withSession(['mfa.verified_at' => now()])
@@ -162,7 +175,9 @@ class Sprint24BackofficeOperationalTest extends TestCase
 
         $minute = ProcedureMinute::query()->firstOrFail();
         $this->assertSame(ProcedureMinuteStatus::Generated, $minute->status);
-        Storage::disk('local')->assertExists($minute->file_path);
+        $minutePath = $minute->file_path;
+        $this->assertIsString($minutePath);
+        Storage::disk('local')->assertExists($minutePath);
 
         $this->actingAs($admin)
             ->withSession(['mfa.verified_at' => now()])

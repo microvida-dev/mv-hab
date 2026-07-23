@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\DocumentTemplate;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreDocumentTemplateVersionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $template = $this->route('documentTemplate');
+
+        return $template instanceof DocumentTemplate
+            && $this->user()?->can('updateBackoffice', $template) === true;
     }
 
     /**
