@@ -9,13 +9,13 @@ use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\Complaint;
 use App\Models\ComplaintDecision;
 use App\Models\User;
-use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\BaseTimelineProvider;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 
 class ComplaintTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
-        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory,
     ) {}
 
     public function forUser(User $user, array $dashboard = []): array

@@ -9,14 +9,14 @@ use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Enums\LotteryDrawStatus;
 use App\Models\LotteryDraw;
 use App\Models\User;
-use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\BaseTimelineProvider;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use Illuminate\Support\Collection;
 
 class LotteryTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
-        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory,
     ) {}
 
     public function forUser(User $user, array $dashboard = []): array

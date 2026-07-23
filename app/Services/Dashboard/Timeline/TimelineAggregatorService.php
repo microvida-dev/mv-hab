@@ -58,7 +58,7 @@ class TimelineAggregatorService
      */
     private function metrics(Collection $events): array
     {
-        $metrics = $this->metricsService ?? new TimelineMetricsService();
+        $metrics = $this->metricsService ?? new TimelineMetricsService;
 
         return $metrics->calculate($events);
     }
@@ -69,7 +69,7 @@ class TimelineAggregatorService
      */
     private function nextAction(Collection $events): ?array
     {
-        $resolver = $this->nextActionResolver ?? new NextActionResolver();
+        $resolver = $this->nextActionResolver ?? new NextActionResolver;
 
         return $resolver->resolve($events)?->toArray();
     }

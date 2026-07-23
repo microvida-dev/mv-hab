@@ -2,6 +2,7 @@
 
 namespace App\Services\Agenda;
 
+use App\Data\Dashboard\TimelineEvent;
 use App\Enums\Agenda\AgendaView;
 use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Models\User;
@@ -95,7 +96,7 @@ final readonly class AgendaService
 
     /**
      * @param  array<string, mixed>  $dashboard
-     * @return Collection<int, \App\Data\Dashboard\TimelineEvent>
+     * @return Collection<int, TimelineEvent>
      */
     public function nextEvents(User $user, int $limit = 5, array $dashboard = []): Collection
     {
@@ -112,7 +113,7 @@ final readonly class AgendaService
 
     /**
      * @param  array<string, mixed>  $dashboard
-     * @return Collection<int, \App\Data\Dashboard\TimelineEvent>
+     * @return Collection<int, TimelineEvent>
      */
     public function nextCriticalEvents(User $user, int $limit = 5, array $dashboard = []): Collection
     {

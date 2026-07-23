@@ -5,8 +5,9 @@ namespace App\Services\Dashboard;
 use App\Models\User;
 use App\Services\Navigation\FavoritesService;
 use App\Services\Navigation\RecentItemsService;
-use App\Services\Navigation\WorkspaceService;
 use App\Services\Navigation\WorkspacePreferenceService;
+use App\Services\Navigation\WorkspaceService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 
 class ProfileDashboardService
@@ -135,8 +136,8 @@ class ProfileDashboardService
 
     /**
      * @param  array<string, mixed>  $workspace
-     * @param  \Illuminate\Support\Collection<int, mixed>  $favorites
-     * @param  \Illuminate\Support\Collection<int, mixed>  $recentItems
+     * @param  Collection<int, mixed>  $favorites
+     * @param  Collection<int, mixed>  $recentItems
      * @return array<string, mixed>
      */
     private function workspaceCardPayload(array $workspace, $favorites, $recentItems, bool $preferred): array
@@ -561,7 +562,6 @@ class ProfileDashboardService
     }
 
     /**
-     * @param  mixed  $route
      * @param  array<string, mixed>  $parameters
      */
     private function routeHref(mixed $route, array $parameters = []): ?string

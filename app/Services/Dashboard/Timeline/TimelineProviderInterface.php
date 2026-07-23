@@ -2,13 +2,14 @@
 
 namespace App\Services\Dashboard\Timeline;
 
+use App\Data\Dashboard\TimelineEvent;
 use App\Models\User;
 
 interface TimelineProviderInterface
 {
     /**
      * @param  array<string, mixed>  $dashboard
-     * @return array<int, \App\Data\Dashboard\TimelineEvent>
+     * @return array<int, TimelineEvent>
      */
     public function forUser(User $user, array $dashboard = []): array;
 }
