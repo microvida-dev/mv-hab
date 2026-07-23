@@ -15,6 +15,7 @@ return [
         'exports' => ['view', 'create', 'download', 'audit', 'delete', 'rgpd', 'sensitive.create', 'sensitive.download', 'sensitive.audit'],
         'rgpd' => ['retention.view', 'retention.manage', 'anonymization.request', 'anonymization.approve', 'anonymization.execute', 'dpo.approve'],
         'municipalities' => ['view', 'create', 'update', 'delete', 'audit'],
+        'municipality_features' => ['view', 'update', 'audit'],
         'programs' => ['view', 'create', 'update', 'delete', 'publish', 'audit'],
         'contests' => ['view', 'create', 'update', 'delete', 'approve', 'reject', 'publish', 'audit'],
         'citizens' => ['view', 'create', 'update', 'delete', 'export', 'audit'],

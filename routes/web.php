@@ -109,6 +109,7 @@ use App\Http\Controllers\Backoffice\NotificationTemplateController as Backoffice
 use App\Http\Controllers\Backoffice\NotificationTemplateVersionController as BackofficeNotificationTemplateVersionController;
 use App\Http\Controllers\Backoffice\OfficialNotificationController as BackofficeOfficialNotificationController;
 use App\Http\Controllers\Backoffice\OperationalDashboardController as BackofficeSprint24OperationalDashboardController;
+use App\Http\Controllers\Backoffice\Platform\MunicipalityFeatureController as BackofficeMunicipalityFeatureController;
 use App\Http\Controllers\Backoffice\PostDrawReportController as BackofficePostDrawReportController;
 use App\Http\Controllers\Backoffice\PreliminaryHearingSubmissionController as BackofficePreliminaryHearingSubmissionController;
 use App\Http\Controllers\Backoffice\ProcedureMinuteController as BackofficeProcedureMinuteController;
@@ -1399,6 +1400,27 @@ Route::middleware('auth')->group(function () {
                         ->middleware('permission:roles.remove')
                         ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                         ->name('users.roles.remove');
+
+                    Route::get('platform/municipalities/features', [BackofficeMunicipalityFeatureController::class, 'index'])
+                        ->middleware('permission:municipality_features.view')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('platform.municipality-features.index');
+                    Route::get('platform/municipalities/{municipality}/features', [BackofficeMunicipalityFeatureController::class, 'show'])
+                        ->middleware('permission:municipality_features.view')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('platform.municipality-features.show');
+                    Route::post('platform/municipalities/{municipality}/features/{feature}/enable', [BackofficeMunicipalityFeatureController::class, 'enable'])
+                        ->middleware('permission:municipality_features.update')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('platform.municipality-features.enable');
+                    Route::post('platform/municipalities/{municipality}/features/{feature}/disable', [BackofficeMunicipalityFeatureController::class, 'disable'])
+                        ->middleware('permission:municipality_features.update')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('platform.municipality-features.disable');
+                    Route::get('platform/municipalities/{municipality}/features/audit', [BackofficeMunicipalityFeatureController::class, 'audit'])
+                        ->middleware('permission:municipality_features.audit')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('platform.municipality-features.audit');
 
                     Route::get('teams', [BackofficeMunicipalTeamController::class, 'index'])->name('teams.index');
                     Route::get('teams/create', [BackofficeMunicipalTeamController::class, 'create'])->name('teams.create');
