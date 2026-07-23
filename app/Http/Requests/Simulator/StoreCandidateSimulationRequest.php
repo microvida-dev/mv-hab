@@ -4,6 +4,7 @@ namespace App\Http\Requests\Simulator;
 
 use App\Http\Requests\Simulator\Concerns\ValidatesSimulationInput;
 use App\Models\AdhesionRegistration;
+use App\Models\Household;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreCandidateSimulationRequest extends FormRequest
@@ -37,16 +38,24 @@ class StoreCandidateSimulationRequest extends FormRequest
             return;
         }
 
-        $household = $registration->household;
+        $householdRelation = $registration->getRelations()['household'] ?? null;
+        $household = $householdRelation instanceof Household ? $householdRelation : null;
         $housingSituation = $registration->currentHousingSituation;
-        $members = $household?->members ?? collect();
+
+        if ($household instanceof Household) {
+            $members = $household->members;
+            $monthlyIncome = $household->monthly_income;
+        } else {
+            $members = collect();
+            $monthlyIncome = 0;
+        }
 
         $this->merge([
             'housing_status' => $housingSituation?->housing_status?->value,
             'household_members_count' => $members->count() ?: 1,
             'adults_count' => $members->filter(fn ($member) => ($member->age() ?? 0) >= 18)->count() ?: 1,
             'dependents_count' => $members->where('is_dependent', true)->count(),
-            'monthly_income' => $household?->monthly_income ?? 0,
+            'monthly_income' => $monthlyIncome,
         ]);
     }
 
