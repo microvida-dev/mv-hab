@@ -35,6 +35,8 @@
         }
     },
     "scripts": {
+        "quality:pint": "@php vendor/bin/pint --test",
+        "quality:pint:changed": "@php scripts/quality/pint-changed.php",
         "quality:tests:integrity": "@php scripts/quality/audit-test-integrity.php",
         "setup": [
             "composer install",
