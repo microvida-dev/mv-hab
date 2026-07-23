@@ -13,7 +13,8 @@ class BlockInactiveBackofficeUsers
     {
         $user = $request->user();
 
-        abort_if($user instanceof User && ! $user->hasRole('candidate') && ($user->status ?? 'active') !== 'active', 403);
+        abort_if($user instanceof User && $user->hasRole('candidate'), 403);
+        abort_if($user instanceof User && ($user->status ?? 'active') !== 'active', 403);
 
         return $next($request);
     }
