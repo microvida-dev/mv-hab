@@ -4244,6 +4244,139 @@ Route::middleware('auth')->group(function () {
             Route::resource('payments', PaymentController::class);
             Route::resource('maintenance-requests', MaintenanceRequestController::class);
             Route::resource('documents', DocumentController::class);
+
+            $sprint47bRouteAccess = [
+                'backoffice.administrative-notes.destroy' => ['administrative_processes.delete', 'applications.review'],
+                'backoffice.administrative-notes.store' => ['administrative_processes.create', 'applications.review'],
+                'backoffice.administrative-notes.update' => ['administrative_processes.update', 'applications.review'],
+                'backoffice.administrative-tasks.cancel' => ['administrative_processes.cancel', 'applications.review'],
+                'backoffice.administrative-tasks.complete' => ['administrative_processes.complete', 'applications.review'],
+                'backoffice.administrative-tasks.index' => ['administrative_processes.view', 'applications.review'],
+                'backoffice.administrative-tasks.store' => ['administrative_processes.assign', 'applications.review'],
+                'backoffice.administrative-tasks.update' => ['administrative_processes.update', 'applications.review'],
+                'backoffice.application-inconsistencies.index' => ['administrative_processes.view', 'applications.review'],
+                'backoffice.application-inconsistencies.resolve' => ['administrative_processes.decide', 'applications.review'],
+                'backoffice.correction-requests.cancel' => ['administrative_processes.cancel', 'applications.review'],
+                'backoffice.correction-requests.close' => ['administrative_processes.complete', 'applications.review'],
+                'backoffice.correction-requests.create' => ['administrative_processes.create', 'applications.review'],
+                'backoffice.correction-requests.edit' => ['administrative_processes.update', 'applications.review'],
+                'backoffice.correction-requests.index' => ['administrative_processes.view', 'applications.review'],
+                'backoffice.correction-requests.issue' => ['administrative_processes.issue', 'applications.review'],
+                'backoffice.correction-requests.mark-overdue' => ['administrative_processes.mark_overdue', 'applications.review'],
+                'backoffice.correction-requests.show' => ['administrative_processes.view', 'applications.review'],
+                'backoffice.correction-requests.store' => ['administrative_processes.create', 'applications.review'],
+                'backoffice.correction-requests.update' => ['administrative_processes.update', 'applications.review'],
+                'backoffice.correction-responses.accept' => ['administrative_processes.decide', 'applications.review'],
+                'backoffice.correction-responses.reject' => ['administrative_processes.decide', 'applications.review'],
+                'backoffice.correction-responses.request-more-information' => ['administrative_processes.decide', 'applications.review'],
+                'backoffice.correction-responses.show' => ['administrative_processes.view', 'applications.review'],
+                'applications.create' => ['applications.create', 'applications.intake'],
+                'applications.destroy' => ['applications.delete', 'applications.review'],
+                'applications.edit' => ['applications.update', 'applications.review'],
+                'applications.index' => ['applications.view', 'applications.review'],
+                'applications.show' => ['applications.view', 'applications.review'],
+                'applications.store' => ['applications.create', 'applications.intake'],
+                'applications.update' => ['applications.update', 'applications.review'],
+                'backoffice.data-reuse.index' => ['applications.view', 'applications.review'],
+                'backoffice.simulator.configuration.edit' => ['simulator.view', null],
+                'backoffice.simulator.configuration.update' => ['simulator.update', null],
+                'backoffice.simulator.insights.index' => ['simulator.view', null],
+                'backoffice.simulator.insights.show' => ['simulator.view', null],
+                'citizens.create' => ['citizens.create', 'applications.intake'],
+                'citizens.destroy' => ['citizens.delete', 'applications.review'],
+                'citizens.edit' => ['citizens.update', 'applications.review'],
+                'citizens.index' => ['citizens.view', 'applications.review'],
+                'citizens.show' => ['citizens.view', 'applications.review'],
+                'citizens.store' => ['citizens.create', 'applications.intake'],
+                'citizens.update' => ['citizens.update', 'applications.review'],
+                'households.create' => ['households.create', 'applications.intake'],
+                'households.destroy' => ['households.delete', 'applications.review'],
+                'households.edit' => ['households.update', 'applications.review'],
+                'households.index' => ['households.view', 'applications.review'],
+                'households.show' => ['households.view', 'applications.review'],
+                'households.store' => ['households.create', 'applications.intake'],
+                'households.update' => ['households.update', 'applications.review'],
+                'backoffice.cases.documents.show' => ['documents.view', 'applications.review'],
+                'backoffice.contracts.documents.download' => ['documents.download', 'applications.review'],
+                'backoffice.contracts.documents.generate' => ['documents.generate', 'applications.review'],
+                'backoffice.document-ai.assistant.index' => ['documents.view', 'applications.review'],
+                'backoffice.document-ai.assistant.recalculate' => ['documents.analyze', 'applications.review'],
+                'backoffice.document-ai.assistant.show' => ['documents.view', 'applications.review'],
+                'backoffice.document-ai.assistant.suggestions.accept' => ['documents.review_ai', 'applications.review'],
+                'backoffice.document-ai.assistant.suggestions.dismiss' => ['documents.review_ai', 'applications.review'],
+                'backoffice.document-ai.assistant.suggestions.update' => ['documents.review_ai', 'applications.review'],
+                'backoffice.document-ai.extractions.index' => ['documents.audit', 'applications.review'],
+                'backoffice.document-ai.extractions.show' => ['documents.audit', 'applications.review'],
+                'backoffice.document-ai.fields.review' => ['documents.review_ai', 'applications.review'],
+                'backoffice.document-ai.validations.index' => ['documents.view', 'applications.review'],
+                'backoffice.document-ai.validations.manual-review' => ['documents.review_ai', 'applications.review'],
+                'backoffice.document-ai.validations.rerun' => ['documents.analyze', 'applications.review'],
+                'backoffice.document-ai.validations.show' => ['documents.view', 'applications.review'],
+                'backoffice.document-ai.validations.validation' => ['documents.view', 'applications.review'],
+                'backoffice.document-template-versions.activate' => ['documents.activate', null],
+                'backoffice.document-template-versions.approve' => ['documents.approve', null],
+                'backoffice.document-template-versions.show' => ['documents.view', null],
+                'backoffice.document-template-versions.store' => ['documents.create', null],
+                'backoffice.document-templates.archive' => ['documents.archive', null],
+                'backoffice.document-templates.create' => ['documents.create', null],
+                'backoffice.document-templates.edit' => ['documents.update', null],
+                'backoffice.document-templates.index' => ['documents.view', null],
+                'backoffice.document-templates.preview' => ['documents.preview', null],
+                'backoffice.document-templates.show' => ['documents.view', null],
+                'backoffice.document-templates.store' => ['documents.create', null],
+                'backoffice.document-templates.update' => ['documents.update', null],
+                'backoffice.finance.annual-document-updates.accept' => ['documents.approve', 'applications.review'],
+                'backoffice.finance.annual-document-updates.index' => ['documents.view', 'applications.review'],
+                'backoffice.finance.annual-document-updates.reject' => ['documents.reject', 'applications.review'],
+                'backoffice.finance.annual-document-updates.show' => ['documents.view', 'applications.review'],
+                'backoffice.finance.annual-document-updates.store' => ['documents.create', 'applications.review'],
+                'backoffice.generated-documents.download' => ['documents.download', 'applications.review'],
+                'backoffice.generated-documents.index' => ['documents.view', 'applications.review'],
+                'backoffice.generated-documents.issue' => ['documents.issue', 'applications.review'],
+                'backoffice.generated-documents.show' => ['documents.view', 'applications.review'],
+                'backoffice.official-documents.cancel' => ['documents.cancel', 'applications.review'],
+                'backoffice.official-documents.download' => ['documents.download', 'applications.review'],
+                'backoffice.official-documents.generate' => ['documents.generate', 'applications.review'],
+                'backoffice.official-documents.index' => ['documents.view', 'applications.review'],
+                'backoffice.official-documents.issue' => ['documents.issue', 'applications.review'],
+                'backoffice.official-documents.show' => ['documents.view', 'applications.review'],
+                'backoffice.procedure-templates.documents.generate' => ['documents.generate', null],
+                'documents.create' => ['documents.create', 'applications.review'],
+                'documents.destroy' => ['documents.delete', 'applications.review'],
+                'documents.edit' => ['documents.update', 'applications.review'],
+                'documents.index' => ['documents.view', 'applications.review'],
+                'documents.show' => ['documents.view', 'applications.review'],
+                'documents.store' => ['documents.create', 'applications.review'],
+                'documents.update' => ['documents.update', 'applications.review'],
+            ];
+
+            Route::getRoutes()->refreshNameLookups();
+
+            foreach ($sprint47bRouteAccess as $routeName => [$permission, $feature]) {
+                $route = Route::getRoutes()->getByName($routeName);
+
+                if ($route === null) {
+                    throw new LogicException("A rota {$routeName} do manifesto 47B não está registada.");
+                }
+
+                $middleware = [
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                ];
+
+                if ($feature !== null) {
+                    $middleware[] = "municipality.feature:{$feature}";
+                }
+
+                $middleware[] = "permission:{$permission}";
+
+                $route
+                    ->middleware($middleware)
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    );
+            }
         });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

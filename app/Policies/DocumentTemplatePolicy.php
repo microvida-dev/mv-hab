@@ -71,6 +71,13 @@ class DocumentTemplatePolicy
             && $this->municipalScope->canMutateDocumentTemplate($user, $template);
     }
 
+    public function createVersionBackoffice(User $user, DocumentTemplate $template): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'documents', 'create')
+            && $this->municipalScope->canMutateDocumentTemplate($user, $template);
+    }
+
     public function archiveBackoffice(User $user, DocumentTemplate $template): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])

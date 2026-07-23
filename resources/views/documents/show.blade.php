@@ -2,9 +2,11 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-4">
             <h2 class="text-xl font-semibold leading-tight text-ink-900">{{ $document->name }}</h2>
-            <a href="{{ route('documents.edit', $document) }}" class="mv-button-secondary">
-                Editar
-            </a>
+            @can('updateBackoffice', $document)
+                <a href="{{ route('documents.edit', $document) }}" class="mv-button-secondary">
+                    Editar
+                </a>
+            @endcan
         </div>
     </x-slot>
 
@@ -36,8 +38,8 @@
                         <dd class="mt-1 text-sm text-ink-900">{{ number_format($document->size / 1024, 1, ',', '.') }} KB</dd>
                     </div>
                     <div class="md:col-span-2">
-                        <dt class="text-sm font-medium text-ink-500">Caminho</dt>
-                        <dd class="mt-1 break-all text-sm text-ink-900">{{ $document->path }}</dd>
+                        <dt class="text-sm font-medium text-ink-500">Proteção</dt>
+                        <dd class="mt-1 text-sm text-ink-900">Ficheiro armazenado em área privada.</dd>
                     </div>
                 </dl>
             </div>

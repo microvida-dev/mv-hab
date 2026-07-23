@@ -17,7 +17,7 @@ class DocumentTemplateVersionController extends Controller
 
     public function store(StoreDocumentTemplateVersionRequest $request, DocumentTemplate $documentTemplate): RedirectResponse
     {
-        Gate::authorize('updateBackoffice', $documentTemplate);
+        Gate::authorize('createVersionBackoffice', $documentTemplate);
         $version = $this->service->create($documentTemplate, $request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.document-template-versions.show', $version);

@@ -12,7 +12,7 @@ class StoreDocumentTemplateVersionRequest extends FormRequest
         $template = $this->route('documentTemplate');
 
         return $template instanceof DocumentTemplate
-            && $this->user()?->can('updateBackoffice', $template) === true;
+            && $this->user()?->can('createVersionBackoffice', $template) === true;
     }
 
     /**

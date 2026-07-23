@@ -2,9 +2,11 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-4">
             <h2 class="text-xl font-semibold leading-tight text-ink-900">Documentos</h2>
-            <a href="{{ route('documents.create') }}" class="mv-button-primary">
-                Novo documento
-            </a>
+            @can('createBackoffice', \App\Models\Document::class)
+                <a href="{{ route('documents.create') }}" class="mv-button-primary">
+                    Novo documento
+                </a>
+            @endcan
         </div>
     </x-slot>
 
@@ -36,14 +38,18 @@
                                     <td class="px-4 py-3">
                                         <div class="flex justify-end gap-2">
                                             <a href="{{ route('documents.show', $document) }}" class="rounded-2xl border border-mvhab-support/40 px-3 py-1.5 text-xs font-semibold text-mvhab-primary hover:bg-mvhab-surface">Ver</a>
-                                            <a href="{{ route('documents.edit', $document) }}" class="rounded-2xl border border-mvhab-support/40 px-3 py-1.5 text-xs font-semibold text-mvhab-primary hover:bg-mvhab-surface">Editar</a>
-                                            <form method="POST" action="{{ route('documents.destroy', $document) }}">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="rounded-2xl border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50" onclick="return confirm('Eliminar este documento?')">
-                                                    Eliminar
-                                                </button>
-                                            </form>
+                                            @can('updateBackoffice', $document)
+                                                <a href="{{ route('documents.edit', $document) }}" class="rounded-2xl border border-mvhab-support/40 px-3 py-1.5 text-xs font-semibold text-mvhab-primary hover:bg-mvhab-surface">Editar</a>
+                                            @endcan
+                                            @can('deleteBackoffice', $document)
+                                                <form method="POST" action="{{ route('documents.destroy', $document) }}">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="rounded-2xl border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50" onclick="return confirm('Eliminar este documento?')">
+                                                        Eliminar
+                                                    </button>
+                                                </form>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>
