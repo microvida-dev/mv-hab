@@ -23,6 +23,7 @@ class MunicipalRoleTemplateRegistry
                 'documents.create',
                 'documents.update',
                 'administrative_processes.view',
+                'administrative_processes.create',
             ],
         ],
         'analista-candidaturas' => [
@@ -55,10 +56,9 @@ class MunicipalRoleTemplateRegistry
                 'dashboard.view',
                 'applications.view',
                 'applications.export',
-                'exports.view',
-                'exports.create',
-                'exports.download',
-                'exports.audit',
+                'reports.view',
+                'reports.export',
+                'reports.audit',
             ],
         ],
     ];

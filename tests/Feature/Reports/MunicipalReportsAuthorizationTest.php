@@ -44,6 +44,7 @@ class MunicipalReportsAuthorizationTest extends TestCase
         $auditor = $this->userWithRole('auditor');
 
         $this->actingAs($auditor)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.reports.access-logs.index'))
             ->assertOk();
 

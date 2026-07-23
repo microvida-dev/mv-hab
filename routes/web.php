@@ -6,8 +6,8 @@ use App\Http\Controllers\Admin\DocumentTypeController as AdminDocumentTypeContro
 use App\Http\Controllers\Admin\ProgramController as AdminProgramController;
 use App\Http\Controllers\Admin\RequiredDocumentController as AdminRequiredDocumentController;
 use App\Http\Controllers\Backoffice\Access\AccessAuditController as BackofficeAccessAuditController;
-use App\Http\Controllers\Backoffice\Access\MunicipalTeamController as BackofficeMunicipalTeamController;
 use App\Http\Controllers\Backoffice\Access\MunicipalRoleTemplateController as BackofficeMunicipalRoleTemplateController;
+use App\Http\Controllers\Backoffice\Access\MunicipalTeamController as BackofficeMunicipalTeamController;
 use App\Http\Controllers\Backoffice\Access\RoleManagementController as BackofficeRoleManagementController;
 use App\Http\Controllers\Backoffice\Access\UserAdministrationController as BackofficeUserAdministrationController;
 use App\Http\Controllers\Backoffice\AdditionalDocumentRequestController as BackofficeAdditionalDocumentRequestController;
@@ -300,14 +300,14 @@ Route::get('/simulador/resultado/{uuid}', [AdvancedSimulatorController::class, '
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)
-        ->middleware('role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor,candidate')
+        ->middleware('permission:dashboard.view')
         ->name('dashboard');
 
     Route::middleware([
-        'role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor',
         'active.backoffice',
         'mfa.backoffice',
         'log.backoffice',
+        'permission:dashboard.view',
     ])->group(function () {
         Route::get('/workspaces/{workspace}', NavigationWorkspaceController::class)
             ->name('workspaces.show');
@@ -762,8 +762,12 @@ Route::middleware('auth')->group(function () {
         ])
         ->group(function () {
             Route::get('search', [UniversalSearchController::class, 'index'])
+                ->middleware('permission:dashboard.view')
+                ->withoutMiddleware('role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor')
                 ->name('search.index');
             Route::get('search/commands', [UniversalSearchController::class, 'commands'])
+                ->middleware('permission:dashboard.view')
+                ->withoutMiddleware('role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor')
                 ->name('search.commands');
 
             Route::get('productivity', BackofficeProductivityController::class)
@@ -1550,7 +1554,15 @@ Route::middleware('auth')->group(function () {
                     });
 
                 Route::prefix('reports')->name('reports.')->group(function () {
-                    Route::get('/', BackofficeReportingController::class)->name('index');
+                    Route::get('/', BackofficeReportingController::class)
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:reports.view',
+                        ])
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('index');
                     Route::get('analytics', BackofficeAnalyticsController::class)->name('analytics');
                     Route::get('dashboard', BackofficeOperationalDashboardController::class)->name('dashboard');
                     Route::get('operational', BackofficeOperationalDashboardController::class)->name('operational');
@@ -1562,15 +1574,57 @@ Route::middleware('auth')->group(function () {
                     Route::match(['put', 'patch'], 'indicators/{indicatorDefinition}', [BackofficeIndicatorController::class, 'update'])->name('indicators.update');
 
                     Route::resource('definitions', BackofficeReportDefinitionController::class)
-                        ->parameters(['definitions' => 'reportDefinition']);
+                        ->parameters(['definitions' => 'reportDefinition'])
+                        ->middlewareFor(['index', 'show'], [
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:reports.view',
+                        ])
+                        ->withoutMiddlewareFor(
+                            ['index', 'show'],
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor',
+                        );
                     Route::get('runs', [BackofficeReportRunController::class, 'index'])->name('runs.index');
                     Route::post('definitions/{reportDefinition}/run', [BackofficeReportRunController::class, 'store'])->name('runs.store');
                     Route::get('runs/{reportRun}', [BackofficeReportRunController::class, 'show'])->name('runs.show');
 
-                    Route::get('exports', [BackofficeReportExportController::class, 'index'])->name('exports.index');
-                    Route::post('definitions/{reportDefinition}/export', [BackofficeReportExportController::class, 'store'])->name('exports.store');
-                    Route::get('exports/{reportExport}', [BackofficeReportExportController::class, 'show'])->name('exports.show');
-                    Route::get('exports/{reportExport}/download', BackofficeReportDownloadController::class)->name('exports.download');
+                    Route::get('exports', [BackofficeReportExportController::class, 'index'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:reports.view',
+                        ])
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('exports.index');
+                    Route::post('definitions/{reportDefinition}/export', [BackofficeReportExportController::class, 'store'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:reports.export',
+                        ])
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('exports.store');
+                    Route::get('exports/{reportExport}', [BackofficeReportExportController::class, 'show'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:reports.view',
+                        ])
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('exports.show');
+                    Route::get('exports/{reportExport}/download', BackofficeReportDownloadController::class)
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:reports.export',
+                        ])
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('exports.download');
 
                     Route::get('filter-presets', [BackofficeReportFilterPresetController::class, 'index'])->name('filter-presets.index');
                     Route::post('filter-presets', [BackofficeReportFilterPresetController::class, 'store'])->name('filter-presets.store');
@@ -1584,8 +1638,24 @@ Route::middleware('auth')->group(function () {
                     Route::match(['put', 'patch'], 'widgets/{dashboardWidget}', [BackofficeDashboardWidgetController::class, 'update'])->name('widgets.update');
                     Route::delete('widgets/{dashboardWidget}', [BackofficeDashboardWidgetController::class, 'destroy'])->name('widgets.destroy');
 
-                    Route::get('access-logs', [BackofficeReportAuditController::class, 'accessLogs'])->name('access-logs.index');
-                    Route::get('download-logs', [BackofficeReportAuditController::class, 'downloadLogs'])->name('download-logs.index');
+                    Route::get('access-logs', [BackofficeReportAuditController::class, 'accessLogs'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:reports.audit',
+                        ])
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('access-logs.index');
+                    Route::get('download-logs', [BackofficeReportAuditController::class, 'downloadLogs'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:reports.audit',
+                        ])
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('download-logs.index');
                 });
 
                 Route::get('analytics', BackofficeAnalyticsController::class)->name('analytics.index');
@@ -1907,6 +1977,13 @@ Route::middleware('auth')->group(function () {
 
                 Route::prefix('cases')->name('cases.')->group(function () {
                     Route::get('applications/{application}', [BackofficeCaseWorkspaceController::class, 'application'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:applications.view',
+                        ])
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                         ->name('applications.show');
                     Route::get('contests/{contest}', [BackofficeCaseWorkspaceController::class, 'contest'])
                         ->name('contests.show');
@@ -3656,8 +3733,22 @@ Route::middleware('auth')->group(function () {
                         ->name('criteria.inactivate');
 
                     Route::get('checks', [BackofficeEligibilityCheckController::class, 'index'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:eligibility.view',
+                        ])
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                         ->name('checks.index');
                     Route::get('checks/{eligibilityCheck}', [BackofficeEligibilityCheckController::class, 'show'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:eligibility.view',
+                        ])
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                         ->name('checks.show');
                     Route::post('checks/{eligibilityCheck}/rerun', [BackofficeEligibilityCheckController::class, 'rerun'])
                         ->name('checks.rerun');

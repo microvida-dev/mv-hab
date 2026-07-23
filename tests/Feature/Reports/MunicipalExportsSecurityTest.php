@@ -46,6 +46,7 @@ class MunicipalExportsSecurityTest extends TestCase
         $report = ReportDefinition::query()->where('code', 'application_status_summary')->firstOrFail();
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.reports.exports.store', $report), [
                 'format' => 'csv',
                 'scope' => ExportScope::Aggregated->value,

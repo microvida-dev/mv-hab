@@ -11,6 +11,14 @@ use App\Models\User;
 
 class ReportPermissionService
 {
+    /** @var array<string, string> */
+    private const DOMAIN_EXPORT_PERMISSIONS = [
+        'applications_by_contest' => 'applications.export',
+        'application_status_summary' => 'applications.export',
+        'complaints_summary' => 'complaints.export',
+        'housing_occupancy_report' => 'housing_units.export',
+    ];
+
     public function canViewDashboard(User $user, DashboardDefinition $dashboard): bool
     {
         if ($user->hasRole('candidate') || ! $user->hasPermission('reports.view')) {
@@ -51,6 +59,11 @@ class ReportPermissionService
     public function canExport(User $user, ReportDefinition $report, ExportScope $scope): bool
     {
         if (! $this->canViewReport($user, $report) || ! $user->hasPermission('reports.export')) {
+            return false;
+        }
+
+        $domainExportPermission = self::DOMAIN_EXPORT_PERMISSIONS[$report->code] ?? null;
+        if ($domainExportPermission !== null && ! $user->hasPermission($domainExportPermission)) {
             return false;
         }
 

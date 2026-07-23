@@ -16,12 +16,12 @@ class ReportDefinitionSeeder extends Seeder
     {
         $baseFormats = [ReportFormat::Html->value, ReportFormat::Csv->value, ReportFormat::Xlsx->value, ReportFormat::Pdf->value];
         $reports = [
-            ['applications_by_contest', 'Candidaturas por concurso', 'applicationsByContest', ReportType::Operational, ReportSensitivityLevel::Restricted, null],
-            ['application_status_summary', 'Resumo de estados das candidaturas', 'applicationStatusSummary', ReportType::Operational, ReportSensitivityLevel::PublicInternal, null],
-            ['eligibility_summary', 'Resumo de elegibilidade', 'eligibilitySummary', ReportType::Operational, ReportSensitivityLevel::Restricted, null],
+            ['applications_by_contest', 'Candidaturas por concurso', 'applicationsByContest', ReportType::Operational, ReportSensitivityLevel::Restricted, 'applications.view'],
+            ['application_status_summary', 'Resumo de estados das candidaturas', 'applicationStatusSummary', ReportType::Operational, ReportSensitivityLevel::PublicInternal, 'applications.view'],
+            ['eligibility_summary', 'Resumo de elegibilidade', 'eligibilitySummary', ReportType::Operational, ReportSensitivityLevel::Restricted, 'eligibility.view'],
             ['document_pending_report', 'Pendências documentais', 'documentPending', ReportType::Sensitive, ReportSensitivityLevel::Sensitive, 'reports.view_sensitive'],
-            ['complaints_summary', 'Resumo de reclamações', 'complaintsSummary', ReportType::Operational, ReportSensitivityLevel::Restricted, null],
-            ['housing_occupancy_report', 'Ocupação do parque habitacional', 'housingOccupancy', ReportType::Executive, ReportSensitivityLevel::PublicInternal, null],
+            ['complaints_summary', 'Resumo de reclamações', 'complaintsSummary', ReportType::Operational, ReportSensitivityLevel::Restricted, 'complaints.view'],
+            ['housing_occupancy_report', 'Ocupação do parque habitacional', 'housingOccupancy', ReportType::Executive, ReportSensitivityLevel::PublicInternal, 'housing_units.view'],
             ['financial_arrears_report', 'Incumprimentos financeiros', 'financialArrears', ReportType::Sensitive, ReportSensitivityLevel::HighlySensitive, 'reports.view_financial'],
             ['maintenance_pending_report', 'Pedidos de manutenção pendentes', 'maintenancePending', ReportType::Operational, ReportSensitivityLevel::Restricted, 'reports.view_maintenance'],
             ['maintenance_costs_by_property', 'Custos de manutenção por imóvel', 'maintenanceCostsByProperty', ReportType::Sensitive, ReportSensitivityLevel::Sensitive, 'reports.view_maintenance'],

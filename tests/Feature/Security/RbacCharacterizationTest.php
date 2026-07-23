@@ -85,7 +85,7 @@ class RbacCharacterizationTest extends TestCase
         $this->assertFalse($user->hasPermission('finance.view'));
     }
 
-    public function test_custom_role_with_valid_permission_is_still_blocked_by_fixed_route_role_names(): void
+    public function test_custom_role_without_intake_permission_is_blocked_by_permission_middleware(): void
     {
         $user = $this->userWithCustomRole(
             roleName: 'application_intake_operator',
@@ -104,11 +104,11 @@ class RbacCharacterizationTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_workspace_service_accepts_permission_but_http_route_rejects_custom_role_name(): void
+    public function test_workspace_service_and_http_route_accept_authorized_custom_role(): void
     {
         $user = $this->userWithCustomRole(
             roleName: 'document_review_operator',
-            permissions: ['documents.view'],
+            permissions: ['dashboard.view', 'documents.view'],
         );
 
         $workspace = app(WorkspaceService::class)
@@ -120,7 +120,7 @@ class RbacCharacterizationTest extends TestCase
         $this->actingAs($user)
             ->withSession(['mfa.verified_at' => now()])
             ->get(route('workspaces.show', 'atendimento'))
-            ->assertForbidden();
+            ->assertOk();
     }
 
     public function test_mfa_is_triggered_by_sensitive_permissions_roles_or_manual_flag(): void

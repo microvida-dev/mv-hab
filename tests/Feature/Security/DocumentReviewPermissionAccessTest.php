@@ -3,6 +3,7 @@
 namespace Tests\Feature\Security;
 
 use App\Enums\DocumentStatus;
+use App\Models\DocumentAiAnalysis;
 use App\Models\DocumentSubmission;
 use App\Models\DocumentVersion;
 use App\Models\Permission;
@@ -34,29 +35,21 @@ class DocumentReviewPermissionAccessTest extends TestCase
     public function test_document_review_routes_use_expected_permissions(): void
     {
         $expected = [
-            'admin.document-reviews.index'
-                => 'permission:documents.view',
+            'admin.document-reviews.index' => 'permission:documents.view',
 
-            'admin.document-reviews.show'
-                => 'permission:documents.view',
+            'admin.document-reviews.show' => 'permission:documents.view',
 
-            'admin.document-reviews.preview'
-                => 'permission:documents.view',
+            'admin.document-reviews.preview' => 'permission:documents.view',
 
-            'admin.document-reviews.download'
-                => 'permission:documents.view',
+            'admin.document-reviews.download' => 'permission:documents.view',
 
-            'admin.document-reviews.under-review'
-                => 'permission:documents.approve',
+            'admin.document-reviews.under-review' => 'permission:documents.approve',
 
-            'admin.document-reviews.validate'
-                => 'permission:documents.approve',
+            'admin.document-reviews.validate' => 'permission:documents.approve',
 
-            'admin.document-reviews.reject'
-                => 'permission:documents.reject',
+            'admin.document-reviews.reject' => 'permission:documents.reject',
 
-            'admin.document-reviews.document-ai'
-                => 'permission:documents.approve',
+            'admin.document-reviews.document-ai' => 'permission:documents.approve',
         ];
 
         foreach ($expected as $routeName => $permissionMiddleware) {
@@ -104,6 +97,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
         $user = $this->userWithCustomRole(['documents.approve']);
 
         $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('admin.document-reviews.index'))
             ->assertForbidden();
     }
@@ -166,6 +160,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
         $submission = DocumentSubmission::factory()->create();
 
         $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(
                 route('admin.document-reviews.under-review', $submission),
                 ['internal_notes' => 'Sem autorização operacional.'],
@@ -179,6 +174,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
         $submission = DocumentSubmission::factory()->create();
 
         $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(
                 route('admin.document-reviews.under-review', $submission),
                 ['internal_notes' => 'Análise iniciada.'],
@@ -202,6 +198,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
         ]);
 
         $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(
                 route('admin.document-reviews.validate', $submission),
                 ['internal_notes' => 'Documento conforme.'],
@@ -222,6 +219,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
         $submission = DocumentSubmission::factory()->create();
 
         $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(
                 route('admin.document-reviews.reject', $submission),
                 [
@@ -244,7 +242,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
         $user = $this->userWithCustomRole(['documents.approve']);
         $submission = DocumentSubmission::factory()->create();
 
-        $analysis = \App\Models\DocumentAiAnalysis::factory()->create([
+        $analysis = DocumentAiAnalysis::factory()->create([
             'document_submission_id' => $submission->id,
         ]);
 
@@ -269,6 +267,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
         );
 
         $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(
                 route('admin.document-reviews.document-ai', $submission),
             )
@@ -376,7 +375,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithCustomRole(array $permissions): User
     {
@@ -404,7 +403,7 @@ class DocumentReviewPermissionAccessTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithSystemRoleAndPermissions(
         string $roleName,
