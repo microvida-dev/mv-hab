@@ -11,15 +11,14 @@ use App\Http\Requests\Backoffice\Access\SyncRolePermissionsRequest;
 use App\Http\Requests\Backoffice\Access\ToggleRoleStatusRequest;
 use App\Http\Requests\Backoffice\Access\UpdateRoleRequest;
 use App\Models\AccessChangeEvent;
-use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use App\Policies\RolePolicy;
+use App\Services\Access\PermissionCatalogService;
 use App\Services\Access\RoleAssignmentService;
 use App\Services\Access\RoleManagementService;
 use DomainException;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -49,12 +48,15 @@ class RoleManagementController extends Controller
         return view('backoffice.access.roles.index', ['roles' => $roles]);
     }
 
-    public function create(Request $request, RolePolicy $policy): View
-    {
+    public function create(
+        Request $request,
+        RolePolicy $policy,
+        PermissionCatalogService $permissions,
+    ): View {
         abort_unless($policy->create($this->authenticatedUser($request)), 403);
 
         return view('backoffice.access.roles.create', [
-            'permissions' => $this->permissions(),
+            'permissionGroups' => $permissions->grouped(),
         ]);
     }
 
@@ -77,22 +79,31 @@ class RoleManagementController extends Controller
             ->with('status', 'Perfil municipal criado com auditoria.');
     }
 
-    public function show(Request $request, Role $role, RolePolicy $policy): View
-    {
+    public function show(
+        Request $request,
+        Role $role,
+        RolePolicy $policy,
+        PermissionCatalogService $permissions,
+    ): View {
         abort_unless($policy->view($this->authenticatedUser($request), $role), 403);
 
         return view('backoffice.access.roles.show', [
             'role' => $role->load('permissions')->loadCount('users'),
+            'permissionGroups' => $permissions->grouped($role->permissions),
         ]);
     }
 
-    public function edit(Request $request, Role $role, RolePolicy $policy): View
-    {
+    public function edit(
+        Request $request,
+        Role $role,
+        RolePolicy $policy,
+        PermissionCatalogService $permissions,
+    ): View {
         abort_unless($policy->update($this->authenticatedUser($request), $role), 403);
 
         return view('backoffice.access.roles.edit', [
             'role' => $role->load('permissions'),
-            'permissions' => $this->permissions(),
+            'permissionGroups' => $permissions->grouped(),
         ]);
     }
 
@@ -261,16 +272,6 @@ class RoleManagementController extends Controller
         }
 
         return back()->with('status', 'Perfil removido com auditoria.');
-    }
-
-    /** @return Collection<int, Permission> */
-    private function permissions(): Collection
-    {
-        return Permission::query()
-            ->where('name', '!=', '*')
-            ->orderBy('module')
-            ->orderBy('action')
-            ->get();
     }
 
     /**

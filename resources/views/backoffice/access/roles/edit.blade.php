@@ -36,6 +36,7 @@
                 @method('PATCH')
                 @include('backoffice.access.roles.partials.permissions', [
                     'selectedPermissionIds' => old('permissions', $role->permissions->modelKeys()),
+                    'readOnly' => false,
                 ])
                 <x-mv.section title="Justificação da matriz" padding="p-5">
                     <textarea name="justification" rows="3" class="mv-input" required>{{ old('justification') }}</textarea>

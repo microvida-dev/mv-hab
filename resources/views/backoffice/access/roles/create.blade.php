@@ -20,7 +20,10 @@
             <form method="POST" action="{{ route('backoffice.roles.store') }}" class="space-y-6">
                 @csrf
                 @include('backoffice.access.roles.partials.details', ['role' => null])
-                @include('backoffice.access.roles.partials.permissions', ['selectedPermissionIds' => old('permissions', [])])
+                @include('backoffice.access.roles.partials.permissions', [
+                    'selectedPermissionIds' => old('permissions', []),
+                    'readOnly' => false,
+                ])
 
                 <x-mv.section title="Justificação administrativa" padding="p-5">
                     <label class="grid gap-1 text-sm">

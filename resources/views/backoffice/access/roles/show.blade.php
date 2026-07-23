@@ -45,15 +45,10 @@
                 </x-mv.section>
             </div>
 
-            <x-mv.section title="Permissões efetivas" padding="p-5">
-                <div class="flex flex-wrap gap-2">
-                    @forelse ($role->permissions->sortBy('name') as $permission)
-                        <x-mv.badge>{{ $permission->name }}</x-mv.badge>
-                    @empty
-                        <p class="text-sm text-ink-500">Este perfil não tem permissões configuradas.</p>
-                    @endforelse
-                </div>
-            </x-mv.section>
+            @include('backoffice.access.roles.partials.permissions', [
+                'selectedPermissionIds' => $role->permissions->modelKeys(),
+                'readOnly' => true,
+            ])
 
             <div class="grid gap-6 xl:grid-cols-2">
                 @can('duplicate', $role)
