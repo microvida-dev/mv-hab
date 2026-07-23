@@ -7,9 +7,9 @@ use App\Models\ProcedureMinute;
 use App\Models\ProcedureTemplate;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\ProcedureMinutes\Renderers\AlcanenaAta01Renderer;
 use App\Services\ProcedureTemplates\TemplateRenderingService;
 use App\Services\ProcedureTemplates\TemplateVariableResolver;
-use App\Services\ProcedureMinutes\Renderers\AlcanenaAta01Renderer;
 use App\Support\AuditEvents;
 use Illuminate\Support\Facades\DB;
 

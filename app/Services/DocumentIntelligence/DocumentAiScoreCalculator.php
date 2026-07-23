@@ -37,11 +37,11 @@ class DocumentAiScoreCalculator
             $flags
         ));
 
-       /*
-        * As flags já impactam o score através do componente "risk" e, em alguns casos,
-        * através dos componentes de OCR/extração. Evita-se dupla penalização operacional.
-        * Apenas riscos bloqueantes reduzem diretamente o score final.
-        */
+        /*
+         * As flags já impactam o score através do componente "risk" e, em alguns casos,
+         * através dos componentes de OCR/extração. Evita-se dupla penalização operacional.
+         * Apenas riscos bloqueantes reduzem diretamente o score final.
+         */
         $directPenalty = $this->directPenalty($flags);
 
         $score = $this->clamp(array_sum($components) - $directPenalty);

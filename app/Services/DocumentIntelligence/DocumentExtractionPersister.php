@@ -11,8 +11,8 @@ use App\Models\DocumentAiAnalysis;
 use App\Models\DocumentAiField;
 use App\Models\DocumentAiFlag;
 use App\Models\DocumentAiProcessingLog;
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 class DocumentExtractionPersister
 {

@@ -5,8 +5,8 @@ namespace App\Services\DocumentIntelligence;
 use App\Data\DocumentIntelligence\DocumentExtractionFlag;
 use App\Data\DocumentIntelligence\DocumentExtractionSchema;
 use App\Data\DocumentIntelligence\ExtractedDocumentField;
-use App\Enums\DocumentAiExtractionSource;
 use App\Enums\DocumentAiDocumentType;
+use App\Enums\DocumentAiExtractionSource;
 
 class RegexFieldExtractor
 {

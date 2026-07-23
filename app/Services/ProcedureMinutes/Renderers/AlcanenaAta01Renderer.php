@@ -3,6 +3,7 @@
 namespace App\Services\ProcedureMinutes\Renderers;
 
 use App\Models\Municipality;
+use Illuminate\Support\Carbon;
 
 final class AlcanenaAta01Renderer
 {
@@ -392,7 +393,7 @@ strong { font-weight: 700; }
         }
 
         try {
-            return \Illuminate\Support\Carbon::parse($value)->format('d/m/Y');
+            return Carbon::parse($value)->format('d/m/Y');
         } catch (\Throwable) {
             return $value;
         }
@@ -405,7 +406,7 @@ strong { font-weight: 700; }
         }
 
         try {
-            $date = \Illuminate\Support\Carbon::parse($value)->locale('pt_PT');
+            $date = Carbon::parse($value)->locale('pt_PT');
 
             return $date->translatedFormat('j \d\e F \d\e Y');
         } catch (\Throwable) {

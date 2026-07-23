@@ -5,6 +5,7 @@ namespace App\Services\DocumentIntelligence;
 use App\Data\DocumentIntelligence\DocumentAiRiskFlag;
 use App\Data\DocumentIntelligence\DocumentAiScoreResult;
 use App\Data\DocumentIntelligence\DocumentAiSuggestionDraft;
+use App\Enums\DocumentAiRiskFlagCode;
 use App\Enums\DocumentAiSuggestionStatus;
 use App\Models\Application;
 use App\Models\DocumentAiAnalysis;
@@ -17,13 +18,13 @@ use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
 use Illuminate\Support\Facades\DB;
-use App\Enums\DocumentAiRiskFlagCode;
 
 class DocumentAiAssistantPersister
 {
     public function __construct(
         private readonly AuditLogger $auditLogger,
     ) {}
+
     /**
      * @param  list<DocumentAiRiskFlag>  $flags
      * @param  list<DocumentAiSuggestionDraft>  $suggestions

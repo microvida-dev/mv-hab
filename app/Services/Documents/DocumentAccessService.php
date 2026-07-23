@@ -15,9 +15,9 @@ use App\Services\Security\AccessLogService;
 use App\Services\Security\SensitiveDataAccessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Illuminate\Support\Str;
 
 class DocumentAccessService
 {
