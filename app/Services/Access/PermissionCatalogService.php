@@ -78,6 +78,7 @@ class PermissionCatalogService
         'municipalities' => 'administration',
         'municipality_features' => 'administration',
         'notifications' => 'administration',
+        'platform_operators' => 'administration',
         'programs' => 'administration',
         'roles' => 'administration',
         'settings' => 'administration',
@@ -115,6 +116,7 @@ class PermissionCatalogService
         'municipality_features' => 'funcionalidades municipais',
         'notifications' => 'notificações',
         'payments' => 'pagamentos',
+        'platform_operators' => 'operadores de plataforma',
         'privacy' => 'privacidade',
         'programs' => 'programas',
         'public_lists' => 'listas públicas',
@@ -203,6 +205,9 @@ class PermissionCatalogService
         'municipality_features.view' => 'Consultar funcionalidades municipais',
         'municipality_features.update' => 'Alterar funcionalidades municipais',
         'municipality_features.audit' => 'Consultar auditoria de funcionalidades municipais',
+        'platform_operators.view' => 'Consultar operadores de plataforma',
+        'platform_operators.manage' => 'Gerir operadores de plataforma',
+        'platform_operators.audit' => 'Consultar auditoria de operadores de plataforma',
     ];
 
     /** @var list<string> */
@@ -213,6 +218,7 @@ class PermissionCatalogService
         'exports',
         'finance',
         'payments',
+        'platform_operators',
         'privacy',
         'rgpd',
         'roles',
@@ -264,6 +270,8 @@ class PermissionCatalogService
         'scoring.update',
         'municipality_features.update',
         'municipality_features.audit',
+        'platform_operators.manage',
+        'platform_operators.audit',
     ];
 
     /**

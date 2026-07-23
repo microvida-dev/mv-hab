@@ -16,6 +16,7 @@ return [
         'rgpd' => ['retention.view', 'retention.manage', 'anonymization.request', 'anonymization.approve', 'anonymization.execute', 'dpo.approve'],
         'municipalities' => ['view', 'create', 'update', 'delete', 'audit'],
         'municipality_features' => ['view', 'update', 'audit'],
+        'platform_operators' => ['view', 'manage', 'audit'],
         'programs' => ['view', 'create', 'update', 'delete', 'publish', 'audit'],
         'contests' => ['view', 'create', 'update', 'delete', 'approve', 'reject', 'publish', 'audit'],
         'citizens' => ['view', 'create', 'update', 'delete', 'export', 'audit'],

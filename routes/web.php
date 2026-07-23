@@ -110,6 +110,7 @@ use App\Http\Controllers\Backoffice\NotificationTemplateVersionController as Bac
 use App\Http\Controllers\Backoffice\OfficialNotificationController as BackofficeOfficialNotificationController;
 use App\Http\Controllers\Backoffice\OperationalDashboardController as BackofficeSprint24OperationalDashboardController;
 use App\Http\Controllers\Backoffice\Platform\MunicipalityFeatureController as BackofficeMunicipalityFeatureController;
+use App\Http\Controllers\Backoffice\Platform\PlatformOperatorController as BackofficePlatformOperatorController;
 use App\Http\Controllers\Backoffice\PostDrawReportController as BackofficePostDrawReportController;
 use App\Http\Controllers\Backoffice\PreliminaryHearingSubmissionController as BackofficePreliminaryHearingSubmissionController;
 use App\Http\Controllers\Backoffice\ProcedureMinuteController as BackofficeProcedureMinuteController;
@@ -1429,6 +1430,27 @@ Route::middleware('auth')->group(function () {
                         ->middleware('permission:municipality_features.audit')
                         ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                         ->name('platform.municipality-features.audit');
+
+                    Route::get('platform/operators', [BackofficePlatformOperatorController::class, 'index'])
+                        ->middleware('permission:platform_operators.view')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('platform.operators.index');
+                    Route::post('platform/operators', [BackofficePlatformOperatorController::class, 'store'])
+                        ->middleware('permission:platform_operators.manage')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('platform.operators.store');
+                    Route::get('platform/operators/audit', [BackofficePlatformOperatorController::class, 'audit'])
+                        ->middleware('permission:platform_operators.audit')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('platform.operators.audit');
+                    Route::get('platform/operators/{platformOperatorAssignment}', [BackofficePlatformOperatorController::class, 'show'])
+                        ->middleware('permission:platform_operators.view')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('platform.operators.show');
+                    Route::post('platform/operators/{platformOperatorAssignment}/revoke', [BackofficePlatformOperatorController::class, 'revoke'])
+                        ->middleware('permission:platform_operators.manage')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('platform.operators.revoke');
 
                     Route::get('teams', [BackofficeMunicipalTeamController::class, 'index'])->name('teams.index');
                     Route::get('teams/create', [BackofficeMunicipalTeamController::class, 'create'])->name('teams.create');

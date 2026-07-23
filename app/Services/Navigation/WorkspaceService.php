@@ -16,6 +16,7 @@ use App\Models\HousingApplication;
 use App\Models\HousingUnit;
 use App\Models\HousingVisit;
 use App\Models\MaintenanceRequest;
+use App\Models\PlatformOperatorAssignment;
 use App\Models\Program;
 use App\Models\PropertyInspection;
 use App\Models\ReportDefinition;
@@ -317,6 +318,7 @@ class WorkspaceService
                         $this->item('Perfis e roles', 'backoffice.roles.index', 'backoffice.roles.*', 'roles.view'),
                         $this->item('Equipas', 'backoffice.teams.index', 'backoffice.teams.*', 'teams.view'),
                         $this->item('Auditoria de acessos', 'backoffice.access-audit.index', 'backoffice.access-audit.*', 'access_audit.view'),
+                        $this->item('Operadores de plataforma', 'backoffice.platform.operators.index', 'backoffice.platform.operators.*', model: PlatformOperatorAssignment::class),
                     ]),
                     $this->group('Segurança operacional', [
                         $this->item('Segurança', 'backoffice.security.dashboard', 'backoffice.security.dashboard', null, ['administrator', 'auditor']),
@@ -434,6 +436,7 @@ class WorkspaceService
             'backoffice.roles.index' => 'security',
             'backoffice.teams.index' => 'users',
             'backoffice.access-audit.index' => 'audit',
+            'backoffice.platform.operators.index' => 'security',
             'backoffice.security.dashboard' => 'security',
             'backoffice.security.mfa.index' => 'lock',
             'backoffice.security.permission-reviews.index' => 'shield',
