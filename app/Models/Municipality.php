@@ -45,4 +45,12 @@ class Municipality extends Model
     {
         return $this->hasMany(Program::class);
     }
+
+    /**
+     * @return HasMany<MunicipalityFeatureEntitlement, $this>
+     */
+    public function featureEntitlements(): HasMany
+    {
+        return $this->hasMany(MunicipalityFeatureEntitlement::class);
+    }
 }
