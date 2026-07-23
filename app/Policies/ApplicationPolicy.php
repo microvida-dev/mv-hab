@@ -40,7 +40,17 @@ class ApplicationPolicy
     public function viewBackoffice(User $user, Application $application): bool
     {
         return ! $user->hasRole('candidate')
-            && $this->canAccess($user, self::MODULE, 'view')
+            && (
+                $this->canAccess($user, self::MODULE, 'view')
+                || $this->canAccess($user, 'documents', 'view')
+            )
+            && $this->municipalScope->ownsApplication($user, $application);
+    }
+
+    public function analyzeDocumentsBackoffice(User $user, Application $application): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'documents', 'analyze')
             && $this->municipalScope->ownsApplication($user, $application);
     }
 

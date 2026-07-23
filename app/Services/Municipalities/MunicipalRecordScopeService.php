@@ -14,6 +14,12 @@ use App\Models\Contract;
 use App\Models\CorrectionRequest;
 use App\Models\CorrectionResponse;
 use App\Models\Document;
+use App\Models\DocumentAiAnalysis;
+use App\Models\DocumentAiField;
+use App\Models\DocumentAiScore;
+use App\Models\DocumentAiSuggestion;
+use App\Models\DocumentAiValidation;
+use App\Models\DocumentAiValidationRun;
 use App\Models\DocumentSubmission;
 use App\Models\EligibilityCheck;
 use App\Models\FutureApplicationDataReuse;
@@ -429,6 +435,126 @@ class MunicipalRecordScopeService
     {
         return $this->documentSubmissions(
             DocumentSubmission::query()->whereKey($submission),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<DocumentAiAnalysis>  $query
+     * @return Builder<DocumentAiAnalysis>
+     */
+    public function documentAiAnalyses(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'document_submission_id',
+            $this->documentSubmissions(DocumentSubmission::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsDocumentAiAnalysis(User $user, DocumentAiAnalysis $analysis): bool
+    {
+        return $this->documentAiAnalyses(
+            DocumentAiAnalysis::query()->whereKey($analysis),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<DocumentAiScore>  $query
+     * @return Builder<DocumentAiScore>
+     */
+    public function documentAiScores(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'document_ai_analysis_id',
+            $this->documentAiAnalyses(DocumentAiAnalysis::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsDocumentAiScore(User $user, DocumentAiScore $score): bool
+    {
+        return $this->documentAiScores(
+            DocumentAiScore::query()->whereKey($score),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<DocumentAiSuggestion>  $query
+     * @return Builder<DocumentAiSuggestion>
+     */
+    public function documentAiSuggestions(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'document_ai_analysis_id',
+            $this->documentAiAnalyses(DocumentAiAnalysis::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsDocumentAiSuggestion(User $user, DocumentAiSuggestion $suggestion): bool
+    {
+        return $this->documentAiSuggestions(
+            DocumentAiSuggestion::query()->whereKey($suggestion),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<DocumentAiField>  $query
+     * @return Builder<DocumentAiField>
+     */
+    public function documentAiFields(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'document_ai_analysis_id',
+            $this->documentAiAnalyses(DocumentAiAnalysis::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsDocumentAiField(User $user, DocumentAiField $field): bool
+    {
+        return $this->documentAiFields(
+            DocumentAiField::query()->whereKey($field),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<DocumentAiValidationRun>  $query
+     * @return Builder<DocumentAiValidationRun>
+     */
+    public function documentAiValidationRuns(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'application_id',
+            $this->applications(Application::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsDocumentAiValidationRun(User $user, DocumentAiValidationRun $run): bool
+    {
+        return $this->documentAiValidationRuns(
+            DocumentAiValidationRun::query()->whereKey($run),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<DocumentAiValidation>  $query
+     * @return Builder<DocumentAiValidation>
+     */
+    public function documentAiValidations(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'document_ai_validation_run_id',
+            $this->documentAiValidationRuns(DocumentAiValidationRun::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsDocumentAiValidation(User $user, DocumentAiValidation $validation): bool
+    {
+        return $this->documentAiValidations(
+            DocumentAiValidation::query()->whereKey($validation),
             $user,
         )->exists();
     }

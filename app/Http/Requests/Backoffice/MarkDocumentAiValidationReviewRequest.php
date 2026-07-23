@@ -12,7 +12,7 @@ class MarkDocumentAiValidationReviewRequest extends FormRequest
         $validation = $this->route('validation');
 
         return $validation instanceof DocumentAiValidation
-            && ($this->user()?->can('markManualReview', $validation) ?? false);
+            && ($this->user()?->can('reviewBackoffice', $validation) ?? false);
     }
 
     /**

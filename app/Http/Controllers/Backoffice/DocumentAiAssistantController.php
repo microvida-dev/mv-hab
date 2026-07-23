@@ -12,13 +12,13 @@ use App\Http\Requests\Backoffice\UpdateDocumentAiSuggestionRequest;
 use App\Models\DocumentAiAnalysis;
 use App\Models\DocumentAiScore;
 use App\Models\DocumentAiSuggestion;
-use App\Policies\DocumentAiAssistantPolicy;
 use App\Services\Audit\AuditLogger;
 use App\Services\DocumentIntelligence\DocumentAiAssistantDashboardService;
 use App\Services\DocumentIntelligence\DocumentAiManualAnalysisService;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class DocumentAiAssistantController extends Controller
@@ -31,23 +31,23 @@ class DocumentAiAssistantController extends Controller
 
     public function index(FilterDocumentAiAssistantRequest $request): View
     {
-        Gate::authorize('viewAny', DocumentAiScore::class);
+        Gate::authorize('viewAnyBackoffice', DocumentAiAnalysis::class);
+        $actor = $this->authenticatedUser($request);
         $filters = array_filter(
             $request->validated(),
             static fn (mixed $value): bool => $value !== null && $value !== ''
         );
 
         return view('backoffice.document-ai.assistant.index', [
-            'scores' => $this->dashboardService->scores($filters),
+            'scores' => $this->dashboardService->scores($filters, $actor),
             'filters' => $filters,
-            'totals' => $this->dashboardService->totals(),
+            'totals' => $this->dashboardService->totals($actor),
         ]);
     }
 
-    public function show(DocumentAiAnalysis $analysis): View
+    public function show(Request $request, DocumentAiAnalysis $analysis): View
     {
-        $user = request()->user();
-        abort_unless($user !== null && app(DocumentAiAssistantPolicy::class)->view($user, $analysis), 403);
+        Gate::authorize('viewBackoffice', $analysis);
 
         $analysis = $this->dashboardService->analysisForShow($analysis);
         $score = $analysis->latestScore;
@@ -84,6 +84,7 @@ class DocumentAiAssistantController extends Controller
 
     public function recalculate(RecalculateDocumentAiScoreRequest $request, DocumentAiAnalysis $analysis): RedirectResponse
     {
+        Gate::authorize('analyzeBackoffice', $analysis);
         $processed = $this->manualAnalysisService->reprocess($analysis, $this->authenticatedUser($request));
 
         return redirect()
@@ -93,6 +94,7 @@ class DocumentAiAssistantController extends Controller
 
     public function updateSuggestion(UpdateDocumentAiSuggestionRequest $request, DocumentAiSuggestion $suggestion): RedirectResponse
     {
+        Gate::authorize('reviewBackoffice', $suggestion);
         $suggestion->forceFill([
             'suggestion' => $request->validated('suggestion'),
             'status' => DocumentAiSuggestionStatus::Edited,
@@ -108,6 +110,7 @@ class DocumentAiAssistantController extends Controller
 
     public function acceptSuggestion(AcceptDocumentAiSuggestionRequest $request, DocumentAiSuggestion $suggestion): RedirectResponse
     {
+        Gate::authorize('reviewBackoffice', $suggestion);
         $suggestion->forceFill([
             'status' => DocumentAiSuggestionStatus::Accepted,
             'accepted_at' => now(),
@@ -128,6 +131,7 @@ class DocumentAiAssistantController extends Controller
 
     public function dismissSuggestion(DismissDocumentAiSuggestionRequest $request, DocumentAiSuggestion $suggestion): RedirectResponse
     {
+        Gate::authorize('reviewBackoffice', $suggestion);
         $suggestion->forceFill([
             'status' => DocumentAiSuggestionStatus::Dismissed,
             'dismissed_at' => now(),

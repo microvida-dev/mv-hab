@@ -5,7 +5,7 @@ namespace App\Http\Requests\Backoffice;
 use App\Enums\DocumentAiValidationGroup;
 use App\Enums\DocumentAiValidationSeverity;
 use App\Enums\DocumentAiValidationStatus;
-use App\Models\DocumentAiValidationRun;
+use App\Models\DocumentAiValidation;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -13,7 +13,7 @@ class FilterDocumentAiValidationsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('viewAny', DocumentAiValidationRun::class) ?? false;
+        return $this->user()?->can('viewAnyBackoffice', DocumentAiValidation::class) ?? false;
     }
 
     /**

@@ -5,17 +5,22 @@ namespace App\Services\DocumentIntelligence;
 use App\Models\DocumentAiAnalysis;
 use App\Models\DocumentAiScore;
 use App\Models\DocumentAiSuggestion;
+use App\Models\User;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class DocumentAiAssistantDashboardService
 {
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
+
     /**
      * @param  array<string, mixed>  $filters
      * @return LengthAwarePaginator<int, DocumentAiScore>
      */
-    public function scores(array $filters): LengthAwarePaginator
+    public function scores(array $filters, User $user): LengthAwarePaginator
     {
-        return DocumentAiScore::query()
+        return $this->municipalScope
+            ->documentAiScores(DocumentAiScore::query(), $user)
             ->with(['analysis.documentSubmission.documentType', 'application.user', 'application.contest'])
             ->when($filters['label'] ?? null, fn ($query, string $label) => $query->where('label', $label))
             ->when(array_key_exists('requires_review', $filters), fn ($query) => $query->where('requires_manual_review', (bool) $filters['requires_review']))
@@ -37,13 +42,22 @@ class DocumentAiAssistantDashboardService
     /**
      * @return array<string, int>
      */
-    public function totals(): array
+    public function totals(User $user): array
     {
         return [
-            'scores' => DocumentAiScore::query()->count(),
-            'requires_review' => DocumentAiScore::query()->requiresReview()->count(),
-            'low_confidence' => DocumentAiScore::query()->where('score', '<', 60)->count(),
-            'open_suggestions' => DocumentAiSuggestion::query()->open()->count(),
+            'scores' => $this->municipalScope->documentAiScores(DocumentAiScore::query(), $user)->count(),
+            'requires_review' => $this->municipalScope
+                ->documentAiScores(DocumentAiScore::query(), $user)
+                ->requiresReview()
+                ->count(),
+            'low_confidence' => $this->municipalScope
+                ->documentAiScores(DocumentAiScore::query(), $user)
+                ->where('score', '<', 60)
+                ->count(),
+            'open_suggestions' => $this->municipalScope
+                ->documentAiSuggestions(DocumentAiSuggestion::query(), $user)
+                ->open()
+                ->count(),
         ];
     }
 

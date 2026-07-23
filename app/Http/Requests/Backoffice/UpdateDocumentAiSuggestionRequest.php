@@ -12,7 +12,7 @@ class UpdateDocumentAiSuggestionRequest extends FormRequest
         $suggestion = $this->route('suggestion');
 
         return $suggestion instanceof DocumentAiSuggestion
-            && ($this->user()?->can('update', $suggestion) ?? false);
+            && ($this->user()?->can('reviewBackoffice', $suggestion) ?? false);
     }
 
     /**

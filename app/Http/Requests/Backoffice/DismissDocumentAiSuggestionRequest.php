@@ -12,7 +12,7 @@ class DismissDocumentAiSuggestionRequest extends FormRequest
         $suggestion = $this->route('suggestion');
 
         return $suggestion instanceof DocumentAiSuggestion
-            && ($this->user()?->can('dismiss', $suggestion) ?? false);
+            && ($this->user()?->can('reviewBackoffice', $suggestion) ?? false);
     }
 
     /**

@@ -5,17 +5,22 @@ namespace App\Services\DocumentIntelligence;
 use App\Enums\DocumentAiValidationSeverity;
 use App\Models\Application;
 use App\Models\DocumentAiValidationRun;
+use App\Models\User;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class DocumentValidationDashboardService
 {
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
+
     /**
      * @param  array<string, mixed>  $filters
      * @return LengthAwarePaginator<int, DocumentAiValidationRun>
      */
-    public function runs(array $filters): LengthAwarePaginator
+    public function runs(array $filters, User $user): LengthAwarePaginator
     {
-        return DocumentAiValidationRun::query()
+        return $this->municipalScope
+            ->documentAiValidationRuns(DocumentAiValidationRun::query(), $user)
             ->with(['application.user', 'application.contest'])
             ->withCount('validations')
             ->when($filters['status'] ?? null, fn ($query, string $value) => $query->where('status', $value))
@@ -36,9 +41,13 @@ class DocumentValidationDashboardService
             ->withQueryString();
     }
 
-    public function latestRunFor(Application $application): ?DocumentAiValidationRun
+    public function latestRunFor(Application $application, User $user): ?DocumentAiValidationRun
     {
-        return $application->documentAiValidationRuns()
+        return $this->municipalScope
+            ->documentAiValidationRuns(
+                DocumentAiValidationRun::query()->where('application_id', $application->id),
+                $user,
+            )
             ->with(['validations.analysis.documentSubmission.documentType'])
             ->latest()
             ->first();
@@ -47,13 +56,24 @@ class DocumentValidationDashboardService
     /**
      * @return array<string, int>
      */
-    public function totals(): array
+    public function totals(User $user): array
     {
         return [
-            'runs' => DocumentAiValidationRun::query()->count(),
-            'requires_review' => DocumentAiValidationRun::query()->requiresReview()->count(),
-            'critical' => DocumentAiValidationRun::query()->where('critical_count', '>', 0)->count(),
-            'medium' => DocumentAiValidationRun::query()->where('medium_count', '>', 0)->count(),
+            'runs' => $this->municipalScope
+                ->documentAiValidationRuns(DocumentAiValidationRun::query(), $user)
+                ->count(),
+            'requires_review' => $this->municipalScope
+                ->documentAiValidationRuns(DocumentAiValidationRun::query(), $user)
+                ->requiresReview()
+                ->count(),
+            'critical' => $this->municipalScope
+                ->documentAiValidationRuns(DocumentAiValidationRun::query(), $user)
+                ->where('critical_count', '>', 0)
+                ->count(),
+            'medium' => $this->municipalScope
+                ->documentAiValidationRuns(DocumentAiValidationRun::query(), $user)
+                ->where('medium_count', '>', 0)
+                ->count(),
         ];
     }
 
