@@ -10,7 +10,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property LeasePaymentStatus $status
+ * @property Carbon|null $received_at
+ * @property-read User|null $tenant
+ */
 class LeasePayment extends Model
 {
     /** @use HasFactory<LeasePaymentFactory> */

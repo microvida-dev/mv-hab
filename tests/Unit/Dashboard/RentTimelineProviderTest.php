@@ -71,6 +71,7 @@ final class RentTimelineProviderTest extends TestCase
         $this->assertSame(TimelinePriority::Medium, $events[0]->priority);
         $this->assertSame(TimelineWorkspace::Finance, $events[0]->workspace);
         $this->assertSame('Prestação de renda a vencer', $events[0]->title);
+        $this->assertSame(RentInstallmentStatus::Issued->value, $events[0]->metadata['status']);
         $this->assertSame($dueDate->toIso8601String(), $events[0]->datetime->toIso8601String());
     }
 
