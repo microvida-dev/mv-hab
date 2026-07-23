@@ -101,12 +101,21 @@ class MunicipalityFeatureController extends Controller
         ]);
     }
 
-    /** @return list<array<string, mixed>> */
+    /**
+     * @return list<array{
+     *     feature: FeatureKey,
+     *     enabled: bool,
+     *     dependencies: list<FeatureKey>,
+     *     can_enable: bool,
+     *     can_disable: bool,
+     *     blocked_reason: string|null
+     * }>
+     */
     private function featureStates(Municipality $municipality): array
     {
         $active = $this->entitlements->activeFor($municipality);
 
-        return collect(FeatureKey::cases())
+        $states = collect(FeatureKey::cases())
             ->map(function (FeatureKey $feature) use ($active): array {
                 $enabled = $active->contains($feature);
                 $missingDependencies = collect($feature->dependencies())
@@ -128,6 +137,9 @@ class MunicipalityFeatureController extends Controller
                             : null),
                 ];
             })
+            ->values()
             ->all();
+
+        return array_values($states);
     }
 }

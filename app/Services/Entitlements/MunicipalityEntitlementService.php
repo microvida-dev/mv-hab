@@ -56,8 +56,9 @@ class MunicipalityEntitlementService
 
         return DB::transaction(function () use ($municipality, $feature, $actor, $justification): MunicipalityFeatureEntitlement {
             $lockedMunicipality = Municipality::query()
+                ->whereKey((int) $municipality->getKey())
                 ->lockForUpdate()
-                ->findOrFail($municipality->getKey());
+                ->firstOrFail();
             $current = $this->currentEnabledFeatures($lockedMunicipality);
 
             foreach ($feature->dependencies() as $dependency) {
@@ -100,8 +101,9 @@ class MunicipalityEntitlementService
 
         return DB::transaction(function () use ($municipality, $feature, $actor, $justification): MunicipalityFeatureEntitlement {
             $lockedMunicipality = Municipality::query()
+                ->whereKey((int) $municipality->getKey())
                 ->lockForUpdate()
-                ->findOrFail($municipality->getKey());
+                ->firstOrFail();
             $current = $this->currentEnabledFeatures($lockedMunicipality);
 
             $activeDependants = collect(FeatureKey::cases())
@@ -152,14 +154,21 @@ class MunicipalityEntitlementService
         $municipalityId = (int) $municipality->getKey();
 
         if (! array_key_exists($municipalityId, $this->enabledByMunicipality)) {
-            $this->enabledByMunicipality[$municipalityId] = MunicipalityFeatureEntitlement::query()
+            $features = MunicipalityFeatureEntitlement::query()
                 ->forMunicipality($municipality)
                 ->enabled()
                 ->pluck('feature_key')
-                ->mapWithKeys(fn (mixed $feature): array => [
-                    $feature instanceof FeatureKey ? $feature->value : (string) $feature => true,
-                ])
                 ->all();
+
+            /** @var array<string, true> $enabled */
+            $enabled = [];
+
+            foreach ($features as $feature) {
+                $key = $feature instanceof FeatureKey ? $feature->value : (string) $feature;
+                $enabled[$key] = true;
+            }
+
+            $this->enabledByMunicipality[$municipalityId] = $enabled;
         }
 
         return $this->enabledByMunicipality[$municipalityId];
@@ -168,7 +177,7 @@ class MunicipalityEntitlementService
     /** @return list<FeatureKey> */
     private function currentEnabledFeatures(Municipality $municipality): array
     {
-        return MunicipalityFeatureEntitlement::query()
+        $features = MunicipalityFeatureEntitlement::query()
             ->forMunicipality($municipality)
             ->enabled()
             ->lockForUpdate()
@@ -176,7 +185,10 @@ class MunicipalityEntitlementService
             ->map(fn (mixed $feature): FeatureKey => $feature instanceof FeatureKey
                 ? $feature
                 : FeatureKey::from((string) $feature))
+            ->values()
             ->all();
+
+        return array_values($features);
     }
 
     private function forget(Municipality $municipality): void
