@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\SimulationScope;
 use App\Enums\SimulationSessionStatus;
+use App\Models\Municipality;
 use App\Models\SimulationSession;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -17,6 +18,7 @@ class SimulationSessionFactory extends Factory
     public function definition(): array
     {
         return [
+            'municipality_id' => Municipality::factory(),
             'uuid' => (string) Str::uuid(),
             'user_id' => null,
             'scope' => SimulationScope::Anonymous->value,
@@ -33,6 +35,8 @@ class SimulationSessionFactory extends Factory
         return $this->state(fn () => [
             'user_id' => $user instanceof User ? $user->id : User::factory(),
             'scope' => SimulationScope::Authenticated->value,
-        ]);
+        ] + ($user?->municipality_id !== null
+            ? ['municipality_id' => $user->municipality_id]
+            : []));
     }
 }

@@ -2,13 +2,29 @@
 
 namespace App\Http\Requests\Simulator;
 
+use App\Models\SimulatorConfiguration;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateSimulatorConfigurationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasPermissionTo('simulator', 'update') === true;
+        $user = $this->user();
+
+        if ($user === null || $user->municipality_id === null) {
+            return false;
+        }
+
+        $configuration = app(MunicipalRecordScopeService::class)
+            ->simulatorConfigurations(SimulatorConfiguration::query(), $user)
+            ->where('name', 'Configuração geral do simulador')
+            ->first() ?? new SimulatorConfiguration([
+                'name' => 'Configuração geral do simulador',
+            ]);
+        $configuration->forceFill(['municipality_id' => $user->municipality_id]);
+
+        return $user->can('updateBackoffice', $configuration);
     }
 
     /**

@@ -7,12 +7,15 @@ use App\Models\AdhesionRegistration;
 use App\Models\Household;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class HouseholdPolicy
 {
     use ChecksPermissions;
 
     private const MODULE = 'households';
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -82,5 +85,39 @@ class HouseholdPolicy
         }
 
         return in_array($status, [AdhesionRegistrationStatus::Incomplete, AdhesionRegistrationStatus::Registered], true);
+    }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view')
+            && $user->municipality_id !== null;
+    }
+
+    public function viewBackoffice(User $user, Household $household): bool
+    {
+        return $this->viewAnyBackoffice($user)
+            && $this->municipalScope->ownsHousehold($user, $household);
+    }
+
+    public function createBackoffice(User $user): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'create')
+            && $user->municipality_id !== null;
+    }
+
+    public function updateBackoffice(User $user, Household $household): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'update')
+            && $this->municipalScope->ownsHousehold($user, $household);
+    }
+
+    public function deleteBackoffice(User $user, Household $household): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'delete')
+            && $this->municipalScope->ownsHousehold($user, $household);
     }
 }

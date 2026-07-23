@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Citizen;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +10,10 @@ class UpdateCitizenRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $citizen = $this->route('citizen');
+
+        return $citizen instanceof Citizen
+            && $this->user()?->can('updateBackoffice', $citizen) === true;
     }
 
     /**

@@ -6,12 +6,20 @@ use App\Models\AdministrativeProcess;
 use App\Models\Application;
 use App\Models\ApplicationReport;
 use App\Models\ApplicationReview;
+use App\Models\Citizen;
+use App\Models\Contract;
+use App\Models\Document;
 use App\Models\DocumentSubmission;
 use App\Models\EligibilityCheck;
+use App\Models\FutureApplicationDataReuse;
+use App\Models\Household;
+use App\Models\HousingApplication;
 use App\Models\ReportAccessLog;
 use App\Models\ReportDownloadLog;
 use App\Models\ReportExport;
 use App\Models\ReportRun;
+use App\Models\SimulationSession;
+use App\Models\SimulatorConfiguration;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -22,6 +30,176 @@ class MunicipalRecordScopeService
         'applications_by_contest',
         'application_status_summary',
     ];
+
+    /**
+     * @param  Builder<Citizen>  $query
+     * @return Builder<Citizen>
+     */
+    public function citizens(Builder $query, User $user): Builder
+    {
+        return $this->directMunicipalScope($query, $user);
+    }
+
+    public function ownsCitizen(User $user, Citizen $citizen): bool
+    {
+        return $this->citizens(Citizen::query()->whereKey($citizen), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<Household>  $query
+     * @return Builder<Household>
+     */
+    public function households(Builder $query, User $user): Builder
+    {
+        return $this->directMunicipalScope($query, $user);
+    }
+
+    public function ownsHousehold(User $user, Household $household): bool
+    {
+        return $this->households(Household::query()->whereKey($household), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<HousingApplication>  $query
+     * @return Builder<HousingApplication>
+     */
+    public function housingApplications(Builder $query, User $user): Builder
+    {
+        return $this->directMunicipalScope($query, $user);
+    }
+
+    public function ownsHousingApplication(User $user, HousingApplication $application): bool
+    {
+        return $this->housingApplications(
+            HousingApplication::query()->whereKey($application),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<Document>  $query
+     * @return Builder<Document>
+     */
+    public function documents(Builder $query, User $user): Builder
+    {
+        return $this->directMunicipalScope($query, $user);
+    }
+
+    public function ownsDocument(User $user, Document $document): bool
+    {
+        return $this->documents(Document::query()->whereKey($document), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<SimulatorConfiguration>  $query
+     * @return Builder<SimulatorConfiguration>
+     */
+    public function simulatorConfigurations(Builder $query, User $user): Builder
+    {
+        return $this->directMunicipalScope($query, $user);
+    }
+
+    public function ownsSimulatorConfiguration(
+        User $user,
+        SimulatorConfiguration $configuration,
+    ): bool {
+        if (! $configuration->exists) {
+            return $user->municipality_id !== null
+                && $configuration->municipality_id === $user->municipality_id;
+        }
+
+        return $this->simulatorConfigurations(
+            SimulatorConfiguration::query()->whereKey($configuration),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<SimulationSession>  $query
+     * @return Builder<SimulationSession>
+     */
+    public function simulationSessions(Builder $query, User $user): Builder
+    {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $sessions) use ($user): void {
+            $sessions
+                ->where('municipality_id', $user->municipality_id)
+                ->orWhereHas('user', fn (Builder $owner): Builder => $owner
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('application.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('recommendedContests.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsSimulationSession(User $user, SimulationSession $session): bool
+    {
+        return $this->simulationSessions(
+            SimulationSession::query()->whereKey($session),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<Contract>  $query
+     * @return Builder<Contract>
+     */
+    public function contracts(Builder $query, User $user): Builder
+    {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $contracts) use ($user): void {
+            $contracts
+                ->whereHas('program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('application.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('candidate', fn (Builder $tenant): Builder => $tenant
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsContract(User $user, Contract $contract): bool
+    {
+        return $this->contracts(Contract::query()->whereKey($contract), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<FutureApplicationDataReuse>  $query
+     * @return Builder<FutureApplicationDataReuse>
+     */
+    public function futureApplicationDataReuse(Builder $query, User $user): Builder
+    {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $reuse) use ($user): void {
+            $reuse
+                ->whereHas('user', fn (Builder $owner): Builder => $owner
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('sourceApplication.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('targetApplication.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsFutureApplicationDataReuse(
+        User $user,
+        FutureApplicationDataReuse $reuse,
+    ): bool {
+        return $this->futureApplicationDataReuse(
+            FutureApplicationDataReuse::query()->whereKey($reuse),
+            $user,
+        )->exists();
+    }
 
     /**
      * @param  Builder<Application>  $query
@@ -252,5 +430,20 @@ class MunicipalRecordScopeService
                 $includeApplicationReports,
             )->select('id'),
         );
+    }
+
+    /**
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
+     */
+    private function directMunicipalScope(Builder $query, User $user): Builder
+    {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where('municipality_id', $user->municipality_id);
     }
 }

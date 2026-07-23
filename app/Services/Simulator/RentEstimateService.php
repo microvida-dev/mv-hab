@@ -30,7 +30,7 @@ class RentEstimateService
         }
 
         $ruleSet = $this->activeRuleSet($contest);
-        $configuration = SimulatorConfiguration::query()->active()->latest()->first();
+        $configuration = $this->configuration($contest);
         $ruleEffort = $ruleSet instanceof RentRuleSet ? $ruleSet->getAttribute('effort_rate_percentage') : null;
         $configurationEffort = $configuration instanceof SimulatorConfiguration ? $configuration->getAttribute('default_effort_rate') : null;
         $effortRate = (float) ($ruleEffort ?? $configurationEffort ?? 35);
@@ -81,6 +81,20 @@ class RentEstimateService
             })
             ->latest()
             ->first();
+    }
+
+    private function configuration(?Contest $contest): ?SimulatorConfiguration
+    {
+        $query = SimulatorConfiguration::query()->active();
+        $municipalityId = $contest?->program?->municipality_id;
+
+        if ($municipalityId !== null) {
+            $query->where('municipality_id', $municipalityId);
+        } else {
+            $query->whereNull('municipality_id');
+        }
+
+        return $query->latest()->first();
     }
 
     /**

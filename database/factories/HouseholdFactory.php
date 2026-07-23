@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\AdhesionRegistration;
 use App\Models\Citizen;
 use App\Models\Household;
+use App\Models\Municipality;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -15,7 +16,10 @@ class HouseholdFactory extends Factory
     public function definition(): array
     {
         return [
-            'citizen_id' => Citizen::factory(),
+            'municipality_id' => Municipality::factory(),
+            'citizen_id' => fn (array $attributes) => Citizen::factory()->create([
+                'municipality_id' => $attributes['municipality_id'],
+            ]),
             'adhesion_registration_id' => null,
             'name' => 'Agregado '.fake()->lastName(),
             'household_type' => 'family',
@@ -32,6 +36,8 @@ class HouseholdFactory extends Factory
             'adhesion_registration_id' => $registration->id ?? AdhesionRegistration::factory(),
             'monthly_income' => 0,
             'members_count' => 0,
-        ]);
+        ] + ($registration?->user?->municipality_id !== null
+            ? ['municipality_id' => $registration->user->municipality_id]
+            : []));
     }
 }

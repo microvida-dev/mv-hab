@@ -6,14 +6,28 @@ use App\Http\Requests\StoreHouseholdRequest;
 use App\Http\Requests\UpdateHouseholdRequest;
 use App\Models\Citizen;
 use App\Models\Household;
+use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
+use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class HouseholdController extends Controller
 {
-    public function index(): View
+    public function __construct(
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly AuditLogger $auditLogger,
+    ) {}
+
+    public function index(Request $request): View
     {
-        $households = Household::query()
+        Gate::authorize('viewAnyBackoffice', Household::class);
+        $households = $this->municipalScope->households(
+            Household::query(),
+            $this->authenticatedUser($request),
+        )
             ->with(['citizen', 'adhesionRegistration'])
             ->withCount('housingApplications')
             ->latest()
@@ -22,9 +36,13 @@ class HouseholdController extends Controller
         return view('households.index', compact('households'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        $citizens = Citizen::query()
+        Gate::authorize('createBackoffice', Household::class);
+        $citizens = $this->municipalScope->citizens(
+            Citizen::query(),
+            $this->authenticatedUser($request),
+        )
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -33,22 +51,38 @@ class HouseholdController extends Controller
 
     public function store(StoreHouseholdRequest $request): RedirectResponse
     {
-        Household::create($request->validated());
+        Gate::authorize('createBackoffice', Household::class);
+        $household = new Household($request->validated());
+        $household->forceFill([
+            'municipality_id' => $this->authenticatedUser($request)->municipality_id,
+        ])->save();
+        $this->auditLogger->record(
+            AuditEvents::CREATE,
+            $household,
+            'households',
+            'create',
+            'Agregado familiar criado no âmbito municipal.',
+        );
 
         return to_route('households.index')
             ->with('success', 'Agregado familiar criado com sucesso.');
     }
 
-    public function show(Household $household): View
+    public function show(Request $request, Household $household): View
     {
+        Gate::authorize('viewBackoffice', $household);
         $household->load(['citizen', 'adhesionRegistration', 'housingApplications.citizen']);
 
         return view('households.show', compact('household'));
     }
 
-    public function edit(Household $household): View
+    public function edit(Request $request, Household $household): View
     {
-        $citizens = Citizen::query()
+        Gate::authorize('updateBackoffice', $household);
+        $citizens = $this->municipalScope->citizens(
+            Citizen::query(),
+            $this->authenticatedUser($request),
+        )
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -57,15 +91,31 @@ class HouseholdController extends Controller
 
     public function update(UpdateHouseholdRequest $request, Household $household): RedirectResponse
     {
+        Gate::authorize('updateBackoffice', $household);
         $household->update($request->validated());
+        $this->auditLogger->record(
+            AuditEvents::UPDATE,
+            $household,
+            'households',
+            'update',
+            'Agregado familiar atualizado no âmbito municipal.',
+        );
 
         return to_route('households.index')
             ->with('success', 'Agregado familiar atualizado com sucesso.');
     }
 
-    public function destroy(Household $household): RedirectResponse
+    public function destroy(Request $request, Household $household): RedirectResponse
     {
+        Gate::authorize('deleteBackoffice', $household);
         $household->delete();
+        $this->auditLogger->record(
+            AuditEvents::DELETE,
+            $household,
+            'households',
+            'delete',
+            'Agregado familiar removido no âmbito municipal.',
+        );
 
         return to_route('households.index')
             ->with('success', 'Agregado familiar eliminado com sucesso.');
