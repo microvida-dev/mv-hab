@@ -32,7 +32,7 @@ class TimelineMetricsService
     private function byWorkspace(Collection $events): array
     {
         return $events
-            ->groupBy(fn (TimelineEvent $event): string => $event->workspace?->value ?? 'unknown')
+            ->groupBy(fn (TimelineEvent $event): string => $this->workspace($event))
             ->map(fn (Collection $items): int => $items->count())
             ->sortDesc()
             ->all();
@@ -49,5 +49,14 @@ class TimelineMetricsService
             ->map(fn (Collection $items): int => $items->count())
             ->sortDesc()
             ->all();
+    }
+
+    private function workspace(TimelineEvent $event): string
+    {
+        if ($event->workspace === null) {
+            return 'unknown';
+        }
+
+        return $event->workspace->value;
     }
 }

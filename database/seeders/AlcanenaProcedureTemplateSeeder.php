@@ -118,14 +118,4 @@ class AlcanenaProcedureTemplateSeeder extends Seeder
 HTML,
         ];
     }
-
-    /**
-     * @return list<string>
-     */
-    private function variables(string $content): array
-    {
-        preg_match_all('/{{\s*([A-Za-z0-9_\.]+)\s*}}/', $content, $matches);
-
-        return array_values(array_unique($matches[1]));
-    }
 }

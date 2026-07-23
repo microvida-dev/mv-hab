@@ -40,9 +40,14 @@ class FavoritesService
         ]);
 
         if (! $favorite->exists) {
-            $favorite->sort_order = ((int) NavigationFavorite::query()
+            $maxSortOrder = NavigationFavorite::query()
                 ->where('user_id', $user->id)
-                ->max('sort_order')) + 1;
+                ->max('sort_order');
+
+            $favorite->sort_order = max(
+                0,
+                is_numeric($maxSortOrder) ? (int) $maxSortOrder : 0,
+            ) + 1;
         }
 
         $favorite->fill([

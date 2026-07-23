@@ -25,14 +25,8 @@ class TimelineAggregatorService
     {
         return collect($this->providers)
             ->flatMap(fn (TimelineProviderInterface $provider): array => $provider->forUser($user, $dashboard))
-            ->filter(fn (mixed $event): bool => $event instanceof TimelineEvent)
             ->unique(fn (TimelineEvent $event): string => $event->id)
-            ->sortBy([
-                fn (TimelineEvent $event): int => $event->priorityWeight(),
-                fn (TimelineEvent $event): string => $event->datetime?->toIso8601String() ?? '9999-12-31T23:59:59',
-                fn (TimelineEvent $event): string => $event->workspace?->value ?? '',
-                fn (TimelineEvent $event): string => $event->type->value,
-            ])
+            ->sort(fn (TimelineEvent $left, TimelineEvent $right): int => $this->compareEvents($left, $right))
             ->values();
     }
 
@@ -88,15 +82,45 @@ class TimelineAggregatorService
             ->map(fn (Collection $items, string $label): array => [
                 'label' => $label,
                 'items' => $items
-                    ->sortBy([
-                        fn (TimelineEvent $event): int => $event->priorityWeight(),
-                        fn (TimelineEvent $event): string => $event->datetime?->toIso8601String() ?? '9999-12-31T23:59:59',
-                    ])
+                    ->sort(fn (TimelineEvent $left, TimelineEvent $right): int => $this->compareEvents($left, $right))
                     ->map->toArray()
                     ->values()
                     ->all(),
             ])
             ->values()
             ->all();
+    }
+
+    private function compareEvents(TimelineEvent $left, TimelineEvent $right): int
+    {
+        $comparisons = [
+            $left->priorityWeight() <=> $right->priorityWeight(),
+            $this->eventDate($left) <=> $this->eventDate($right),
+            $this->workspace($left) <=> $this->workspace($right),
+            $left->type->value <=> $right->type->value,
+            strcasecmp($left->title, $right->title),
+        ];
+
+        foreach ($comparisons as $comparison) {
+            if ($comparison !== 0) {
+                return $comparison;
+            }
+        }
+
+        return 0;
+    }
+
+    private function eventDate(TimelineEvent $event): string
+    {
+        return $event->datetime?->toIso8601String() ?? '9999-12-31T23:59:59';
+    }
+
+    private function workspace(TimelineEvent $event): string
+    {
+        if ($event->workspace === null) {
+            return '';
+        }
+
+        return $event->workspace->value;
     }
 }

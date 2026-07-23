@@ -18,7 +18,13 @@ class DeadlineTimelineProvider extends BaseTimelineProvider
 
     public function forUser(User $user, array $dashboard = []): array
     {
-        return collect($dashboard['deadlines'] ?? [])
+        $deadlines = $dashboard['deadlines'] ?? null;
+
+        if (! is_array($deadlines)) {
+            return [];
+        }
+
+        return collect(array_values(array_filter($deadlines, 'is_array')))
             ->map(fn (array $deadline, int $index): TimelineEvent => $this->factory->make(
                 id: 'deadline-'.$index.'-'.md5((string) ($deadline['label'] ?? $deadline['title'] ?? 'Prazo')),
                 type: TimelineType::Deadline,
