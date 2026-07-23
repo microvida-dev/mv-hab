@@ -2,8 +2,10 @@
     <x-slot name="header">
         <x-mv.page-header
             eyebrow="Gestão de acessos"
-            title="Criar perfil municipal"
-            description="O identificador técnico será criado automaticamente e ficará estável."
+            :title="$template ? 'Criar perfil a partir de modelo' : 'Criar perfil municipal'"
+            :description="$template
+                ? 'Reveja e ajuste a matriz recomendada antes de guardar o novo perfil.'
+                : 'O identificador técnico será criado automaticamente e ficará estável.'"
         >
             <x-slot name="actions">
                 <a href="{{ route('backoffice.roles.index') }}" class="mv-button-secondary">Voltar</a>
@@ -17,11 +19,17 @@
                 <x-mv.alert tone="danger">Corrija os campos assinalados antes de guardar.</x-mv.alert>
             @endif
 
+            @if ($template)
+                <x-mv.alert tone="info">
+                    Modelo selecionado: <strong>{{ $template['label'] }}</strong>. O modelo não concede acessos por si só e não copia utilizadores.
+                </x-mv.alert>
+            @endif
+
             <form method="POST" action="{{ route('backoffice.roles.store') }}" class="space-y-6">
                 @csrf
-                @include('backoffice.access.roles.partials.details', ['role' => null])
+                @include('backoffice.access.roles.partials.details', ['role' => $roleDraft])
                 @include('backoffice.access.roles.partials.permissions', [
-                    'selectedPermissionIds' => old('permissions', []),
+                    'selectedPermissionIds' => old('permissions', $template['permission_ids'] ?? []),
                     'readOnly' => false,
                 ])
 

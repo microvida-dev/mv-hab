@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ProgramController as AdminProgramController;
 use App\Http\Controllers\Admin\RequiredDocumentController as AdminRequiredDocumentController;
 use App\Http\Controllers\Backoffice\Access\AccessAuditController as BackofficeAccessAuditController;
 use App\Http\Controllers\Backoffice\Access\MunicipalTeamController as BackofficeMunicipalTeamController;
+use App\Http\Controllers\Backoffice\Access\MunicipalRoleTemplateController as BackofficeMunicipalRoleTemplateController;
 use App\Http\Controllers\Backoffice\Access\RoleManagementController as BackofficeRoleManagementController;
 use App\Http\Controllers\Backoffice\Access\UserAdministrationController as BackofficeUserAdministrationController;
 use App\Http\Controllers\Backoffice\AdditionalDocumentRequestController as BackofficeAdditionalDocumentRequestController;
@@ -1338,6 +1339,14 @@ Route::middleware('auth')->group(function () {
                         ->middleware('permission:roles.create')
                         ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                         ->name('roles.store');
+                    Route::get('role-templates', [BackofficeMunicipalRoleTemplateController::class, 'index'])
+                        ->middleware('permission:roles.view')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('role-templates.index');
+                    Route::get('role-templates/{template}/create', [BackofficeMunicipalRoleTemplateController::class, 'create'])
+                        ->middleware('permission:roles.create')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('role-templates.create');
                     Route::get('roles/{role}', [BackofficeRoleManagementController::class, 'show'])
                         ->middleware('permission:roles.view')
                         ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')

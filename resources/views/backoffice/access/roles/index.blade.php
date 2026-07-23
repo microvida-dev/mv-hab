@@ -7,6 +7,7 @@
         >
             @can('create', App\Models\Role::class)
                 <x-slot name="actions">
+                    <a href="{{ route('backoffice.role-templates.index') }}" class="mv-button-secondary">Modelos recomendados</a>
                     <a href="{{ route('backoffice.roles.create') }}" class="mv-button-primary">Criar perfil</a>
                 </x-slot>
             @endcan

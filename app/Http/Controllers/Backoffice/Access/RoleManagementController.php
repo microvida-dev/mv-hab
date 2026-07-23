@@ -57,6 +57,8 @@ class RoleManagementController extends Controller
 
         return view('backoffice.access.roles.create', [
             'permissionGroups' => $permissions->grouped(),
+            'roleDraft' => null,
+            'template' => null,
         ]);
     }
 
