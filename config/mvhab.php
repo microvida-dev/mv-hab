@@ -11,9 +11,29 @@ return [
         'teams' => ['view', 'create', 'update', 'manage_members', 'audit'],
         'access_audit' => ['view', 'export', 'audit'],
         'work_tasks' => ['view', 'view_team', 'create', 'assign', 'claim', 'reassign', 'update_status', 'complete', 'cancel', 'audit', 'dashboard', 'manage_sla'],
-        'security' => ['view_access_logs', 'revoke_sessions', 'audit_sensitive_access'],
+        'security' => [
+            'view',
+            'update',
+            'resolve',
+            'approve',
+            'manage_own_mfa',
+            'view_access_logs',
+            'revoke_sessions',
+            'audit_sensitive_access',
+        ],
+        'permission_reviews' => ['view', 'create', 'update', 'complete', 'audit'],
         'exports' => ['view', 'create', 'download', 'audit', 'delete', 'rgpd', 'sensitive.create', 'sensitive.download', 'sensitive.audit'],
-        'rgpd' => ['retention.view', 'retention.manage', 'anonymization.request', 'anonymization.approve', 'anonymization.execute', 'dpo.approve'],
+        'rgpd' => [
+            'retention.view',
+            'retention.manage',
+            'retention.approve',
+            'retention.execute',
+            'anonymization.view',
+            'anonymization.request',
+            'anonymization.approve',
+            'anonymization.execute',
+            'dpo.approve',
+        ],
         'municipalities' => ['view', 'create', 'update', 'delete', 'audit'],
         'municipality_features' => ['view', 'update', 'audit'],
         'platform_operators' => ['view', 'manage', 'audit'],
@@ -54,7 +74,7 @@ return [
             'audit',
         ],
         'audit_logs' => ['view', 'export', 'audit'],
-        'privacy' => ['view', 'create', 'update', 'delete', 'approve', 'reject', 'export', 'audit'],
+        'privacy' => ['view', 'create', 'update', 'delete', 'assign', 'approve', 'reject', 'export', 'audit'],
         'settings' => ['view', 'create', 'update', 'delete', 'audit'],
         'housing_units' => ['view', 'create', 'update', 'delete', 'export', 'audit'],
         'simulator' => ['view', 'create', 'update', 'delete', 'export', 'audit'],
@@ -80,6 +100,7 @@ return [
             'label' => 'Municipal technician',
             'permissions' => [
                 'dashboard.view',
+                'security.manage_own_mfa',
                 'programs.view',
                 'programs.create',
                 'programs.update',
@@ -214,6 +235,7 @@ return [
             'label' => 'Jury',
             'permissions' => [
                 'dashboard.view',
+                'security.manage_own_mfa',
                 'applications.view',
                 'applications.approve',
                 'applications.reject',
@@ -254,6 +276,7 @@ return [
             'label' => 'Financial manager',
             'permissions' => [
                 'dashboard.view',
+                'security.manage_own_mfa',
                 'dashboard.export',
                 'contracts.view',
                 'contracts.create',
@@ -295,6 +318,7 @@ return [
             'label' => 'Maintenance manager',
             'permissions' => [
                 'dashboard.view',
+                'security.manage_own_mfa',
                 'housing_units.view',
                 'maintenance_requests.view',
                 'maintenance_requests.create',
@@ -333,6 +357,7 @@ return [
             'label' => 'Legal manager',
             'permissions' => [
                 'dashboard.view',
+                'security.manage_own_mfa',
                 'applications.view',
                 'documents.view',
                 'documents.audit',
@@ -378,6 +403,7 @@ return [
             'label' => 'Housing manager',
             'permissions' => [
                 'dashboard.view',
+                'security.manage_own_mfa',
                 'housing_units.view',
                 'housing_units.create',
                 'housing_units.update',
@@ -420,6 +446,7 @@ return [
             'label' => 'Inspection manager',
             'permissions' => [
                 'dashboard.view',
+                'security.manage_own_mfa',
                 'housing_units.view',
                 'maintenance_requests.view',
                 'maintenance_requests.create',
@@ -453,6 +480,7 @@ return [
             'label' => 'Support agent',
             'permissions' => [
                 'dashboard.view',
+                'security.manage_own_mfa',
                 'support.view',
                 'support.create',
                 'support.update',
@@ -538,6 +566,7 @@ return [
             'permissions' => [
                 '*.view',
                 '*.audit',
+                'security.manage_own_mfa',
                 'dashboard.export',
                 'reports.export',
                 'audit_logs.export',

@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int|null $municipality_id
+ */
 class PermissionReview extends Model
 {
     /** @use HasFactory<PermissionReviewFactory> */
@@ -32,6 +35,12 @@ class PermissionReview extends Model
     public function items(): HasMany
     {
         return $this->hasMany(PermissionReviewItem::class);
+    }
+
+    /** @return BelongsTo<Municipality, $this> */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Security;
 
+use App\Models\Municipality;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -83,6 +84,8 @@ class CustomRoleEffectivePermissionTest extends TestCase
     private function customRole(string $name, array $permissionIds, bool $active = true): Role
     {
         $role = Role::query()->create([
+            'municipality_id' => Municipality::query()->value('id')
+                ?? Municipality::factory()->create()->id,
             'name' => $name,
             'label' => str($name)->replace('_', ' ')->title()->toString(),
             'scope' => 'municipal',

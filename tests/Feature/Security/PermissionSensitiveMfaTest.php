@@ -3,6 +3,7 @@
 namespace Tests\Feature\Security;
 
 use App\Enums\FeatureKey;
+use App\Models\Municipality;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -57,11 +58,11 @@ class PermissionSensitiveMfaTest extends TestCase
 
     public function test_removing_last_sensitive_permission_recalculates_requirement_immediately(): void
     {
-        $administrator = $this->administrator();
         $user = $this->userWithCustomRole('analista_mfa_recalculado', [
             'documents.view',
             'documents.reject',
         ]);
+        $administrator = $this->administrator($user->municipality);
         $role = $user->roles()->where('name', 'analista_mfa_recalculado')->firstOrFail();
         $viewPermission = Permission::query()->where('name', 'documents.view')->firstOrFail();
         $mfa = app(MfaEnforcementService::class);
@@ -84,7 +85,12 @@ class PermissionSensitiveMfaTest extends TestCase
     public function test_inactive_sensitive_role_does_not_require_mfa_or_grant_access(): void
     {
         $user = $this->userWithCustomRole('consulta_documental_ativa', ['documents.view']);
-        $inactive = $this->customRole('decisao_documental_inativa', ['documents.approve'], false);
+        $inactive = $this->customRole(
+            'decisao_documental_inativa',
+            ['documents.approve'],
+            false,
+            $user->municipality,
+        );
         $user->roles()->attach($inactive);
 
         $this->assertFalse(app(MfaEnforcementService::class)->requiresMfa($user));
@@ -98,8 +104,18 @@ class PermissionSensitiveMfaTest extends TestCase
     public function test_exporter_template_requires_mfa_and_legacy_rules_remain_active(): void
     {
         $template = app(MunicipalRoleTemplateRegistry::class)->resolve('exportador-candidaturas');
-        $role = $this->customRoleFromIds('exportador_municipal_mfa', $template['permission_ids']);
-        $exporter = User::factory()->create(['status' => 'active', 'mfa_required' => false]);
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
+        $role = $this->customRoleFromIds(
+            'exportador_municipal_mfa',
+            $template['permission_ids'],
+            true,
+            $municipality,
+        );
+        $exporter = User::factory()->create([
+            'municipality_id' => $municipality->id,
+            'status' => 'active',
+            'mfa_required' => false,
+        ]);
         $exporter->roles()->attach($role);
         $support = $this->userWithSystemRole('support_agent');
         $technician = $this->userWithSystemRole('municipal_technician');
@@ -116,8 +132,8 @@ class PermissionSensitiveMfaTest extends TestCase
     /** @param list<string> $permissionNames */
     private function userWithCustomRole(string $name, array $permissionNames): User
     {
-        $role = $this->customRole($name, $permissionNames);
         $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
+        $role = $this->customRole($name, $permissionNames, true, $municipality);
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',
@@ -129,17 +145,33 @@ class PermissionSensitiveMfaTest extends TestCase
     }
 
     /** @param list<string> $permissionNames */
-    private function customRole(string $name, array $permissionNames, bool $active = true): Role
-    {
+    private function customRole(
+        string $name,
+        array $permissionNames,
+        bool $active = true,
+        ?Municipality $municipality = null,
+    ): Role {
         $ids = Permission::query()->whereIn('name', $permissionNames)->pluck('id')->all();
 
-        return $this->customRoleFromIds($name, array_map(fn ($id): int => (int) $id, $ids), $active);
+        return $this->customRoleFromIds(
+            $name,
+            array_map(fn ($id): int => (int) $id, $ids),
+            $active,
+            $municipality,
+        );
     }
 
     /** @param list<int> $permissionIds */
-    private function customRoleFromIds(string $name, array $permissionIds, bool $active = true): Role
-    {
+    private function customRoleFromIds(
+        string $name,
+        array $permissionIds,
+        bool $active = true,
+        ?Municipality $municipality = null,
+    ): Role {
+        $municipality ??= Municipality::query()->first()
+            ?? Municipality::factory()->create();
         $role = Role::query()->create([
+            'municipality_id' => $municipality->id,
             'name' => $name,
             'label' => str($name)->replace('_', ' ')->title()->toString(),
             'scope' => 'municipal',
@@ -151,9 +183,9 @@ class PermissionSensitiveMfaTest extends TestCase
         return $role;
     }
 
-    private function userWithSystemRole(string $name): User
+    private function userWithSystemRole(string $name, ?Municipality $municipality = null): User
     {
-        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
+        $municipality ??= $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',
@@ -164,8 +196,8 @@ class PermissionSensitiveMfaTest extends TestCase
         return $user;
     }
 
-    private function administrator(): User
+    private function administrator(?Municipality $municipality = null): User
     {
-        return $this->userWithSystemRole('administrator');
+        return $this->userWithSystemRole('administrator', $municipality);
     }
 }

@@ -4,24 +4,38 @@ namespace App\Policies;
 
 use App\Models\SecurityAlertRule;
 use App\Models\User;
-use App\Policies\Concerns\HandlesSecurityAccess;
+use App\Services\Security\SecurityMunicipalScopeService;
 
 class SecurityAlertRulePolicy
 {
-    use HandlesSecurityAccess;
+    public function __construct(
+        private readonly SecurityMunicipalScopeService $scope,
+    ) {}
 
     public function viewAny(User $user): bool
     {
-        return $this->backoffice($user, 'audit');
+        return $user->municipality_id !== null
+            && $user->hasPermission('security.view');
+    }
+
+    public function view(User $user, SecurityAlertRule $rule): bool
+    {
+        return $this->viewAny($user)
+            && $this->scope->alertRules(
+                SecurityAlertRule::query()->whereKey($rule),
+                $user,
+            )->exists();
     }
 
     public function create(User $user): bool
     {
-        return $this->backoffice($user, 'create');
+        return $user->municipality_id !== null
+            && $user->hasPermission('security.update');
     }
 
     public function update(User $user, SecurityAlertRule $rule): bool
     {
-        return $this->backoffice($user, 'update');
+        return $user->hasPermission('security.update')
+            && $this->scope->ownsMutableAlertRule($user, $rule);
     }
 }

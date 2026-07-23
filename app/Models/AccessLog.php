@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * @property AccessLogType $access_type
+ * @property int|null $municipality_id
  * @property User|null $user
  */
 class AccessLog extends Model
@@ -41,6 +42,12 @@ class AccessLog extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return BelongsTo<Municipality, $this> */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 
     /**

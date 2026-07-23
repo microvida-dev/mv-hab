@@ -4,6 +4,7 @@ namespace App\Services\Security;
 
 use App\Models\BackupReview;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Str;
 
 class BackupReviewService
@@ -23,8 +24,13 @@ class BackupReviewService
      */
     public function create(User $actor, array $data): BackupReview
     {
+        if ($actor->municipality_id === null) {
+            throw new AuthorizationException('A revisão exige contexto municipal.');
+        }
+
         return BackupReview::query()->create([
             'review_number' => 'BKP-'.now()->format('YmdHis').'-'.Str::upper(Str::random(5)),
+            'municipality_id' => $actor->municipality_id,
             'status' => $data['status'] ?? 'reviewed',
             'environment' => $data['environment'] ?? app()->environment(),
             'backup_scope' => $data['backup_scope'] ?? 'Base de dados e storage privado. DEMO — SUJEITO A VALIDAÇÃO DO MUNICÍPIO/DPO.',

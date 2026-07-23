@@ -22,6 +22,7 @@ class SensitiveDataAccessService
         $request = $this->request();
 
         $log = SensitiveDataAccessLog::query()->create([
+            'municipality_id' => $subject->municipality_id ?? $user->municipality_id,
             'user_id' => $user->id,
             'subject_user_id' => $subject?->id,
             'resource_type' => $resource->getMorphClass(),

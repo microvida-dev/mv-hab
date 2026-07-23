@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\MfaDevice;
 use Illuminate\Foundation\Http\FormRequest;
 
 class DisableMfaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasPermission('settings.update') || $this->user()?->hasRole('administrator');
+        $device = $this->route('mfaDevice');
+
+        return $device instanceof MfaDevice
+            && ($this->user()?->can('update', $device) ?? false);
     }
 
     /**

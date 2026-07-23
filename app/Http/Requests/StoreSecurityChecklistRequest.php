@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Models\SecurityChecklist;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSecurityChecklistRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return ! $this->user()?->hasRole('candidate') && $this->user()?->hasPermission('settings.audit');
+        return $this->user()?->can('create', SecurityChecklist::class) ?? false;
     }
 
     /**

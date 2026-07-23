@@ -1594,27 +1594,62 @@ Route::middleware('auth')->group(function () {
                     ->name('security.')
                     ->middleware(['active.backoffice', 'mfa.backoffice', 'log.backoffice'])
                     ->group(function () {
-                        Route::get('/', BackofficeSecurityDashboardController::class)->name('dashboard');
+                        $fixedSecurityRoles = 'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor';
 
-                        Route::prefix('mfa')->name('mfa.')->group(function () {
-                            Route::get('/', [BackofficeMfaController::class, 'index'])->name('index');
-                            Route::post('enable', [BackofficeMfaController::class, 'enable'])->name('enable');
-                            Route::post('verify', [BackofficeMfaController::class, 'verify'])->name('verify');
-                            Route::post('{mfaDevice}/confirm', [BackofficeMfaController::class, 'confirm'])->name('confirm');
-                            Route::post('{mfaDevice}/disable', [BackofficeMfaController::class, 'disable'])->name('disable');
-                            Route::post('recovery-codes/regenerate', [BackofficeMfaController::class, 'regenerate'])->name('recovery-codes.regenerate');
-                        });
+                        Route::get('/', BackofficeSecurityDashboardController::class)
+                            ->middleware('permission:security.view')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('dashboard');
 
-                        Route::get('permission-reviews', [BackofficePermissionReviewController::class, 'index'])->name('permission-reviews.index');
-                        Route::post('permission-reviews', [BackofficePermissionReviewController::class, 'store'])->name('permission-reviews.store');
-                        Route::get('permission-reviews/{permissionReview}', [BackofficePermissionReviewController::class, 'show'])->name('permission-reviews.show');
-                        Route::post('permission-reviews/{permissionReview}/complete', [BackofficePermissionReviewController::class, 'complete'])->name('permission-reviews.complete');
+                        Route::prefix('mfa')
+                            ->name('mfa.')
+                            ->middleware('permission:security.manage_own_mfa')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->group(function () {
+                                Route::get('/', [BackofficeMfaController::class, 'index'])->name('index');
+                                Route::post('enable', [BackofficeMfaController::class, 'enable'])->name('enable');
+                                Route::post('verify', [BackofficeMfaController::class, 'verify'])->name('verify');
+                                Route::post('{mfaDevice}/confirm', [BackofficeMfaController::class, 'confirm'])->name('confirm');
+                                Route::post('{mfaDevice}/disable', [BackofficeMfaController::class, 'disable'])->name('disable');
+                                Route::post('recovery-codes/regenerate', [BackofficeMfaController::class, 'regenerate'])->name('recovery-codes.regenerate');
+                            });
+
+                        Route::get('permission-reviews', [BackofficePermissionReviewController::class, 'index'])
+                            ->middleware('permission:permission_reviews.view')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('permission-reviews.index');
+                        Route::post('permission-reviews', [BackofficePermissionReviewController::class, 'store'])
+                            ->middleware('permission:permission_reviews.create')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('permission-reviews.store');
+                        Route::get('permission-reviews/{permissionReview}', [BackofficePermissionReviewController::class, 'show'])
+                            ->middleware('permission:permission_reviews.view')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('permission-reviews.show');
+                        Route::post('permission-reviews/{permissionReview}/complete', [BackofficePermissionReviewController::class, 'complete'])
+                            ->middleware('permission:permission_reviews.complete')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('permission-reviews.complete');
 
                         Route::prefix('audit')->name('audit.')->group(function () {
-                            Route::get('events', [BackofficeSecurityAuditController::class, 'events'])->name('events.index');
-                            Route::get('events/{auditEvent}', [BackofficeSecurityAuditController::class, 'event'])->name('events.show');
-                            Route::get('access-logs', [BackofficeSecurityAuditController::class, 'accessLogs'])->name('access-logs.index');
-                            Route::get('sensitive-logs', [BackofficeSecurityAuditController::class, 'sensitiveLogs'])->name('sensitive-logs.index');
+                            $fixedSecurityRoles = 'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor';
+
+                            Route::get('events', [BackofficeSecurityAuditController::class, 'events'])
+                                ->middleware('permission:audit_logs.view')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('events.index');
+                            Route::get('events/{auditEvent}', [BackofficeSecurityAuditController::class, 'event'])
+                                ->middleware('permission:audit_logs.view')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('events.show');
+                            Route::get('access-logs', [BackofficeSecurityAuditController::class, 'accessLogs'])
+                                ->middleware('permission:security.view_access_logs')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('access-logs.index');
+                            Route::get('sensitive-logs', [BackofficeSecurityAuditController::class, 'sensitiveLogs'])
+                                ->middleware('permission:security.audit_sensitive_access')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('sensitive-logs.index');
                         });
 
                         Route::prefix('privacy')->name('privacy.')->group(function () {
@@ -1646,20 +1681,62 @@ Route::middleware('auth')->group(function () {
                             Route::post('anonymization/{anonymizationRequest}/run', [BackofficePrivacyController::class, 'runAnonymization'])->name('anonymization.run');
                         });
 
-                        Route::get('alerts', [BackofficeSecurityOperationsController::class, 'alerts'])->name('alerts.index');
-                        Route::post('alert-rules', [BackofficeSecurityOperationsController::class, 'storeAlertRule'])->name('alert-rules.store');
-                        Route::match(['put', 'patch'], 'alert-rules/{securityAlertRule}', [BackofficeSecurityOperationsController::class, 'updateAlertRule'])->name('alert-rules.update');
-                        Route::post('alerts/{securityAlert}/review', [BackofficeSecurityOperationsController::class, 'reviewAlert'])->name('alerts.review');
-                        Route::post('alerts/{securityAlert}/resolve', [BackofficeSecurityOperationsController::class, 'resolveAlert'])->name('alerts.resolve');
-                        Route::get('storage', [BackofficeSecurityOperationsController::class, 'storage'])->name('storage.index');
-                        Route::get('encrypted-fields', [BackofficeSecurityOperationsController::class, 'encryptedFields'])->name('encrypted-fields.index');
-                        Route::get('backups', [BackofficeSecurityOperationsController::class, 'backups'])->name('backups.index');
-                        Route::post('backups', [BackofficeSecurityOperationsController::class, 'storeBackupReview'])->name('backups.store');
-                        Route::get('checklists', [BackofficeSecurityOperationsController::class, 'checklists'])->name('checklists.index');
-                        Route::post('checklists', [BackofficeSecurityOperationsController::class, 'storeChecklist'])->name('checklists.store');
-                        Route::get('checklists/{securityChecklist}', [BackofficeSecurityOperationsController::class, 'showChecklist'])->name('checklists.show');
-                        Route::match(['put', 'patch'], 'checklist-items/{securityChecklistItem}', [BackofficeSecurityOperationsController::class, 'updateChecklistItem'])->name('checklist-items.update');
-                        Route::post('checklists/{securityChecklist}/approve', [BackofficeSecurityOperationsController::class, 'approveChecklist'])->name('checklists.approve');
+                        Route::get('alerts', [BackofficeSecurityOperationsController::class, 'alerts'])
+                            ->middleware('permission:security.view')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('alerts.index');
+                        Route::post('alert-rules', [BackofficeSecurityOperationsController::class, 'storeAlertRule'])
+                            ->middleware('permission:security.update')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('alert-rules.store');
+                        Route::match(['put', 'patch'], 'alert-rules/{securityAlertRule}', [BackofficeSecurityOperationsController::class, 'updateAlertRule'])
+                            ->middleware('permission:security.update')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('alert-rules.update');
+                        Route::post('alerts/{securityAlert}/review', [BackofficeSecurityOperationsController::class, 'reviewAlert'])
+                            ->middleware('permission:security.update')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('alerts.review');
+                        Route::post('alerts/{securityAlert}/resolve', [BackofficeSecurityOperationsController::class, 'resolveAlert'])
+                            ->middleware('permission:security.resolve')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('alerts.resolve');
+                        Route::get('storage', [BackofficeSecurityOperationsController::class, 'storage'])
+                            ->middleware('permission:security.view')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('storage.index');
+                        Route::get('encrypted-fields', [BackofficeSecurityOperationsController::class, 'encryptedFields'])
+                            ->middleware('permission:security.view')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('encrypted-fields.index');
+                        Route::get('backups', [BackofficeSecurityOperationsController::class, 'backups'])
+                            ->middleware('permission:security.view')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('backups.index');
+                        Route::post('backups', [BackofficeSecurityOperationsController::class, 'storeBackupReview'])
+                            ->middleware('permission:security.update')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('backups.store');
+                        Route::get('checklists', [BackofficeSecurityOperationsController::class, 'checklists'])
+                            ->middleware('permission:security.view')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('checklists.index');
+                        Route::post('checklists', [BackofficeSecurityOperationsController::class, 'storeChecklist'])
+                            ->middleware('permission:security.update')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('checklists.store');
+                        Route::get('checklists/{securityChecklist}', [BackofficeSecurityOperationsController::class, 'showChecklist'])
+                            ->middleware('permission:security.view')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('checklists.show');
+                        Route::match(['put', 'patch'], 'checklist-items/{securityChecklistItem}', [BackofficeSecurityOperationsController::class, 'updateChecklistItem'])
+                            ->middleware('permission:security.update')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('checklist-items.update');
+                        Route::post('checklists/{securityChecklist}/approve', [BackofficeSecurityOperationsController::class, 'approveChecklist'])
+                            ->middleware('permission:security.approve')
+                            ->withoutMiddleware($fixedSecurityRoles)
+                            ->name('checklists.approve');
                     });
 
                 Route::prefix('reports')->name('reports.')->group(function () {

@@ -6,8 +6,12 @@ use App\Enums\BackupReviewStatus;
 use Database\Factories\BackupReviewFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int|null $municipality_id
+ */
 class BackupReview extends Model
 {
     /** @use HasFactory<BackupReviewFactory> */
@@ -23,5 +27,11 @@ class BackupReview extends Model
             'last_restore_test_at' => 'datetime',
             'reviewed_at' => 'datetime',
         ];
+    }
+
+    /** @return BelongsTo<Municipality, $this> */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 }

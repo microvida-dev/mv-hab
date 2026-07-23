@@ -107,20 +107,22 @@ class InventoryBackofficeRoutesCommandTest extends TestCase
         ])->assertSuccessful();
 
         $routes = collect($this->jsonFile($output)['routes'])->keyBy('route_name');
-        $fixed = $routes->get('backoffice.access-audit.index');
+        $accessAudit = $routes->get('backoffice.access-audit.index');
         $migrated = $routes->get('backoffice.application-reviews.complete');
 
-        $this->assertNotNull($fixed);
-        $this->assertSame(
+        $this->assertNotNull($accessAudit);
+        $this->assertNull($accessAudit['role_middleware_active']);
+        $this->assertContains(
             'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor',
-            $fixed['role_middleware_active'],
+            $accessAudit['role_middleware_excluded'],
         );
-        $this->assertTrue($fixed['active_backoffice_present']);
-        $this->assertTrue($fixed['mfa_backoffice_present']);
-        $this->assertTrue($fixed['log_backoffice_present']);
-        $this->assertSame('access_audit.view', $fixed['permission_recommendation']);
-        $this->assertTrue($fixed['permission_catalog_exists']);
-        $this->assertFalse($fixed['permission_semantically_adequate']);
+        $this->assertContains('access_audit.view', $accessAudit['permission_middleware']);
+        $this->assertTrue($accessAudit['active_backoffice_present']);
+        $this->assertTrue($accessAudit['mfa_backoffice_present']);
+        $this->assertTrue($accessAudit['log_backoffice_present']);
+        $this->assertSame('access_audit.view', $accessAudit['permission_recommendation']);
+        $this->assertTrue($accessAudit['permission_catalog_exists']);
+        $this->assertTrue($accessAudit['permission_semantically_adequate']);
 
         $this->assertNotNull($migrated);
         $this->assertContains(
@@ -173,15 +175,24 @@ class InventoryBackofficeRoutesCommandTest extends TestCase
     public function test_gap_filters_are_applied_to_policy_scope_and_audit_findings(): void
     {
         $filters = [
-            'missing-policy' => fn (array $route): bool => is_string($route['record_model'])
-                && $route['policy_class'] === null,
-            'missing-scope' => fn (array $route): bool => $route['municipal_record_scope'] === 'missing',
-            'mutation-without-audit' => fn (array $route): bool => $route['operation_type'] === 'mutation'
-                && $route['audit_requirement'] === 'required'
-                && $route['audit_implementation'] === 'missing',
+            'missing-policy' => [
+                'predicate' => fn (array $route): bool => is_string($route['record_model'])
+                    && $route['policy_class'] === null,
+                'may_be_empty' => true,
+            ],
+            'missing-scope' => [
+                'predicate' => fn (array $route): bool => $route['municipal_record_scope'] === 'missing',
+                'may_be_empty' => false,
+            ],
+            'mutation-without-audit' => [
+                'predicate' => fn (array $route): bool => $route['operation_type'] === 'mutation'
+                    && $route['audit_requirement'] === 'required'
+                    && $route['audit_implementation'] === 'missing',
+                'may_be_empty' => false,
+            ],
         ];
 
-        foreach ($filters as $option => $predicate) {
+        foreach ($filters as $option => $expectation) {
             $output = $this->outputPath($option.'.json');
 
             $this->artisan('access:inventory-backoffice-routes', [
@@ -193,9 +204,12 @@ class InventoryBackofficeRoutesCommandTest extends TestCase
 
             $routes = collect($this->jsonFile($output)['routes']);
 
-            $this->assertNotEmpty($routes, "O filtro {$option} deve produzir achados.");
+            if (! $expectation['may_be_empty']) {
+                $this->assertNotEmpty($routes, "O filtro {$option} deve produzir achados.");
+            }
+
             $this->assertTrue(
-                $routes->every($predicate),
+                $routes->every($expectation['predicate']),
                 "O filtro {$option} devolveu uma rota fora do critério.",
             );
         }

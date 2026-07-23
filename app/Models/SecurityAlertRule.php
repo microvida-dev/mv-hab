@@ -6,11 +6,13 @@ use App\Enums\SecurityAlertSeverity;
 use Database\Factories\SecurityAlertRuleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property SecurityAlertSeverity $severity
+ * @property int|null $municipality_id
  * @property string $name
  * @property string|null $description
  */
@@ -35,5 +37,11 @@ class SecurityAlertRule extends Model
     public function alerts(): HasMany
     {
         return $this->hasMany(SecurityAlert::class);
+    }
+
+    /** @return BelongsTo<Municipality, $this> */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 }

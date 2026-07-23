@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\SecurityAlertSeverity;
 use App\Enums\SecurityAlertStatus;
+use App\Models\Municipality;
 use App\Models\SecurityAlert;
 use App\Models\SecurityAlertRule;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -15,6 +16,10 @@ class SecurityAlertFactory extends Factory
     public function definition(): array
     {
         return [
+            'municipality_id' => fn (): int => (int) (
+                Municipality::query()->value('id')
+                ?? Municipality::factory()->create()->id
+            ),
             'alert_number' => 'SEC-'.now()->format('YmdHis').'-'.Str::upper(Str::random(6)),
             'security_alert_rule_id' => SecurityAlertRule::factory(),
             'status' => SecurityAlertStatus::Open->value,

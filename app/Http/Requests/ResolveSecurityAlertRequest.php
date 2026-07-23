@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\SecurityAlert;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ResolveSecurityAlertRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return ! $this->user()?->hasRole('candidate') && $this->user()?->hasPermission('settings.audit');
+        $alert = $this->route('securityAlert');
+
+        return $alert instanceof SecurityAlert
+            && ($this->user()?->can('resolve', $alert) ?? false);
     }
 
     /**

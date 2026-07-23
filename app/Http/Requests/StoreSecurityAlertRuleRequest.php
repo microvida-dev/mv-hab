@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\SecurityAlertSeverity;
+use App\Models\SecurityAlertRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +11,7 @@ class StoreSecurityAlertRuleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return ! $this->user()?->hasRole('candidate') && $this->user()?->hasPermission('settings.create');
+        return $this->user()?->can('create', SecurityAlertRule::class) ?? false;
     }
 
     /**

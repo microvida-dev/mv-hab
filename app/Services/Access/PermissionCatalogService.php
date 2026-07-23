@@ -79,6 +79,7 @@ class PermissionCatalogService
         'municipality_features' => 'administration',
         'notifications' => 'administration',
         'platform_operators' => 'administration',
+        'permission_reviews' => 'rgpd',
         'programs' => 'administration',
         'roles' => 'administration',
         'settings' => 'administration',
@@ -116,6 +117,7 @@ class PermissionCatalogService
         'municipality_features' => 'funcionalidades municipais',
         'notifications' => 'notificações',
         'payments' => 'pagamentos',
+        'permission_reviews' => 'revisões de permissões',
         'platform_operators' => 'operadores de plataforma',
         'privacy' => 'privacidade',
         'programs' => 'programas',
@@ -156,6 +158,8 @@ class PermissionCatalogService
         'manage' => 'Gerir',
         'manage_members' => 'Gerir membros de',
         'manage_sla' => 'Gerir SLA de',
+        'manage_own_mfa' => 'Gerir MFA próprio em',
+        'resolve' => 'Resolver',
         'update_status' => 'Alterar estado de',
         'view_team' => 'Consultar tarefas da equipa em',
         'deactivate' => 'Desativar',
@@ -208,6 +212,16 @@ class PermissionCatalogService
         'platform_operators.view' => 'Consultar operadores de plataforma',
         'platform_operators.manage' => 'Gerir operadores de plataforma',
         'platform_operators.audit' => 'Consultar auditoria de operadores de plataforma',
+        'permission_reviews.view' => 'Consultar revisões de permissões',
+        'permission_reviews.create' => 'Criar revisões de permissões',
+        'permission_reviews.update' => 'Alterar revisões de permissões',
+        'permission_reviews.complete' => 'Concluir revisões de permissões',
+        'permission_reviews.audit' => 'Consultar auditoria de revisões de permissões',
+        'security.view' => 'Consultar segurança',
+        'security.update' => 'Alterar configuração de segurança',
+        'security.resolve' => 'Resolver alertas de segurança',
+        'security.approve' => 'Aprovar verificações de segurança',
+        'security.manage_own_mfa' => 'Gerir MFA próprio',
     ];
 
     /** @var list<string> */
@@ -218,6 +232,7 @@ class PermissionCatalogService
         'exports',
         'finance',
         'payments',
+        'permission_reviews',
         'platform_operators',
         'privacy',
         'rgpd',
@@ -245,6 +260,7 @@ class PermissionCatalogService
         'reactivate',
         'reassign',
         'revoke_sessions',
+        'resolve',
         'audit_sensitive_access',
         'download',
     ];
@@ -354,6 +370,10 @@ class PermissionCatalogService
     {
         if ($name === '*') {
             return true;
+        }
+
+        if ($name === 'security.manage_own_mfa') {
+            return false;
         }
 
         [$parsedModule, $parsedAction] = $this->parse($name);

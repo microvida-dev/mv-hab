@@ -63,6 +63,7 @@ class SystemRoleProtectionTest extends TestCase
         $administrator = $this->administrator();
         $permission = $administrator->roles()->firstOrFail()->permissions()->firstOrFail();
         $role = Role::query()->create([
+            'municipality_id' => $administrator->municipality_id,
             'name' => 'operador_municipal_estavel',
             'label' => 'Operador municipal estável',
             'scope' => 'municipal',

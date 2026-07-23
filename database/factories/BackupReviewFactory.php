@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\BackupReviewStatus;
 use App\Models\BackupReview;
+use App\Models\Municipality;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -13,6 +14,10 @@ class BackupReviewFactory extends Factory
     public function definition(): array
     {
         return [
+            'municipality_id' => fn (): int => (int) (
+                Municipality::query()->value('id')
+                ?? Municipality::factory()->create()->id
+            ),
             'review_number' => 'BKP-'.now()->format('YmdHis').'-'.Str::upper(Str::random(5)),
             'status' => BackupReviewStatus::Reviewed->value,
             'environment' => 'test',

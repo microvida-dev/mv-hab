@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Municipality;
 use App\Models\PermissionReview;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -13,6 +14,10 @@ class PermissionReviewFactory extends Factory
     public function definition(): array
     {
         return [
+            'municipality_id' => fn (): int => (int) (
+                Municipality::query()->value('id')
+                ?? Municipality::factory()->create()->id
+            ),
             'review_number' => 'PERM-'.now()->format('YmdHis').'-'.Str::upper(Str::random(5)),
             'status' => 'in_progress',
             'scope' => 'all',

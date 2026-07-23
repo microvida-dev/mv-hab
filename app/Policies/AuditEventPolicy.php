@@ -4,25 +4,30 @@ namespace App\Policies;
 
 use App\Models\AuditEvent;
 use App\Models\User;
-use App\Policies\Concerns\HandlesSecurityAccess;
+use App\Services\Security\SecurityMunicipalScopeService;
 
 class AuditEventPolicy
 {
-    use HandlesSecurityAccess;
+    public function __construct(
+        private readonly SecurityMunicipalScopeService $scope,
+    ) {}
 
     public function viewAny(User $user): bool
     {
-        return $this->audit($user);
+        return $user->municipality_id !== null
+            && $user->hasPermission('audit_logs.view');
     }
 
     public function view(User $user, AuditEvent $event): bool
     {
-        return $this->audit($user);
+        return $this->viewAny($user)
+            && $this->scope->ownsAuditEvent($user, $event);
     }
 
     public function export(User $user): bool
     {
-        return ! $user->hasRole('candidate') && $user->hasPermission('audit_logs.export');
+        return $user->municipality_id !== null
+            && $user->hasPermission('audit_logs.export');
     }
 
     public function update(User $user, AuditEvent $event): bool

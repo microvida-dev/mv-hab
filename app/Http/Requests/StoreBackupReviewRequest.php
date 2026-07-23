@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Models\BackupReview;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreBackupReviewRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return ! $this->user()?->hasRole('candidate') && $this->user()?->hasPermission('settings.audit');
+        return $this->user()?->can('create', BackupReview::class) ?? false;
     }
 
     /**

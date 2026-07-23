@@ -9,16 +9,18 @@ class MfaDevicePolicy
 {
     public function viewAny(User $user): bool
     {
-        return ! $user->hasRole('candidate');
+        return $user->municipality_id !== null
+            && $user->hasPermission('security.manage_own_mfa');
     }
 
     public function view(User $user, MfaDevice $device): bool
     {
-        return $device->user_id === $user->id || $user->hasRole('administrator');
+        return $this->viewAny($user)
+            && $device->user_id === $user->id;
     }
 
     public function update(User $user, MfaDevice $device): bool
     {
-        return $device->user_id === $user->id || $user->hasRole('administrator');
+        return $this->view($user, $device);
     }
 }
