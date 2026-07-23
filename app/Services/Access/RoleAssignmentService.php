@@ -14,6 +14,7 @@ class RoleAssignmentService
     public function __construct(
         private readonly AccessChangeLogger $logger,
         private readonly RoleAssignmentPolicy $policy,
+        private readonly AccessMunicipalScopeService $municipalScope,
     ) {}
 
     public function assign(User $actor, User $target, Role $role, string $justification): void
@@ -92,9 +93,7 @@ class RoleAssignmentService
             throw new DomainException('Não é possível atribuir um perfil inativo.');
         }
 
-        if ($actor->municipality_id !== null
-            && $target->municipality_id !== null
-            && $actor->municipality_id !== $target->municipality_id) {
+        if (! $this->municipalScope->ownsUser($actor, $target)) {
             throw new AuthorizationException('Atribuição entre municípios bloqueada.');
         }
 
@@ -107,6 +106,10 @@ class RoleAssignmentService
     {
         if (! $this->policy->remove($actor, $role)) {
             throw new AuthorizationException('Sem permissão para remover esta role.');
+        }
+
+        if (! $this->municipalScope->ownsUser($actor, $target)) {
+            throw new AuthorizationException('Remoção entre municípios bloqueada.');
         }
 
         if ($actor->is($target) && $role->name === 'administrator') {
@@ -133,6 +136,7 @@ class RoleAssignmentService
 
         return ! User::query()
             ->whereKeyNot($target->id)
+            ->where('municipality_id', $target->municipality_id)
             ->where('status', 'active')
             ->whereHas('roles', fn ($query) => $query->where('name', 'administrator'))
             ->exists();

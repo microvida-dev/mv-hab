@@ -33,6 +33,10 @@ class AccessChangeLogger
         $request = $this->request();
 
         $event = AccessChangeEvent::query()->create([
+            'municipality_id' => $target->municipality_id
+                ?? $team->municipality_id
+                ?? $role->municipality_id
+                ?? $actor->municipality_id,
             'event_code' => $eventCode,
             'actor_id' => $actor->id,
             'target_user_id' => $target?->id,

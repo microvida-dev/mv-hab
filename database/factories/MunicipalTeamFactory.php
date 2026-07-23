@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Municipality;
 use App\Models\MunicipalTeam;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -17,12 +17,16 @@ class MunicipalTeamFactory extends Factory
         $name = fake()->unique()->company();
 
         return [
+            'municipality_id' => fn (): int => (int) (
+                Municipality::query()->value('id')
+                ?? Municipality::factory()->create()->id
+            ),
             'name' => Str::title($name),
             'slug' => Str::slug($name).'-'.fake()->unique()->numerify('###'),
             'description' => fake()->sentence(),
             'status' => 'active',
             'functional_scopes' => ['backoffice'],
-            'manager_user_id' => User::factory(),
+            'manager_user_id' => null,
         ];
     }
 

@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Backoffice\Access;
 
+use App\Models\User;
+use App\Policies\UserAdministrationPolicy;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +11,10 @@ class StoreBackofficeUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) $this->user()?->hasPermission('users.create');
+        $actor = $this->user();
+
+        return $actor instanceof User
+            && app(UserAdministrationPolicy::class)->create($actor);
     }
 
     /**
@@ -17,15 +22,25 @@ class StoreBackofficeUserRequest extends FormRequest
      */
     public function rules(): array
     {
+        $municipalityId = $this->user()?->municipality_id;
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'role' => [
                 'required',
                 'string',
-                Rule::exists('roles', 'name')->where(fn ($query) => $query->where('is_active', true)),
+                Rule::exists('roles', 'name')->where(fn ($query) => $query
+                    ->where('is_active', true)
+                    ->where(fn ($roles) => $roles
+                        ->where('is_system', true)
+                        ->orWhere('municipality_id', $municipalityId))),
             ],
-            'team_id' => ['nullable', 'integer', 'exists:municipal_teams,id'],
+            'team_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('municipal_teams', 'id')->where('municipality_id', $municipalityId),
+            ],
             'role_in_team' => ['nullable', 'string', 'max:120'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'mfa_required' => ['nullable', 'boolean'],

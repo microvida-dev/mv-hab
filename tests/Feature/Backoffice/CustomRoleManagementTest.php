@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Backoffice;
 
+use App\Models\Municipality;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -14,11 +15,14 @@ class CustomRoleManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    private Municipality $municipality;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
+        $this->municipality = Municipality::factory()->create();
     }
 
     public function test_role_management_routes_use_permissions_and_all_backoffice_guards(): void
@@ -153,7 +157,10 @@ class CustomRoleManagementTest extends TestCase
             ->assertRedirect();
 
         $copy = Role::query()->where('label', 'Técnico municipal adaptado')->firstOrFail();
-        $target = User::factory()->create(['status' => 'active']);
+        $target = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
+            'status' => 'active',
+        ]);
         $target->roles()->attach($copy);
 
         $this->actingAs($administrator)
@@ -235,7 +242,10 @@ class CustomRoleManagementTest extends TestCase
     {
         $administrator = $this->userWithRole('administrator');
         $inactive = $this->customRole('perfil_inativo', ['applications.view'], false);
-        $target = User::factory()->create(['status' => 'active']);
+        $target = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
+            'status' => 'active',
+        ]);
 
         $this->actingAs($administrator)
             ->withSession(['mfa.verified_at' => now()])
@@ -258,6 +268,7 @@ class CustomRoleManagementTest extends TestCase
     private function customRole(string $name, array $permissions, bool $active = true): Role
     {
         $role = Role::query()->create([
+            'municipality_id' => $this->municipality->id,
             'name' => $name,
             'label' => str($name)->replace('_', ' ')->title()->toString(),
             'scope' => 'municipal',
@@ -279,7 +290,10 @@ class CustomRoleManagementTest extends TestCase
 
     private function userWithRole(string $role): User
     {
-        $user = User::factory()->create(['status' => 'active']);
+        $user = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
+            'status' => 'active',
+        ]);
         $user->assignRole($role);
 
         return $user;

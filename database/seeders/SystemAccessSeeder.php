@@ -43,6 +43,7 @@ class SystemAccessSeeder extends Seeder
             $role = Role::query()->updateOrCreate(
                 ['name' => $name],
                 [
+                    'municipality_id' => null,
                     'label' => $definition['label'],
                     'scope' => 'system',
                     'is_system' => true,

@@ -2,13 +2,20 @@
 
 namespace App\Http\Requests\Backoffice\Access;
 
+use App\Models\User;
+use App\Policies\UserAdministrationPolicy;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateBackofficeUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) $this->user()?->hasPermission('users.update');
+        $actor = $this->user();
+        $target = $this->route('user');
+
+        return $actor instanceof User
+            && $target instanceof User
+            && app(UserAdministrationPolicy::class)->update($actor, $target);
     }
 
     /**

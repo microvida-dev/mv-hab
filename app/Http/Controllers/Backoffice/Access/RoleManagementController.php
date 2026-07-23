@@ -14,6 +14,7 @@ use App\Models\AccessChangeEvent;
 use App\Models\Role;
 use App\Models\User;
 use App\Policies\RolePolicy;
+use App\Services\Access\AccessMunicipalScopeService;
 use App\Services\Access\PermissionCatalogService;
 use App\Services\Access\RoleAssignmentService;
 use App\Services\Access\RoleManagementService;
@@ -24,12 +25,19 @@ use Illuminate\Http\Request;
 
 class RoleManagementController extends Controller
 {
+    public function __construct(private readonly AccessMunicipalScopeService $municipalScope) {}
+
     public function index(Request $request, RolePolicy $policy): View
     {
-        abort_unless($policy->viewAny($this->authenticatedUser($request)), 403);
+        $actor = $this->authenticatedUser($request);
 
-        $roles = Role::query()
-            ->withCount(['users', 'permissions'])
+        abort_unless($policy->viewAny($actor), 403);
+
+        $roles = $this->municipalScope->roles(Role::query(), $actor)
+            ->withCount([
+                'users' => fn ($query) => $query->where('municipality_id', $actor->municipality_id),
+                'permissions',
+            ])
             ->when($request->filled('q'), function ($query) use ($request): void {
                 $search = '%'.$request->string('q')->trim()->toString().'%';
                 $query->where(fn ($inner) => $inner
@@ -87,10 +95,16 @@ class RoleManagementController extends Controller
         RolePolicy $policy,
         PermissionCatalogService $permissions,
     ): View {
-        abort_unless($policy->view($this->authenticatedUser($request), $role), 403);
+        $actor = $this->authenticatedUser($request);
+
+        abort_unless($policy->view($actor, $role), 403);
 
         return view('backoffice.access.roles.show', [
-            'role' => $role->load('permissions')->loadCount('users'),
+            'role' => $role
+                ->load('permissions')
+                ->loadCount([
+                    'users' => fn ($query) => $query->where('municipality_id', $actor->municipality_id),
+                ]),
             'permissionGroups' => $permissions->grouped($role->permissions),
         ]);
     }
@@ -206,11 +220,16 @@ class RoleManagementController extends Controller
 
     public function users(Request $request, Role $role, RolePolicy $policy): View
     {
-        abort_unless($policy->viewUsers($this->authenticatedUser($request), $role), 403);
+        $actor = $this->authenticatedUser($request);
+
+        abort_unless($policy->viewUsers($actor, $role), 403);
 
         return view('backoffice.access.roles.users', [
-            'role' => $role->loadCount('users'),
+            'role' => $role->loadCount([
+                'users' => fn ($query) => $query->where('municipality_id', $actor->municipality_id),
+            ]),
             'users' => $role->users()
+                ->where('municipality_id', $actor->municipality_id)
                 ->with('roles')
                 ->orderBy('name')
                 ->paginate(20),
@@ -219,11 +238,13 @@ class RoleManagementController extends Controller
 
     public function audit(Request $request, Role $role, RolePolicy $policy): View
     {
-        abort_unless($policy->audit($this->authenticatedUser($request), $role), 403);
+        $actor = $this->authenticatedUser($request);
+
+        abort_unless($policy->audit($actor, $role), 403);
 
         return view('backoffice.access.roles.audit', [
             'role' => $role,
-            'events' => AccessChangeEvent::query()
+            'events' => $this->municipalScope->accessEvents(AccessChangeEvent::query(), $actor)
                 ->with('actor')
                 ->where('role_id', $role->id)
                 ->latest('occurred_at')
@@ -252,10 +273,13 @@ class RoleManagementController extends Controller
 
     public function assign(AssignUserRoleRequest $request, User $user, RoleAssignmentService $roles): RedirectResponse
     {
-        $role = Role::query()->where('name', $request->validated('role'))->firstOrFail();
+        $actor = $this->authenticatedUser($request);
+        $role = $this->municipalScope->roles(Role::query(), $actor)
+            ->where('name', $request->validated('role'))
+            ->firstOrFail();
 
         try {
-            $roles->assign($this->authenticatedUser($request), $user, $role, $request->validated('justification'));
+            $roles->assign($actor, $user, $role, $request->validated('justification'));
         } catch (DomainException $exception) {
             return back()->withErrors(['access' => $exception->getMessage()]);
         }
@@ -265,10 +289,13 @@ class RoleManagementController extends Controller
 
     public function remove(AssignUserRoleRequest $request, User $user, RoleAssignmentService $roles): RedirectResponse
     {
-        $role = Role::query()->where('name', $request->validated('role'))->firstOrFail();
+        $actor = $this->authenticatedUser($request);
+        $role = $this->municipalScope->roles(Role::query(), $actor)
+            ->where('name', $request->validated('role'))
+            ->firstOrFail();
 
         try {
-            $roles->remove($this->authenticatedUser($request), $user, $role, $request->validated('justification'));
+            $roles->remove($actor, $user, $role, $request->validated('justification'));
         } catch (DomainException $exception) {
             return back()->withErrors(['access' => $exception->getMessage()]);
         }

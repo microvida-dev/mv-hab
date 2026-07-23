@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Role extends Model
@@ -14,6 +15,7 @@ class Role extends Model
     use HasFactory;
 
     protected $fillable = [
+        'municipality_id',
         'name',
         'label',
         'description',
@@ -49,6 +51,12 @@ class Role extends Model
     public function isMunicipalCustom(): bool
     {
         return ! $this->is_system && $this->scope === 'municipal';
+    }
+
+    /** @return BelongsTo<Municipality, $this> */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 
     /**

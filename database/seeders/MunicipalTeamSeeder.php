@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Municipality;
 use App\Models\MunicipalTeam;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -10,6 +11,17 @@ class MunicipalTeamSeeder extends Seeder
 {
     public function run(): void
     {
+        $municipality = Municipality::query()->updateOrCreate(
+            ['code' => 'MVHAB'],
+            [
+                'name' => 'Município MV HAB',
+                'tax_number' => null,
+                'contact_email' => 'habitacao@example.com',
+                'settings' => ['public_portal' => true],
+                'active' => true,
+            ],
+        );
+
         collect([
             ['name' => 'Gabinete Técnico', 'description' => 'Análise técnica e tramitação administrativa.', 'functional_scopes' => ['applications', 'documents', 'eligibility']],
             ['name' => 'Gabinete Jurídico', 'description' => 'Contratos, reclamações, audiência prévia e pareceres.', 'functional_scopes' => ['contracts', 'complaints', 'hearings']],
@@ -19,10 +31,11 @@ class MunicipalTeamSeeder extends Seeder
             ['name' => 'Vistorias', 'description' => 'Vistorias, autos e evidências técnicas.', 'functional_scopes' => ['inspections']],
             ['name' => 'Atendimento', 'description' => 'Apoio ao cidadão e comunicações operacionais.', 'functional_scopes' => ['support', 'candidate_experience']],
             ['name' => 'Auditoria', 'description' => 'Auditoria interna, RGPD e controlo de acessos.', 'functional_scopes' => ['audit_logs', 'privacy', 'access_audit']],
-        ])->each(function (array $team): void {
+        ])->each(function (array $team) use ($municipality): void {
             MunicipalTeam::query()->updateOrCreate(
                 ['slug' => Str::slug($team['name'])],
                 [
+                    'municipality_id' => $municipality->id,
                     'name' => $team['name'],
                     'description' => $team['description'],
                     'status' => 'active',

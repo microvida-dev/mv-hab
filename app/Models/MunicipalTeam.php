@@ -16,6 +16,7 @@ class MunicipalTeam extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'municipality_id',
         'name',
         'slug',
         'description',
@@ -36,6 +37,12 @@ class MunicipalTeam extends Model
     public function isActive(): bool
     {
         return $this->status === 'active';
+    }
+
+    /** @return BelongsTo<Municipality, $this> */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 
     /**

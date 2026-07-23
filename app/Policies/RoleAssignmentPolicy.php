@@ -4,9 +4,12 @@ namespace App\Policies;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Access\AccessMunicipalScopeService;
 
 class RoleAssignmentPolicy
 {
+    public function __construct(private readonly AccessMunicipalScopeService $municipalScope) {}
+
     public function viewAny(User $user): bool
     {
         return $this->can($user, 'view');
@@ -30,9 +33,10 @@ class RoleAssignmentPolicy
     private function withinScope(User $user, Role $role): bool
     {
         if ($role->name === 'administrator') {
-            return $user->hasRole('administrator');
+            return $user->hasRole('administrator')
+                && $this->municipalScope->ownsRole($user, $role);
         }
 
-        return $role->isSystem() || $role->scope === 'municipal';
+        return $this->municipalScope->ownsRole($user, $role);
     }
 }

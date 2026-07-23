@@ -11,6 +11,7 @@ use App\Models\MunicipalTeam;
 use App\Models\Role;
 use App\Models\User;
 use App\Policies\UserAdministrationPolicy;
+use App\Services\Access\AccessMunicipalScopeService;
 use App\Services\Access\UserAdministrationService;
 use DomainException;
 use Illuminate\Contracts\View\View;
@@ -19,11 +20,15 @@ use Illuminate\Http\Request;
 
 class UserAdministrationController extends Controller
 {
+    public function __construct(private readonly AccessMunicipalScopeService $municipalScope) {}
+
     public function index(Request $request, UserAdministrationPolicy $policy): View
     {
-        abort_unless($policy->viewAny($this->authenticatedUser($request)), 403);
+        $actor = $this->authenticatedUser($request);
 
-        $users = User::query()
+        abort_unless($policy->viewAny($actor), 403);
+
+        $users = $this->municipalScope->users(User::query(), $actor)
             ->with('roles', 'municipalTeams')
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
             ->when($request->filled('role'), fn ($query) => $query->whereHas('roles', fn ($roles) => $roles->where('name', $request->string('role')->toString())))
@@ -40,18 +45,31 @@ class UserAdministrationController extends Controller
 
         return view('backoffice.access.users.index', [
             'users' => $users,
-            'roles' => Role::query()->active()->orderBy('label')->get(),
-            'teams' => MunicipalTeam::query()->orderBy('name')->get(),
+            'roles' => $this->municipalScope->roles(Role::query(), $actor)
+                ->active()
+                ->orderBy('label')
+                ->get(),
+            'teams' => $this->municipalScope->teams(MunicipalTeam::query(), $actor)
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
     public function create(Request $request, UserAdministrationPolicy $policy): View
     {
-        abort_unless($policy->create($this->authenticatedUser($request)), 403);
+        $actor = $this->authenticatedUser($request);
+
+        abort_unless($policy->create($actor), 403);
 
         return view('backoffice.access.users.create', [
-            'roles' => Role::query()->active()->orderBy('label')->get(),
-            'teams' => MunicipalTeam::query()->where('status', 'active')->orderBy('name')->get(),
+            'roles' => $this->municipalScope->roles(Role::query(), $actor)
+                ->active()
+                ->orderBy('label')
+                ->get(),
+            'teams' => $this->municipalScope->teams(MunicipalTeam::query(), $actor)
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
@@ -68,12 +86,17 @@ class UserAdministrationController extends Controller
 
     public function show(Request $request, User $user, UserAdministrationPolicy $policy): View
     {
-        abort_unless($policy->view($this->authenticatedUser($request), $user), 403);
+        $actor = $this->authenticatedUser($request);
+
+        abort_unless($policy->view($actor, $user), 403);
 
         return view('backoffice.access.users.show', [
             'user' => $user->load('roles.permissions', 'municipalTeams.manager'),
-            'roles' => Role::query()->active()->orderBy('label')->get(),
-            'events' => AccessChangeEvent::query()
+            'roles' => $this->municipalScope->roles(Role::query(), $actor)
+                ->active()
+                ->orderBy('label')
+                ->get(),
+            'events' => $this->municipalScope->accessEvents(AccessChangeEvent::query(), $actor)
                 ->with('actor', 'role', 'municipalTeam')
                 ->where('target_user_id', $user->id)
                 ->latest('occurred_at')
@@ -83,7 +106,9 @@ class UserAdministrationController extends Controller
 
     public function edit(Request $request, User $user, UserAdministrationPolicy $policy): View
     {
-        abort_unless($policy->update($this->authenticatedUser($request), $user), 403);
+        $actor = $this->authenticatedUser($request);
+
+        abort_unless($policy->update($actor, $user), 403);
 
         return view('backoffice.access.users.edit', ['user' => $user->load('roles', 'municipalTeams')]);
     }

@@ -24,6 +24,7 @@ class UserAdministrationService
         private readonly RoleAssignmentPolicy $rolePolicy,
         private readonly MfaEnforcementService $mfa,
         private readonly SessionRevocationService $sessions,
+        private readonly AccessMunicipalScopeService $municipalScope,
     ) {}
 
     /**
@@ -35,13 +36,17 @@ class UserAdministrationService
             throw new AuthorizationException('Sem permissão para criar utilizadores.');
         }
 
-        $role = Role::query()->active()->where('name', (string) $data['role'])->firstOrFail();
+        $role = $this->municipalScope->roles(Role::query(), $actor)
+            ->active()
+            ->where('name', (string) $data['role'])
+            ->firstOrFail();
         $this->authorizeInitialRole($actor, $role);
-        $team = $this->teamFromData($data);
+        $team = $this->teamFromData($data, $actor);
         $this->ensureTeamAcceptsMembers($team);
 
         return DB::transaction(function () use ($actor, $data, $role, $team): User {
             $user = new User;
+            $user->municipality_id = $actor->municipality_id;
             $user->name = (string) $data['name'];
             $user->email = (string) $data['email'];
             $user->email_verified_at = now();
@@ -292,13 +297,14 @@ class UserAdministrationService
     /**
      * @param  array<string, mixed>  $data
      */
-    private function teamFromData(array $data): ?MunicipalTeam
+    private function teamFromData(array $data, User $actor): ?MunicipalTeam
     {
         if (empty($data['team_id'])) {
             return null;
         }
 
-        return MunicipalTeam::query()->findOrFail((int) $data['team_id']);
+        return $this->municipalScope->teams(MunicipalTeam::query(), $actor)
+            ->findOrFail((int) $data['team_id']);
     }
 
     private function ensureTeamAcceptsMembers(?MunicipalTeam $team): void
@@ -327,6 +333,7 @@ class UserAdministrationService
 
         return ! User::query()
             ->whereKeyNot($target->id)
+            ->where('municipality_id', $target->municipality_id)
             ->where('status', 'active')
             ->whereHas('roles', fn ($query) => $query->where('name', 'administrator'))
             ->exists();

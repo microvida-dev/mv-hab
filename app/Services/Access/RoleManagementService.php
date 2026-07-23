@@ -32,7 +32,7 @@ class RoleManagementService
 
         return DB::transaction(function () use ($actor, $data, $permissionIds, $justification): Role {
             $permissions = $this->authorizedPermissions($actor, $permissionIds);
-            $role = $this->persistRole($data, $permissions);
+            $role = $this->persistRole($actor, $data, $permissions);
             $permissionNames = $permissions->pluck('name')->sort()->values()->all();
 
             $this->logger->record(
@@ -146,7 +146,7 @@ class RoleManagementService
                 ->values()
                 ->all();
             $permissions = $this->authorizedPermissions($actor, $permissionIds);
-            $role = $this->persistRole([
+            $role = $this->persistRole($actor, [
                 'label' => $label,
                 'description' => $description,
             ], $permissions);
@@ -271,12 +271,13 @@ class RoleManagementService
      * @param  array<string, mixed>  $data
      * @param  Collection<int, Permission>  $permissions
      */
-    private function persistRole(array $data, Collection $permissions): Role
+    private function persistRole(User $actor, array $data, Collection $permissions): Role
     {
         $label = trim((string) $data['label']);
         $description = $data['description'] ?? null;
 
         $role = Role::query()->create([
+            'municipality_id' => $actor->municipality_id,
             'name' => $this->uniqueIdentifier($label),
             'label' => $label,
             'description' => $this->nullableTrim(is_string($description) ? $description : null),

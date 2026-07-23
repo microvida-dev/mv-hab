@@ -10,6 +10,7 @@ use App\Models\AccessChangeEvent;
 use App\Models\MunicipalTeam;
 use App\Models\User;
 use App\Policies\TeamManagementPolicy;
+use App\Services\Access\AccessMunicipalScopeService;
 use App\Services\Access\MunicipalTeamService;
 use DomainException;
 use Illuminate\Contracts\View\View;
@@ -18,12 +19,16 @@ use Illuminate\Http\Request;
 
 class MunicipalTeamController extends Controller
 {
+    public function __construct(private readonly AccessMunicipalScopeService $municipalScope) {}
+
     public function index(Request $request, TeamManagementPolicy $policy): View
     {
-        abort_unless($policy->viewAny($this->authenticatedUser($request)), 403);
+        $actor = $this->authenticatedUser($request);
+
+        abort_unless($policy->viewAny($actor), 403);
 
         return view('backoffice.access.teams.index', [
-            'teams' => MunicipalTeam::query()
+            'teams' => $this->municipalScope->teams(MunicipalTeam::query(), $actor)
                 ->with('manager')
                 ->withCount('members')
                 ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
@@ -35,10 +40,16 @@ class MunicipalTeamController extends Controller
 
     public function create(Request $request, TeamManagementPolicy $policy): View
     {
-        abort_unless($policy->create($this->authenticatedUser($request)), 403);
+        $actor = $this->authenticatedUser($request);
+
+        abort_unless($policy->create($actor), 403);
 
         return view('backoffice.access.teams.create', [
-            'users' => User::query()->where('status', 'active')->orderBy('name')->limit(200)->get(),
+            'users' => $this->municipalScope->users(User::query(), $actor)
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->limit(200)
+                ->get(),
         ]);
     }
 
@@ -55,12 +66,18 @@ class MunicipalTeamController extends Controller
 
     public function show(Request $request, MunicipalTeam $municipalTeam, TeamManagementPolicy $policy): View
     {
-        abort_unless($policy->view($this->authenticatedUser($request), $municipalTeam), 403);
+        $actor = $this->authenticatedUser($request);
+
+        abort_unless($policy->view($actor, $municipalTeam), 403);
 
         return view('backoffice.access.teams.show', [
             'team' => $municipalTeam->load('manager', 'members.roles'),
-            'users' => User::query()->where('status', 'active')->orderBy('name')->limit(200)->get(),
-            'events' => AccessChangeEvent::query()
+            'users' => $this->municipalScope->users(User::query(), $actor)
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->limit(200)
+                ->get(),
+            'events' => $this->municipalScope->accessEvents(AccessChangeEvent::query(), $actor)
                 ->with('actor', 'targetUser')
                 ->where('municipal_team_id', $municipalTeam->id)
                 ->latest('occurred_at')
@@ -70,11 +87,17 @@ class MunicipalTeamController extends Controller
 
     public function edit(Request $request, MunicipalTeam $municipalTeam, TeamManagementPolicy $policy): View
     {
-        abort_unless($policy->update($this->authenticatedUser($request), $municipalTeam), 403);
+        $actor = $this->authenticatedUser($request);
+
+        abort_unless($policy->update($actor, $municipalTeam), 403);
 
         return view('backoffice.access.teams.edit', [
             'team' => $municipalTeam,
-            'users' => User::query()->where('status', 'active')->orderBy('name')->limit(200)->get(),
+            'users' => $this->municipalScope->users(User::query(), $actor)
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->limit(200)
+                ->get(),
         ]);
     }
 
