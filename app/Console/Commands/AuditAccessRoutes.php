@@ -9,7 +9,39 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use InvalidArgumentException;
 use JsonException;
+use LogicException;
 
+/**
+ * @phpstan-type AccessRouteRow array{
+ *     name: string|null,
+ *     uri: string,
+ *     methods: list<string>,
+ *     action: string,
+ *     middleware: list<string>,
+ *     declared_middleware: list<string>,
+ *     excluded_middleware: list<string>,
+ *     role_middleware: string|null,
+ *     roles: list<string>,
+ *     permission_middleware: list<string>,
+ *     uses_fixed_role_middleware: bool,
+ *     is_backoffice_role_route: bool,
+ *     has_auth: bool,
+ *     has_active_backoffice: bool,
+ *     has_mfa_backoffice: bool,
+ *     has_log_backoffice: bool,
+ *     missing_backoffice_guards: list<string>
+ * }
+ * @phpstan-type AccessRouteSummary array{
+ *     total_routes: int,
+ *     fixed_role_routes: int,
+ *     backoffice_fixed_role_routes: int,
+ *     candidate_fixed_role_routes: int,
+ *     permission_middleware_routes: int,
+ *     backoffice_fixed_role_without_active_backoffice: int,
+ *     backoffice_fixed_role_without_mfa_backoffice: int,
+ *     backoffice_fixed_role_without_log_backoffice: int
+ * }
+ */
 class AuditAccessRoutes extends Command
 {
     protected $signature = 'access:audit-routes
@@ -47,12 +79,16 @@ class AuditAccessRoutes extends Command
         };
 
         if ($output = $this->normalizedOutputPath()) {
-            if ($format === 'table') {
-                $content = $this->asJson($rows, $summary);
+            $outputContent = $format === 'table'
+                ? $this->asJson($rows, $summary)
+                : $content;
+
+            if (! is_string($outputContent)) {
+                throw new LogicException('O conteúdo da auditoria de acessos não foi serializado.');
             }
 
             File::ensureDirectoryExists(dirname($output));
-            File::put($output, $content);
+            File::put($output, $outputContent);
 
             $this->info("Access route audit written to: {$output}");
 
@@ -60,6 +96,10 @@ class AuditAccessRoutes extends Command
         }
 
         if ($format === 'json' || $format === 'csv') {
+            if (! is_string($content)) {
+                throw new LogicException('O conteúdo da auditoria de acessos não foi serializado.');
+            }
+
             $this->line($content);
 
             return self::SUCCESS;
@@ -72,7 +112,7 @@ class AuditAccessRoutes extends Command
     }
 
     /**
-     * @return Collection<int, array<string, mixed>>
+     * @return Collection<int, AccessRouteRow>
      */
     private function routeRows(): Collection
     {
@@ -87,27 +127,34 @@ class AuditAccessRoutes extends Command
     }
 
     /**
-     * @return array<string, mixed>
+     * @return AccessRouteRow
      */
     private function routeRow(Route $route): array
     {
-        $declaredMiddleware = array_values($route->gatherMiddleware());
-        $excludedMiddleware = array_values($route->excludedMiddleware());
+        $declaredMiddleware = $this->stringList($route->gatherMiddleware());
+        $excludedMiddleware = $this->stringList($route->excludedMiddleware());
 
-        $middleware = array_values(
+        $middleware = $this->stringList(
             app('router')->resolveMiddleware(
                 $declaredMiddleware,
                 $excludedMiddleware,
             )
         );
 
-        $roleMiddleware = collect($middleware)
-            ->first(fn (string $item): bool => str_starts_with($item, 'role:'));
+        $roleMiddleware = null;
 
-        $permissionMiddleware = collect($middleware)
-            ->filter(fn (string $item): bool => str_starts_with($item, 'permission:'))
-            ->values()
-            ->all();
+        foreach ($middleware as $item) {
+            if (str_starts_with($item, 'role:')) {
+                $roleMiddleware = $item;
+
+                break;
+            }
+        }
+
+        $permissionMiddleware = array_values(array_filter(
+            $middleware,
+            fn (string $item): bool => str_starts_with($item, 'permission:'),
+        ));
 
         $roles = is_string($roleMiddleware)
             ? array_values(array_filter(explode(',', substr($roleMiddleware, strlen('role:')))))
@@ -116,7 +163,7 @@ class AuditAccessRoutes extends Command
         return [
             'name' => $route->getName(),
             'uri' => $route->uri(),
-            'methods' => array_values(array_diff($route->methods(), ['HEAD'])),
+            'methods' => $this->stringList(array_diff($route->methods(), ['HEAD'])),
             'action' => $route->getActionName(),
             'middleware' => $middleware,
             'declared_middleware' => $declaredMiddleware,
@@ -135,6 +182,15 @@ class AuditAccessRoutes extends Command
                 isBackofficeRoleRoute: $this->isBackofficeRoleRoute($roles),
             ),
         ];
+    }
+
+    /**
+     * @param  array<array-key, string>  $items
+     * @return list<string>
+     */
+    private function stringList(array $items): array
+    {
+        return array_values($items);
     }
 
     /**
@@ -158,18 +214,19 @@ class AuditAccessRoutes extends Command
             return [];
         }
 
-        return collect([
-            'active.backoffice',
-            'mfa.backoffice',
-            'log.backoffice',
-        ])->reject(fn (string $guard): bool => in_array($guard, $middleware, true))
-            ->values()
-            ->all();
+        return array_values(array_filter(
+            [
+                'active.backoffice',
+                'mfa.backoffice',
+                'log.backoffice',
+            ],
+            fn (string $guard): bool => ! in_array($guard, $middleware, true),
+        ));
     }
 
     /**
-     * @param  Collection<int, array<string, mixed>>  $rows
-     * @return array<string, int>
+     * @param  Collection<int, covariant AccessRouteRow>  $rows
+     * @return AccessRouteSummary
      */
     private function summary(Collection $rows): array
     {
@@ -201,8 +258,8 @@ class AuditAccessRoutes extends Command
     }
 
     /**
-     * @param  Collection<int, array<string, mixed>>  $rows
-     * @param  array<string, int>  $summary
+     * @param  Collection<int, covariant AccessRouteRow>  $rows
+     * @param  AccessRouteSummary  $summary
      *
      * @throws JsonException
      */
@@ -219,7 +276,7 @@ class AuditAccessRoutes extends Command
     }
 
     /**
-     * @param  Collection<int, array<string, mixed>>  $rows
+     * @param  Collection<int, covariant AccessRouteRow>  $rows
      */
     private function asCsv(Collection $rows): string
     {
@@ -274,7 +331,7 @@ class AuditAccessRoutes extends Command
     }
 
     /**
-     * @param  array<string, int>  $summary
+     * @param  AccessRouteSummary  $summary
      */
     private function renderSummary(array $summary): void
     {
@@ -307,7 +364,7 @@ class AuditAccessRoutes extends Command
     }
 
     /**
-     * @param  Collection<int, array<string, mixed>>  $rows
+     * @param  Collection<int, covariant AccessRouteRow>  $rows
      */
     private function renderTable(Collection $rows): void
     {
