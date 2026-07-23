@@ -22,7 +22,7 @@ class EligibilityCriterionController extends Controller
 
     public function index(EligibilityRuleSet $eligibilityRuleSet): View
     {
-        Gate::authorize('view', $eligibilityRuleSet);
+        Gate::authorize('viewBackoffice', $eligibilityRuleSet);
         $eligibilityRuleSet->load(['program', 'contest']);
         $criteria = $eligibilityRuleSet->criteria()->paginate(30);
 
@@ -34,7 +34,7 @@ class EligibilityCriterionController extends Controller
 
     public function create(EligibilityRuleSet $eligibilityRuleSet): View
     {
-        Gate::authorize('create', [EligibilityCriterion::class, $eligibilityRuleSet]);
+        Gate::authorize('createBackoffice', [EligibilityCriterion::class, $eligibilityRuleSet]);
 
         return view('backoffice.eligibility.criteria.create', [
             'ruleSet' => $eligibilityRuleSet,
@@ -57,7 +57,7 @@ class EligibilityCriterionController extends Controller
 
     public function edit(EligibilityCriterion $eligibilityCriterion): View
     {
-        Gate::authorize('update', $eligibilityCriterion);
+        Gate::authorize('updateBackoffice', $eligibilityCriterion);
         $eligibilityCriterion->load('ruleSet');
 
         return view('backoffice.eligibility.criteria.edit', [
@@ -80,7 +80,7 @@ class EligibilityCriterionController extends Controller
 
     public function activate(Request $request, EligibilityCriterion $eligibilityCriterion): RedirectResponse
     {
-        Gate::authorize('activate', $eligibilityCriterion);
+        Gate::authorize('activateBackoffice', $eligibilityCriterion);
         $eligibilityCriterion->update(['is_active' => true]);
         $this->audit('activate', AuditEvents::UPDATE, $eligibilityCriterion, $request);
 
@@ -89,7 +89,7 @@ class EligibilityCriterionController extends Controller
 
     public function inactivate(Request $request, EligibilityCriterion $eligibilityCriterion): RedirectResponse
     {
-        Gate::authorize('activate', $eligibilityCriterion);
+        Gate::authorize('deactivateBackoffice', $eligibilityCriterion);
         $eligibilityCriterion->update(['is_active' => false]);
         $this->audit('inactivate', AuditEvents::UPDATE, $eligibilityCriterion, $request);
 

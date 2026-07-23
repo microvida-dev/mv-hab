@@ -2,6 +2,7 @@
 
 namespace App\Services\Municipalities;
 
+use App\Models\AdministrativeDecision;
 use App\Models\AdministrativeProcess;
 use App\Models\AdministrativeProcessNote;
 use App\Models\AdministrativeTask;
@@ -9,8 +10,11 @@ use App\Models\AnnualDocumentUpdateRequest;
 use App\Models\Application;
 use App\Models\ApplicationReport;
 use App\Models\ApplicationReview;
+use App\Models\ApplicationScore;
 use App\Models\ApplicationSimulationInconsistency;
 use App\Models\Citizen;
+use App\Models\Complaint;
+use App\Models\ComplaintDecision;
 use App\Models\Contest;
 use App\Models\Contract;
 use App\Models\CorrectionRequest;
@@ -26,20 +30,30 @@ use App\Models\DocumentSubmission;
 use App\Models\DocumentTemplate;
 use App\Models\DocumentTemplateVersion;
 use App\Models\EligibilityCheck;
+use App\Models\EligibilityCriterion;
+use App\Models\EligibilityRuleSet;
 use App\Models\FutureApplicationDataReuse;
 use App\Models\GeneratedOfficialDocument;
 use App\Models\GeneratedProcedureDocument;
 use App\Models\Household;
 use App\Models\HousingApplication;
 use App\Models\LeaseContractDocument;
+use App\Models\LotteryDraw;
 use App\Models\Program;
+use App\Models\RankingSnapshot;
+use App\Models\RankingUpdateRun;
 use App\Models\ReportAccessLog;
 use App\Models\ReportDownloadLog;
 use App\Models\ReportExport;
 use App\Models\ReportRun;
+use App\Models\ScoringCriterion;
+use App\Models\ScoringRule;
+use App\Models\ScoringRuleSet;
+use App\Models\ScoringRun;
 use App\Models\SimulationSession;
 use App\Models\SimulatorConfiguration;
 use App\Models\TenantFinancialAccount;
+use App\Models\TieBreakerRule;
 use App\Models\User;
 use App\Services\Platform\PlatformOperatorScopeService;
 use Illuminate\Database\Eloquent\Builder;
@@ -329,6 +343,79 @@ class MunicipalRecordScopeService
     {
         return $this->administrativeProcesses(
             AdministrativeProcess::query()->whereKey($process),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<AdministrativeDecision>  $query
+     * @return Builder<AdministrativeDecision>
+     */
+    public function administrativeDecisions(Builder $query, User $user): Builder
+    {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $decisions) use ($user): void {
+            $decisions
+                ->whereIn(
+                    'administrative_process_id',
+                    $this->administrativeProcesses(
+                        AdministrativeProcess::query(),
+                        $user,
+                    )->select('id'),
+                )
+                ->orWhereIn(
+                    'application_id',
+                    $this->applications(Application::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsAdministrativeDecision(
+        User $user,
+        AdministrativeDecision $decision,
+    ): bool {
+        return $this->administrativeDecisions(
+            AdministrativeDecision::query()->whereKey($decision),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<Complaint>  $query
+     * @return Builder<Complaint>
+     */
+    public function complaints(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'application_id',
+            $this->applications(Application::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsComplaint(User $user, Complaint $complaint): bool
+    {
+        return $this->complaints(Complaint::query()->whereKey($complaint), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<ComplaintDecision>  $query
+     * @return Builder<ComplaintDecision>
+     */
+    public function complaintDecisions(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'complaint_id',
+            $this->complaints(Complaint::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsComplaintDecision(User $user, ComplaintDecision $decision): bool
+    {
+        return $this->complaintDecisions(
+            ComplaintDecision::query()->whereKey($decision),
             $user,
         )->exists();
     }
@@ -769,6 +856,263 @@ class MunicipalRecordScopeService
     {
         return $this->documentAiScores(
             DocumentAiScore::query()->whereKey($score),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<EligibilityRuleSet>  $query
+     * @return Builder<EligibilityRuleSet>
+     */
+    public function eligibilityRuleSets(Builder $query, User $user): Builder
+    {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $ruleSets) use ($user): void {
+            $ruleSets
+                ->whereHas(
+                    'program',
+                    fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id),
+                )
+                ->orWhereHas(
+                    'contest.program',
+                    fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id),
+                );
+        });
+    }
+
+    public function ownsEligibilityRuleSet(User $user, EligibilityRuleSet $ruleSet): bool
+    {
+        return $this->eligibilityRuleSets(
+            EligibilityRuleSet::query()->whereKey($ruleSet),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<EligibilityCriterion>  $query
+     * @return Builder<EligibilityCriterion>
+     */
+    public function eligibilityCriteria(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'eligibility_rule_set_id',
+            $this->eligibilityRuleSets(EligibilityRuleSet::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsEligibilityCriterion(
+        User $user,
+        EligibilityCriterion $criterion,
+    ): bool {
+        return $this->eligibilityCriteria(
+            EligibilityCriterion::query()->whereKey($criterion),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<ScoringRuleSet>  $query
+     * @return Builder<ScoringRuleSet>
+     */
+    public function scoringRuleSets(Builder $query, User $user): Builder
+    {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $ruleSets) use ($user): void {
+            $ruleSets
+                ->whereHas(
+                    'program',
+                    fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id),
+                )
+                ->orWhereHas(
+                    'contest.program',
+                    fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id),
+                );
+        });
+    }
+
+    public function ownsScoringRuleSet(User $user, ScoringRuleSet $ruleSet): bool
+    {
+        return $this->scoringRuleSets(
+            ScoringRuleSet::query()->whereKey($ruleSet),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<ScoringCriterion>  $query
+     * @return Builder<ScoringCriterion>
+     */
+    public function scoringCriteria(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'scoring_rule_set_id',
+            $this->scoringRuleSets(ScoringRuleSet::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsScoringCriterion(User $user, ScoringCriterion $criterion): bool
+    {
+        return $this->scoringCriteria(
+            ScoringCriterion::query()->whereKey($criterion),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<ScoringRule>  $query
+     * @return Builder<ScoringRule>
+     */
+    public function scoringRules(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'scoring_criterion_id',
+            $this->scoringCriteria(ScoringCriterion::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsScoringRule(User $user, ScoringRule $rule): bool
+    {
+        return $this->scoringRules(ScoringRule::query()->whereKey($rule), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<TieBreakerRule>  $query
+     * @return Builder<TieBreakerRule>
+     */
+    public function tieBreakerRules(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'scoring_rule_set_id',
+            $this->scoringRuleSets(ScoringRuleSet::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsTieBreakerRule(User $user, TieBreakerRule $rule): bool
+    {
+        return $this->tieBreakerRules(
+            TieBreakerRule::query()->whereKey($rule),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<ScoringRun>  $query
+     * @return Builder<ScoringRun>
+     */
+    public function scoringRuns(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'scoring_rule_set_id',
+            $this->scoringRuleSets(ScoringRuleSet::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsScoringRun(User $user, ScoringRun $run): bool
+    {
+        return $this->scoringRuns(ScoringRun::query()->whereKey($run), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<ApplicationScore>  $query
+     * @return Builder<ApplicationScore>
+     */
+    public function applicationScores(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'application_id',
+            $this->applications(Application::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsApplicationScore(User $user, ApplicationScore $score): bool
+    {
+        return $this->applicationScores(
+            ApplicationScore::query()->whereKey($score),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<RankingSnapshot>  $query
+     * @return Builder<RankingSnapshot>
+     */
+    public function rankingSnapshots(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'scoring_run_id',
+            $this->scoringRuns(ScoringRun::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsRankingSnapshot(User $user, RankingSnapshot $snapshot): bool
+    {
+        return $this->rankingSnapshots(
+            RankingSnapshot::query()->whereKey($snapshot),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<LotteryDraw>  $query
+     * @return Builder<LotteryDraw>
+     */
+    public function lotteryDraws(Builder $query, User $user): Builder
+    {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $draws) use ($user): void {
+            $draws
+                ->whereHas(
+                    'program',
+                    fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id),
+                )
+                ->orWhereHas(
+                    'contest.program',
+                    fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id),
+                )
+                ->orWhereHas(
+                    'definitiveList.program',
+                    fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id),
+                );
+        });
+    }
+
+    public function ownsLotteryDraw(User $user, LotteryDraw $draw): bool
+    {
+        return $this->lotteryDraws(LotteryDraw::query()->whereKey($draw), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<RankingUpdateRun>  $query
+     * @return Builder<RankingUpdateRun>
+     */
+    public function rankingUpdateRuns(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'lottery_run_id',
+            $this->lotteryDraws(LotteryDraw::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsRankingUpdateRun(User $user, RankingUpdateRun $run): bool
+    {
+        return $this->rankingUpdateRuns(
+            RankingUpdateRun::query()->whereKey($run),
             $user,
         )->exists();
     }

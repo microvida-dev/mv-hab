@@ -9,7 +9,9 @@ use App\Http\Requests\UpdateScoringRuleSetRequest;
 use App\Models\Contest;
 use App\Models\Program;
 use App\Models\ScoringRuleSet;
+use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -19,12 +21,16 @@ use Illuminate\Support\Facades\Gate;
 
 class ScoringRuleSetController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        Gate::authorize('viewAny', ScoringRuleSet::class);
-        $ruleSets = ScoringRuleSet::query()
+        Gate::authorize('viewAnyBackoffice', ScoringRuleSet::class);
+        $ruleSets = $this->municipalScope
+            ->scoringRuleSets(ScoringRuleSet::query(), $this->authenticatedUser($request))
             ->with(['program', 'contest'])
             ->withCount(['criteria', 'tieBreakerRules', 'runs'])
             ->latest()
@@ -33,11 +39,14 @@ class ScoringRuleSetController extends Controller
         return view('backoffice.scoring.rule-sets.index', compact('ruleSets'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        Gate::authorize('create', ScoringRuleSet::class);
+        Gate::authorize('createBackoffice', ScoringRuleSet::class);
 
-        return view('backoffice.scoring.rule-sets.create', $this->formData());
+        return view(
+            'backoffice.scoring.rule-sets.create',
+            $this->formData($this->authenticatedUser($request)),
+        );
     }
 
     public function store(StoreScoringRuleSetRequest $request): RedirectResponse
@@ -46,13 +55,10 @@ class ScoringRuleSetController extends Controller
             $data = $this->normalized($request->validated());
             $ruleSet = ScoringRuleSet::query()->create($data);
             $ruleSet->forceFill([
+                'status' => ScoringRuleSetStatus::Draft,
                 'created_by' => $this->authenticatedUser($request)->id,
                 'updated_by' => $this->authenticatedUser($request)->id,
             ])->save();
-
-            if ($ruleSet->status === ScoringRuleSetStatus::Active) {
-                $this->archiveConflicts($ruleSet);
-            }
 
             return $ruleSet;
         });
@@ -65,7 +71,7 @@ class ScoringRuleSetController extends Controller
 
     public function show(ScoringRuleSet $scoringRuleSet): View
     {
-        Gate::authorize('view', $scoringRuleSet);
+        Gate::authorize('viewBackoffice', $scoringRuleSet);
         $scoringRuleSet->load(['program', 'contest', 'criteria', 'tieBreakerRules', 'runs'])
             ->loadCount(['criteria', 'tieBreakerRules', 'runs']);
 
@@ -74,11 +80,11 @@ class ScoringRuleSetController extends Controller
 
     public function edit(ScoringRuleSet $scoringRuleSet): View
     {
-        Gate::authorize('update', $scoringRuleSet);
+        Gate::authorize('updateBackoffice', $scoringRuleSet);
 
         return view('backoffice.scoring.rule-sets.edit', [
             'ruleSet' => $scoringRuleSet,
-            ...$this->formData(),
+            ...$this->formData($this->currentUser()),
         ]);
     }
 
@@ -87,10 +93,6 @@ class ScoringRuleSetController extends Controller
         DB::transaction(function () use ($request, $scoringRuleSet) {
             $scoringRuleSet->update($this->normalized($request->validated()));
             $scoringRuleSet->forceFill(['updated_by' => $this->authenticatedUser($request)->id])->save();
-
-            if ($scoringRuleSet->status === ScoringRuleSetStatus::Active) {
-                $this->archiveConflicts($scoringRuleSet);
-            }
         });
 
         $this->audit('rule_set_update', AuditEvents::UPDATE, $scoringRuleSet, $request);
@@ -101,7 +103,7 @@ class ScoringRuleSetController extends Controller
 
     public function activate(Request $request, ScoringRuleSet $scoringRuleSet): RedirectResponse
     {
-        Gate::authorize('activate', $scoringRuleSet);
+        Gate::authorize('activateBackoffice', $scoringRuleSet);
         DB::transaction(function () use ($request, $scoringRuleSet) {
             $this->archiveConflicts($scoringRuleSet);
             $scoringRuleSet->forceFill([
@@ -116,7 +118,7 @@ class ScoringRuleSetController extends Controller
 
     public function archive(Request $request, ScoringRuleSet $scoringRuleSet): RedirectResponse
     {
-        Gate::authorize('archive', $scoringRuleSet);
+        Gate::authorize('archiveBackoffice', $scoringRuleSet);
         $scoringRuleSet->forceFill([
             'status' => ScoringRuleSetStatus::Archived,
             'updated_by' => $this->authenticatedUser($request)->id,
@@ -128,7 +130,7 @@ class ScoringRuleSetController extends Controller
 
     public function duplicate(Request $request, ScoringRuleSet $scoringRuleSet): RedirectResponse
     {
-        Gate::authorize('duplicate', $scoringRuleSet);
+        Gate::authorize('duplicateBackoffice', $scoringRuleSet);
 
         $copy = DB::transaction(function () use ($request, $scoringRuleSet) {
             $scoringRuleSet->load(['criteria.rules', 'tieBreakerRules']);
@@ -172,12 +174,17 @@ class ScoringRuleSetController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formData(): array
+    private function formData(User $actor): array
     {
         return [
-            'programs' => Program::query()->orderBy('name')->get(['id', 'name']),
-            'contests' => Contest::query()->orderBy('title')->get(['id', 'program_id', 'title']),
-            'statuses' => ScoringRuleSetStatus::options(),
+            'programs' => $this->municipalScope
+                ->programs(Program::query(), $actor)
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'contests' => $this->municipalScope
+                ->contests(Contest::query(), $actor)
+                ->orderBy('title')
+                ->get(['id', 'program_id', 'title']),
         ];
     }
 

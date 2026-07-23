@@ -19,14 +19,14 @@ class AdministrativeDecisionController extends Controller
 
     public function createAdmission(AdministrativeProcess $administrativeProcess): View
     {
-        Gate::authorize('create', AdministrativeDecision::class);
+        Gate::authorize('createBackoffice', [AdministrativeDecision::class, $administrativeProcess]);
 
         return view('backoffice.administrative-decisions.create-admission', ['process' => $administrativeProcess]);
     }
 
     public function storeAdmission(StoreAdministrativeDecisionRequest $request, AdministrativeProcess $administrativeProcess): RedirectResponse
     {
-        Gate::authorize('create', AdministrativeDecision::class);
+        Gate::authorize('createBackoffice', [AdministrativeDecision::class, $administrativeProcess]);
         $decision = $this->decisionService->create($administrativeProcess, $this->decisionService->admissionData($request->validated()), $this->authenticatedUser($request));
 
         return to_route('backoffice.administrative-decisions.show', $decision)
@@ -35,14 +35,14 @@ class AdministrativeDecisionController extends Controller
 
     public function createNonAdmission(AdministrativeProcess $administrativeProcess): View
     {
-        Gate::authorize('create', AdministrativeDecision::class);
+        Gate::authorize('createBackoffice', [AdministrativeDecision::class, $administrativeProcess]);
 
         return view('backoffice.administrative-decisions.create-non-admission', ['process' => $administrativeProcess]);
     }
 
     public function storeNonAdmission(StoreAdministrativeDecisionRequest $request, AdministrativeProcess $administrativeProcess): RedirectResponse
     {
-        Gate::authorize('create', AdministrativeDecision::class);
+        Gate::authorize('createBackoffice', [AdministrativeDecision::class, $administrativeProcess]);
         $decision = $this->decisionService->create($administrativeProcess, $this->decisionService->nonAdmissionData($request->validated()), $this->authenticatedUser($request));
 
         return to_route('backoffice.administrative-decisions.show', $decision)
@@ -51,7 +51,7 @@ class AdministrativeDecisionController extends Controller
 
     public function show(AdministrativeDecision $administrativeDecision): View
     {
-        Gate::authorize('view', $administrativeDecision);
+        Gate::authorize('viewBackoffice', $administrativeDecision);
         $administrativeDecision->load(['administrativeProcess', 'application', 'decidedBy', 'approvedBy']);
 
         return view('backoffice.administrative-decisions.show', ['decision' => $administrativeDecision]);
@@ -59,7 +59,7 @@ class AdministrativeDecisionController extends Controller
 
     public function approve(ApproveAdministrativeDecisionRequest $request, AdministrativeDecision $administrativeDecision): RedirectResponse
     {
-        Gate::authorize('approve', $administrativeDecision);
+        Gate::authorize('approveBackoffice', $administrativeDecision);
         $this->decisionService->approve($administrativeDecision, $this->authenticatedUser($request));
 
         return back()->with('success', 'Decisão aprovada e aplicada ao processo.');
@@ -67,7 +67,7 @@ class AdministrativeDecisionController extends Controller
 
     public function cancel(Request $request, AdministrativeDecision $administrativeDecision): RedirectResponse
     {
-        Gate::authorize('approve', $administrativeDecision);
+        Gate::authorize('cancelBackoffice', $administrativeDecision);
         $this->decisionService->cancel($administrativeDecision, $this->authenticatedUser($request));
 
         return back()->with('success', 'Decisão cancelada.');

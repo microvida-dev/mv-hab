@@ -77,7 +77,7 @@ class DocumentAiAssistantController extends Controller
 
     public function score(DocumentAiScore $score): RedirectResponse
     {
-        Gate::authorize('view', $score);
+        Gate::authorize('viewBackoffice', $score);
 
         return redirect()->route('backoffice.document-ai.assistant.show', $score->analysis);
     }

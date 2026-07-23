@@ -29,7 +29,7 @@ class StoreScoringRuleRequest extends FormRequest
         }
 
         return $this->user()?->can(
-            'create',
+            'createBackoffice',
             [ScoringRule::class, $scoringCriterion]
         ) ?? false;
     }

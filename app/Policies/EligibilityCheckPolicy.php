@@ -39,14 +39,14 @@ class EligibilityCheckPolicy
     public function runFormal(User $user, Application $application): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, 'eligibility', 'create')
+            && $this->canAccess($user, 'eligibility', 'run')
             && $this->municipalScope->ownsApplication($user, $application);
     }
 
     public function rerun(User $user, EligibilityCheck $check): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, 'eligibility', 'update')
+            && $this->canAccess($user, 'eligibility', 'run')
             && $this->municipalScope->ownsEligibilityCheck($user, $check);
     }
 }

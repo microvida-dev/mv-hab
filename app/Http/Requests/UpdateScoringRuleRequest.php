@@ -9,7 +9,10 @@ class UpdateScoringRuleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('update', $this->route('scoringRule')) ?? false;
+        return $this->user()?->can(
+            'updateBackoffice',
+            $this->route('scoringRule'),
+        ) ?? false;
     }
 
     /**

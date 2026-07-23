@@ -11,6 +11,7 @@ use App\Models\DocumentAiAnalysis;
 use App\Models\DocumentAiFlag;
 use App\Models\DocumentAiProcessingLog;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -18,17 +19,22 @@ use Illuminate\Support\Facades\Gate;
 
 class DocumentAiClassificationController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
     public function index(FilterDocumentAiClassificationsRequest $request): View
     {
-        Gate::authorize('viewAny', DocumentAiAnalysis::class);
+        Gate::authorize('viewAnyBackoffice', DocumentAiAnalysis::class);
+        $actor = $this->authenticatedUser($request);
         $filters = array_filter(
             $request->validated(),
             static fn (mixed $value): bool => $value !== null && $value !== ''
         );
 
-        $analyses = DocumentAiAnalysis::query()
+        $analyses = $this->municipalScope
+            ->documentAiAnalyses(DocumentAiAnalysis::query(), $actor)
             ->with(['documentSubmission.documentType', 'documentSubmission.requiredDocument', 'documentSubmission.user', 'documentVersion'])
             ->when($filters['document_type'] ?? null, fn ($query, string $value) => $query->where('detected_document_type', $value))
             ->when($filters['classification_status'] ?? null, fn ($query, string $value) => $query->where('classification_status', $value))
@@ -50,7 +56,7 @@ class DocumentAiClassificationController extends Controller
 
     public function show(DocumentAiAnalysis $analysis): View
     {
-        Gate::authorize('view', $analysis);
+        Gate::authorize('viewBackoffice', $analysis);
 
         $analysis->load([
             'documentSubmission.documentType',
@@ -82,7 +88,7 @@ class DocumentAiClassificationController extends Controller
 
     public function markManualReview(MarkDocumentAiManualReviewRequest $request, DocumentAiAnalysis $analysis): RedirectResponse
     {
-        Gate::authorize('markManualReview', $analysis);
+        Gate::authorize('reviewBackoffice', $analysis);
         $reason = $request->validated('reason') ?: 'Revisão manual solicitada no painel de classificação IA.';
 
         $analysis->forceFill([

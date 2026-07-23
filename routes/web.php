@@ -1546,6 +1546,16 @@ Route::middleware('auth')->group(function () {
                 Route::post('sorteios/{lotteryDraw}/presencas/lote', [BackofficeDrawAttendanceController::class, 'bulkStore'])
                     ->name('lottery-draws.attendance.bulk-store');
                 Route::post('sorteios/{lotteryDraw}/ranking/atualizar', [BackofficeRankingUpdateRunController::class, 'apply'])
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'municipality.feature:applications.review',
+                        'permission:scoring.run',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
                     ->name('lottery-draws.ranking.update');
                 Route::post('sorteios/{lotteryDraw}/relatorio-pos-sorteio/gerar', [BackofficePostDrawReportController::class, 'generate'])
                     ->name('lottery-draws.post-draw-report.generate');
@@ -2525,12 +2535,29 @@ Route::middleware('auth')->group(function () {
                         'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
                     )
                     ->name('additional-document-submissions.decide');
-                Route::get('documentos/ia/classificacoes', [BackofficeDocumentAiClassificationController::class, 'index'])
-                    ->name('document-ai.classifications.index');
-                Route::get('documentos/ia/classificacoes/{analysis}', [BackofficeDocumentAiClassificationController::class, 'show'])
-                    ->name('document-ai.classifications.show');
-                Route::post('documentos/ia/classificacoes/{analysis}/revisao-manual', [BackofficeDocumentAiClassificationController::class, 'markManualReview'])
-                    ->name('document-ai.classifications.manual-review');
+                Route::middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'municipality.feature:applications.review',
+                ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->group(function (): void {
+                        Route::get('documentos/ia/classificacoes', [BackofficeDocumentAiClassificationController::class, 'index'])
+                            ->middleware('permission:documents.view')
+                            ->name('document-ai.classifications.index');
+                        Route::get('documentos/ia/classificacoes/{analysis}', [BackofficeDocumentAiClassificationController::class, 'show'])
+                            ->middleware('permission:documents.view')
+                            ->name('document-ai.classifications.show');
+                        Route::post('documentos/ia/classificacoes/{analysis}/revisao-manual', [BackofficeDocumentAiClassificationController::class, 'markManualReview'])
+                            ->middleware('permission:documents.review_ai')
+                            ->name('document-ai.classifications.manual-review');
+                        Route::get('documentos/ia/assistente/scores/{score}', [BackofficeDocumentAiAssistantController::class, 'score'])
+                            ->middleware('permission:documents.view')
+                            ->name('document-ai.assistant.score');
+                    });
                 Route::get('documentos/ia/extracoes', [BackofficeDocumentAiExtractionController::class, 'index'])
                     ->name('document-ai.extractions.index');
                 Route::get('documentos/ia/extracoes/{analysis}', [BackofficeDocumentAiExtractionController::class, 'show'])
@@ -2539,8 +2566,6 @@ Route::middleware('auth')->group(function () {
                     ->name('document-ai.fields.review');
                 Route::get('documentos/ia/assistente', [BackofficeDocumentAiAssistantController::class, 'index'])
                     ->name('document-ai.assistant.index');
-                Route::get('documentos/ia/assistente/scores/{score}', [BackofficeDocumentAiAssistantController::class, 'score'])
-                    ->name('document-ai.assistant.score');
                 Route::get('documentos/ia/assistente/{analysis}', [BackofficeDocumentAiAssistantController::class, 'show'])
                     ->name('document-ai.assistant.show');
                 Route::post('documentos/ia/assistente/{analysis}/recalcular', [BackofficeDocumentAiAssistantController::class, 'recalculate'])
@@ -2775,20 +2800,38 @@ Route::middleware('auth')->group(function () {
                 Route::post('correction-responses/{correctionResponse}/request-more-information', [BackofficeCorrectionResponseReviewController::class, 'requestMoreInformation'])
                     ->name('correction-responses.request-more-information');
 
-                Route::get('administrative-processes/{administrativeProcess}/decisions/create-admission', [BackofficeAdministrativeDecisionController::class, 'createAdmission'])
-                    ->name('administrative-decisions.create-admission');
-                Route::post('administrative-processes/{administrativeProcess}/decisions/admission', [BackofficeAdministrativeDecisionController::class, 'storeAdmission'])
-                    ->name('administrative-decisions.store-admission');
-                Route::get('administrative-processes/{administrativeProcess}/decisions/create-non-admission', [BackofficeAdministrativeDecisionController::class, 'createNonAdmission'])
-                    ->name('administrative-decisions.create-non-admission');
-                Route::post('administrative-processes/{administrativeProcess}/decisions/non-admission', [BackofficeAdministrativeDecisionController::class, 'storeNonAdmission'])
-                    ->name('administrative-decisions.store-non-admission');
-                Route::get('administrative-decisions/{administrativeDecision}', [BackofficeAdministrativeDecisionController::class, 'show'])
-                    ->name('administrative-decisions.show');
-                Route::post('administrative-decisions/{administrativeDecision}/approve', [BackofficeAdministrativeDecisionController::class, 'approve'])
-                    ->name('administrative-decisions.approve');
-                Route::post('administrative-decisions/{administrativeDecision}/cancel', [BackofficeAdministrativeDecisionController::class, 'cancel'])
-                    ->name('administrative-decisions.cancel');
+                Route::middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'municipality.feature:applications.review',
+                ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->group(function (): void {
+                        Route::get('administrative-processes/{administrativeProcess}/decisions/create-admission', [BackofficeAdministrativeDecisionController::class, 'createAdmission'])
+                            ->middleware('permission:administrative_decisions.create')
+                            ->name('administrative-decisions.create-admission');
+                        Route::post('administrative-processes/{administrativeProcess}/decisions/admission', [BackofficeAdministrativeDecisionController::class, 'storeAdmission'])
+                            ->middleware('permission:administrative_decisions.create')
+                            ->name('administrative-decisions.store-admission');
+                        Route::get('administrative-processes/{administrativeProcess}/decisions/create-non-admission', [BackofficeAdministrativeDecisionController::class, 'createNonAdmission'])
+                            ->middleware('permission:administrative_decisions.create')
+                            ->name('administrative-decisions.create-non-admission');
+                        Route::post('administrative-processes/{administrativeProcess}/decisions/non-admission', [BackofficeAdministrativeDecisionController::class, 'storeNonAdmission'])
+                            ->middleware('permission:administrative_decisions.create')
+                            ->name('administrative-decisions.store-non-admission');
+                        Route::get('administrative-decisions/{administrativeDecision}', [BackofficeAdministrativeDecisionController::class, 'show'])
+                            ->middleware('permission:administrative_decisions.view')
+                            ->name('administrative-decisions.show');
+                        Route::post('administrative-decisions/{administrativeDecision}/approve', [BackofficeAdministrativeDecisionController::class, 'approve'])
+                            ->middleware('permission:administrative_decisions.approve')
+                            ->name('administrative-decisions.approve');
+                        Route::post('administrative-decisions/{administrativeDecision}/cancel', [BackofficeAdministrativeDecisionController::class, 'cancel'])
+                            ->middleware('permission:administrative_decisions.cancel')
+                            ->name('administrative-decisions.cancel');
+                    });
 
                 Route::get('administrative-tasks', [BackofficeAdministrativeTaskController::class, 'index'])
                     ->name('administrative-tasks.index');
@@ -2865,11 +2908,32 @@ Route::middleware('auth')->group(function () {
                 Route::post('complaints/{complaint}/start-review', [BackofficeComplaintController::class, 'startReview'])->name('complaints.start-review');
                 Route::post('complaints/{complaint}/reviews', [BackofficeComplaintReviewController::class, 'store'])->name('complaints.reviews.store');
                 Route::post('complaints/{complaint}/close', [BackofficeComplaintController::class, 'close'])->name('complaints.close');
-                Route::get('complaints/{complaint}/decisions/create', [BackofficeComplaintDecisionController::class, 'create'])->name('complaint-decisions.create');
-                Route::post('complaints/{complaint}/decisions', [BackofficeComplaintDecisionController::class, 'store'])->name('complaint-decisions.store');
-                Route::get('complaint-decisions/{complaintDecision}', [BackofficeComplaintDecisionController::class, 'show'])->name('complaint-decisions.show');
-                Route::post('complaint-decisions/{complaintDecision}/approve', [BackofficeComplaintDecisionController::class, 'approve'])->name('complaint-decisions.approve');
-                Route::post('complaint-decisions/{complaintDecision}/cancel', [BackofficeComplaintDecisionController::class, 'cancel'])->name('complaint-decisions.cancel');
+                Route::middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'municipality.feature:applications.review',
+                ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->group(function (): void {
+                        Route::get('complaints/{complaint}/decisions/create', [BackofficeComplaintDecisionController::class, 'create'])
+                            ->middleware('permission:complaints.decide')
+                            ->name('complaint-decisions.create');
+                        Route::post('complaints/{complaint}/decisions', [BackofficeComplaintDecisionController::class, 'store'])
+                            ->middleware('permission:complaints.decide')
+                            ->name('complaint-decisions.store');
+                        Route::get('complaint-decisions/{complaintDecision}', [BackofficeComplaintDecisionController::class, 'show'])
+                            ->middleware('permission:complaints.view')
+                            ->name('complaint-decisions.show');
+                        Route::post('complaint-decisions/{complaintDecision}/approve', [BackofficeComplaintDecisionController::class, 'approve'])
+                            ->middleware('permission:complaints.approve')
+                            ->name('complaint-decisions.approve');
+                        Route::post('complaint-decisions/{complaintDecision}/cancel', [BackofficeComplaintDecisionController::class, 'cancel'])
+                            ->middleware('permission:complaints.cancel')
+                            ->name('complaint-decisions.cancel');
+                    });
                 Route::get('complaints/{complaint}/additional-information/create', [BackofficeAdditionalInformationRequestController::class, 'create'])->name('additional-information-requests.create');
                 Route::post('complaints/{complaint}/additional-information', [BackofficeAdditionalInformationRequestController::class, 'store'])->name('additional-information-requests.store');
                 Route::get('additional-information-requests/{additionalInformationRequest}', [BackofficeAdditionalInformationRequestController::class, 'show'])->name('additional-information-requests.show');
@@ -3974,39 +4038,65 @@ Route::middleware('auth')->group(function () {
                     ->name('properties.technical-history');
 
                 Route::prefix('eligibility')->name('eligibility.')->group(function () {
-                    Route::get('rule-sets', [BackofficeEligibilityRuleSetController::class, 'index'])
-                        ->name('rule-sets.index');
-                    Route::get('rule-sets/create', [BackofficeEligibilityRuleSetController::class, 'create'])
-                        ->name('rule-sets.create');
-                    Route::post('rule-sets', [BackofficeEligibilityRuleSetController::class, 'store'])
-                        ->name('rule-sets.store');
-                    Route::get('rule-sets/{eligibilityRuleSet}', [BackofficeEligibilityRuleSetController::class, 'show'])
-                        ->name('rule-sets.show');
-                    Route::get('rule-sets/{eligibilityRuleSet}/edit', [BackofficeEligibilityRuleSetController::class, 'edit'])
-                        ->name('rule-sets.edit');
-                    Route::match(['put', 'patch'], 'rule-sets/{eligibilityRuleSet}', [BackofficeEligibilityRuleSetController::class, 'update'])
-                        ->name('rule-sets.update');
-                    Route::post('rule-sets/{eligibilityRuleSet}/activate', [BackofficeEligibilityRuleSetController::class, 'activate'])
-                        ->name('rule-sets.activate');
-                    Route::post('rule-sets/{eligibilityRuleSet}/archive', [BackofficeEligibilityRuleSetController::class, 'archive'])
-                        ->name('rule-sets.archive');
-                    Route::post('rule-sets/{eligibilityRuleSet}/duplicate', [BackofficeEligibilityRuleSetController::class, 'duplicate'])
-                        ->name('rule-sets.duplicate');
+                    Route::middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                    ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->group(function (): void {
+                            Route::get('rule-sets', [BackofficeEligibilityRuleSetController::class, 'index'])
+                                ->middleware('permission:eligibility.view')
+                                ->name('rule-sets.index');
+                            Route::get('rule-sets/create', [BackofficeEligibilityRuleSetController::class, 'create'])
+                                ->middleware('permission:eligibility.create')
+                                ->name('rule-sets.create');
+                            Route::post('rule-sets', [BackofficeEligibilityRuleSetController::class, 'store'])
+                                ->middleware('permission:eligibility.create')
+                                ->name('rule-sets.store');
+                            Route::get('rule-sets/{eligibilityRuleSet}', [BackofficeEligibilityRuleSetController::class, 'show'])
+                                ->middleware('permission:eligibility.view')
+                                ->name('rule-sets.show');
+                            Route::get('rule-sets/{eligibilityRuleSet}/edit', [BackofficeEligibilityRuleSetController::class, 'edit'])
+                                ->middleware('permission:eligibility.update')
+                                ->name('rule-sets.edit');
+                            Route::match(['put', 'patch'], 'rule-sets/{eligibilityRuleSet}', [BackofficeEligibilityRuleSetController::class, 'update'])
+                                ->middleware('permission:eligibility.update')
+                                ->name('rule-sets.update');
+                            Route::post('rule-sets/{eligibilityRuleSet}/activate', [BackofficeEligibilityRuleSetController::class, 'activate'])
+                                ->middleware('permission:eligibility.activate')
+                                ->name('rule-sets.activate');
+                            Route::post('rule-sets/{eligibilityRuleSet}/archive', [BackofficeEligibilityRuleSetController::class, 'archive'])
+                                ->middleware('permission:eligibility.archive')
+                                ->name('rule-sets.archive');
+                            Route::post('rule-sets/{eligibilityRuleSet}/duplicate', [BackofficeEligibilityRuleSetController::class, 'duplicate'])
+                                ->middleware('permission:eligibility.duplicate')
+                                ->name('rule-sets.duplicate');
 
-                    Route::get('rule-sets/{eligibilityRuleSet}/criteria', [BackofficeEligibilityCriterionController::class, 'index'])
-                        ->name('criteria.index');
-                    Route::get('rule-sets/{eligibilityRuleSet}/criteria/create', [BackofficeEligibilityCriterionController::class, 'create'])
-                        ->name('criteria.create');
-                    Route::post('rule-sets/{eligibilityRuleSet}/criteria', [BackofficeEligibilityCriterionController::class, 'store'])
-                        ->name('criteria.store');
-                    Route::get('criteria/{eligibilityCriterion}/edit', [BackofficeEligibilityCriterionController::class, 'edit'])
-                        ->name('criteria.edit');
-                    Route::match(['put', 'patch'], 'criteria/{eligibilityCriterion}', [BackofficeEligibilityCriterionController::class, 'update'])
-                        ->name('criteria.update');
-                    Route::post('criteria/{eligibilityCriterion}/activate', [BackofficeEligibilityCriterionController::class, 'activate'])
-                        ->name('criteria.activate');
-                    Route::post('criteria/{eligibilityCriterion}/inactivate', [BackofficeEligibilityCriterionController::class, 'inactivate'])
-                        ->name('criteria.inactivate');
+                            Route::get('rule-sets/{eligibilityRuleSet}/criteria', [BackofficeEligibilityCriterionController::class, 'index'])
+                                ->middleware('permission:eligibility.view')
+                                ->name('criteria.index');
+                            Route::get('rule-sets/{eligibilityRuleSet}/criteria/create', [BackofficeEligibilityCriterionController::class, 'create'])
+                                ->middleware('permission:eligibility.create')
+                                ->name('criteria.create');
+                            Route::post('rule-sets/{eligibilityRuleSet}/criteria', [BackofficeEligibilityCriterionController::class, 'store'])
+                                ->middleware('permission:eligibility.create')
+                                ->name('criteria.store');
+                            Route::get('criteria/{eligibilityCriterion}/edit', [BackofficeEligibilityCriterionController::class, 'edit'])
+                                ->middleware('permission:eligibility.update')
+                                ->name('criteria.edit');
+                            Route::match(['put', 'patch'], 'criteria/{eligibilityCriterion}', [BackofficeEligibilityCriterionController::class, 'update'])
+                                ->middleware('permission:eligibility.update')
+                                ->name('criteria.update');
+                            Route::post('criteria/{eligibilityCriterion}/activate', [BackofficeEligibilityCriterionController::class, 'activate'])
+                                ->middleware('permission:eligibility.activate')
+                                ->name('criteria.activate');
+                            Route::post('criteria/{eligibilityCriterion}/inactivate', [BackofficeEligibilityCriterionController::class, 'inactivate'])
+                                ->middleware('permission:eligibility.deactivate')
+                                ->name('criteria.inactivate');
+                        });
 
                     Route::get('checks', [BackofficeEligibilityCheckController::class, 'index'])
                         ->middleware([
@@ -4034,7 +4124,7 @@ Route::middleware('auth')->group(function () {
                             'mfa.backoffice',
                             'log.backoffice',
                             'municipality.feature:applications.review',
-                            'permission:eligibility.update',
+                            'permission:eligibility.run',
                         ])
                         ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                         ->name('checks.rerun');
@@ -4044,109 +4134,175 @@ Route::middleware('auth')->group(function () {
                             'mfa.backoffice',
                             'log.backoffice',
                             'municipality.feature:applications.review',
-                            'permission:eligibility.create',
+                            'permission:eligibility.run',
                         ])
                         ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                         ->name('applications.run');
                 });
 
                 Route::prefix('scoring')->name('scoring.')->group(function () {
-                    Route::get('rule-sets', [BackofficeScoringRuleSetController::class, 'index'])
-                        ->name('rule-sets.index');
-                    Route::get('rule-sets/create', [BackofficeScoringRuleSetController::class, 'create'])
-                        ->name('rule-sets.create');
-                    Route::post('rule-sets', [BackofficeScoringRuleSetController::class, 'store'])
-                        ->name('rule-sets.store');
-                    Route::get('rule-sets/{scoringRuleSet}', [BackofficeScoringRuleSetController::class, 'show'])
-                        ->name('rule-sets.show');
-                    Route::get('rule-sets/{scoringRuleSet}/edit', [BackofficeScoringRuleSetController::class, 'edit'])
-                        ->name('rule-sets.edit');
-                    Route::match(['put', 'patch'], 'rule-sets/{scoringRuleSet}', [BackofficeScoringRuleSetController::class, 'update'])
-                        ->name('rule-sets.update');
-                    Route::post('rule-sets/{scoringRuleSet}/activate', [BackofficeScoringRuleSetController::class, 'activate'])
-                        ->name('rule-sets.activate');
-                    Route::post('rule-sets/{scoringRuleSet}/archive', [BackofficeScoringRuleSetController::class, 'archive'])
-                        ->name('rule-sets.archive');
-                    Route::post('rule-sets/{scoringRuleSet}/duplicate', [BackofficeScoringRuleSetController::class, 'duplicate'])
-                        ->name('rule-sets.duplicate');
+                    Route::middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                    ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->group(function (): void {
+                            Route::get('rule-sets', [BackofficeScoringRuleSetController::class, 'index'])
+                                ->middleware('permission:scoring.view')
+                                ->name('rule-sets.index');
+                            Route::get('rule-sets/create', [BackofficeScoringRuleSetController::class, 'create'])
+                                ->middleware('permission:scoring.create')
+                                ->name('rule-sets.create');
+                            Route::post('rule-sets', [BackofficeScoringRuleSetController::class, 'store'])
+                                ->middleware('permission:scoring.create')
+                                ->name('rule-sets.store');
+                            Route::get('rule-sets/{scoringRuleSet}', [BackofficeScoringRuleSetController::class, 'show'])
+                                ->middleware('permission:scoring.view')
+                                ->name('rule-sets.show');
+                            Route::get('rule-sets/{scoringRuleSet}/edit', [BackofficeScoringRuleSetController::class, 'edit'])
+                                ->middleware('permission:scoring.update')
+                                ->name('rule-sets.edit');
+                            Route::match(['put', 'patch'], 'rule-sets/{scoringRuleSet}', [BackofficeScoringRuleSetController::class, 'update'])
+                                ->middleware('permission:scoring.update')
+                                ->name('rule-sets.update');
+                            Route::post('rule-sets/{scoringRuleSet}/activate', [BackofficeScoringRuleSetController::class, 'activate'])
+                                ->middleware('permission:scoring.activate')
+                                ->name('rule-sets.activate');
+                            Route::post('rule-sets/{scoringRuleSet}/archive', [BackofficeScoringRuleSetController::class, 'archive'])
+                                ->middleware('permission:scoring.archive')
+                                ->name('rule-sets.archive');
+                            Route::post('rule-sets/{scoringRuleSet}/duplicate', [BackofficeScoringRuleSetController::class, 'duplicate'])
+                                ->middleware('permission:scoring.duplicate')
+                                ->name('rule-sets.duplicate');
 
-                    Route::get('rule-sets/{scoringRuleSet}/criteria', [BackofficeScoringCriterionController::class, 'index'])
-                        ->name('criteria.index');
-                    Route::get('rule-sets/{scoringRuleSet}/criteria/create', [BackofficeScoringCriterionController::class, 'create'])
-                        ->name('criteria.create');
-                    Route::post('rule-sets/{scoringRuleSet}/criteria', [BackofficeScoringCriterionController::class, 'store'])
-                        ->name('criteria.store');
-                    Route::get('criteria/{scoringCriterion}/edit', [BackofficeScoringCriterionController::class, 'edit'])
-                        ->name('criteria.edit');
-                    Route::match(['put', 'patch'], 'criteria/{scoringCriterion}', [BackofficeScoringCriterionController::class, 'update'])
-                        ->name('criteria.update');
-                    Route::post('criteria/{scoringCriterion}/activate', [BackofficeScoringCriterionController::class, 'activate'])
-                        ->name('criteria.activate');
-                    Route::post('criteria/{scoringCriterion}/inactivate', [BackofficeScoringCriterionController::class, 'inactivate'])
-                        ->name('criteria.inactivate');
+                            Route::get('rule-sets/{scoringRuleSet}/criteria', [BackofficeScoringCriterionController::class, 'index'])
+                                ->middleware('permission:scoring.view')
+                                ->name('criteria.index');
+                            Route::get('rule-sets/{scoringRuleSet}/criteria/create', [BackofficeScoringCriterionController::class, 'create'])
+                                ->middleware('permission:scoring.create')
+                                ->name('criteria.create');
+                            Route::post('rule-sets/{scoringRuleSet}/criteria', [BackofficeScoringCriterionController::class, 'store'])
+                                ->middleware('permission:scoring.create')
+                                ->name('criteria.store');
+                            Route::get('criteria/{scoringCriterion}/edit', [BackofficeScoringCriterionController::class, 'edit'])
+                                ->middleware('permission:scoring.update')
+                                ->name('criteria.edit');
+                            Route::match(['put', 'patch'], 'criteria/{scoringCriterion}', [BackofficeScoringCriterionController::class, 'update'])
+                                ->middleware('permission:scoring.update')
+                                ->name('criteria.update');
+                            Route::post('criteria/{scoringCriterion}/activate', [BackofficeScoringCriterionController::class, 'activate'])
+                                ->middleware('permission:scoring.activate')
+                                ->name('criteria.activate');
+                            Route::post('criteria/{scoringCriterion}/inactivate', [BackofficeScoringCriterionController::class, 'inactivate'])
+                                ->middleware('permission:scoring.deactivate')
+                                ->name('criteria.inactivate');
 
-                    Route::get('criteria/{scoringCriterion}/rules', [BackofficeScoringRuleController::class, 'index'])
-                        ->name('rules.index');
-                    Route::get('criteria/{scoringCriterion}/rules/create', [BackofficeScoringRuleController::class, 'create'])
-                        ->name('rules.create');
-                    Route::post('criteria/{scoringCriterion}/rules', [BackofficeScoringRuleController::class, 'store'])
-                        ->name('rules.store');
-                    Route::get('rules/{scoringRule}/edit', [BackofficeScoringRuleController::class, 'edit'])
-                        ->name('rules.edit');
-                    Route::match(['put', 'patch'], 'rules/{scoringRule}', [BackofficeScoringRuleController::class, 'update'])
-                        ->name('rules.update');
-                    Route::delete('rules/{scoringRule}', [BackofficeScoringRuleController::class, 'destroy'])
-                        ->name('rules.destroy');
+                            Route::get('criteria/{scoringCriterion}/rules', [BackofficeScoringRuleController::class, 'index'])
+                                ->middleware('permission:scoring.view')
+                                ->name('rules.index');
+                            Route::get('criteria/{scoringCriterion}/rules/create', [BackofficeScoringRuleController::class, 'create'])
+                                ->middleware('permission:scoring.create')
+                                ->name('rules.create');
+                            Route::post('criteria/{scoringCriterion}/rules', [BackofficeScoringRuleController::class, 'store'])
+                                ->middleware('permission:scoring.create')
+                                ->name('rules.store');
+                            Route::get('rules/{scoringRule}/edit', [BackofficeScoringRuleController::class, 'edit'])
+                                ->middleware('permission:scoring.update')
+                                ->name('rules.edit');
+                            Route::match(['put', 'patch'], 'rules/{scoringRule}', [BackofficeScoringRuleController::class, 'update'])
+                                ->middleware('permission:scoring.update')
+                                ->name('rules.update');
+                            Route::delete('rules/{scoringRule}', [BackofficeScoringRuleController::class, 'destroy'])
+                                ->middleware('permission:scoring.delete')
+                                ->name('rules.destroy');
 
-                    Route::get('rule-sets/{scoringRuleSet}/tie-breakers', [BackofficeTieBreakerRuleController::class, 'index'])
-                        ->name('tie-breakers.index');
-                    Route::get('rule-sets/{scoringRuleSet}/tie-breakers/create', [BackofficeTieBreakerRuleController::class, 'create'])
-                        ->name('tie-breakers.create');
-                    Route::post('rule-sets/{scoringRuleSet}/tie-breakers', [BackofficeTieBreakerRuleController::class, 'store'])
-                        ->name('tie-breakers.store');
-                    Route::get('tie-breakers/{tieBreakerRule}/edit', [BackofficeTieBreakerRuleController::class, 'edit'])
-                        ->name('tie-breakers.edit');
-                    Route::match(['put', 'patch'], 'tie-breakers/{tieBreakerRule}', [BackofficeTieBreakerRuleController::class, 'update'])
-                        ->name('tie-breakers.update');
-                    Route::post('tie-breakers/{tieBreakerRule}/activate', [BackofficeTieBreakerRuleController::class, 'activate'])
-                        ->name('tie-breakers.activate');
-                    Route::post('tie-breakers/{tieBreakerRule}/inactivate', [BackofficeTieBreakerRuleController::class, 'inactivate'])
-                        ->name('tie-breakers.inactivate');
+                            Route::get('rule-sets/{scoringRuleSet}/tie-breakers', [BackofficeTieBreakerRuleController::class, 'index'])
+                                ->middleware('permission:scoring.view')
+                                ->name('tie-breakers.index');
+                            Route::get('rule-sets/{scoringRuleSet}/tie-breakers/create', [BackofficeTieBreakerRuleController::class, 'create'])
+                                ->middleware('permission:scoring.create')
+                                ->name('tie-breakers.create');
+                            Route::post('rule-sets/{scoringRuleSet}/tie-breakers', [BackofficeTieBreakerRuleController::class, 'store'])
+                                ->middleware('permission:scoring.create')
+                                ->name('tie-breakers.store');
+                            Route::get('tie-breakers/{tieBreakerRule}/edit', [BackofficeTieBreakerRuleController::class, 'edit'])
+                                ->middleware('permission:scoring.update')
+                                ->name('tie-breakers.edit');
+                            Route::match(['put', 'patch'], 'tie-breakers/{tieBreakerRule}', [BackofficeTieBreakerRuleController::class, 'update'])
+                                ->middleware('permission:scoring.update')
+                                ->name('tie-breakers.update');
+                            Route::post('tie-breakers/{tieBreakerRule}/activate', [BackofficeTieBreakerRuleController::class, 'activate'])
+                                ->middleware('permission:scoring.activate')
+                                ->name('tie-breakers.activate');
+                            Route::post('tie-breakers/{tieBreakerRule}/inactivate', [BackofficeTieBreakerRuleController::class, 'inactivate'])
+                                ->middleware('permission:scoring.deactivate')
+                                ->name('tie-breakers.inactivate');
+                        });
 
-                    Route::get('runs', [BackofficeScoringRunController::class, 'index'])
-                        ->name('runs.index');
-                    Route::get('runs/create', [BackofficeScoringRunController::class, 'create'])
-                        ->name('runs.create');
-                    Route::post('runs', [BackofficeScoringRunController::class, 'store'])
-                        ->name('runs.store');
-                    Route::get('runs/{scoringRun}', [BackofficeScoringRunController::class, 'show'])
-                        ->name('runs.show');
-                    Route::post('runs/{scoringRun}/run', [BackofficeScoringRunController::class, 'run'])
-                        ->name('runs.run');
-                    Route::post('runs/{scoringRun}/lock', [BackofficeScoringRunController::class, 'lock'])
-                        ->name('runs.lock');
-                    Route::post('runs/{scoringRun}/cancel', [BackofficeScoringRunController::class, 'cancel'])
-                        ->name('runs.cancel');
+                    Route::middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'municipality.feature:applications.review',
+                    ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->group(function (): void {
+                            Route::get('runs', [BackofficeScoringRunController::class, 'index'])
+                                ->middleware('permission:scoring.view')
+                                ->name('runs.index');
+                            Route::get('runs/create', [BackofficeScoringRunController::class, 'create'])
+                                ->middleware('permission:scoring.run')
+                                ->name('runs.create');
+                            Route::post('runs', [BackofficeScoringRunController::class, 'store'])
+                                ->middleware('permission:scoring.run')
+                                ->name('runs.store');
+                            Route::get('runs/{scoringRun}', [BackofficeScoringRunController::class, 'show'])
+                                ->middleware('permission:scoring.view')
+                                ->name('runs.show');
+                            Route::post('runs/{scoringRun}/run', [BackofficeScoringRunController::class, 'run'])
+                                ->middleware('permission:scoring.run')
+                                ->name('runs.run');
+                            Route::post('runs/{scoringRun}/lock', [BackofficeScoringRunController::class, 'lock'])
+                                ->middleware('permission:scoring.lock')
+                                ->name('runs.lock');
+                            Route::post('runs/{scoringRun}/cancel', [BackofficeScoringRunController::class, 'cancel'])
+                                ->middleware('permission:scoring.cancel')
+                                ->name('runs.cancel');
 
-                    Route::get('application-scores', [BackofficeApplicationScoreController::class, 'index'])
-                        ->name('application-scores.index');
-                    Route::get('application-scores/{applicationScore}', [BackofficeApplicationScoreController::class, 'show'])
-                        ->name('application-scores.show');
-                    Route::get('application-scores/{applicationScore}/manual-review', [BackofficeApplicationScoreController::class, 'manualReview'])
-                        ->name('application-scores.manual-review');
-                    Route::match(['put', 'patch'], 'application-scores/{applicationScore}/manual-review', [BackofficeApplicationScoreController::class, 'updateManualScore'])
-                        ->name('application-scores.manual-review.update');
-                    Route::post('application-scores/{applicationScore}/lock', [BackofficeApplicationScoreController::class, 'lock'])
-                        ->name('application-scores.lock');
+                            Route::get('application-scores', [BackofficeApplicationScoreController::class, 'index'])
+                                ->middleware('permission:scoring.view')
+                                ->name('application-scores.index');
+                            Route::get('application-scores/{applicationScore}', [BackofficeApplicationScoreController::class, 'show'])
+                                ->middleware('permission:scoring.view')
+                                ->name('application-scores.show');
+                            Route::get('application-scores/{applicationScore}/manual-review', [BackofficeApplicationScoreController::class, 'manualReview'])
+                                ->middleware('permission:scoring.review')
+                                ->name('application-scores.manual-review');
+                            Route::match(['put', 'patch'], 'application-scores/{applicationScore}/manual-review', [BackofficeApplicationScoreController::class, 'updateManualScore'])
+                                ->middleware('permission:scoring.review')
+                                ->name('application-scores.manual-review.update');
+                            Route::post('application-scores/{applicationScore}/lock', [BackofficeApplicationScoreController::class, 'lock'])
+                                ->middleware('permission:scoring.lock')
+                                ->name('application-scores.lock');
 
-                    Route::get('ranking-snapshots', [BackofficeRankingSnapshotController::class, 'index'])
-                        ->name('ranking-snapshots.index');
-                    Route::get('ranking-snapshots/{rankingSnapshot}', [BackofficeRankingSnapshotController::class, 'show'])
-                        ->name('ranking-snapshots.show');
-                    Route::post('ranking-snapshots/{rankingSnapshot}/lock', [BackofficeRankingSnapshotController::class, 'lock'])
-                        ->name('ranking-snapshots.lock');
-                    Route::post('ranking-snapshots/{rankingSnapshot}/archive', [BackofficeRankingSnapshotController::class, 'archive'])
-                        ->name('ranking-snapshots.archive');
+                            Route::get('ranking-snapshots', [BackofficeRankingSnapshotController::class, 'index'])
+                                ->middleware('permission:scoring.view')
+                                ->name('ranking-snapshots.index');
+                            Route::get('ranking-snapshots/{rankingSnapshot}', [BackofficeRankingSnapshotController::class, 'show'])
+                                ->middleware('permission:scoring.view')
+                                ->name('ranking-snapshots.show');
+                            Route::post('ranking-snapshots/{rankingSnapshot}/lock', [BackofficeRankingSnapshotController::class, 'lock'])
+                                ->middleware('permission:scoring.lock')
+                                ->name('ranking-snapshots.lock');
+                            Route::post('ranking-snapshots/{rankingSnapshot}/archive', [BackofficeRankingSnapshotController::class, 'archive'])
+                                ->middleware('permission:scoring.archive')
+                                ->name('ranking-snapshots.archive');
+                        });
                 });
             });
 

@@ -16,7 +16,7 @@ class StoreScoringCriterionRequest extends FormRequest
         /** @var ScoringRuleSet|null $scoringRuleSet */
         $scoringRuleSet = $this->route('scoringRuleSet');
 
-        if ($scoringRuleSet !== null) {
+        if ($scoringRuleSet instanceof ScoringRuleSet) {
             $this->merge([
                 'scoring_rule_set_id' => $scoringRuleSet->id,
             ]);
@@ -29,7 +29,7 @@ class StoreScoringCriterionRequest extends FormRequest
         $scoringRuleSet = $this->route('scoringRuleSet');
 
         return $this->user()?->can(
-            'create',
+            'createBackoffice',
             [ScoringCriterion::class, $scoringRuleSet]
         ) ?? false;
     }

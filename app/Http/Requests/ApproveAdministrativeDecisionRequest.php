@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\AdministrativeDecision;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ApproveAdministrativeDecisionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $decision = $this->route('administrativeDecision');
+
+        return $decision instanceof AdministrativeDecision
+            && ($this->user()?->can('approveBackoffice', $decision) ?? false);
     }
 
     /**

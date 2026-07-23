@@ -42,17 +42,7 @@
         <x-input-error :messages="$errors->get('description')" class="mt-2" />
     </div>
 
-    <div class="grid gap-5 md:grid-cols-3">
-        <div>
-            <x-input-label for="status" value="Estado" />
-            <select id="status" name="status" class="mv-input mt-1 block w-full">
-                @foreach ($statuses as $value => $label)
-                    <option value="{{ $value }}" @selected(old('status', $ruleSet->status?->value ?? 'draft') === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
-            <x-input-error :messages="$errors->get('status')" class="mt-2" />
-        </div>
-
+    <div class="grid gap-5 md:grid-cols-2">
         <div>
             <x-input-label for="starts_at" value="Início" />
             <x-text-input id="starts_at" type="datetime-local" name="starts_at" class="mt-1 block w-full" :value="old('starts_at', $ruleSet->starts_at?->format('Y-m-d\\TH:i'))" />

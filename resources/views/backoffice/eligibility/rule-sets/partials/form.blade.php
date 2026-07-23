@@ -7,15 +7,6 @@
         <x-input-error class="mt-2" :messages="$errors->get('name')" />
     </div>
     <div>
-        <x-input-label for="status" value="Estado" />
-        <select id="status" name="status" class="mv-input mt-1 block w-full">
-            @foreach ($statuses as $value => $label)
-                <option value="{{ $value }}" @selected(old('status', isset($ruleSet) ? $ruleSet->status->value : 'draft') === $value)>{{ $label }}</option>
-            @endforeach
-        </select>
-        <x-input-error class="mt-2" :messages="$errors->get('status')" />
-    </div>
-    <div>
         <x-input-label for="program_id" value="Programa" />
         <select id="program_id" name="program_id" class="mv-input mt-1 block w-full">
             <option value="">Selecionar</option>

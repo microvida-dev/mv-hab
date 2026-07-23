@@ -6,10 +6,13 @@ use App\Models\EligibilityCriterion;
 use App\Models\EligibilityRuleSet;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class EligibilityCriterionPolicy
 {
     use ChecksPermissions;
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -36,5 +39,33 @@ class EligibilityCriterionPolicy
     public function activate(User $user, EligibilityCriterion $criterion): bool
     {
         return $this->update($user, $criterion);
+    }
+
+    public function createBackoffice(User $user, EligibilityRuleSet $ruleSet): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'eligibility', 'create')
+            && $this->municipalScope->ownsEligibilityRuleSet($user, $ruleSet);
+    }
+
+    public function updateBackoffice(User $user, EligibilityCriterion $criterion): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'eligibility', 'update')
+            && $this->municipalScope->ownsEligibilityCriterion($user, $criterion);
+    }
+
+    public function activateBackoffice(User $user, EligibilityCriterion $criterion): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'eligibility', 'activate')
+            && $this->municipalScope->ownsEligibilityCriterion($user, $criterion);
+    }
+
+    public function deactivateBackoffice(User $user, EligibilityCriterion $criterion): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'eligibility', 'deactivate')
+            && $this->municipalScope->ownsEligibilityCriterion($user, $criterion);
     }
 }

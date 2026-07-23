@@ -78,6 +78,13 @@ class DocumentAiAnalysisPolicy
             );
     }
 
+    public function reviewBackoffice(User $user, DocumentAiAnalysis $analysis): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'review_ai')
+            && $this->municipalScope->ownsDocumentAiAnalysis($user, $analysis);
+    }
+
     public function viewAnyBackoffice(User $user): bool
     {
         return ! $user->hasRole('candidate')

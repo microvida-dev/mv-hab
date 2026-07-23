@@ -6,6 +6,9 @@ class UpdateEligibilityRuleSetRequest extends StoreEligibilityRuleSetRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('update', $this->route('eligibilityRuleSet')) ?? false;
+        return $this->user()?->can(
+            'updateBackoffice',
+            $this->route('eligibilityRuleSet'),
+        ) ?? false;
     }
 }

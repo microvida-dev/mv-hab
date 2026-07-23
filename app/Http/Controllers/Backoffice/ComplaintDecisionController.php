@@ -20,7 +20,7 @@ class ComplaintDecisionController extends Controller
 
     public function create(Complaint $complaint): View
     {
-        Gate::authorize('create', ComplaintDecision::class);
+        Gate::authorize('decideBackoffice', [ComplaintDecision::class, $complaint]);
 
         return view('backoffice.complaint-decisions.create', [
             'complaint' => $complaint,
@@ -30,7 +30,7 @@ class ComplaintDecisionController extends Controller
 
     public function store(StoreComplaintDecisionRequest $request, Complaint $complaint): RedirectResponse
     {
-        Gate::authorize('create', ComplaintDecision::class);
+        Gate::authorize('decideBackoffice', [ComplaintDecision::class, $complaint]);
         $decision = $this->service->create($complaint, $request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.complaint-decisions.show', $decision)->with('success', 'Decisão criada.');
@@ -38,7 +38,7 @@ class ComplaintDecisionController extends Controller
 
     public function show(ComplaintDecision $complaintDecision): View
     {
-        Gate::authorize('view', $complaintDecision);
+        Gate::authorize('viewBackoffice', $complaintDecision);
         $complaintDecision->load(['complaint.candidate', 'application', 'provisionalList', 'proposedBy', 'approvedBy']);
 
         return view('backoffice.complaint-decisions.show', compact('complaintDecision'));
@@ -46,7 +46,7 @@ class ComplaintDecisionController extends Controller
 
     public function approve(ApproveComplaintDecisionRequest $request, ComplaintDecision $complaintDecision): RedirectResponse
     {
-        Gate::authorize('approve', $complaintDecision);
+        Gate::authorize('approveBackoffice', $complaintDecision);
         $this->service->approve($complaintDecision, $this->authenticatedUser($request));
 
         return back()->with('success', 'Decisão aprovada.');
@@ -54,7 +54,7 @@ class ComplaintDecisionController extends Controller
 
     public function cancel(Request $request, ComplaintDecision $complaintDecision): RedirectResponse
     {
-        Gate::authorize('approve', $complaintDecision);
+        Gate::authorize('cancelBackoffice', $complaintDecision);
         $this->service->cancel($complaintDecision, $this->authenticatedUser($request));
 
         return back()->with('success', 'Decisão cancelada.');
