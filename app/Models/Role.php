@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,15 +16,39 @@ class Role extends Model
     protected $fillable = [
         'name',
         'label',
+        'description',
         'scope',
         'is_system',
+        'is_active',
     ];
 
     protected function casts(): array
     {
         return [
             'is_system' => 'boolean',
+            'is_active' => 'boolean',
         ];
+    }
+
+    /** @param Builder<Role> $query */
+    public function scopeActive(Builder $query): void
+    {
+        $query->where('is_active', true);
+    }
+
+    public function isSystem(): bool
+    {
+        return $this->is_system;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->is_active;
+    }
+
+    public function isMunicipalCustom(): bool
+    {
+        return ! $this->is_system && $this->scope === 'municipal';
     }
 
     /**

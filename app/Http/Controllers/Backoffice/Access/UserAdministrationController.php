@@ -40,7 +40,7 @@ class UserAdministrationController extends Controller
 
         return view('backoffice.access.users.index', [
             'users' => $users,
-            'roles' => Role::query()->orderBy('label')->get(),
+            'roles' => Role::query()->active()->orderBy('label')->get(),
             'teams' => MunicipalTeam::query()->orderBy('name')->get(),
         ]);
     }
@@ -50,7 +50,7 @@ class UserAdministrationController extends Controller
         abort_unless($policy->create($this->authenticatedUser($request)), 403);
 
         return view('backoffice.access.users.create', [
-            'roles' => Role::query()->orderBy('label')->get(),
+            'roles' => Role::query()->active()->orderBy('label')->get(),
             'teams' => MunicipalTeam::query()->where('status', 'active')->orderBy('name')->get(),
         ]);
     }
@@ -72,7 +72,7 @@ class UserAdministrationController extends Controller
 
         return view('backoffice.access.users.show', [
             'user' => $user->load('roles.permissions', 'municipalTeams.manager'),
-            'roles' => Role::query()->orderBy('label')->get(),
+            'roles' => Role::query()->active()->orderBy('label')->get(),
             'events' => AccessChangeEvent::query()
                 ->with('actor', 'role', 'municipalTeam')
                 ->where('target_user_id', $user->id)

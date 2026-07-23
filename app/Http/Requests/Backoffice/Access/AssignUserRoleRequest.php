@@ -3,12 +3,17 @@
 namespace App\Http\Requests\Backoffice\Access;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class AssignUserRoleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) ($this->user()?->hasPermission('roles.assign') || $this->user()?->hasPermission('roles.remove'));
+        $permission = $this->routeIs('backoffice.users.roles.assign')
+            ? 'roles.assign'
+            : 'roles.remove';
+
+        return (bool) $this->user()?->hasPermission($permission);
     }
 
     /**
@@ -16,8 +21,14 @@ class AssignUserRoleRequest extends FormRequest
      */
     public function rules(): array
     {
+        $roleExists = Rule::exists('roles', 'name');
+
+        if ($this->routeIs('backoffice.users.roles.assign')) {
+            $roleExists->where(fn ($query) => $query->where('is_active', true));
+        }
+
         return [
-            'role' => ['required', 'string', 'exists:roles,name'],
+            'role' => ['required', 'string', $roleExists],
             'justification' => ['required', 'string', 'max:1000'],
         ];
     }

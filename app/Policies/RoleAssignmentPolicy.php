@@ -14,7 +14,7 @@ class RoleAssignmentPolicy
 
     public function assign(User $user, Role $role): bool
     {
-        return $this->can($user, 'assign') && $this->withinScope($user, $role);
+        return $this->can($user, 'assign') && $role->isActive() && $this->withinScope($user, $role);
     }
 
     public function remove(User $user, Role $role): bool
@@ -33,6 +33,6 @@ class RoleAssignmentPolicy
             return $user->hasRole('administrator');
         }
 
-        return true;
+        return $role->isSystem() || $role->scope === 'municipal';
     }
 }

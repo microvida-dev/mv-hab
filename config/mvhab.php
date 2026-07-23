@@ -7,7 +7,7 @@ return [
     'permissions' => [
         'dashboard' => ['view', 'export', 'audit'],
         'users' => ['view', 'create', 'update', 'delete', 'deactivate', 'reactivate', 'force_mfa', 'reset_password', 'audit'],
-        'roles' => ['view', 'assign', 'remove', 'audit'],
+        'roles' => ['view', 'create', 'update', 'delete', 'assign', 'remove', 'audit'],
         'teams' => ['view', 'create', 'update', 'manage_members', 'audit'],
         'access_audit' => ['view', 'export', 'audit'],
         'work_tasks' => ['view', 'view_team', 'create', 'assign', 'claim', 'reassign', 'update_status', 'complete', 'cancel', 'audit', 'dashboard', 'manage_sla'],

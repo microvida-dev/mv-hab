@@ -44,7 +44,7 @@ class UserAdministrationService
             throw new AuthorizationException('Sem permissão para criar utilizadores.');
         }
 
-        $role = Role::query()->where('name', (string) $data['role'])->firstOrFail();
+        $role = Role::query()->active()->where('name', (string) $data['role'])->firstOrFail();
         $this->authorizeInitialRole($actor, $role);
         $team = $this->teamFromData($data);
         $this->ensureTeamAcceptsMembers($team);

@@ -20,7 +20,11 @@ class StoreBackofficeUserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'role' => ['required', 'string', 'exists:roles,name'],
+            'role' => [
+                'required',
+                'string',
+                Rule::exists('roles', 'name')->where(fn ($query) => $query->where('is_active', true)),
+            ],
             'team_id' => ['nullable', 'integer', 'exists:municipal_teams,id'],
             'role_in_team' => ['nullable', 'string', 'max:120'],
             'status' => ['required', Rule::in(['active', 'inactive'])],

@@ -88,6 +88,16 @@ class RoleAssignmentService
             throw new AuthorizationException('Self-promotion bloqueado.');
         }
 
+        if (! $role->isActive()) {
+            throw new DomainException('Não é possível atribuir um perfil inativo.');
+        }
+
+        if ($actor->municipality_id !== null
+            && $target->municipality_id !== null
+            && $actor->municipality_id !== $target->municipality_id) {
+            throw new AuthorizationException('Atribuição entre municípios bloqueada.');
+        }
+
         if (! $this->roleIsWithinActorPermissions($actor, $role)) {
             throw new AuthorizationException('A role excede o escopo de permissões do actor.');
         }

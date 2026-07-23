@@ -483,6 +483,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasRole(string|array $roles): bool
     {
         return $this->roles()
+            ->where('roles.is_active', true)
             ->whereIn('name', Arr::wrap($roles))
             ->exists();
     }
@@ -494,6 +495,7 @@ class User extends Authenticatable implements MustVerifyEmail
             : [$permission, null];
 
         return $this->roles()
+            ->where('roles.is_active', true)
             ->whereHas('permissions', function ($query) use ($permission, $module, $action) {
                 $query->where('name', '*')
                     ->orWhere('name', $permission)

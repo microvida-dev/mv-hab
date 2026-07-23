@@ -535,6 +535,7 @@ class WorkspaceService
         if (! array_key_exists((int) $user->id, $this->roleNamesByUser)) {
             $user->loadMissing('roles.permissions');
             $this->roleNamesByUser[(int) $user->id] = $user->roles
+                ->where('is_active', true)
                 ->pluck('name')
                 ->filter(fn (mixed $name): bool => is_string($name))
                 ->values()
@@ -550,6 +551,7 @@ class WorkspaceService
         if (! array_key_exists((int) $user->id, $this->permissionNamesByUser)) {
             $user->loadMissing('roles.permissions');
             $this->permissionNamesByUser[(int) $user->id] = $user->roles
+                ->where('is_active', true)
                 ->flatMap(fn ($role) => $role->permissions->pluck('name'))
                 ->filter(fn (mixed $name): bool => is_string($name))
                 ->unique()
