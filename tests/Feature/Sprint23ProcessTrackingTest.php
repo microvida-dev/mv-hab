@@ -56,7 +56,7 @@ class Sprint23ProcessTrackingTest extends TestCase
         $candidate = $this->userWithRole('candidate');
         $staff = $this->userWithRole('municipal_technician');
         $application = Application::factory()->submitted()->create(['user_id' => $candidate->id]);
-        $this->assignApplicationMunicipality($staff, $application, FeatureKey::cases());
+        $this->assignApplicationMunicipality($staff, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $process = AdministrativeProcess::factory()->create([
             'application_id' => $application->id,
             'user_id' => $candidate->id,

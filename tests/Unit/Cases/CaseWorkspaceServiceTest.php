@@ -28,7 +28,7 @@ class CaseWorkspaceServiceTest extends TestCase
         $user = User::factory()->create(['status' => 'active']);
         $user->assignRole('municipal_technician');
         $application = Application::factory()->submitted()->create();
-        $this->assignApplicationMunicipality($user, $application, FeatureKey::cases());
+        $this->assignApplicationMunicipality($user, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $payload = app(CaseWorkspaceService::class)->forApplication($user, $application);
 

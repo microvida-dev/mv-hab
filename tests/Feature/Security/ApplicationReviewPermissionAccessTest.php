@@ -74,7 +74,7 @@ class ApplicationReviewPermissionAccessTest extends TestCase
         ]);
 
         $process = AdministrativeProcess::factory()->create();
-        $this->assignApplicationMunicipality($user, $process->application, FeatureKey::cases());
+        $this->assignApplicationMunicipality($user, $process->application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $process->update(['program_id' => $process->application->program_id]);
 
         $this->actingAs($user)
@@ -102,7 +102,7 @@ class ApplicationReviewPermissionAccessTest extends TestCase
         ]);
 
         $review = ApplicationReview::factory()->create();
-        $this->assignApplicationMunicipality($user, $review->application, FeatureKey::cases());
+        $this->assignApplicationMunicipality($user, $review->application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->actingAs($user)
             ->get(route('backoffice.application-reviews.show', $review))
@@ -153,7 +153,7 @@ class ApplicationReviewPermissionAccessTest extends TestCase
      */
     private function userWithCustomRole(array $permissions): User
     {
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',
@@ -182,7 +182,7 @@ class ApplicationReviewPermissionAccessTest extends TestCase
         string $roleName,
         string $permission,
     ): User {
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',

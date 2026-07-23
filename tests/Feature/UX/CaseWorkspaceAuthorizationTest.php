@@ -69,7 +69,7 @@ class CaseWorkspaceAuthorizationTest extends TestCase
     {
         $auditor = $this->userWithRole('auditor');
         $application = Application::factory()->submitted()->create();
-        $this->assignApplicationMunicipality($auditor, $application, FeatureKey::cases());
+        $this->assignApplicationMunicipality($auditor, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         DocumentSubmission::factory()->create([
             'application_id' => $application->id,
             'status' => 'submitted',

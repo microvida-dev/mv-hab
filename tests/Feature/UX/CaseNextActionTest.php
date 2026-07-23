@@ -28,7 +28,7 @@ class CaseNextActionTest extends TestCase
     {
         $technician = $this->userWithRole('municipal_technician');
         $application = Application::factory()->submitted()->create();
-        $this->assignApplicationMunicipality($technician, $application, FeatureKey::cases());
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         DocumentSubmission::factory()->create([
             'application_id' => $application->id,
             'status' => 'submitted',
@@ -46,7 +46,7 @@ class CaseNextActionTest extends TestCase
     {
         $technician = $this->userWithRole('municipal_technician');
         $application = Application::factory()->submitted()->create();
-        $this->assignApplicationMunicipality($technician, $application, FeatureKey::cases());
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->actingAs($technician)
             ->withSession(['mfa.verified_at' => now()])
@@ -63,7 +63,7 @@ class CaseNextActionTest extends TestCase
     {
         $technician = $this->userWithRole('municipal_technician');
         $application = Application::factory()->submitted()->create();
-        $this->assignApplicationMunicipality($technician, $application, FeatureKey::cases());
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         EligibilityCheck::factory()->create([
             'application_id' => $application->id,
             'user_id' => $application->user_id,
@@ -80,7 +80,7 @@ class CaseNextActionTest extends TestCase
 
     private function userWithRole(string $role): User
     {
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',

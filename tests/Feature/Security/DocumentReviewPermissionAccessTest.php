@@ -35,10 +35,10 @@ class DocumentReviewPermissionAccessTest extends TestCase
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
-        $this->municipality = $this->municipalityWithFeatures([
+        $this->municipality = $this->municipalityWithFeatures(
             FeatureKey::ApplicationIntake,
             FeatureKey::ApplicationReview,
-        ]);
+        );
         Storage::fake('local');
     }
 

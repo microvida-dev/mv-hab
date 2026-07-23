@@ -3,6 +3,7 @@
 namespace Tests\Feature\Security;
 
 use App\Enums\FeatureKey;
+use App\Models\Municipality;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -30,7 +31,7 @@ class MunicipalityFeatureMiddlewareTest extends TestCase
 
     public function test_enabled_feature_allows_request_with_existing_permission(): void
     {
-        $municipality = $this->municipalityWithFeatures([FeatureKey::ApplicationIntake]);
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake);
         $user = $this->userWithPermissions($municipality->id, ['administrative_processes.create']);
 
         $this->actingAs($user)
@@ -41,7 +42,7 @@ class MunicipalityFeatureMiddlewareTest extends TestCase
 
     public function test_disabled_feature_and_missing_municipality_fail_closed(): void
     {
-        $municipality = $this->municipalityWithFeatures();
+        $municipality = Municipality::factory()->create();
         $municipalUser = $this->userWithPermissions($municipality->id, ['administrative_processes.create']);
         $platformUser = $this->userWithPermissions(null, ['administrative_processes.create']);
 
@@ -56,7 +57,7 @@ class MunicipalityFeatureMiddlewareTest extends TestCase
 
     public function test_unknown_feature_is_rejected_without_exposing_configuration(): void
     {
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake);
         $user = $this->userWithPermissions($municipality->id, ['dashboard.view']);
 
         $this->actingAs($user)
@@ -66,7 +67,7 @@ class MunicipalityFeatureMiddlewareTest extends TestCase
 
     public function test_feature_middleware_does_not_grant_permission(): void
     {
-        $municipality = $this->municipalityWithFeatures([FeatureKey::ApplicationIntake]);
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake);
         $user = $this->userWithPermissions($municipality->id, ['dashboard.view']);
 
         $this->actingAs($user)

@@ -25,7 +25,7 @@ class ProfileDashboardWidgetsTest extends TestCase
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
-        $this->municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $this->municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
     }
 
     public function test_dashboard_renders_profile_widgets_metrics_and_deadlines(): void

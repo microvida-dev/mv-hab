@@ -52,7 +52,7 @@ class DocumentSecurityFlowTest extends TestCase
             ->assertRedirect();
 
         $submission = DocumentSubmission::query()->firstOrFail();
-        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::cases());
+        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $this->assertSame($candidate->id, $submission->user_id);
         $this->assertSame(DocumentStatus::Submitted, $submission->status);
         $this->assertStringStartsWith('documents/'.$registration->id.'/'.$submission->id.'/1/', $submission->storage_path);

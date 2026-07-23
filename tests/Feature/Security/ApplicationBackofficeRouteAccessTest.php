@@ -184,7 +184,7 @@ class ApplicationBackofficeRouteAccessTest extends TestCase
      */
     private function userWithCustomRole(array $permissions): User
     {
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',
@@ -216,7 +216,7 @@ class ApplicationBackofficeRouteAccessTest extends TestCase
         string $roleName,
         array $permissions,
     ): User {
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',

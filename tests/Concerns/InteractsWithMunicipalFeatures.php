@@ -11,30 +11,40 @@ use App\Models\User;
 
 trait InteractsWithMunicipalFeatures
 {
-    /**
-     * @param  list<FeatureKey>  $features
-     */
-    protected function municipalityWithFeatures(array $features = []): Municipality
-    {
+    protected function municipalityWithFeatures(
+        FeatureKey $feature,
+        FeatureKey ...$additionalFeatures,
+    ): Municipality {
         $municipality = Municipality::factory()->create();
 
-        return $this->enableMunicipalityFeatures($municipality, $features);
+        return $this->enableMunicipalityFeatures(
+            $municipality,
+            $feature,
+            ...$additionalFeatures,
+        );
     }
 
-    /**
-     * @param  list<FeatureKey>  $features
-     */
-    protected function enableMunicipalityFeatures(Municipality $municipality, array $features): Municipality
-    {
+    protected function enableMunicipalityFeature(
+        Municipality $municipality,
+        FeatureKey $feature,
+    ): Municipality {
+        MunicipalityFeatureEntitlement::query()->updateOrCreate(
+            [
+                'municipality_id' => $municipality->getKey(),
+                'feature_key' => $feature->value,
+            ],
+            ['enabled' => true],
+        );
 
+        return $municipality;
+    }
+
+    protected function enableMunicipalityFeatures(
+        Municipality $municipality,
+        FeatureKey ...$features,
+    ): Municipality {
         foreach ($features as $feature) {
-            MunicipalityFeatureEntitlement::query()->updateOrCreate(
-                [
-                    'municipality_id' => $municipality->getKey(),
-                    'feature_key' => $feature->value,
-                ],
-                ['enabled' => true],
-            );
+            $this->enableMunicipalityFeature($municipality, $feature);
         }
 
         return $municipality;
@@ -47,30 +57,33 @@ trait InteractsWithMunicipalFeatures
         return $user->refresh();
     }
 
-    /**
-     * @param  list<FeatureKey>  $features
-     */
     protected function assignApplicationMunicipality(
         User $user,
         Application $application,
-        array $features,
+        FeatureKey $feature,
+        FeatureKey ...$additionalFeatures,
     ): User {
         $municipality = $application->program()->firstOrFail()->municipality()->firstOrFail();
 
-        $this->enableMunicipalityFeatures($municipality, $features);
+        $this->enableMunicipalityFeatures(
+            $municipality,
+            $feature,
+            ...$additionalFeatures,
+        );
 
         return $this->assignMunicipality($user, $municipality);
     }
 
-    /**
-     * @param  list<FeatureKey>  $features
-     */
     protected function assignDocumentMunicipality(
         User $user,
         DocumentSubmission $document,
-        array $features,
+        FeatureKey $feature,
+        FeatureKey ...$additionalFeatures,
     ): User {
-        $municipality = $this->municipalityWithFeatures($features);
+        $municipality = $this->municipalityWithFeatures(
+            $feature,
+            ...$additionalFeatures,
+        );
 
         $this->assignMunicipality($user, $municipality);
 

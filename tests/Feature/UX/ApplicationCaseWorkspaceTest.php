@@ -27,7 +27,7 @@ class ApplicationCaseWorkspaceTest extends TestCase
     {
         $technician = $this->userWithRole('municipal_technician');
         $application = Application::factory()->submitted()->create();
-        $this->assignApplicationMunicipality($technician, $application, FeatureKey::cases());
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         DocumentSubmission::factory()->create([
             'application_id' => $application->id,
             'status' => 'submitted',
@@ -49,7 +49,7 @@ class ApplicationCaseWorkspaceTest extends TestCase
 
     private function userWithRole(string $role): User
     {
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',

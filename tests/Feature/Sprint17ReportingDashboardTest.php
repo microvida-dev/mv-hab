@@ -45,7 +45,7 @@ class Sprint17ReportingDashboardTest extends TestCase
             DashboardWidgetSeeder::class,
             ReportDefinitionSeeder::class,
         ]);
-        $this->municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $this->municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview, FeatureKey::ApplicationExport);
     }
 
     public function test_reporting_area_blocks_guest_and_candidate(): void

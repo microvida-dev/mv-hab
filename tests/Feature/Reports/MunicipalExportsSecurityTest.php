@@ -33,7 +33,7 @@ class MunicipalExportsSecurityTest extends TestCase
             SystemAccessSeeder::class,
             ReportDefinitionSeeder::class,
         ]);
-        $this->municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $this->municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationExport);
     }
 
     public function test_csv_exporter_neutralizes_formula_injection(): void

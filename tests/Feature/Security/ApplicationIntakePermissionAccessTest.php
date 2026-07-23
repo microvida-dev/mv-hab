@@ -26,7 +26,7 @@ class ApplicationIntakePermissionAccessTest extends TestCase
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
-        $this->municipality = $this->municipalityWithFeatures([FeatureKey::ApplicationIntake]);
+        $this->municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake);
     }
 
     public function test_application_intake_routes_no_longer_use_fixed_role_middleware(): void

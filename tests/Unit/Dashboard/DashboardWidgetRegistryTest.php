@@ -24,7 +24,7 @@ class DashboardWidgetRegistryTest extends TestCase
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
-        $this->municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $this->municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
     }
 
     public function test_auditor_receives_read_only_audit_widget(): void

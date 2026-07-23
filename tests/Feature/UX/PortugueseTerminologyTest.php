@@ -26,7 +26,7 @@ class PortugueseTerminologyTest extends TestCase
     {
         $administrator = $this->userWithRole('administrator');
         $application = Application::factory()->submitted()->create();
-        $this->assignApplicationMunicipality($administrator, $application, FeatureKey::cases());
+        $this->assignApplicationMunicipality($administrator, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->actingAs($administrator)
             ->withSession(['mfa.verified_at' => now()])
@@ -47,7 +47,7 @@ class PortugueseTerminologyTest extends TestCase
 
     private function userWithRole(string $role): User
     {
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',

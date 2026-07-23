@@ -33,7 +33,7 @@ class DocumentAiManualReviewExecutionTest extends TestCase
     {
         $submission = $this->documentSubmission();
         $administrator = $this->userWithRole('administrator');
-        $this->assignDocumentMunicipality($administrator, $submission, FeatureKey::cases());
+        $this->assignDocumentMunicipality($administrator, $submission, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->actingAs($administrator)
             ->withSession(['mfa.verified_at' => now()])
@@ -54,7 +54,7 @@ class DocumentAiManualReviewExecutionTest extends TestCase
             'status' => DocumentAiStatus::Completed,
         ]);
         $technician = $this->userWithRole('municipal_technician');
-        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::cases());
+        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->mock(DocumentAiManualAnalysisService::class, function ($mock) use ($analysis, $submission, $technician): void {
             $mock->shouldReceive('execute')
@@ -85,7 +85,7 @@ class DocumentAiManualReviewExecutionTest extends TestCase
             'ocr_available' => false,
         ]);
         $administrator = $this->userWithRole('administrator');
-        $this->assignDocumentMunicipality($administrator, $submission, FeatureKey::cases());
+        $this->assignDocumentMunicipality($administrator, $submission, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->mock(DocumentAiManualAnalysisService::class, function ($mock) use ($analysis, $administrator): void {
             $mock->shouldReceive('reprocess')

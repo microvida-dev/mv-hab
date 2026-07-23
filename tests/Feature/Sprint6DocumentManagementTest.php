@@ -169,7 +169,7 @@ class Sprint6DocumentManagementTest extends TestCase
         [$candidate, , $household] = $this->candidateWithDocumentContext();
         $technician = $this->userWithRole('municipal_technician');
         $submission = $this->uploadIdentification($candidate, $household->members()->firstOrFail());
-        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::cases());
+        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->actingAs($technician)
             ->withSession(['mfa.verified_at' => now()])
@@ -202,7 +202,7 @@ class Sprint6DocumentManagementTest extends TestCase
         [$candidate, , $household] = $this->candidateWithDocumentContext();
         $technician = $this->userWithRole('municipal_technician');
         $submission = $this->uploadIdentification($candidate, $household->members()->firstOrFail());
-        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::cases());
+        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->actingAs($technician)
             ->withSession(['mfa.verified_at' => now()])

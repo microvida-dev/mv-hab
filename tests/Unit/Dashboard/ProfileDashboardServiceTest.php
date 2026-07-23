@@ -24,7 +24,7 @@ class ProfileDashboardServiceTest extends TestCase
 
     public function test_profile_dashboard_payload_contains_authorized_sections(): void
     {
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'name' => 'Maria Técnica',

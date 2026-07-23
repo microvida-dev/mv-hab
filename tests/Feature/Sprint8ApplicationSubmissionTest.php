@@ -271,7 +271,7 @@ class Sprint8ApplicationSubmissionTest extends TestCase
         [$candidate, , , , $contest] = $this->completeCandidateContext();
         $application = $this->submittedApplication($candidate, $contest);
         $technician = $this->userWithRole('municipal_technician');
-        $this->assignApplicationMunicipality($technician, $application, FeatureKey::cases());
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->actingAs($candidate)
             ->get(route('backoffice.applications.index'))

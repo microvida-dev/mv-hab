@@ -36,20 +36,20 @@ class ApplicationFeatureEntitlementAccessTest extends TestCase
 
     public function test_review_access_requires_feature_permission_and_record_scope(): void
     {
-        $municipalityA = $this->municipalityWithFeatures([
+        $municipalityA = $this->municipalityWithFeatures(
             FeatureKey::ApplicationIntake,
             FeatureKey::ApplicationReview,
-        ]);
-        $municipalityB = $this->municipalityWithFeatures([
+        );
+        $municipalityB = $this->municipalityWithFeatures(
             FeatureKey::ApplicationIntake,
             FeatureKey::ApplicationReview,
-        ]);
+        );
         $applicationA = $this->applicationForMunicipality($municipalityA->id);
         $applicationB = $this->applicationForMunicipality($municipalityB->id);
 
         $authorized = $this->userWithPermissions($municipalityA->id, ['applications.view']);
         $withoutFeature = $this->userWithPermissions(
-            $this->municipalityWithFeatures([FeatureKey::ApplicationIntake])->id,
+            $this->municipalityWithFeatures(FeatureKey::ApplicationIntake)->id,
             ['applications.view'],
         );
         $withoutPermission = $this->userWithPermissions($municipalityA->id, ['dashboard.view']);
@@ -62,8 +62,8 @@ class ApplicationFeatureEntitlementAccessTest extends TestCase
 
     public function test_intake_policy_blocks_cross_municipality_record_even_with_feature_and_permission(): void
     {
-        $municipalityA = $this->municipalityWithFeatures([FeatureKey::ApplicationIntake]);
-        $municipalityB = $this->municipalityWithFeatures([FeatureKey::ApplicationIntake]);
+        $municipalityA = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake);
+        $municipalityB = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake);
         $applicationB = $this->applicationForMunicipality($municipalityB->id);
         $user = $this->userWithPermissions($municipalityA->id, ['administrative_processes.create']);
 
@@ -77,16 +77,16 @@ class ApplicationFeatureEntitlementAccessTest extends TestCase
 
     public function test_application_export_requires_feature_permission_and_municipal_scope(): void
     {
-        $municipalityA = $this->municipalityWithFeatures(FeatureKey::cases());
-        $municipalityB = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipalityA = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationExport);
+        $municipalityB = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationExport);
         $report = ReportDefinition::query()->where('code', 'application_status_summary')->firstOrFail();
         $permissions = ['reports.view', 'reports.export', 'applications.view', 'applications.export'];
         $userA = $this->userWithPermissions($municipalityA->id, $permissions);
         $userB = $this->userWithPermissions($municipalityB->id, $permissions);
-        $withoutExportFeatureMunicipality = $this->municipalityWithFeatures([
+        $withoutExportFeatureMunicipality = $this->municipalityWithFeatures(
             FeatureKey::ApplicationIntake,
             FeatureKey::ApplicationReview,
-        ]);
+        );
         $withoutExportFeature = $this->userWithPermissions(
             $withoutExportFeatureMunicipality->id,
             $permissions,
@@ -144,7 +144,7 @@ class ApplicationFeatureEntitlementAccessTest extends TestCase
 
     public function test_export_feature_does_not_replace_domain_permission_and_mfa(): void
     {
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationExport);
         $report = ReportDefinition::query()->where('code', 'application_status_summary')->firstOrFail();
         $withoutDomainPermission = $this->userWithPermissions($municipality->id, [
             'reports.view',
@@ -178,10 +178,10 @@ class ApplicationFeatureEntitlementAccessTest extends TestCase
 
     public function test_inactive_role_does_not_grant_effective_permission(): void
     {
-        $municipality = $this->municipalityWithFeatures([
+        $municipality = $this->municipalityWithFeatures(
             FeatureKey::ApplicationIntake,
             FeatureKey::ApplicationReview,
-        ]);
+        );
         $application = $this->applicationForMunicipality($municipality->id);
         $user = $this->userWithPermissions($municipality->id, ['applications.view'], false);
 

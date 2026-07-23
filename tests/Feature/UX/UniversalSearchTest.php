@@ -26,7 +26,7 @@ class UniversalSearchTest extends TestCase
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
-        $this->municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $this->municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
     }
 
     public function test_backoffice_user_searches_authorized_application_contest_workspace_and_task(): void

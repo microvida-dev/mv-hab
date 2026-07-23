@@ -249,7 +249,7 @@ class ApplicationArtifactRouteAccessTest extends TestCase
      */
     private function userWithCustomRole(array $permissions): User
     {
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationExport);
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',
@@ -281,7 +281,7 @@ class ApplicationArtifactRouteAccessTest extends TestCase
         string $roleName,
         array $permissions,
     ): User {
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationExport);
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',

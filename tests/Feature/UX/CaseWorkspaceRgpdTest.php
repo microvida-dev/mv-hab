@@ -42,7 +42,7 @@ class CaseWorkspaceRgpdTest extends TestCase
     {
         $technician = $this->userWithRole('municipal_technician');
         $application = Application::factory()->submitted()->create();
-        $this->assignApplicationMunicipality($technician, $application, FeatureKey::cases());
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         ProcessTimelineEvent::factory()->create([
             'application_id' => $application->id,

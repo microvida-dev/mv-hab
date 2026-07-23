@@ -56,7 +56,7 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
     {
         [$candidate, $application] = $this->submittedApplicationContext();
         $technician = $this->userWithRole('municipal_technician');
-        $this->assignApplicationMunicipality($technician, $application, FeatureKey::cases());
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->actingAs($technician)
             ->withSession(['mfa.verified_at' => now()])

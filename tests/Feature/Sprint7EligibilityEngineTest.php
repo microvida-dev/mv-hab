@@ -47,10 +47,10 @@ class Sprint7EligibilityEngineTest extends TestCase
     {
         parent::setUp();
         $this->seed(SystemAccessSeeder::class);
-        $this->municipality = $this->municipalityWithFeatures([
+        $this->municipality = $this->municipalityWithFeatures(
             FeatureKey::ApplicationIntake,
             FeatureKey::ApplicationReview,
-        ]);
+        );
     }
 
     public function test_candidate_eligibility_area_requires_authentication_role_and_ownership(): void

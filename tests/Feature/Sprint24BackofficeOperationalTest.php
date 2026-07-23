@@ -66,7 +66,7 @@ class Sprint24BackofficeOperationalTest extends TestCase
     {
         $admin = $this->userWithRole('administrator');
         $application = $this->submittedApplication();
-        $this->assignApplicationMunicipality($admin, $application, FeatureKey::cases());
+        $this->assignApplicationMunicipality($admin, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationExport);
 
         $this->actingAs($admin)
             ->withSession(['mfa.verified_at' => now()])

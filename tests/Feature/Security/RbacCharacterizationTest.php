@@ -27,7 +27,7 @@ class RbacCharacterizationTest extends TestCase
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
-        $this->municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $this->municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
     }
 
     public function test_custom_roles_resolve_exact_module_action_and_global_wildcards(): void

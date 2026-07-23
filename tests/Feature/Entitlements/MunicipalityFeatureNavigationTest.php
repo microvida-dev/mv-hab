@@ -35,11 +35,11 @@ class MunicipalityFeatureNavigationTest extends TestCase
 
     public function test_review_navigation_requires_feature_and_permission(): void
     {
-        $enabledMunicipality = $this->municipalityWithFeatures([
+        $enabledMunicipality = $this->municipalityWithFeatures(
             FeatureKey::ApplicationIntake,
             FeatureKey::ApplicationReview,
-        ]);
-        $disabledMunicipality = $this->municipalityWithFeatures([FeatureKey::ApplicationIntake]);
+        );
+        $disabledMunicipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake);
         $enabledUser = $this->userWithPermissions($enabledMunicipality->id, ['applications.view', 'documents.view']);
         $disabledUser = $this->userWithPermissions($disabledMunicipality->id, ['applications.view', 'documents.view']);
         $withoutPermission = $this->userWithPermissions($enabledMunicipality->id, ['dashboard.view']);
@@ -68,14 +68,14 @@ class MunicipalityFeatureNavigationTest extends TestCase
 
     public function test_search_returns_only_authorized_municipal_applications(): void
     {
-        $municipalityA = $this->municipalityWithFeatures([
+        $municipalityA = $this->municipalityWithFeatures(
             FeatureKey::ApplicationIntake,
             FeatureKey::ApplicationReview,
-        ]);
-        $municipalityB = $this->municipalityWithFeatures([
+        );
+        $municipalityB = $this->municipalityWithFeatures(
             FeatureKey::ApplicationIntake,
             FeatureKey::ApplicationReview,
-        ]);
+        );
         $user = $this->userWithPermissions($municipalityA->id, ['applications.view']);
         $applicationA = $this->application($municipalityA->id, 'CAND-45D-AUTHORIZED');
         $this->application($municipalityB->id, 'CAND-45D-HIDDEN');
@@ -91,14 +91,14 @@ class MunicipalityFeatureNavigationTest extends TestCase
 
     public function test_dashboard_application_counts_are_scoped_to_user_municipality(): void
     {
-        $municipalityA = $this->municipalityWithFeatures([
+        $municipalityA = $this->municipalityWithFeatures(
             FeatureKey::ApplicationIntake,
             FeatureKey::ApplicationReview,
-        ]);
-        $municipalityB = $this->municipalityWithFeatures([
+        );
+        $municipalityB = $this->municipalityWithFeatures(
             FeatureKey::ApplicationIntake,
             FeatureKey::ApplicationReview,
-        ]);
+        );
         $user = $this->userWithPermissions($municipalityA->id, [
             'dashboard.view',
             'applications.view',

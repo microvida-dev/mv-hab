@@ -74,7 +74,11 @@ class InitialMunicipalRoleProfilesTest extends TestCase
 
     public function test_operator_reaches_collection_workflow_but_not_decisions_or_prohibited_domains(): void
     {
-        [$operator] = $this->userFromTemplate('operador-recolha');
+        [$operator] = $this->userFromTemplate(
+            'operador-recolha',
+            FeatureKey::ApplicationIntake,
+            FeatureKey::ApplicationReview,
+        );
         $application = Application::factory()->submitted()->create([
             'application_number' => 'CAND-45C-OPERADOR',
         ]);
@@ -128,7 +132,11 @@ class InitialMunicipalRoleProfilesTest extends TestCase
 
     public function test_analyst_can_decide_documents_and_consult_eligibility_without_export_access(): void
     {
-        [$analyst] = $this->userFromTemplate('analista-candidaturas');
+        [$analyst] = $this->userFromTemplate(
+            'analista-candidaturas',
+            FeatureKey::ApplicationIntake,
+            FeatureKey::ApplicationReview,
+        );
         $validatedSubmission = DocumentSubmission::factory()->create([
             'status' => DocumentStatus::UnderReview->value,
         ]);
@@ -186,7 +194,11 @@ class InitialMunicipalRoleProfilesTest extends TestCase
 
     public function test_exporter_can_export_only_application_reports_and_consult_export_audit(): void
     {
-        [$exporter] = $this->userFromTemplate('exportador-candidaturas');
+        [$exporter] = $this->userFromTemplate(
+            'exportador-candidaturas',
+            FeatureKey::ApplicationIntake,
+            FeatureKey::ApplicationExport,
+        );
         $applicationReport = ReportDefinition::query()
             ->where('code', 'application_status_summary')
             ->firstOrFail();
@@ -318,7 +330,11 @@ class InitialMunicipalRoleProfilesTest extends TestCase
 
     public function test_candidate_remains_outside_backoffice_even_with_a_custom_profile(): void
     {
-        [$exporter, $role] = $this->userFromTemplate('exportador-candidaturas');
+        [$exporter, $role] = $this->userFromTemplate(
+            'exportador-candidaturas',
+            FeatureKey::ApplicationIntake,
+            FeatureKey::ApplicationExport,
+        );
         $candidateRole = Role::query()->where('name', 'candidate')->firstOrFail();
         $exporter->roles()->attach($candidateRole);
 
@@ -336,8 +352,11 @@ class InitialMunicipalRoleProfilesTest extends TestCase
     /**
      * @return array{User, Role}
      */
-    private function userFromTemplate(string $templateKey): array
-    {
+    private function userFromTemplate(
+        string $templateKey,
+        FeatureKey $feature,
+        FeatureKey ...$additionalFeatures,
+    ): array {
         $template = app(MunicipalRoleTemplateRegistry::class)->resolve($templateKey);
         $role = Role::query()->create([
             'name' => $templateKey.'_'.Str::lower(Str::random(8)),
@@ -349,7 +368,10 @@ class InitialMunicipalRoleProfilesTest extends TestCase
         ]);
         $role->permissions()->sync($template['permission_ids']);
 
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(
+            $feature,
+            ...$additionalFeatures,
+        );
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',

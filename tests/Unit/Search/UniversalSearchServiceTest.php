@@ -25,7 +25,7 @@ class UniversalSearchServiceTest extends TestCase
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
-        $this->municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $this->municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
     }
 
     public function test_service_returns_grouped_authorized_results(): void

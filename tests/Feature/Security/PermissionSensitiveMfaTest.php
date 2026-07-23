@@ -117,7 +117,7 @@ class PermissionSensitiveMfaTest extends TestCase
     private function userWithCustomRole(string $name, array $permissionNames): User
     {
         $role = $this->customRole($name, $permissionNames);
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',
@@ -153,7 +153,7 @@ class PermissionSensitiveMfaTest extends TestCase
 
     private function userWithSystemRole(string $name): User
     {
-        $municipality = $this->municipalityWithFeatures(FeatureKey::cases());
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',
