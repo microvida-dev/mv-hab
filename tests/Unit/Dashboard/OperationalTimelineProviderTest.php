@@ -45,7 +45,7 @@ final class OperationalTimelineProviderTest extends TestCase
     {
         PropertyInspection::factory()->create([
             'status' => InspectionStatus::Scheduled,
-            'scheduled_for' => now()->addHour(),
+            'scheduled_for' => today()->setTime(12, 0),
         ]);
 
         $events = (new InspectionTimelineProvider)->forUser($this->authorizedUser());
@@ -125,7 +125,7 @@ final class OperationalTimelineProviderTest extends TestCase
     {
         HousingVisit::factory()->create([
             'status' => VisitStatus::Confirmed,
-            'scheduled_at' => now()->addHour(),
+            'scheduled_at' => today()->setTime(12, 0),
         ]);
 
         $events = (new VisitTimelineProvider)->forUser($this->authorizedUser());

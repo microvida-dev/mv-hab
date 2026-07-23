@@ -219,6 +219,14 @@ A revisão final detetou que `create/update` ainda podiam receber `status`.
 Essa entrada foi removida das views e Requests. O teste cobre tentativa de
 ativação/arquivo por payload com apenas permissions de criação/edição.
 
+### Fixtures de agenda dependentes da hora
+
+O gate pós-commit executado às 23:11 revelou duas fixtures que usavam
+`now()->addHour()` mas esperavam um evento de `today()`. Após as 23:00, o
+evento passava para o dia seguinte. As datas de vistoria e visita foram
+fixadas às 12:00 do próprio dia, sem alterar providers ou comportamento de
+produção.
+
 ## Testes
 
 Cobertura criada/reforçada:
