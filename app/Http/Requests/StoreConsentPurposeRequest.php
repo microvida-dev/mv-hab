@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\ConsentLegalBasis;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +11,11 @@ class StoreConsentPurposeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return ! $this->user()?->hasRole('candidate') && $this->user()?->hasPermission('privacy.create');
+        $user = $this->user();
+
+        return $user instanceof User
+            && $user->municipality_id !== null
+            && $user->hasPermission('privacy.create');
     }
 
     /**

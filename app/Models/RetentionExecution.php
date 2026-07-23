@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
+ * @property int|null $municipality_id
  * @property RetentionExecutionStatus $status
  */
 class RetentionExecution extends Model
@@ -36,5 +37,13 @@ class RetentionExecution extends Model
     public function policy(): BelongsTo
     {
         return $this->belongsTo(RetentionPolicy::class, 'retention_policy_id');
+    }
+
+    /**
+     * @return BelongsTo<Municipality, $this>
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 }

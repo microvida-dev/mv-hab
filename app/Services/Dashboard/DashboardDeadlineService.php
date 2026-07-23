@@ -29,7 +29,7 @@ class DashboardDeadlineService
             $this->authorizedAlert($user, 'pending_documents', 'Documentos pendentes', $this->countPendingDocuments($user), 'Validação documental por concluir.', 'admin.document-reviews.index', 'documents.view', 'warning', feature: FeatureKey::ApplicationReview),
             $this->authorizedAlert($user, 'pending_complaints', 'Reclamações pendentes', $this->countRows('complaints', ['status' => ['submitted', 'pending', 'under_review', 'open']]), 'Reclamações ou audiência prévia em aberto.', 'backoffice.complaints.index', 'complaints.view', 'warning'),
             $this->authorizedAlert($user, 'pending_contracts', 'Contratos pendentes', $this->countRows('contracts', ['status' => ['draft', 'pending_review', 'pending_signature', 'generated']]), 'Contratos a rever/formalizar.', 'backoffice.contracts.leases.index', 'contracts.view', 'civic'),
-            $this->authorizedAlert($user, 'rgpd_requests', 'Pedidos RGPD', $this->countRows('data_subject_requests', ['status' => ['draft', 'pending', 'pending_dpo_approval', 'open']]), 'Pedidos de titular em aberto.', 'backoffice.security.privacy.requests.index', 'privacy.view', 'warning'),
+            $this->authorizedAlert($user, 'rgpd_requests', 'Pedidos RGPD', $this->countRows('data_subject_requests', ['status' => ['draft', 'pending', 'pending_dpo_approval', 'open']], $user), 'Pedidos de titular em aberto.', 'backoffice.security.privacy.requests.index', 'privacy.view', 'warning'),
             $this->authorizedAlert($user, 'security_alerts', 'Alertas de segurança', $this->countRows('security_alerts', ['status' => ['open', 'active', 'new']]), 'Riscos técnicos pendentes.', 'backoffice.security.alerts.index', null, 'danger', ['administrator', 'auditor']),
         ]));
     }
@@ -37,13 +37,21 @@ class DashboardDeadlineService
     /**
      * @param  array<string, list<string>>  $whereIn
      */
-    private function countRows(string $table, array $whereIn): int
+    private function countRows(string $table, array $whereIn, ?User $municipalActor = null): int
     {
         if (! Schema::hasTable($table)) {
             return 0;
         }
 
         $query = DB::table($table);
+
+        if ($municipalActor instanceof User && Schema::hasColumn($table, 'municipality_id')) {
+            if ($municipalActor->municipality_id === null) {
+                return 0;
+            }
+
+            $query->where('municipality_id', $municipalActor->municipality_id);
+        }
 
         if (Schema::hasColumn($table, 'deleted_at')) {
             $query->whereNull('deleted_at');

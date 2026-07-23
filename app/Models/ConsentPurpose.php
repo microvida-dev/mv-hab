@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int|null $municipality_id
+ */
 class ConsentPurpose extends Model
 {
     /** @use HasFactory<ConsentPurposeFactory> */
@@ -49,5 +52,13 @@ class ConsentPurpose extends Model
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * @return BelongsTo<Municipality, $this>
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 }

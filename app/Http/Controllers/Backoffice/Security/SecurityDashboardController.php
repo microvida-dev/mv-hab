@@ -10,6 +10,7 @@ use App\Models\DataSubjectRequest;
 use App\Models\PermissionReview;
 use App\Models\SecurityAlert;
 use App\Models\SecurityChecklist;
+use App\Services\Rgpd\PrivacyMunicipalScopeService;
 use App\Services\Security\DocumentStorageSecurityReviewService;
 use App\Services\Security\SecurityMunicipalScopeService;
 use App\Services\Security\SensitiveFieldEncryptionReviewService;
@@ -23,12 +24,15 @@ class SecurityDashboardController extends Controller
         DocumentStorageSecurityReviewService $storageReview,
         SensitiveFieldEncryptionReviewService $fieldReview,
         SecurityMunicipalScopeService $scope,
+        PrivacyMunicipalScopeService $privacyScope,
     ): View {
         $actor = $this->authenticatedUser($request);
         abort_unless($actor->hasPermission('security.view'), 403);
 
-        $rgpdRequests = DataSubjectRequest::query()
-            ->whereHas('user', fn ($users) => $users->where('municipality_id', $actor->municipality_id));
+        $rgpdRequests = $privacyScope->requests(
+            DataSubjectRequest::query(),
+            $actor,
+        );
 
         return view('backoffice.security.dashboard', [
             'metrics' => [

@@ -24,12 +24,23 @@ class DataExportService
         private readonly AuditTrailService $audit,
         private readonly AccessLogService $access,
         private readonly SensitiveDataAccessService $sensitiveAccess,
+        private readonly PrivacyMunicipalScopeService $scope,
     ) {}
 
     public function generate(DataSubjectRequest $request, User $actor): DataExportPackage
     {
+        abort_unless(
+            $request->user_id === $actor->id
+            || (
+                $actor->hasPermission('privacy.export')
+                && $this->scope->ownsRequest($actor, $request)
+            ),
+            403,
+        );
+
         $subject = $request->user;
         abort_unless($subject instanceof User, 422, 'Pedido RGPD sem titular associado.');
+        abort_unless($this->scope->ownsUser($actor, $subject), 403);
 
         $payload = json_encode($this->inventory->collectForUser($subject), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         if (! is_string($payload)) {
@@ -42,6 +53,7 @@ class DataExportService
         Storage::disk('local')->put($path, $payload);
 
         $package = DataExportPackage::query()->create([
+            'municipality_id' => $request->municipality_id,
             'data_subject_request_id' => $request->id,
             'user_id' => $subject->id,
             'package_number' => 'EXP-'.now()->format('YmdHis').'-'.Str::upper(Str::random(5)),
@@ -72,8 +84,18 @@ class DataExportService
 
     public function download(DataExportPackage $package, User $actor): StreamedResponse
     {
+        abort_unless(
+            $package->user_id === $actor->id
+            || (
+                $actor->hasPermission('privacy.export')
+                && $this->scope->ownsExport($actor, $package)
+            ),
+            403,
+        );
+
         $subject = $package->user;
         abort_unless($subject instanceof User, 422, 'Pacote RGPD sem titular associado.');
+        abort_unless($this->scope->ownsUser($actor, $subject), 403);
 
         abort_unless(Storage::disk($package->storage_disk)->exists($package->storage_path), 404);
 

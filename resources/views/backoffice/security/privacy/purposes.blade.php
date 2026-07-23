@@ -2,6 +2,7 @@
     <x-slot name="header"><h1 class="text-2xl font-semibold text-ink-900">Finalidades RGPD</h1></x-slot>
     <div class="py-8"><div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
         <x-flash-message />
+        @can('create', \App\Models\ConsentPurpose::class)
         <form method="POST" action="{{ route('backoffice.security.privacy.purposes.store') }}" class="mv-surface grid gap-4 p-5 md:grid-cols-2">
             @csrf
             <input name="code" class="mv-input" placeholder="Código" required>
@@ -14,6 +15,7 @@
             <label class="text-sm"><input type="checkbox" name="is_active" value="1" checked> Ativa</label>
             <button class="mv-button-primary w-fit">Criar finalidade</button>
         </form>
+        @endcan
         <section class="mv-surface overflow-hidden">
             <table class="mv-table"><thead><tr><th>Código</th><th>Nome</th><th>Base legal</th><th>Ativa</th><th>Retenção</th></tr></thead><tbody>@foreach ($purposes as $purpose)<tr><td>{{ $purpose->code }}</td><td>{{ $purpose->name }}</td><td>{{ $purpose->legal_basis?->label() }}</td><td>{{ $purpose->is_active ? 'sim' : 'não' }}</td><td>{{ $purpose->retention_period_months ?? '—' }}</td></tr>@endforeach</tbody></table>
             <div class="p-4">{{ $purposes->links() }}</div>

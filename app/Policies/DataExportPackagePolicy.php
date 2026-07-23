@@ -4,15 +4,21 @@ namespace App\Policies;
 
 use App\Models\DataExportPackage;
 use App\Models\User;
-use App\Policies\Concerns\HandlesSecurityAccess;
+use App\Services\Rgpd\PrivacyMunicipalScopeService;
 
 class DataExportPackagePolicy
 {
-    use HandlesSecurityAccess;
+    public function __construct(
+        private readonly PrivacyMunicipalScopeService $scope,
+    ) {}
 
     public function view(User $user, DataExportPackage $package): bool
     {
-        return $package->user_id === $user->id || $this->privacy($user);
+        return $package->user_id === $user->id
+            || (
+                $user->hasPermission('privacy.export')
+                && $this->scope->ownsExport($user, $package)
+            );
     }
 
     public function download(User $user, DataExportPackage $package): bool
@@ -22,6 +28,7 @@ class DataExportPackagePolicy
 
     public function create(User $user): bool
     {
-        return $this->privacy($user, 'export');
+        return $user->municipality_id !== null
+            && $user->hasPermission('privacy.export');
     }
 }

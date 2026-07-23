@@ -12,6 +12,7 @@ use App\Models\DataSubjectRequest;
 use App\Models\UserConsent;
 use App\Services\Rgpd\DataExportService;
 use App\Services\Rgpd\DataSubjectRequestService;
+use App\Services\Rgpd\PrivacyMunicipalScopeService;
 use App\Services\Rgpd\UserConsentService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -20,12 +21,22 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PrivacyController extends Controller
 {
+    public function __construct(
+        private readonly PrivacyMunicipalScopeService $scope,
+    ) {}
+
     public function index(Request $request): View
     {
+        $actor = $this->authenticatedUser($request);
+
         return view('candidate.privacy.index', [
-            'purposes' => ConsentPurpose::query()->where('is_active', true)->latest()->get(),
-            'consents' => $this->authenticatedUser($request)->consents()->with('purpose')->latest()->get(),
-            'requests' => $this->authenticatedUser($request)->dataSubjectRequests()->with('exports')->latest('received_at')->get(),
+            'purposes' => $this->scope
+                ->purposes(ConsentPurpose::query(), $actor)
+                ->where('is_active', true)
+                ->latest()
+                ->get(),
+            'consents' => $actor->consents()->with('purpose')->latest()->get(),
+            'requests' => $actor->dataSubjectRequests()->with('exports')->latest('received_at')->get(),
         ]);
     }
 
@@ -48,13 +59,15 @@ class PrivacyController extends Controller
     public function grantConsent(StoreUserConsentRequest $request, UserConsentService $consents): RedirectResponse
     {
         $validated = $request->validated();
+        $actor = $this->authenticatedUser($request);
 
-        $purpose = ConsentPurpose::query()
+        $purpose = $this->scope
+            ->purposes(ConsentPurpose::query(), $actor)
             ->where('is_active', true)
             ->findOrFail((int) $validated['consent_purpose_id']);
 
         $consents->grant(
-            $this->authenticatedUser($request),
+            $actor,
             $purpose,
             $validated['text_snapshot'],
         );

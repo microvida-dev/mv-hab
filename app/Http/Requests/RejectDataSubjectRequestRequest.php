@@ -2,13 +2,18 @@
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RejectDataSubjectRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return ! $this->user()?->hasRole('candidate') && $this->user()?->hasPermission('privacy.reject');
+        $user = $this->user();
+
+        return $user instanceof User
+            && $user->municipality_id !== null
+            && $user->hasPermission('privacy.reject');
     }
 
     /**

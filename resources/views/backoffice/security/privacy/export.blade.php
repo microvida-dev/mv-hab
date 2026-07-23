@@ -4,7 +4,9 @@
         <section class="mv-surface p-6">
             <p class="text-sm text-ink-500">Ficheiro privado: {{ $package->filename }} · checksum {{ $package->checksum }}</p>
             <p class="mt-2 text-sm text-ink-500">Expira em {{ $package->expires_at?->format('d/m/Y H:i') }}</p>
+            @can('download', $package)
             <a href="{{ route('backoffice.security.privacy.exports.download', $package) }}" class="mv-button-primary mt-4 inline-flex">Download autorizado</a>
+            @endcan
         </section>
     </div></div>
 </x-app-layout>

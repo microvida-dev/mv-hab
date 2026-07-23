@@ -43,20 +43,28 @@ class DashboardMetricService
             $this->authorizedMetric($user, 'urgent_maintenance', 'Manutenção urgente', $this->countRows('maintenance_requests', ['priority' => ['high', 'urgent'], 'status' => ['open', 'reported', 'in_analysis', 'in_progress', 'scheduled']]), 'Pedidos prioritários por resolver.', 'backoffice.maintenance.index', 'maintenance_requests.view', 'danger'),
             $this->authorizedMetric($user, 'scheduled_inspections', 'Vistorias agendadas', $this->countRows('property_inspections', ['status' => ['scheduled', 'planned', 'in_progress']]), 'Vistorias técnicas em curso.', 'backoffice.inspections.index', 'inspections.view', 'civic'),
             $this->authorizedMetric($user, 'recent_audit_events', 'Eventos de auditoria', $this->countRecentRows('audit_events', 'occurred_at'), 'Eventos críticos/recentes auditáveis.', 'backoffice.security.audit.events.index', 'audit_logs.view', 'neutral'),
-            $this->authorizedMetric($user, 'rgpd_requests', 'Pedidos RGPD', $this->countRows('data_subject_requests', ['status' => ['draft', 'pending', 'pending_dpo_approval', 'open']]), 'Pedidos de titular a acompanhar.', 'backoffice.security.privacy.requests.index', 'privacy.view', 'warning'),
+            $this->authorizedMetric($user, 'rgpd_requests', 'Pedidos RGPD', $this->countRows('data_subject_requests', ['status' => ['draft', 'pending', 'pending_dpo_approval', 'open']], $user), 'Pedidos de titular a acompanhar.', 'backoffice.security.privacy.requests.index', 'privacy.view', 'warning'),
         ]));
     }
 
     /**
      * @param  array<string, list<string>>  $whereIn
      */
-    private function countRows(string $table, array $whereIn = []): int
+    private function countRows(string $table, array $whereIn = [], ?User $municipalActor = null): int
     {
         if (! Schema::hasTable($table)) {
             return 0;
         }
 
         $query = DB::table($table);
+
+        if ($municipalActor instanceof User && Schema::hasColumn($table, 'municipality_id')) {
+            if ($municipalActor->municipality_id === null) {
+                return 0;
+            }
+
+            $query->where('municipality_id', $municipalActor->municipality_id);
+        }
 
         if (Schema::hasColumn($table, 'deleted_at')) {
             $query->whereNull('deleted_at');

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\DataExportPackage;
 use App\Models\DataSubjectRequest;
+use App\Models\Municipality;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -16,6 +17,10 @@ class DataExportPackageFactory extends Factory
         $uuid = (string) Str::uuid();
 
         return [
+            'municipality_id' => fn (): int => (int) (
+                Municipality::query()->value('id')
+                ?? Municipality::factory()->create()->id
+            ),
             'data_subject_request_id' => DataSubjectRequest::factory(),
             'user_id' => User::factory(),
             'package_number' => 'EXP-'.now()->format('YmdHis').'-'.Str::upper(Str::random(5)),

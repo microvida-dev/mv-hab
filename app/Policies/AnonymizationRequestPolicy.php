@@ -4,29 +4,41 @@ namespace App\Policies;
 
 use App\Models\AnonymizationRequest;
 use App\Models\User;
-use App\Policies\Concerns\HandlesSecurityAccess;
+use App\Services\Rgpd\PrivacyMunicipalScopeService;
 
 class AnonymizationRequestPolicy
 {
-    use HandlesSecurityAccess;
+    public function __construct(
+        private readonly PrivacyMunicipalScopeService $scope,
+    ) {}
 
     public function viewAny(User $user): bool
     {
-        return $this->privacy($user);
+        return $user->municipality_id !== null
+            && $user->hasPermission('rgpd.anonymization.view');
     }
 
     public function view(User $user, AnonymizationRequest $request): bool
     {
-        return $this->privacy($user);
+        return $this->viewAny($user)
+            && $this->scope->ownsAnonymizationRequest($user, $request);
     }
 
     public function create(User $user): bool
     {
-        return $this->privacy($user, 'create');
+        return $user->municipality_id !== null
+            && $user->hasPermission('rgpd.anonymization.request');
     }
 
-    public function run(User $user, AnonymizationRequest $request): bool
+    public function approve(User $user, AnonymizationRequest $request): bool
     {
-        return $this->privacy($user, 'approve');
+        return $user->hasPermission('rgpd.anonymization.approve')
+            && $this->scope->ownsAnonymizationRequest($user, $request);
+    }
+
+    public function execute(User $user, AnonymizationRequest $request): bool
+    {
+        return $user->hasPermission('rgpd.anonymization.execute')
+            && $this->scope->ownsAnonymizationRequest($user, $request);
     }
 }

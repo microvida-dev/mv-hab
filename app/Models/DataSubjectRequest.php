@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property int|null $municipality_id
  * @property DataSubjectRequestType $request_type
  * @property DataSubjectRequestStatus $status
  * @property Carbon|null $due_at
@@ -75,5 +76,13 @@ class DataSubjectRequest extends Model
     public function anonymizationRequests(): HasMany
     {
         return $this->hasMany(AnonymizationRequest::class);
+    }
+
+    /**
+     * @return BelongsTo<Municipality, $this>
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 }

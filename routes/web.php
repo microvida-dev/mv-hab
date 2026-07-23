@@ -1653,32 +1653,103 @@ Route::middleware('auth')->group(function () {
                         });
 
                         Route::prefix('privacy')->name('privacy.')->group(function () {
-                            Route::get('purposes', [BackofficePrivacyController::class, 'purposes'])->name('purposes.index');
-                            Route::post('purposes', [BackofficePrivacyController::class, 'storePurpose'])->name('purposes.store');
-                            Route::match(['put', 'patch'], 'purposes/{consentPurpose}', [BackofficePrivacyController::class, 'updatePurpose'])->name('purposes.update');
+                            $fixedSecurityRoles = 'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor';
 
-                            Route::get('requests', [BackofficePrivacyController::class, 'requests'])->name('requests.index');
-                            Route::post('requests', [BackofficePrivacyController::class, 'storeRequest'])->name('requests.store');
-                            Route::get('requests/{dataSubjectRequest}', [BackofficePrivacyController::class, 'showRequest'])->name('requests.show');
-                            Route::post('requests/{dataSubjectRequest}/assign', [BackofficePrivacyController::class, 'assignRequest'])->name('requests.assign');
-                            Route::post('requests/{dataSubjectRequest}/complete', [BackofficePrivacyController::class, 'completeRequest'])->name('requests.complete');
-                            Route::post('requests/{dataSubjectRequest}/reject', [BackofficePrivacyController::class, 'rejectRequest'])->name('requests.reject');
-                            Route::post('requests/{dataSubjectRequest}/exports', [BackofficePrivacyController::class, 'generateExport'])->name('requests.exports.store');
-                            Route::get('exports/{dataExportPackage}', [BackofficePrivacyController::class, 'showExport'])->name('exports.show');
-                            Route::get('exports/{dataExportPackage}/download', [BackofficePrivacyController::class, 'downloadExport'])->name('exports.download');
+                            Route::get('purposes', [BackofficePrivacyController::class, 'purposes'])
+                                ->middleware('permission:privacy.view')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('purposes.index');
+                            Route::post('purposes', [BackofficePrivacyController::class, 'storePurpose'])
+                                ->middleware('permission:privacy.create')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('purposes.store');
+                            Route::match(['put', 'patch'], 'purposes/{consentPurpose}', [BackofficePrivacyController::class, 'updatePurpose'])
+                                ->middleware('permission:privacy.update')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('purposes.update');
 
-                            Route::get('retention', [BackofficePrivacyController::class, 'retention'])->name('retention.index');
-                            Route::post('retention', [BackofficePrivacyController::class, 'storeRetention'])->name('retention.store');
-                            Route::match(['put', 'patch'], 'retention/{retentionPolicy}', [BackofficePrivacyController::class, 'updateRetention'])->name('retention.update');
-                            Route::post('retention/{retentionPolicy}/simulate', [BackofficePrivacyController::class, 'simulateRetention'])->name('retention.simulate');
-                            Route::post('retention-executions/{retentionExecution}/approve', [BackofficePrivacyController::class, 'approveRetention'])->name('retention-executions.approve');
-                            Route::post('retention-executions/{retentionExecution}/run', [BackofficePrivacyController::class, 'runRetention'])->name('retention-executions.run');
+                            Route::get('requests', [BackofficePrivacyController::class, 'requests'])
+                                ->middleware('permission:privacy.view')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('requests.index');
+                            Route::post('requests', [BackofficePrivacyController::class, 'storeRequest'])
+                                ->middleware('permission:privacy.create')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('requests.store');
+                            Route::get('requests/{dataSubjectRequest}', [BackofficePrivacyController::class, 'showRequest'])
+                                ->middleware('permission:privacy.view')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('requests.show');
+                            Route::post('requests/{dataSubjectRequest}/assign', [BackofficePrivacyController::class, 'assignRequest'])
+                                ->middleware('permission:privacy.assign')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('requests.assign');
+                            Route::post('requests/{dataSubjectRequest}/complete', [BackofficePrivacyController::class, 'completeRequest'])
+                                ->middleware('permission:privacy.approve')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('requests.complete');
+                            Route::post('requests/{dataSubjectRequest}/reject', [BackofficePrivacyController::class, 'rejectRequest'])
+                                ->middleware('permission:privacy.reject')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('requests.reject');
+                            Route::post('requests/{dataSubjectRequest}/exports', [BackofficePrivacyController::class, 'generateExport'])
+                                ->middleware('permission:privacy.export')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('requests.exports.store');
+                            Route::get('exports/{dataExportPackage}', [BackofficePrivacyController::class, 'showExport'])
+                                ->middleware('permission:privacy.export')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('exports.show');
+                            Route::get('exports/{dataExportPackage}/download', [BackofficePrivacyController::class, 'downloadExport'])
+                                ->middleware('permission:privacy.export')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('exports.download');
 
-                            Route::get('anonymization', [BackofficePrivacyController::class, 'anonymization'])->name('anonymization.index');
-                            Route::post('anonymization', [BackofficePrivacyController::class, 'storeAnonymization'])->name('anonymization.store');
-                            Route::get('anonymization/{anonymizationRequest}', [BackofficePrivacyController::class, 'showAnonymization'])->name('anonymization.show');
-                            Route::post('anonymization/{anonymizationRequest}/approve', [BackofficePrivacyController::class, 'approveAnonymization'])->name('anonymization.approve');
-                            Route::post('anonymization/{anonymizationRequest}/run', [BackofficePrivacyController::class, 'runAnonymization'])->name('anonymization.run');
+                            Route::get('retention', [BackofficePrivacyController::class, 'retention'])
+                                ->middleware('permission:rgpd.retention.view')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('retention.index');
+                            Route::post('retention', [BackofficePrivacyController::class, 'storeRetention'])
+                                ->middleware('permission:rgpd.retention.manage')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('retention.store');
+                            Route::match(['put', 'patch'], 'retention/{retentionPolicy}', [BackofficePrivacyController::class, 'updateRetention'])
+                                ->middleware('permission:rgpd.retention.manage')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('retention.update');
+                            Route::post('retention/{retentionPolicy}/simulate', [BackofficePrivacyController::class, 'simulateRetention'])
+                                ->middleware('permission:rgpd.retention.manage')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('retention.simulate');
+                            Route::post('retention-executions/{retentionExecution}/approve', [BackofficePrivacyController::class, 'approveRetention'])
+                                ->middleware('permission:rgpd.retention.approve')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('retention-executions.approve');
+                            Route::post('retention-executions/{retentionExecution}/run', [BackofficePrivacyController::class, 'runRetention'])
+                                ->middleware('permission:rgpd.retention.execute')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('retention-executions.run');
+
+                            Route::get('anonymization', [BackofficePrivacyController::class, 'anonymization'])
+                                ->middleware('permission:rgpd.anonymization.view')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('anonymization.index');
+                            Route::post('anonymization', [BackofficePrivacyController::class, 'storeAnonymization'])
+                                ->middleware('permission:rgpd.anonymization.request')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('anonymization.store');
+                            Route::get('anonymization/{anonymizationRequest}', [BackofficePrivacyController::class, 'showAnonymization'])
+                                ->middleware('permission:rgpd.anonymization.view')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('anonymization.show');
+                            Route::post('anonymization/{anonymizationRequest}/approve', [BackofficePrivacyController::class, 'approveAnonymization'])
+                                ->middleware('permission:rgpd.anonymization.approve')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('anonymization.approve');
+                            Route::post('anonymization/{anonymizationRequest}/run', [BackofficePrivacyController::class, 'runAnonymization'])
+                                ->middleware('permission:rgpd.anonymization.execute')
+                                ->withoutMiddleware($fixedSecurityRoles)
+                                ->name('anonymization.run');
                         });
 
                         Route::get('alerts', [BackofficeSecurityOperationsController::class, 'alerts'])
@@ -2189,6 +2260,13 @@ Route::middleware('auth')->group(function () {
                     Route::get('documents/{documentSubmission}', [BackofficeCaseWorkspaceController::class, 'document'])
                         ->name('documents.show');
                     Route::get('rgpd/{dataSubjectRequest}', [BackofficeCaseWorkspaceController::class, 'rgpd'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'permission:privacy.view',
+                        ])
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                         ->name('rgpd.show');
                     Route::get('audit/{auditEvent}', [BackofficeCaseWorkspaceController::class, 'audit'])
                         ->name('audit.show');

@@ -6,12 +6,20 @@
             <p class="text-sm text-ink-500">{{ $requestRecord->request_type?->label() }} · {{ $requestRecord->status?->label() }} · prazo {{ $requestRecord->due_at?->format('d/m/Y') }}</p>
             <p class="mt-3 text-ink-700">{{ $requestRecord->description }}</p>
             <div class="mt-4 flex flex-wrap gap-3">
+                @can('assign', $requestRecord)
                 <form method="POST" action="{{ route('backoffice.security.privacy.requests.assign', $requestRecord) }}" class="flex gap-2">@csrf<select name="assigned_to" class="mv-input">@foreach ($users as $user)<option value="{{ $user->id }}">{{ $user->name }}</option>@endforeach</select><button class="mv-button-secondary">Atribuir</button></form>
+                @endcan
+                @can('export', $requestRecord)
                 <form method="POST" action="{{ route('backoffice.security.privacy.requests.exports.store', $requestRecord) }}">@csrf<button class="mv-button-secondary">Gerar exportação</button></form>
+                @endcan
             </div>
             <div class="mt-4 grid gap-3 md:grid-cols-2">
+                @can('approve', $requestRecord)
                 <form method="POST" action="{{ route('backoffice.security.privacy.requests.complete', $requestRecord) }}" class="grid gap-2">@csrf<textarea name="summary" class="mv-input" rows="2" placeholder="Resumo de conclusão"></textarea><button class="mv-button-primary w-fit">Concluir</button></form>
+                @endcan
+                @can('reject', $requestRecord)
                 <form method="POST" action="{{ route('backoffice.security.privacy.requests.reject', $requestRecord) }}" class="grid gap-2">@csrf<textarea name="reason" class="mv-input" rows="2" placeholder="Fundamento de rejeição"></textarea><button class="mv-button-secondary w-fit">Rejeitar</button></form>
+                @endcan
             </div>
         </section>
         <section class="grid gap-6 xl:grid-cols-2">

@@ -9,8 +9,8 @@ use App\Http\Requests\GenerateDataExportPackageRequest;
 use App\Http\Requests\RejectDataSubjectRequestRequest;
 use App\Http\Requests\RunRetentionSimulationRequest;
 use App\Http\Requests\StoreAnonymizationRequestRequest;
+use App\Http\Requests\StoreBackofficeDataSubjectRequestRequest;
 use App\Http\Requests\StoreConsentPurposeRequest;
-use App\Http\Requests\StoreDataSubjectRequestRequest;
 use App\Http\Requests\StoreRetentionPolicyRequest;
 use App\Http\Requests\UpdateConsentPurposeRequest;
 use App\Http\Requests\UpdateRetentionPolicyRequest;
@@ -25,36 +25,31 @@ use App\Services\Rgpd\AnonymizationService;
 use App\Services\Rgpd\ConsentPurposeService;
 use App\Services\Rgpd\DataExportService;
 use App\Services\Rgpd\DataSubjectRequestService;
+use App\Services\Rgpd\PrivacyMunicipalScopeService;
 use App\Services\Rgpd\RetentionExecutionService;
 use App\Services\Rgpd\RetentionPolicyService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PrivacyController extends Controller
 {
     private const PER_PAGE = 20;
 
-    private function authorizePermission(Request $request, string $permission): User
-    {
-        $user = $this->authenticatedUser($request);
-
-        abort_unless(
-            $user->hasPermission($permission),
-            403
-        );
-
-        return $user;
-    }
+    public function __construct(
+        private readonly PrivacyMunicipalScopeService $scope,
+    ) {}
 
     /**
      * @return Collection<int, User>
      */
-    private function assignableUsers(): Collection
+    private function assignableUsers(User $actor): Collection
     {
-        return User::query()
+        return $this->scope
+            ->users(User::query(), $actor)
             ->orderBy('name')
             ->limit(100)
             ->get([
@@ -64,9 +59,11 @@ class PrivacyController extends Controller
             ]);
     }
 
-    private function findUserOrFail(mixed $id): User
+    private function findUserOrFail(User $actor, mixed $id): User
     {
-        $user = User::query()->findOrFail($id);
+        $user = $this->scope
+            ->users(User::query(), $actor)
+            ->findOrFail($id);
 
         abort_unless($user instanceof User, 404);
 
@@ -75,10 +72,12 @@ class PrivacyController extends Controller
 
     public function purposes(Request $request): View
     {
-        $this->authorizePermission($request, 'privacy.view');
+        $actor = $this->authenticatedUser($request);
+        Gate::authorize('viewAny', ConsentPurpose::class);
 
         return view('backoffice.security.privacy.purposes', [
-            'purposes' => ConsentPurpose::query()
+            'purposes' => $this->scope
+                ->purposes(ConsentPurpose::query(), $actor)
                 ->latest()
                 ->paginate(self::PER_PAGE),
         ]);
@@ -89,6 +88,7 @@ class PrivacyController extends Controller
         ConsentPurposeService $purposes
     ): RedirectResponse {
         $user = $this->authenticatedUser($request);
+        Gate::authorize('create', ConsentPurpose::class);
 
         $purposes->create(
             $request->validated(),
@@ -104,6 +104,7 @@ class PrivacyController extends Controller
         ConsentPurposeService $purposes
     ): RedirectResponse {
         $user = $this->authenticatedUser($request);
+        Gate::authorize('update', $consentPurpose);
 
         $purposes->update(
             $consentPurpose,
@@ -116,10 +117,12 @@ class PrivacyController extends Controller
 
     public function requests(Request $request): View
     {
-        $this->authorizePermission($request, 'privacy.view');
+        $actor = $this->authenticatedUser($request);
+        Gate::authorize('viewAny', DataSubjectRequest::class);
 
         return view('backoffice.security.privacy.requests', [
-            'requests' => DataSubjectRequest::query()
+            'requests' => $this->scope
+                ->requests(DataSubjectRequest::query(), $actor)
                 ->with([
                     'user',
                     'assignedTo',
@@ -127,20 +130,21 @@ class PrivacyController extends Controller
                 ->latest('received_at')
                 ->paginate(self::PER_PAGE),
 
-            'users' => $this->assignableUsers(),
+            'users' => $this->assignableUsers($actor),
         ]);
     }
 
     public function storeRequest(
-        StoreDataSubjectRequestRequest $request,
+        StoreBackofficeDataSubjectRequestRequest $request,
         DataSubjectRequestService $requests
     ): RedirectResponse {
-        $user = $this->authorizePermission($request, 'privacy.create');
+        $user = $this->authenticatedUser($request);
+        Gate::authorize('create', DataSubjectRequest::class);
 
         $data = $request->validated();
 
         $subject = ! empty($data['user_id'])
-            ? $this->findUserOrFail($data['user_id'])
+            ? $this->findUserOrFail($user, $data['user_id'])
             : null;
 
         $rgpdRequest = $requests->create(
@@ -161,7 +165,8 @@ class PrivacyController extends Controller
         Request $request,
         DataSubjectRequest $dataSubjectRequest
     ): View {
-        $this->authorizePermission($request, 'privacy.view');
+        $actor = $this->authenticatedUser($request);
+        Gate::authorize('view', $dataSubjectRequest);
 
         $dataSubjectRequest->loadMissing([
             'user',
@@ -175,7 +180,7 @@ class PrivacyController extends Controller
             'backoffice.security.privacy.request',
             [
                 'requestRecord' => $dataSubjectRequest,
-                'users' => $this->assignableUsers(),
+                'users' => $this->assignableUsers($actor),
             ]
         );
     }
@@ -186,10 +191,11 @@ class PrivacyController extends Controller
         DataSubjectRequestService $requests
     ): RedirectResponse {
         $user = $this->authenticatedUser($request);
+        Gate::authorize('assign', $dataSubjectRequest);
 
         $requests->assign(
             $dataSubjectRequest,
-            $this->findUserOrFail($request->validated('assigned_to')),
+            $this->findUserOrFail($user, $request->validated('assigned_to')),
             $user
         );
 
@@ -202,6 +208,7 @@ class PrivacyController extends Controller
         DataSubjectRequestService $requests
     ): RedirectResponse {
         $user = $this->authenticatedUser($request);
+        Gate::authorize('approve', $dataSubjectRequest);
 
         $requests->complete(
             $dataSubjectRequest,
@@ -218,6 +225,7 @@ class PrivacyController extends Controller
         DataSubjectRequestService $requests
     ): RedirectResponse {
         $user = $this->authenticatedUser($request);
+        Gate::authorize('reject', $dataSubjectRequest);
 
         $requests->reject(
             $dataSubjectRequest,
@@ -233,6 +241,8 @@ class PrivacyController extends Controller
         DataSubjectRequest $dataSubjectRequest,
         DataExportService $exports
     ): RedirectResponse {
+        Gate::authorize('export', $dataSubjectRequest);
+
         $package = $exports->generate(
             $dataSubjectRequest,
             $this->authenticatedUser($request)
@@ -253,7 +263,7 @@ class PrivacyController extends Controller
         Request $request,
         DataExportPackage $dataExportPackage
     ): View {
-        $this->authorizePermission($request, 'privacy.view');
+        Gate::authorize('view', $dataExportPackage);
 
         $dataExportPackage->loadMissing([
             'request',
@@ -273,10 +283,8 @@ class PrivacyController extends Controller
         DataExportPackage $dataExportPackage,
         DataExportService $exports
     ): StreamedResponse {
-        $user = $this->authorizePermission(
-            $request,
-            'privacy.export'
-        );
+        $user = $this->authenticatedUser($request);
+        Gate::authorize('download', $dataExportPackage);
 
         return $exports->download(
             $dataExportPackage,
@@ -286,17 +294,20 @@ class PrivacyController extends Controller
 
     public function retention(Request $request): View
     {
-        $this->authorizePermission($request, 'privacy.view');
+        $actor = $this->authenticatedUser($request);
+        Gate::authorize('viewAny', RetentionPolicy::class);
 
         return view(
             'backoffice.security.privacy.retention',
             [
-                'policies' => RetentionPolicy::query()
+                'policies' => $this->scope
+                    ->retentionPolicies(RetentionPolicy::query(), $actor)
                     ->with('executions')
                     ->latest()
                     ->paginate(self::PER_PAGE),
 
-                'executions' => RetentionExecution::query()
+                'executions' => $this->scope
+                    ->retentionExecutions(RetentionExecution::query(), $actor)
                     ->with('policy')
                     ->latest()
                     ->limit(15)
@@ -309,6 +320,8 @@ class PrivacyController extends Controller
         StoreRetentionPolicyRequest $request,
         RetentionPolicyService $policies
     ): RedirectResponse {
+        Gate::authorize('create', RetentionPolicy::class);
+
         $policies->create(
             $request->validated(),
             $this->authenticatedUser($request)
@@ -325,9 +338,13 @@ class PrivacyController extends Controller
         RetentionPolicy $retentionPolicy,
         RetentionPolicyService $policies
     ): RedirectResponse {
+        $actor = $this->authenticatedUser($request);
+        Gate::authorize('update', $retentionPolicy);
+
         $policies->update(
             $retentionPolicy,
-            $request->validated()
+            $request->validated(),
+            $actor,
         );
 
         return back()->with(
@@ -341,6 +358,8 @@ class PrivacyController extends Controller
         RetentionPolicy $retentionPolicy,
         RetentionExecutionService $executions
     ): RedirectResponse {
+        Gate::authorize('simulate', $retentionPolicy);
+
         $execution = $executions->simulate(
             $retentionPolicy,
             $this->authenticatedUser($request)
@@ -360,10 +379,8 @@ class PrivacyController extends Controller
         RetentionExecution $retentionExecution,
         RetentionExecutionService $executions
     ): RedirectResponse {
-        $user = $this->authorizePermission(
-            $request,
-            'privacy.approve'
-        );
+        $user = $this->authenticatedUser($request);
+        Gate::authorize('approve', $retentionExecution);
 
         $executions->approve(
             $retentionExecution,
@@ -381,10 +398,8 @@ class PrivacyController extends Controller
         RetentionExecution $retentionExecution,
         RetentionExecutionService $executions
     ): RedirectResponse {
-        $user = $this->authorizePermission(
-            $request,
-            'privacy.approve'
-        );
+        $user = $this->authenticatedUser($request);
+        Gate::authorize('execute', $retentionExecution);
 
         $executions->run(
             $retentionExecution,
@@ -400,12 +415,14 @@ class PrivacyController extends Controller
     public function anonymization(
         Request $request
     ): View {
-        $this->authorizePermission($request, 'privacy.view');
+        $actor = $this->authenticatedUser($request);
+        Gate::authorize('viewAny', AnonymizationRequest::class);
 
         return view(
             'backoffice.security.privacy.anonymization',
             [
-                'requests' => AnonymizationRequest::query()
+                'requests' => $this->scope
+                    ->anonymizationRequests(AnonymizationRequest::query(), $actor)
                     ->with([
                         'user',
                         'request',
@@ -413,7 +430,7 @@ class PrivacyController extends Controller
                     ->latest()
                     ->paginate(self::PER_PAGE),
 
-                'users' => $this->assignableUsers(),
+                'users' => $this->assignableUsers($actor),
             ]
         );
     }
@@ -422,6 +439,8 @@ class PrivacyController extends Controller
         StoreAnonymizationRequestRequest $request,
         AnonymizationService $anonymization
     ): RedirectResponse {
+        Gate::authorize('create', AnonymizationRequest::class);
+
         $anonRequest = $anonymization->create(
             $request->payload(),
             $this->authenticatedUser($request)
@@ -442,7 +461,7 @@ class PrivacyController extends Controller
         Request $request,
         AnonymizationRequest $anonymizationRequest
     ): View {
-        $this->authorizePermission($request, 'privacy.view');
+        Gate::authorize('view', $anonymizationRequest);
 
         $anonymizationRequest->loadMissing([
             'user',
@@ -462,10 +481,8 @@ class PrivacyController extends Controller
         AnonymizationRequest $anonymizationRequest,
         AnonymizationService $anonymization
     ): RedirectResponse {
-        $user = $this->authorizePermission(
-            $request,
-            'privacy.approve'
-        );
+        $user = $this->authenticatedUser($request);
+        Gate::authorize('approve', $anonymizationRequest);
 
         $anonymization->approve(
             $anonymizationRequest,
@@ -483,10 +500,8 @@ class PrivacyController extends Controller
         AnonymizationRequest $anonymizationRequest,
         AnonymizationService $anonymization
     ): RedirectResponse {
-        $user = $this->authorizePermission(
-            $request,
-            'privacy.approve'
-        );
+        $user = $this->authenticatedUser($request);
+        Gate::authorize('execute', $anonymizationRequest);
 
         $anonymization->run(
             $anonymizationRequest,

@@ -11,20 +11,23 @@ use App\Models\DataSubjectRequest;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
+use App\Services\Rgpd\PrivacyMunicipalScopeService;
 
 class RgpdTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
         private readonly TimelineEventFactory $factory = new TimelineEventFactory,
+        private readonly PrivacyMunicipalScopeService $scope = new PrivacyMunicipalScopeService,
     ) {}
 
     public function forUser(User $user, array $dashboard = []): array
     {
-        if (! $user->hasPermission('rgpd.view')) {
+        if (! $user->hasPermission('privacy.view')) {
             return [];
         }
 
-        return DataSubjectRequest::query()
+        return $this->scope
+            ->requests(DataSubjectRequest::query(), $user)
             ->whereNotNull('due_at')
             ->whereNotIn('status', [
                 DataSubjectRequestStatus::Completed->value,
