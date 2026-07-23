@@ -35,7 +35,9 @@ persistentes antes do rollout.
 - `ff5d6bb1` — implementação permission-first, Policies, Requests e scope;
 - `201cfcf0` — fixtures reais de reclamações e sorteios;
 - `12bde5ce` — testes de rotas, limites municipais e snapshot progressivo;
-- documentação final: este relatório e o registo de decisões.
+- `300852a7` — relatório e registo das decisões semânticas;
+- `e1b5e88c` — estabilização das fixtures temporais da agenda;
+- documentação de fecho atualizada antes da publicação.
 
 ## Manifesto e reconciliação
 
