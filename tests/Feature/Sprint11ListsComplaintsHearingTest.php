@@ -8,6 +8,7 @@ use App\Enums\ApplicationStatus;
 use App\Enums\ComplaintDecisionResult;
 use App\Enums\ComplaintStatus;
 use App\Enums\DefinitiveListStatus;
+use App\Enums\FeatureKey;
 use App\Enums\HearingType;
 use App\Enums\ListEntryStatus;
 use App\Enums\ListPublicationChannel;
@@ -21,26 +22,37 @@ use App\Models\ApplicationScore;
 use App\Models\Contest;
 use App\Models\CurrentHousingSituation;
 use App\Models\Household;
+use App\Models\Municipality;
 use App\Models\Program;
 use App\Models\ProvisionalList;
 use App\Models\RankingEntry;
 use App\Models\RankingSnapshot;
 use App\Models\ScoringRun;
 use App\Models\User;
+use App\Services\Entitlements\MunicipalityEntitlementService;
 use App\Services\Lists\DefinitiveListService;
 use App\Services\Lists\ProvisionalListService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class Sprint11ListsComplaintsHearingTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
+
+    private Municipality $municipality;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed(SystemAccessSeeder::class);
+        $this->municipality = $this->municipalityWithFeatures(
+            FeatureKey::ApplicationIntake,
+            FeatureKey::ApplicationReview,
+        );
     }
 
     public function test_backoffice_lists_are_protected_by_role_and_permission(): void
@@ -161,19 +173,49 @@ class Sprint11ListsComplaintsHearingTest extends TestCase
         $list = $this->publishedComplaintOpenList($snapshot, $administrator);
         $complaint = $this->submittedComplaint($list, $application, $candidate);
 
-        $this->actingAs($administrator);
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()]);
         $this->post(route('backoffice.complaints.mark-received', $complaint))->assertRedirect();
         $this->post(route('backoffice.complaints.start-review', $complaint->fresh()))->assertRedirect();
-        $this->post(route('backoffice.complaint-decisions.store', $complaint->fresh()), [
+
+        $this->assertNotNull($administrator->municipality_id);
+        $this->assertTrue($administrator->hasPermission('complaints.decide'));
+        $this->assertTrue(
+            app(MunicipalityEntitlementService::class)->enabledFor(
+                $administrator->municipality,
+                FeatureKey::ApplicationReview,
+            ),
+        );
+        $this->assertTrue(
+            app(MunicipalRecordScopeService::class)->ownsComplaint(
+                $administrator,
+                $complaint,
+            ),
+        );
+
+        $response = $this->post(route('backoffice.complaint-decisions.store', $complaint->fresh()), [
             'decision_result' => ComplaintDecisionResult::Accepted->value,
             'summary' => 'Reclamação aceite para refletir na lista definitiva.',
             'grounds' => 'Fundamentação administrativa fictícia.',
             'requires_list_update' => '1',
             'candidate_visible' => '1',
-        ])->assertRedirect();
+        ]);
 
-        $decision = $complaint->fresh()->decision;
-        $this->post(route('backoffice.complaint-decisions.approve', $decision))->assertRedirect();
+        $response
+            ->assertSessionHas('success')
+            ->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('complaint_decisions', [
+            'complaint_id' => $complaint->id,
+        ]);
+
+        $decision = $complaint->fresh()->decision()->firstOrFail();
+        $response->assertRedirect(
+            route('backoffice.complaint-decisions.show', $decision),
+        );
+
+        $this->post(route('backoffice.complaint-decisions.approve', $decision))
+            ->assertSessionHas('success')
+            ->assertSessionHasNoErrors();
         $this->assertSame(ComplaintStatus::Accepted, $complaint->fresh()->status);
 
         app(ProvisionalListService::class)->closeComplaintPeriod($list->fresh(), $administrator);
@@ -283,7 +325,9 @@ class Sprint11ListsComplaintsHearingTest extends TestCase
             'name' => 'Candidato Sensível',
             'email' => 'sensivel-sprint11@example.test',
         ]);
-        $program = Program::factory()->published()->create();
+        $program = Program::factory()->published()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         $contest = Contest::factory()->for($program)->open()->create();
         $registration = AdhesionRegistration::factory()->registered()->for($candidate)->create([
             'nif' => 'TEST-S11-'.fake()->unique()->numerify('#####'),
@@ -343,7 +387,10 @@ class Sprint11ListsComplaintsHearingTest extends TestCase
 
     private function userWithRole(string $role, array $attributes = []): User
     {
-        $user = User::factory()->create($attributes);
+        $user = User::factory()->create([
+            ...$attributes,
+            'municipality_id' => $this->municipality->id,
+        ]);
         $user->assignRole($role);
 
         return $user;
