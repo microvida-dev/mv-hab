@@ -104,7 +104,7 @@ class RequirePermissionMiddlewareTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithPermissions(array $permissions): User
     {

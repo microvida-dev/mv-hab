@@ -160,7 +160,7 @@ class Sprint3PortalProgramsTest extends TestCase
                         'effective_until' => today()->addYear()->toDateString(),
                     ],
                 ],
-        ]);
+            ]);
 
         $program = Program::query()->where('name', 'Programa de Arrendamento Municipal')->firstOrFail();
 
@@ -217,7 +217,7 @@ class Sprint3PortalProgramsTest extends TestCase
                     ],
                 ],
                 'jury_members' => [],
-        ]);
+            ]);
 
         $contest = Contest::query()->where('code', 'CAA-TEST-2026')->firstOrFail();
 

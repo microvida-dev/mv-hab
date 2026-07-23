@@ -24,7 +24,7 @@ class AgendaServiceTest extends TestCase
     {
         $service = $this->serviceWithEvents($this->events());
 
-        $agenda = $service->today(new User());
+        $agenda = $service->today(new User);
 
         $this->assertArrayHasKey('date', $agenda);
         $this->assertArrayHasKey('events', $agenda);
@@ -34,7 +34,7 @@ class AgendaServiceTest extends TestCase
     {
         $service = $this->serviceWithEvents($this->events());
 
-        $agenda = $service->week(new User());
+        $agenda = $service->week(new User);
 
         $this->assertArrayHasKey('start', $agenda);
         $this->assertArrayHasKey('end', $agenda);
@@ -45,7 +45,7 @@ class AgendaServiceTest extends TestCase
     {
         $service = $this->serviceWithEvents($this->events());
 
-        $agenda = $service->month(new User());
+        $agenda = $service->month(new User);
 
         $this->assertArrayHasKey('month', $agenda);
         $this->assertArrayHasKey('weeks', $agenda);
@@ -55,7 +55,7 @@ class AgendaServiceTest extends TestCase
     {
         $service = $this->serviceWithEvents($this->events());
 
-        $events = $service->nextEvents(new User());
+        $events = $service->nextEvents(new User);
 
         $this->assertSame(
             ['critical', 'normal'],
@@ -67,14 +67,14 @@ class AgendaServiceTest extends TestCase
     {
         $service = $this->serviceWithEvents($this->events());
 
-        $events = $service->nextCriticalEvents(new User());
+        $events = $service->nextCriticalEvents(new User);
 
         $this->assertCount(1, $events);
         $this->assertSame('critical', $events->first()->id);
     }
 
     /**
-     * @param array<int,TimelineEvent> $events
+     * @param  array<int,TimelineEvent>  $events
      */
     private function serviceWithEvents(array $events): AgendaService
     {
@@ -90,10 +90,10 @@ class AgendaServiceTest extends TestCase
 
         return new AgendaService(
             $timeline,
-            new AgendaEventFilter(),
-            new AgendaDayBuilder(),
-            new AgendaWeekBuilder(),
-            new AgendaMonthBuilder(),
+            new AgendaEventFilter,
+            new AgendaDayBuilder,
+            new AgendaWeekBuilder,
+            new AgendaMonthBuilder,
         );
     }
 

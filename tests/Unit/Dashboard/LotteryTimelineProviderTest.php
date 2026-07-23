@@ -40,7 +40,7 @@ final class LotteryTimelineProviderTest extends TestCase
             ->once()
             ->andReturnFalse();
 
-        $events = (new LotteryTimelineProvider())->forUser($user);
+        $events = (new LotteryTimelineProvider)->forUser($user);
 
         $this->assertSame([], $events);
     }
@@ -61,7 +61,7 @@ final class LotteryTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new LotteryTimelineProvider())->forUser($user);
+        $events = (new LotteryTimelineProvider)->forUser($user);
 
         $this->assertCount(2, $events);
 
@@ -94,7 +94,7 @@ final class LotteryTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new LotteryTimelineProvider())->forUser($user);
+        $events = (new LotteryTimelineProvider)->forUser($user);
 
         $types = collect($events)->pluck('type')->all();
 

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Security;
 
-use App\Models\AdditionalDocumentRequest;
 use App\Models\AdditionalDocumentSubmission;
 use App\Models\Application;
 use App\Models\Permission;
@@ -30,20 +29,15 @@ class AdditionalDocumentBackofficePermissionAccessTest extends TestCase
     public function test_additional_document_routes_use_expected_permissions(): void
     {
         $expected = [
-            'backoffice.additional-document-requests.index'
-                => 'permission:documents.view,applications.view',
+            'backoffice.additional-document-requests.index' => 'permission:documents.view,applications.view',
 
-            'backoffice.additional-document-requests.store'
-                => 'permission:documents.create,applications.update',
+            'backoffice.additional-document-requests.store' => 'permission:documents.create,applications.update',
 
-            'backoffice.additional-document-submissions.index'
-                => 'permission:documents.view,applications.view',
+            'backoffice.additional-document-submissions.index' => 'permission:documents.view,applications.view',
 
-            'backoffice.additional-document-submissions.show'
-                => 'permission:documents.view,applications.view',
+            'backoffice.additional-document-submissions.show' => 'permission:documents.view,applications.view',
 
-            'backoffice.additional-document-submissions.decide'
-                => 'permission:documents.approve,documents.reject',
+            'backoffice.additional-document-submissions.decide' => 'permission:documents.approve,documents.reject',
         ];
 
         foreach ($expected as $routeName => $permissionMiddleware) {
@@ -347,7 +341,7 @@ class AdditionalDocumentBackofficePermissionAccessTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithCustomRole(array $permissions): User
     {
@@ -375,7 +369,7 @@ class AdditionalDocumentBackofficePermissionAccessTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithSystemRoleAndPermissions(
         string $roleName,

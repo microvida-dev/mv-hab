@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Security;
 
+use App\Models\AdministrativeProcess;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -87,7 +88,7 @@ class AdministrativeProcessIndexPermissionAccessTest extends TestCase
         );
 
         $this->assertFalse(
-            $user->can('viewAny', \App\Models\AdministrativeProcess::class),
+            $user->can('viewAny', AdministrativeProcess::class),
         );
 
         $this->actingAs($user)
@@ -96,7 +97,7 @@ class AdministrativeProcessIndexPermissionAccessTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithCustomRole(array $permissions): User
     {

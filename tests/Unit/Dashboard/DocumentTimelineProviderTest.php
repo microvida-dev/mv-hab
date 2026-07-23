@@ -46,7 +46,7 @@ final class DocumentTimelineProviderTest extends TestCase
             ->once()
             ->andReturnFalse();
 
-        $events = (new DocumentTimelineProvider())->forUser($user);
+        $events = (new DocumentTimelineProvider)->forUser($user);
 
         $this->assertSame([], $events);
     }
@@ -67,7 +67,7 @@ final class DocumentTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new DocumentTimelineProvider())->forUser($user);
+        $events = (new DocumentTimelineProvider)->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::DocumentSubmitted, $events[0]->type);
@@ -94,7 +94,7 @@ final class DocumentTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new DocumentTimelineProvider())->forUser($user);
+        $events = (new DocumentTimelineProvider)->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::DocumentUnderReview, $events[0]->type);
@@ -118,7 +118,7 @@ final class DocumentTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new DocumentTimelineProvider())->forUser($user);
+        $events = (new DocumentTimelineProvider)->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::DocumentDossierIncomplete, $events[0]->type);
@@ -142,7 +142,7 @@ final class DocumentTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new DocumentTimelineProvider())->forUser($user);
+        $events = (new DocumentTimelineProvider)->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::AdditionalDocumentRequested, $events[0]->type);
@@ -167,7 +167,7 @@ final class DocumentTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new DocumentTimelineProvider())->forUser($user);
+        $events = (new DocumentTimelineProvider)->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::AdditionalDocumentSubmitted, $events[0]->type);

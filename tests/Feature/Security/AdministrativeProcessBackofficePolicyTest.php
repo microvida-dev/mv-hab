@@ -107,7 +107,7 @@ class AdministrativeProcessBackofficePolicyTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithCustomRole(array $permissions): User
     {
@@ -138,7 +138,7 @@ class AdministrativeProcessBackofficePolicyTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithSystemRoleAndPermissions(
         string $roleName,

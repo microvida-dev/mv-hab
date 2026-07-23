@@ -29,7 +29,7 @@ class BaseTimelineProviderArchitectureTest extends TestCase
     #[Test]
     public function registry_contains_all_providers_without_duplicates(): void
     {
-        $registry = new TimelineProviderRegistry();
+        $registry = new TimelineProviderRegistry;
 
         $providers = array_map(
             static fn (object $provider): string => $provider::class,
@@ -53,7 +53,7 @@ class BaseTimelineProviderArchitectureTest extends TestCase
     #[Test]
     public function aggregator_uses_registry_providers(): void
     {
-        $registry = new TimelineProviderRegistry();
+        $registry = new TimelineProviderRegistry;
 
         $aggregator = new TimelineAggregatorService(
             $registry->providers(),

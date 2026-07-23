@@ -42,7 +42,7 @@ class AgendaTimelineRepositoryTest extends TestCase
             ),
         ]);
 
-        $repository = new AgendaTimelineRepository();
+        $repository = new AgendaTimelineRepository;
 
         $this->assertSame(['today'], $repository->eventsOfDay($events, Carbon::parse('2026-07-02'))->pluck('id')->all());
         $this->assertSame(['same-week', 'today'], $repository->eventsOfWeek($events, Carbon::parse('2026-07-02'))->pluck('id')->all());
@@ -71,7 +71,7 @@ class AgendaTimelineRepositoryTest extends TestCase
 
         $this->assertSame(
             ['assigned'],
-            (new AgendaTimelineRepository())->eventsByTechnician($events, 10)->pluck('id')->all()
+            (new AgendaTimelineRepository)->eventsByTechnician($events, 10)->pluck('id')->all()
         );
     }
 }

@@ -30,7 +30,7 @@ final class TimelineProviderRegistryTest extends TestCase
 {
     public function test_it_registers_expected_timeline_providers_once(): void
     {
-        $providers = (new TimelineProviderRegistry())->providers();
+        $providers = (new TimelineProviderRegistry)->providers();
 
         $classes = array_map(
             static fn (TimelineProviderInterface $provider): string => $provider::class,

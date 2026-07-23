@@ -16,7 +16,7 @@ final class TimelineEventFactoryTest extends TestCase
     {
         $datetime = now()->startOfMinute();
 
-        $event = (new TimelineEventFactory())->make(
+        $event = (new TimelineEventFactory)->make(
             id: 'event-1',
             type: TimelineType::Task,
             title: 'Evento',
@@ -38,7 +38,7 @@ final class TimelineEventFactoryTest extends TestCase
 
     public function test_it_builds_timeline_event_from_string_datetime(): void
     {
-        $event = (new TimelineEventFactory())->make(
+        $event = (new TimelineEventFactory)->make(
             id: 'event-2',
             type: TimelineType::Deadline,
             title: 'Prazo',
@@ -56,7 +56,7 @@ final class TimelineEventFactoryTest extends TestCase
 
     public function test_it_builds_timeline_event_without_datetime(): void
     {
-        $event = (new TimelineEventFactory())->make(
+        $event = (new TimelineEventFactory)->make(
             id: 'event-3',
             type: TimelineType::InternalAlert,
             title: 'Alerta',
