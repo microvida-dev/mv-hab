@@ -1326,9 +1326,66 @@ Route::middleware('auth')->group(function () {
                     Route::post('users/{user}/force-mfa', [BackofficeUserAdministrationController::class, 'forceMfa'])->name('users.force-mfa');
                     Route::post('users/{user}/reset-password', [BackofficeUserAdministrationController::class, 'resetPassword'])->name('users.reset-password');
 
-                    Route::get('roles', [BackofficeRoleManagementController::class, 'index'])->name('roles.index');
-                    Route::post('users/{user}/roles/assign', [BackofficeRoleManagementController::class, 'assign'])->name('users.roles.assign');
-                    Route::post('users/{user}/roles/remove', [BackofficeRoleManagementController::class, 'remove'])->name('users.roles.remove');
+                    Route::get('roles', [BackofficeRoleManagementController::class, 'index'])
+                        ->middleware('permission:roles.view')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('roles.index');
+                    Route::get('roles/create', [BackofficeRoleManagementController::class, 'create'])
+                        ->middleware('permission:roles.create')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('roles.create');
+                    Route::post('roles', [BackofficeRoleManagementController::class, 'store'])
+                        ->middleware('permission:roles.create')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('roles.store');
+                    Route::get('roles/{role}', [BackofficeRoleManagementController::class, 'show'])
+                        ->middleware('permission:roles.view')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('roles.show');
+                    Route::get('roles/{role}/edit', [BackofficeRoleManagementController::class, 'edit'])
+                        ->middleware('permission:roles.update')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('roles.edit');
+                    Route::match(['put', 'patch'], 'roles/{role}', [BackofficeRoleManagementController::class, 'update'])
+                        ->middleware('permission:roles.update')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('roles.update');
+                    Route::patch('roles/{role}/permissions', [BackofficeRoleManagementController::class, 'syncPermissions'])
+                        ->middleware('permission:roles.update')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('roles.permissions.update');
+                    Route::post('roles/{role}/duplicate', [BackofficeRoleManagementController::class, 'duplicate'])
+                        ->middleware('permission:roles.create')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('roles.duplicate');
+                    Route::post('roles/{role}/activate', [BackofficeRoleManagementController::class, 'activate'])
+                        ->middleware('permission:roles.update')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('roles.activate');
+                    Route::post('roles/{role}/deactivate', [BackofficeRoleManagementController::class, 'deactivate'])
+                        ->middleware('permission:roles.update')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('roles.deactivate');
+                    Route::get('roles/{role}/users', [BackofficeRoleManagementController::class, 'users'])
+                        ->middleware('permission:roles.view')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('roles.users');
+                    Route::get('roles/{role}/audit', [BackofficeRoleManagementController::class, 'audit'])
+                        ->middleware('permission:roles.audit')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('roles.audit');
+                    Route::delete('roles/{role}', [BackofficeRoleManagementController::class, 'destroy'])
+                        ->middleware('permission:roles.delete')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('roles.destroy');
+                    Route::post('users/{user}/roles/assign', [BackofficeRoleManagementController::class, 'assign'])
+                        ->middleware('permission:roles.assign')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('users.roles.assign');
+                    Route::post('users/{user}/roles/remove', [BackofficeRoleManagementController::class, 'remove'])
+                        ->middleware('permission:roles.remove')
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                        ->name('users.roles.remove');
 
                     Route::get('teams', [BackofficeMunicipalTeamController::class, 'index'])->name('teams.index');
                     Route::get('teams/create', [BackofficeMunicipalTeamController::class, 'create'])->name('teams.create');

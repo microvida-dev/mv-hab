@@ -102,6 +102,31 @@ class RoleManagementService
         });
     }
 
+    /** @param array<string, mixed> $data */
+    public function updateDetails(User $actor, Role $role, array $data, string $justification): Role
+    {
+        $permissionIds = array_values($role->permissions()
+            ->pluck('permissions.id')
+            ->map(fn ($id): int => (int) $id)
+            ->values()
+            ->all());
+
+        return $this->update($actor, $role, $data, $permissionIds, $justification);
+    }
+
+    /** @param list<int> $permissionIds */
+    public function synchronizePermissions(
+        User $actor,
+        Role $role,
+        array $permissionIds,
+        string $justification,
+    ): Role {
+        return $this->update($actor, $role, [
+            'label' => $role->label,
+            'description' => $role->description,
+        ], $permissionIds, $justification);
+    }
+
     public function duplicate(
         User $actor,
         Role $source,
