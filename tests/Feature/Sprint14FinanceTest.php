@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Enums\ContractStatus;
 use App\Enums\DefaultNoticeStatus;
-use App\Enums\FeatureKey;
 use App\Enums\IncomeChangeStatus;
 use App\Enums\LeasePaymentStatus;
 use App\Enums\PaymentReceiptStatus;
@@ -223,13 +222,14 @@ class Sprint14FinanceTest extends TestCase
 
         $this->assertSame(RentReviewStatus::Applied, $review->refresh()->status);
         $this->assertSame(275.0, (float) $context['contract']->refresh()->monthly_rent);
-        $this->assertTrue($context['manager']->hasPermission('documents.create'));
+        $this->assertTrue($context['manager']->hasPermission('finance.create'));
         $this->assertTrue(Gate::forUser($context['manager'])->allows(
             'createBackoffice',
             AnnualDocumentUpdateRequest::class,
         ));
 
         $this->actingAs($context['manager'])
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.finance.annual-document-updates.store'), [
                 'tenant_financial_account_id' => $account->id,
                 'reference_year' => now()->year,
@@ -262,10 +262,6 @@ class Sprint14FinanceTest extends TestCase
         $municipality = $program->municipality()->firstOrFail();
         $this->assignMunicipality($candidate, $municipality);
         $this->assignMunicipality($manager, $municipality);
-        $this->enableMunicipalityFeature(
-            $municipality,
-            FeatureKey::ApplicationReview,
-        );
         $contract = Contract::factory()->create([
             'program_id' => $program->id,
             'user_id' => $candidate->id,

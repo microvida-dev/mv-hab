@@ -45,7 +45,7 @@ class AnnualDocumentUpdateRequestPolicy
     public function viewAnyBackoffice(User $user): bool
     {
         return ! $user->hasRole('candidate')
-            && $this->canAccess($user, 'documents', 'view');
+            && $this->canAccess($user, 'finance', 'view');
     }
 
     public function viewBackoffice(
@@ -62,7 +62,7 @@ class AnnualDocumentUpdateRequestPolicy
     public function createBackoffice(User $user): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, 'documents', 'create');
+            && $this->canAccess($user, 'finance', 'create');
     }
 
     public function approveBackoffice(
@@ -70,7 +70,7 @@ class AnnualDocumentUpdateRequestPolicy
         AnnualDocumentUpdateRequest $annualDocumentUpdateRequest,
     ): bool {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, 'documents', 'approve')
+            && $this->canAccess($user, 'finance', 'approve')
             && $this->municipalScope->ownsAnnualDocumentUpdateRequest(
                 $user,
                 $annualDocumentUpdateRequest,
@@ -82,7 +82,7 @@ class AnnualDocumentUpdateRequestPolicy
         AnnualDocumentUpdateRequest $annualDocumentUpdateRequest,
     ): bool {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, 'documents', 'reject')
+            && $this->canAccess($user, 'finance', 'reject')
             && $this->municipalScope->ownsAnnualDocumentUpdateRequest(
                 $user,
                 $annualDocumentUpdateRequest,

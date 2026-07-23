@@ -28,8 +28,14 @@ class CaseWorkspaceRgpdTest extends TestCase
             'title' => 'Comprovativo fictício',
             'storage_path' => 'storage/app/private/123456789.pdf',
         ]);
+        $technician = $this->userWithRole();
+        $this->assignDocumentMunicipality(
+            $technician,
+            $document,
+            FeatureKey::ApplicationReview,
+        );
 
-        $this->actingAs($this->userWithRole())
+        $this->actingAs($technician)
             ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.cases.documents.show', $document))
             ->assertOk()

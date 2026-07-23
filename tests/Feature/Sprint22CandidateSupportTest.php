@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\FeatureKey;
 use App\Enums\InconsistencySeverity;
 use App\Enums\InconsistencyType;
 use App\Enums\InteractionType;
@@ -26,11 +27,12 @@ use App\Models\VisitSlot;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class Sprint22CandidateSupportTest extends TestCase
 {
-    use RefreshDatabase;
+    use InteractsWithMunicipalFeatures, RefreshDatabase;
 
     public function test_candidate_books_reschedules_and_cancels_visit_with_ownership_protection(): void
     {
@@ -252,6 +254,11 @@ class Sprint22CandidateSupportTest extends TestCase
         ]);
 
         $application = Application::factory()->create(['user_id' => $candidate->id]);
+        $this->assignApplicationMunicipality(
+            $staff,
+            $application,
+            FeatureKey::ApplicationReview,
+        );
         $inconsistency = ApplicationSimulationInconsistency::factory()->create([
             'application_id' => $application->id,
             'user_id' => $candidate->id,

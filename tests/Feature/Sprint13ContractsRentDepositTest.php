@@ -12,6 +12,7 @@ use App\Enums\ContractStatus;
 use App\Enums\ContractTemplateStatus;
 use App\Enums\ContractValidationType;
 use App\Enums\DepositStatus;
+use App\Enums\FeatureKey;
 use App\Enums\HouseholdRelationship;
 use App\Enums\HousingUnitStatus;
 use App\Enums\RentCalculationMethod;
@@ -37,11 +38,12 @@ use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class Sprint13ContractsRentDepositTest extends TestCase
 {
-    use RefreshDatabase;
+    use InteractsWithMunicipalFeatures, RefreshDatabase;
 
     protected function setUp(): void
     {
@@ -167,6 +169,7 @@ class Sprint13ContractsRentDepositTest extends TestCase
         $contract = $this->contractFromAllocation($administrator, $allocation, $calculation, $template);
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.contracts.leases.activate', $contract), [
                 'activation_reason' => 'Tentativa prematura.',
                 'confirm_activation' => '1',
@@ -228,6 +231,12 @@ class Sprint13ContractsRentDepositTest extends TestCase
         $program = Program::factory()->published()->create();
         $contest = Contest::factory()->for($program)->open()->create();
         $candidate = $this->userWithRole('candidate');
+        $municipality = $program->municipality()->firstOrFail();
+
+        $this->enableMunicipalityFeature($municipality, FeatureKey::ApplicationReview);
+        $this->assignMunicipality($administrator, $municipality);
+        $this->assignMunicipality($candidate, $municipality);
+
         $registration = AdhesionRegistration::factory()->registered()->for($candidate)->create([
             'email' => $candidate->email,
             'nif' => 'TEST-S13-'.fake()->unique()->numerify('#####'),

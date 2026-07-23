@@ -11,6 +11,22 @@ class ApplicationsDocumentsPermissionRoutesTest extends TestCase
     private const FIXED_ROLE_MIDDLEWARE =
         'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor';
 
+    private const PERMISSION_OVERRIDES = [
+        'backoffice.finance.annual-document-updates.accept' => 'finance.approve',
+        'backoffice.finance.annual-document-updates.index' => 'finance.view',
+        'backoffice.finance.annual-document-updates.reject' => 'finance.reject',
+        'backoffice.finance.annual-document-updates.show' => 'finance.view',
+        'backoffice.finance.annual-document-updates.store' => 'finance.create',
+    ];
+
+    private const WITHOUT_APPLICATION_ENTITLEMENT = [
+        'backoffice.finance.annual-document-updates.accept',
+        'backoffice.finance.annual-document-updates.index',
+        'backoffice.finance.annual-document-updates.reject',
+        'backoffice.finance.annual-document-updates.show',
+        'backoffice.finance.annual-document-updates.store',
+    ];
+
     /**
      * @throws JsonException
      */
@@ -29,6 +45,7 @@ class ApplicationsDocumentsPermissionRoutesTest extends TestCase
         $this->assertCount(102, $routes);
 
         $routeNames = [];
+        $manifestRoutesWithFeature = 0;
         $routesWithFeature = 0;
 
         foreach ($routes as $definition) {
@@ -41,6 +58,15 @@ class ApplicationsDocumentsPermissionRoutesTest extends TestCase
             $this->assertIsString($routeName);
             $this->assertIsString($permission);
             $this->assertFalse(str_starts_with($routeName, 'candidate.'), $routeName);
+
+            if (is_string($feature)) {
+                $manifestRoutesWithFeature++;
+            }
+
+            $permission = self::PERMISSION_OVERRIDES[$routeName] ?? $permission;
+            if (in_array($routeName, self::WITHOUT_APPLICATION_ENTITLEMENT, true)) {
+                $feature = null;
+            }
 
             $routeNames[] = $routeName;
             $route = Route::getRoutes()->getByName($routeName);
@@ -93,6 +119,7 @@ class ApplicationsDocumentsPermissionRoutesTest extends TestCase
         }
 
         $this->assertCount(102, array_unique($routeNames));
-        $this->assertSame(85, $routesWithFeature);
+        $this->assertSame(85, $manifestRoutesWithFeature);
+        $this->assertSame(80, $routesWithFeature);
     }
 }
