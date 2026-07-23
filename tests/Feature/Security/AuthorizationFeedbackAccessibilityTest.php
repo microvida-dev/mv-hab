@@ -21,6 +21,12 @@ class AuthorizationFeedbackAccessibilityTest extends TestCase
             })
             ->name('tests.access-feedback.accessibility');
 
+        Route::middleware('web')
+            ->get('/__tests/access-feedback/accessibility-guest', function (): never {
+                abort(403, 'technical guest exception message');
+            })
+            ->name('tests.access-feedback.accessibility-guest');
+
         Route::getRoutes()->refreshNameLookups();
     }
 
@@ -40,5 +46,16 @@ class AuthorizationFeedbackAccessibilityTest extends TestCase
             ->assertSee('class="mv-button-primary"', false)
             ->assertDontSee('technical exception message')
             ->assertDontSee('Stack trace');
+    }
+
+    public function test_guest_denial_uses_public_layout_without_authenticated_navigation(): void
+    {
+        $this->get(route('tests.access-feedback.accessibility-guest'))
+            ->assertForbidden()
+            ->assertSeeText('Acesso não autorizado')
+            ->assertSeeText('Não tem permissão para realizar esta ação.')
+            ->assertSeeText('Ir para o Portal Público')
+            ->assertSee('role="alert"', false)
+            ->assertDontSee('technical guest exception message');
     }
 }
