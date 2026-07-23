@@ -3,11 +3,16 @@
 namespace App\Services\Municipalities;
 
 use App\Models\AdministrativeProcess;
+use App\Models\AdministrativeProcessNote;
+use App\Models\AdministrativeTask;
 use App\Models\Application;
 use App\Models\ApplicationReport;
 use App\Models\ApplicationReview;
+use App\Models\ApplicationSimulationInconsistency;
 use App\Models\Citizen;
 use App\Models\Contract;
+use App\Models\CorrectionRequest;
+use App\Models\CorrectionResponse;
 use App\Models\Document;
 use App\Models\DocumentSubmission;
 use App\Models\EligibilityCheck;
@@ -242,6 +247,149 @@ class MunicipalRecordScopeService
     {
         return $this->administrativeProcesses(
             AdministrativeProcess::query()->whereKey($process),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<AdministrativeProcessNote>  $query
+     * @return Builder<AdministrativeProcessNote>
+     */
+    public function administrativeProcessNotes(Builder $query, User $user): Builder
+    {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $notes) use ($user): void {
+            $notes
+                ->whereHas('administrativeProcess.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('application.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsAdministrativeProcessNote(
+        User $user,
+        AdministrativeProcessNote $note,
+    ): bool {
+        return $this->administrativeProcessNotes(
+            AdministrativeProcessNote::query()->whereKey($note),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<AdministrativeTask>  $query
+     * @return Builder<AdministrativeTask>
+     */
+    public function administrativeTasks(Builder $query, User $user): Builder
+    {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $tasks) use ($user): void {
+            $tasks
+                ->whereHas('administrativeProcess.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('application.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsAdministrativeTask(User $user, AdministrativeTask $task): bool
+    {
+        return $this->administrativeTasks(
+            AdministrativeTask::query()->whereKey($task),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<ApplicationSimulationInconsistency>  $query
+     * @return Builder<ApplicationSimulationInconsistency>
+     */
+    public function applicationSimulationInconsistencies(Builder $query, User $user): Builder
+    {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $inconsistencies) use ($user): void {
+            $inconsistencies
+                ->whereHas('application.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('user', fn (Builder $candidate): Builder => $candidate
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereIn(
+                    'simulation_session_id',
+                    $this->simulationSessions(SimulationSession::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsApplicationSimulationInconsistency(
+        User $user,
+        ApplicationSimulationInconsistency $inconsistency,
+    ): bool {
+        return $this->applicationSimulationInconsistencies(
+            ApplicationSimulationInconsistency::query()->whereKey($inconsistency),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<CorrectionRequest>  $query
+     * @return Builder<CorrectionRequest>
+     */
+    public function correctionRequests(Builder $query, User $user): Builder
+    {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $requests) use ($user): void {
+            $requests
+                ->whereHas('administrativeProcess.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('application.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsCorrectionRequest(User $user, CorrectionRequest $request): bool
+    {
+        return $this->correctionRequests(
+            CorrectionRequest::query()->whereKey($request),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<CorrectionResponse>  $query
+     * @return Builder<CorrectionResponse>
+     */
+    public function correctionResponses(Builder $query, User $user): Builder
+    {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $responses) use ($user): void {
+            $responses
+                ->whereHas('correctionRequest.administrativeProcess.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('application.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsCorrectionResponse(User $user, CorrectionResponse $response): bool
+    {
+        return $this->correctionResponses(
+            CorrectionResponse::query()->whereKey($response),
             $user,
         )->exists();
     }

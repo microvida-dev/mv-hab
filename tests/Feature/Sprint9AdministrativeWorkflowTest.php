@@ -149,6 +149,7 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
     {
         [, $application] = $this->submittedApplicationContext();
         $technician = $this->userWithRole('municipal_technician');
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::ApplicationReview);
         $process = $this->processReadyForCorrection($application, $technician);
         $request = app(CorrectionRequestService::class)->create($process, $this->correctionPayload(), $technician);
         app(CorrectionRequestService::class)->issue($request, $technician);
@@ -219,6 +220,7 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
     {
         [, $application] = $this->submittedApplicationContext();
         $technician = $this->userWithRole('municipal_technician');
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::ApplicationReview);
         $process = $this->processReadyForCorrection($application, $technician);
 
         EligibilityCheck::factory()->create([

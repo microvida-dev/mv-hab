@@ -60,7 +60,28 @@ class AdministrativeProcessPolicy
         AdministrativeProcess $administrativeProcess,
     ): bool {
         return ! $user->hasRole('candidate')
-            && $this->canAccess($user, self::MODULE, 'view');
+            && $this->canAccess($user, self::MODULE, 'view')
+            && $this->municipalScope->ownsAdministrativeProcess($user, $administrativeProcess);
+    }
+
+    public function createBackoffice(
+        User $user,
+        AdministrativeProcess $administrativeProcess,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'create')
+            && ! $administrativeProcess->isClosed()
+            && $this->municipalScope->ownsAdministrativeProcess($user, $administrativeProcess);
+    }
+
+    public function assignBackoffice(
+        User $user,
+        AdministrativeProcess $administrativeProcess,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'assign')
+            && ! $administrativeProcess->isClosed()
+            && $this->municipalScope->ownsAdministrativeProcess($user, $administrativeProcess);
     }
 
     public function auditBackoffice(
@@ -71,6 +92,7 @@ class AdministrativeProcessPolicy
             && (
                 $this->canAccess($user, self::MODULE, 'audit')
                 || $this->canAccess($user, self::MODULE, 'view')
-            );
+            )
+            && $this->municipalScope->ownsAdministrativeProcess($user, $administrativeProcess);
     }
 }

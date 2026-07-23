@@ -5,12 +5,15 @@ namespace App\Policies;
 use App\Models\CorrectionRequest;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class CorrectionRequestPolicy
 {
     use ChecksPermissions;
 
     private const MODULE = 'administrative_processes';
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -36,5 +39,49 @@ class CorrectionRequestPolicy
     public function update(User $user, CorrectionRequest $correctionRequest): bool
     {
         return ! $user->hasRole(['candidate', 'auditor']) && $this->canAccess($user, self::MODULE, 'update');
+    }
+
+    public function viewBackoffice(User $user, CorrectionRequest $request): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view')
+            && $this->municipalScope->ownsCorrectionRequest($user, $request);
+    }
+
+    public function updateBackoffice(User $user, CorrectionRequest $request): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'update')
+            && $this->municipalScope->ownsCorrectionRequest($user, $request);
+    }
+
+    public function issueBackoffice(User $user, CorrectionRequest $request): bool
+    {
+        return $this->transitionBackoffice($user, $request, 'issue');
+    }
+
+    public function cancelBackoffice(User $user, CorrectionRequest $request): bool
+    {
+        return $this->transitionBackoffice($user, $request, 'cancel');
+    }
+
+    public function completeBackoffice(User $user, CorrectionRequest $request): bool
+    {
+        return $this->transitionBackoffice($user, $request, 'complete');
+    }
+
+    public function markOverdueBackoffice(User $user, CorrectionRequest $request): bool
+    {
+        return $this->transitionBackoffice($user, $request, 'mark_overdue');
+    }
+
+    private function transitionBackoffice(
+        User $user,
+        CorrectionRequest $request,
+        string $action,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, $action)
+            && $this->municipalScope->ownsCorrectionRequest($user, $request);
     }
 }

@@ -12,7 +12,7 @@ class ResolveApplicationSimulationInconsistencyRequest extends FormRequest
         $inconsistency = $this->route('inconsistency');
 
         return $inconsistency instanceof ApplicationSimulationInconsistency
-            && ($this->user()?->can('resolve', $inconsistency) ?? false);
+            && ($this->user()?->can('decideBackoffice', $inconsistency) ?? false);
     }
 
     /**
