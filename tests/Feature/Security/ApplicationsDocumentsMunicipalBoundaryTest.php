@@ -12,6 +12,7 @@ use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
@@ -276,7 +277,7 @@ class ApplicationsDocumentsMunicipalBoundaryTest extends TestCase
         return $user;
     }
 
-    private function getAs(User $user, string $url): \Illuminate\Testing\TestResponse
+    private function getAs(User $user, string $url): TestResponse
     {
         return $this->actingAs($user)
             ->withSession(['mfa.verified_at' => now()])
