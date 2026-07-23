@@ -16,15 +16,23 @@ final readonly class AgendaMonth
         public array $summary = [],
     ) {}
 
+    /**
+     * @return array{
+     *     month: string,
+     *     label: string,
+     *     weeks: list<array<string, mixed>>,
+     *     summary: array<string, mixed>
+     * }
+     */
     public function toArray(): array
     {
         return [
             'month' => $this->month->format('Y-m'),
             'label' => $this->month->translatedFormat('F Y'),
-            'weeks' => array_map(
+            'weeks' => array_values(array_map(
                 fn (AgendaWeek $week): array => $week->toArray(),
                 $this->weeks
-            ),
+            )),
             'summary' => $this->summary,
         ];
     }

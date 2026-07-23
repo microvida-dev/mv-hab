@@ -17,16 +17,25 @@ final readonly class AgendaWeek
         public array $summary = [],
     ) {}
 
+    /**
+     * @return array{
+     *     start: string,
+     *     end: string,
+     *     label: string,
+     *     days: list<array<string, mixed>>,
+     *     summary: array<string, mixed>
+     * }
+     */
     public function toArray(): array
     {
         return [
             'start' => $this->start->toDateString(),
             'end' => $this->end->toDateString(),
             'label' => $this->start->format('d/m').' - '.$this->end->format('d/m/Y'),
-            'days' => array_map(
+            'days' => array_values(array_map(
                 fn (AgendaDay $day): array => $day->toArray(),
                 $this->days
-            ),
+            )),
             'summary' => $this->summary,
         ];
     }

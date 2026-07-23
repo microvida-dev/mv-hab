@@ -45,6 +45,14 @@ class AgendaEventFilterTest extends TestCase
                 status: TimelineStatus::Scheduled,
                 workspace: TimelineWorkspace::Patrimony,
             ),
+            new TimelineEvent(
+                id: 'without-date',
+                type: TimelineType::Visit,
+                title: 'Sem data',
+                priority: TimelinePriority::High,
+                status: TimelineStatus::Scheduled,
+                workspace: TimelineWorkspace::Patrimony,
+            ),
         ]);
 
         $filtered = (new AgendaEventFilter)->apply($events, new AgendaFilters(

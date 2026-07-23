@@ -40,14 +40,23 @@ class AgendaTimelineRepositoryTest extends TestCase
                 priority: TimelinePriority::Low,
                 workspace: TimelineWorkspace::Contests,
             ),
+            new TimelineEvent(
+                id: 'without-workspace-or-date',
+                type: TimelineType::Task,
+                title: 'Sem enquadramento',
+            ),
         ]);
 
         $repository = new AgendaTimelineRepository;
 
         $this->assertSame(['today'], $repository->eventsOfDay($events, Carbon::parse('2026-07-02'))->pluck('id')->all());
-        $this->assertSame(['same-week', 'today'], $repository->eventsOfWeek($events, Carbon::parse('2026-07-02'))->pluck('id')->all());
-        $this->assertSame(['same-week', 'today'], $repository->eventsOfMonth($events, Carbon::parse('2026-07-02'))->pluck('id')->all());
+        $this->assertSame(['today', 'same-week'], $repository->eventsOfWeek($events, Carbon::parse('2026-07-02'))->pluck('id')->all());
+        $this->assertSame(['today', 'same-week'], $repository->eventsOfMonth($events, Carbon::parse('2026-07-02'))->pluck('id')->all());
         $this->assertSame(['same-week'], $repository->eventsByWorkspace($events, TimelineWorkspace::Patrimony)->pluck('id')->all());
+        $this->assertSame(
+            ['today', 'same-week', 'other-month', 'without-workspace-or-date'],
+            $repository->sort($events)->pluck('id')->all()
+        );
     }
 
     public function test_it_filters_events_by_technician_metadata(): void
