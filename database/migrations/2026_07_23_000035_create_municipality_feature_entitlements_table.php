@@ -16,8 +16,14 @@ return new class extends Migration
             $table->boolean('enabled');
             $table->timestamps();
 
-            $table->unique(['municipality_id', 'feature_key']);
-            $table->index(['municipality_id', 'enabled']);
+            $table->unique(
+                ['municipality_id', 'feature_key'],
+                'mfe_municipality_feature_unique',
+            );
+            $table->index(
+                ['municipality_id', 'enabled'],
+                'mfe_municipality_enabled_index',
+            );
         });
 
         $features = [
