@@ -47,7 +47,7 @@ class InspectionTimelineProvider extends BaseTimelineProvider
                 metadata: [
                     'inspection_id' => $inspection->getKey(),
                     'inspection_number' => $inspection->inspection_number,
-                    'status' => $inspection->status,
+                    'status' => $inspection->status->value,
                 ],
             ))
             ->all();

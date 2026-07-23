@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property VisitStatus $status
+ * @property Carbon|null $scheduled_at
  * @property Carbon|null $starts_at
  * @property Carbon|null $ends_at
  */

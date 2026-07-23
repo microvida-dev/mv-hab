@@ -25,12 +25,15 @@ use Illuminate\Support\Carbon;
  * @property string|null $seed
  * @property string|null $algorithm
  * @property string|null $participants_hash
+ * @property Carbon|null $scheduled_at
  * @property Carbon|null $participants_locked_at
  * @property Carbon|null $started_at
  * @property Carbon|null $completed_at
  * @property Carbon|null $validated_at
  * @property Carbon|null $cancelled_at
  * @property-read AllocationRun|null $allocationRun
+ * @property-read Program|null $program
+ * @property-read Contest|null $contest
  * @property-read DefinitiveList|null $definitiveList
  * @property-read Collection<int, LotteryParticipant> $participants
  * @property-read Collection<int, LotteryResult> $results

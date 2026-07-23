@@ -15,7 +15,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property MaintenanceRequestStatus $status
  * @property Carbon|null $reported_at
+ * @property Carbon|null $scheduled_for
  * @property Carbon|null $resolved_at
  */
 class MaintenanceRequest extends Model

@@ -11,7 +11,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property InternalAlertStatus $status
+ * @property Carbon|null $due_at
+ */
 class InternalAlert extends Model
 {
     /** @use HasFactory<InternalAlertFactory> */

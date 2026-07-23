@@ -49,7 +49,7 @@ final class LotteryTimelineProviderTest extends TestCase
     {
         $scheduledAt = now()->addDays(2)->startOfMinute();
 
-        LotteryDraw::factory()->create([
+        $draw = LotteryDraw::factory()->create([
             'status' => LotteryDrawStatus::Ready,
             'scheduled_at' => $scheduledAt,
         ]);
@@ -76,6 +76,8 @@ final class LotteryTimelineProviderTest extends TestCase
         $this->assertSame(TimelineWorkspace::Contests, $scheduled->workspace);
         $this->assertSame('Sorteio agendado', $scheduled->title);
         $this->assertSame($scheduledAt->toIso8601String(), $scheduled->datetime->toIso8601String());
+        $this->assertSame($draw->program->name, $scheduled->metadata['program_name']);
+        $this->assertArrayNotHasKey('program_title', $scheduled->metadata);
     }
 
     public function test_builds_completed_and_validated_events(): void

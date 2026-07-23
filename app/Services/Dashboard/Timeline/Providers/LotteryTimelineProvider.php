@@ -7,7 +7,9 @@ use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Enums\LotteryDrawStatus;
+use App\Models\Contest;
 use App\Models\LotteryDraw;
+use App\Models\Program;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
@@ -131,8 +133,8 @@ class LotteryTimelineProvider extends BaseTimelineProvider
 
     private function description(LotteryDraw $draw): string
     {
-        $contest = $draw->contest?->title ?? 'Concurso';
-        $program = $draw->program?->title ?? 'Programa';
+        $contest = $draw->contest instanceof Contest ? $draw->contest->title : 'Concurso';
+        $program = $draw->program instanceof Program ? $draw->program->name : 'Programa';
 
         return trim("{$contest} · {$program}");
     }
@@ -143,11 +145,11 @@ class LotteryTimelineProvider extends BaseTimelineProvider
         return [
             'lottery_draw_id' => $draw->getKey(),
             'contest_id' => $draw->contest_id,
-            'contest_title' => $draw->contest?->title,
+            'contest_title' => $draw->contest instanceof Contest ? $draw->contest->title : null,
             'program_id' => $draw->program_id,
-            'program_title' => $draw->program?->title,
-            'status' => $draw->status?->value ?? $draw->status,
-            'draw_type' => $draw->draw_type?->value ?? $draw->draw_type,
+            'program_name' => $draw->program instanceof Program ? $draw->program->name : null,
+            'status' => $draw->status->value,
+            'draw_type' => $draw->draw_type?->value,
             'scheduled_at' => $draw->scheduled_at?->toIso8601String(),
             'completed_at' => $draw->completed_at?->toIso8601String(),
             'validated_at' => $draw->validated_at?->toIso8601String(),

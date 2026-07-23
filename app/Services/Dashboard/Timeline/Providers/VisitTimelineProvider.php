@@ -49,7 +49,7 @@ class VisitTimelineProvider extends BaseTimelineProvider
                 metadata: [
                     'visit_id' => $visit->getKey(),
                     'visit_number' => $visit->visit_number,
-                    'status' => $visit->status,
+                    'status' => $visit->status->value,
                 ],
             ))
             ->all();

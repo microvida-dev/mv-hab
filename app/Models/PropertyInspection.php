@@ -12,7 +12,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property InspectionStatus $status
+ * @property Carbon|null $scheduled_for
+ */
 class PropertyInspection extends Model
 {
     /** @use HasFactory<PropertyInspectionFactory> */
