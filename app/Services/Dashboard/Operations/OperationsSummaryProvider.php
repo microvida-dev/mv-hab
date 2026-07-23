@@ -12,8 +12,10 @@ class OperationsSummaryProvider
      */
     public function forUser(User $user, array $dashboard): array
     {
+        $metrics = $dashboard['metrics'] ?? null;
+
         return [
-            'metrics' => collect($dashboard['metrics'] ?? [])->values()->all(),
+            'metrics' => is_array($metrics) ? array_values($metrics) : [],
         ];
     }
 }

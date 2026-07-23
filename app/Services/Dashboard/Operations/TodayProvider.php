@@ -31,27 +31,39 @@ class TodayProvider
         private readonly ?TimelineAggregatorService $timelineAggregator = null,
     ) {}
 
+    /**
+     * @param  array<string, mixed>  $dashboard
+     * @return list<array<string, mixed>>
+     */
     public function forUser(User $user, array $dashboard): array
     {
         $timeline = $this->timelineForUser($user, $dashboard);
+        $items = $timeline['items'] ?? null;
 
-        return $timeline['items'] ?? [];
+        return is_array($items)
+            ? array_values(array_filter($items, 'is_array'))
+            : [];
     }
 
+    /**
+     * @param  array<string, mixed>  $dashboard
+     * @return array<string, mixed>
+     */
     public function timelineForUser(User $user, array $dashboard): array
     {
         return $this->aggregator()->forUser($user, $dashboard);
     }
 
     /**
-     * @return array<int, TimelineEvent>
+     * @param  array<string, mixed>  $dashboard
+     * @return list<TimelineEvent>
      */
     public function eventsForUser(User $user, array $dashboard): array
     {
-        return collect($this->providers())
+        return array_values(collect($this->providers())
             ->flatMap(fn (TimelineProviderInterface $provider): array => $provider->forUser($user, $dashboard))
             ->values()
-            ->all();
+            ->all());
     }
 
     private function aggregator(): TimelineAggregatorService

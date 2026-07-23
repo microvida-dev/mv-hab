@@ -161,10 +161,33 @@ class ProfileDashboardService
             'is_preferred' => $preferred,
             'favorites_count' => $workspaceFavorites->count(),
             'recent_count' => $workspaceRecentItems->count(),
-            'modules_count' => collect($workspace['groups'] ?? [])
-                ->flatMap(fn (array $group): array => $group['items'] ?? [])
-                ->count(),
+            'modules_count' => $this->workspaceModulesCount($workspace),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $workspace
+     */
+    private function workspaceModulesCount(array $workspace): int
+    {
+        $groups = $workspace['groups'] ?? null;
+
+        if (! is_array($groups)) {
+            return 0;
+        }
+
+        return array_sum(array_map(
+            static function (mixed $group): int {
+                if (! is_array($group)) {
+                    return 0;
+                }
+
+                $items = $group['items'] ?? null;
+
+                return is_array($items) ? count($items) : 0;
+            },
+            $groups,
+        ));
     }
 
     /**
