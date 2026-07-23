@@ -4,8 +4,8 @@ namespace App\Http\Requests;
 
 use App\Enums\HousingUnitStatus;
 use App\Models\HousingUnit;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class StoreHousingUnitRequest extends FormRequest

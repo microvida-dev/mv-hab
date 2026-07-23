@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Backoffice\PublicPortal;
 
 use App\Models\HousingUnitImage;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
 class StoreHousingUnitImageRequest extends FormRequest
 {

@@ -4,8 +4,8 @@ namespace App\Http\Requests\Backoffice\PublicPortal;
 
 use App\Enums\HousingUnitPublicDocumentType;
 use App\Models\HousingUnitPublicDocument;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class StoreHousingUnitPublicDocumentRequest extends FormRequest

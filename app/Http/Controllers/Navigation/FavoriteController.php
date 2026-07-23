@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Navigation;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Navigation\ReorderNavigationFavoritesRequest;
 use App\Http\Requests\Navigation\StoreNavigationFavoriteRequest;
 use App\Models\NavigationFavorite;
 use App\Services\Navigation\FavoritesService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use App\Http\Requests\Navigation\ReorderNavigationFavoritesRequest;
 
 class FavoriteController extends Controller
 {

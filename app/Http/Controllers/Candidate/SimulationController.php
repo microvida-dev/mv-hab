@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Candidate;
 
+use App\Enums\HousingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Simulator\ConvertSimulationToPrefillRequest;
 use App\Http\Requests\Simulator\SaveSimulationRequest;
 use App\Http\Requests\Simulator\StoreCandidateSimulationRequest;
+use App\Models\AdhesionRegistration;
 use App\Models\Application;
 use App\Models\Contest;
 use App\Models\SimulationSession;
@@ -17,8 +19,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use App\Enums\HousingStatus;
-use App\Models\AdhesionRegistration;
 
 class SimulationController extends Controller
 {
