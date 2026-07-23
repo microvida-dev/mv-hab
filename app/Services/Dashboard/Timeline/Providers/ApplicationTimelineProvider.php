@@ -3,6 +3,7 @@
 namespace App\Services\Dashboard\Timeline\Providers;
 
 use App\Data\Dashboard\TimelineEvent;
+use App\Enums\ApplicationStatus;
 use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
@@ -25,7 +26,14 @@ class ApplicationTimelineProvider extends BaseTimelineProvider
 
         return Application::query()
             ->whereNotNull('submitted_at')
-            ->whereIn('status', ['submitted', 'under_analysis', 'documents_pending', 'eligible', 'ineligible'])
+            ->whereIn('status', [
+                ApplicationStatus::Submitted->value,
+                ApplicationStatus::UnderReview->value,
+                ApplicationStatus::RequiresCorrection->value,
+                ApplicationStatus::CorrectionSubmitted->value,
+                ApplicationStatus::Eligible->value,
+                ApplicationStatus::Ineligible->value,
+            ])
             ->orderBy('submitted_at')
             ->limit(20)
             ->get()
@@ -43,7 +51,7 @@ class ApplicationTimelineProvider extends BaseTimelineProvider
                 metadata: [
                     'application_id' => $application->getKey(),
                     'application_number' => $application->application_number,
-                    'status' => $application->status?->value ?? $application->status,
+                    'status' => $application->status->value,
                 ],
             ))
             ->all();

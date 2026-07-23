@@ -3,6 +3,8 @@
 namespace App\Services\Dashboard\Timeline\Providers;
 
 use App\Data\Dashboard\TimelineEvent;
+use App\Enums\CorrectionRequestStatus;
+use App\Enums\CorrectionResponseStatus;
 use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
@@ -31,11 +33,17 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
             ->all();
     }
 
+    /** @return list<TimelineEvent> */
     private function openCorrectionRequests(): array
     {
-        return CorrectionRequest::query()
+        return array_values(CorrectionRequest::query()
             ->whereNotNull('response_deadline_at')
-            ->whereNotIn('status', ['completed', 'cancelled', 'expired'])
+            ->whereIn('status', [
+                CorrectionRequestStatus::Issued->value,
+                CorrectionRequestStatus::Open->value,
+                CorrectionRequestStatus::PartiallyResponded->value,
+                CorrectionRequestStatus::Overdue->value,
+            ])
             ->orderBy('response_deadline_at')
             ->limit(20)
             ->get()
@@ -55,17 +63,23 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
                 metadata: [
                     'correction_request_id' => $request->getKey(),
                     'request_number' => $request->request_number,
-                    'status' => $request->status,
+                    'status' => $request->status->value,
                 ],
             ))
-            ->all();
+            ->values()
+            ->all());
     }
 
+    /** @return list<TimelineEvent> */
     private function submittedResponses(): array
     {
-        return CorrectionResponse::query()
+        return array_values(CorrectionResponse::query()
+            ->with('correctionRequest')
             ->whereNotNull('submitted_at')
-            ->whereIn('status', ['submitted', 'under_review'])
+            ->whereIn('status', [
+                CorrectionResponseStatus::Submitted->value,
+                CorrectionResponseStatus::UnderReview->value,
+            ])
             ->orderBy('submitted_at')
             ->limit(20)
             ->get()
@@ -73,7 +87,7 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
                 id: 'correction-response-'.$response->getKey(),
                 type: TimelineType::CorrectionResponse,
                 title: 'Resposta a aperfeiçoamento recebida',
-                description: trim(($response->response_number ?? 'Resposta').' · aguarda validação'),
+                description: trim('Resposta ao pedido '.$this->requestNumber($response).' · aguarda validação'),
                 route: route('backoffice.correction-responses.show', [
                     'correctionResponse' => $response,
                 ]),
@@ -84,10 +98,22 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
                 workspace: TimelineWorkspace::Applications,
                 metadata: [
                     'correction_response_id' => $response->getKey(),
-                    'response_number' => $response->response_number,
-                    'status' => $response->status,
+                    'request_number' => $this->requestNumber($response),
+                    'status' => $response->status->value,
                 ],
             ))
-            ->all();
+            ->values()
+            ->all());
+    }
+
+    private function requestNumber(CorrectionResponse $response): string
+    {
+        $relation = $response->relationLoaded('correctionRequest')
+            ? $response->getRelation('correctionRequest')
+            : null;
+
+        return $relation instanceof CorrectionRequest
+            ? $relation->request_number
+            : 'não identificado';
     }
 }

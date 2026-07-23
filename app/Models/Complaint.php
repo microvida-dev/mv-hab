@@ -10,7 +10,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property ComplaintStatus $status
+ * @property Carbon|null $submitted_at
+ * @property Carbon|null $received_at
+ * @property Carbon|null $additional_information_deadline_at
+ */
 class Complaint extends Model
 {
     /** @use HasFactory<ComplaintFactory> */
