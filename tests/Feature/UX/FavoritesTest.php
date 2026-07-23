@@ -82,6 +82,45 @@ class FavoritesTest extends TestCase
         ]);
     }
 
+    public function test_user_can_reorder_own_favorites(): void
+    {
+        $administrator = $this->userWithRole('administrator');
+        $first = NavigationFavorite::query()->create([
+            'user_id' => $administrator->id,
+            'item_type' => 'workspace',
+            'workspace_key' => 'concursos',
+            'label' => 'Concursos',
+            'route_name' => 'workspaces.show',
+            'route_parameters' => ['workspace' => 'concursos'],
+            'sort_order' => 1,
+        ]);
+        $second = NavigationFavorite::query()->create([
+            'user_id' => $administrator->id,
+            'item_type' => 'workspace',
+            'workspace_key' => 'gestao',
+            'label' => 'Gestão',
+            'route_name' => 'workspaces.show',
+            'route_parameters' => ['workspace' => 'gestao'],
+            'sort_order' => 2,
+        ]);
+
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
+            ->put(route('navigation.favorites.reorder'), [
+                'favorites' => [$second->id, $first->id],
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('navigation_favorites', [
+            'id' => $second->id,
+            'sort_order' => 1,
+        ]);
+        $this->assertDatabaseHas('navigation_favorites', [
+            'id' => $first->id,
+            'sort_order' => 2,
+        ]);
+    }
+
     private function userWithRole(string $role): User
     {
         $user = User::factory()->create(['status' => 'active']);

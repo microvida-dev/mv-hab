@@ -35,7 +35,7 @@ class FavoriteController extends Controller
     {
         $favorites->reorder(
             $this->authenticatedUser($request),
-            array_map('intval', $request->validated('favorites')),
+            array_values(array_map('intval', $request->validated('favorites'))),
         );
 
         return back()->with('success', 'Ordem dos favoritos atualizada.');
