@@ -36,6 +36,7 @@ class QA45DashboardsKpisMunicipalReportsTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($this->userWithRole('municipal_technician'))
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.reports.index'))
             ->assertOk()
             ->assertDontSee('storage_path');

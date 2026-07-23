@@ -28,14 +28,11 @@ class ApplicationBackofficeRouteAccessTest extends TestCase
     public function test_application_routes_use_expected_permissions(): void
     {
         $expected = [
-            'backoffice.applications.index'
-                => 'permission:applications.view',
+            'backoffice.applications.index' => 'permission:applications.view',
 
-            'backoffice.applications.show'
-                => 'permission:applications.view',
+            'backoffice.applications.show' => 'permission:applications.view',
 
-            'backoffice.applications.timeline'
-                => 'permission:applications.audit,applications.view',
+            'backoffice.applications.timeline' => 'permission:applications.audit,applications.view',
         ];
 
         foreach ($expected as $routeName => $permissionMiddleware) {
@@ -110,6 +107,7 @@ class ApplicationBackofficeRouteAccessTest extends TestCase
         $application = Application::factory()->create();
 
         $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.applications.timeline', $application))
             ->assertOk();
     }
@@ -179,7 +177,7 @@ class ApplicationBackofficeRouteAccessTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithCustomRole(array $permissions): User
     {
@@ -207,7 +205,7 @@ class ApplicationBackofficeRouteAccessTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithSystemRoleAndPermissions(
         string $roleName,

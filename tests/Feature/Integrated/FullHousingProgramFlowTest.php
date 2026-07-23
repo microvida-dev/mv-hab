@@ -103,6 +103,7 @@ class FullHousingProgramFlowTest extends TestCase
             ->assertSee('Área pessoal');
 
         $this->actingAs($auditor)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.reports.index'))
             ->assertOk();
     }

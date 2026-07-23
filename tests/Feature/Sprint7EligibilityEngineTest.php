@@ -151,6 +151,7 @@ class Sprint7EligibilityEngineTest extends TestCase
         ]);
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.eligibility.checks.show', $check))
             ->assertOk()
             ->assertSee('Dados a completar')

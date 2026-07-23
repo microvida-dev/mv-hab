@@ -211,6 +211,7 @@ return [
         'jury' => [
             'label' => 'Jury',
             'permissions' => [
+                'dashboard.view',
                 'applications.view',
                 'applications.approve',
                 'applications.reject',

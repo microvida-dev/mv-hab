@@ -28,10 +28,8 @@ class AdministrativeProcessBackofficeRouteAccessTest extends TestCase
     public function test_show_and_timeline_routes_use_expected_permissions(): void
     {
         $expected = [
-            'backoffice.administrative-processes.show'
-                => 'permission:administrative_processes.view',
-            'backoffice.administrative-processes.timeline'
-                => 'permission:administrative_processes.audit,administrative_processes.view',
+            'backoffice.administrative-processes.show' => 'permission:administrative_processes.view',
+            'backoffice.administrative-processes.timeline' => 'permission:administrative_processes.audit,administrative_processes.view',
         ];
 
         foreach ($expected as $routeName => $permissionMiddleware) {
@@ -97,6 +95,7 @@ class AdministrativeProcessBackofficeRouteAccessTest extends TestCase
         $process = AdministrativeProcess::factory()->create();
 
         $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.administrative-processes.timeline', $process))
             ->assertOk();
     }
@@ -152,7 +151,7 @@ class AdministrativeProcessBackofficeRouteAccessTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithCustomRole(array $permissions): User
     {
@@ -180,7 +179,7 @@ class AdministrativeProcessBackofficeRouteAccessTest extends TestCase
     }
 
     /**
-     * @param list<string> $permissions
+     * @param  list<string>  $permissions
      */
     private function userWithSystemRoleAndPermissions(
         string $roleName,
