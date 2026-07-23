@@ -6,6 +6,8 @@ use App\Data\Dashboard\TimelineEvent;
 use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
+use App\Enums\HearingStatus;
+use App\Enums\HearingSubmissionStatus;
 use App\Models\Hearing;
 use App\Models\HearingSubmission;
 use App\Models\User;
@@ -31,11 +33,19 @@ class HearingTimelineProvider extends BaseTimelineProvider
             ->all();
     }
 
+    /**
+     * @return array<int, TimelineEvent>
+     */
     private function openHearings(): array
     {
         return Hearing::query()
             ->whereNotNull('deadline_at')
-            ->whereNotIn('status', ['closed', 'cancelled', 'expired'])
+            ->whereIn('status', [
+                HearingStatus::Issued->value,
+                HearingStatus::Open->value,
+                HearingStatus::Submitted->value,
+                HearingStatus::UnderReview->value,
+            ])
             ->orderBy('deadline_at')
             ->limit(20)
             ->get()
@@ -55,37 +65,52 @@ class HearingTimelineProvider extends BaseTimelineProvider
                 metadata: [
                     'hearing_id' => $hearing->getKey(),
                     'hearing_number' => $hearing->hearing_number,
-                    'status' => $hearing->status,
+                    'status' => $hearing->status->value,
                 ],
             ))
             ->all();
     }
 
+    /**
+     * @return array<int, TimelineEvent>
+     */
     private function submittedHearings(): array
     {
         return HearingSubmission::query()
+            ->with('hearing')
             ->whereNotNull('submitted_at')
-            ->whereIn('status', ['submitted', 'under_review'])
+            ->whereIn('status', [
+                HearingSubmissionStatus::Submitted->value,
+                HearingSubmissionStatus::UnderReview->value,
+            ])
             ->orderBy('submitted_at')
             ->limit(20)
             ->get()
-            ->map(fn (HearingSubmission $submission): TimelineEvent => $this->factory->make(
-                id: 'hearing-submission-'.$submission->getKey(),
-                type: TimelineType::HearingSubmission,
-                title: 'Pronúncia recebida',
-                description: trim(($submission->submission_number ?? 'Pronúncia').' · aguarda análise'),
-                route: route('backoffice.hearings.index'),
-                datetime: $submission->submitted_at,
-                priority: TimelinePriority::Medium,
-                icon: 'message',
-                tone: 'info',
-                workspace: TimelineWorkspace::Applications,
-                metadata: [
-                    'hearing_submission_id' => $submission->getKey(),
-                    'submission_number' => $submission->submission_number,
-                    'status' => $submission->status,
-                ],
-            ))
+            ->map(fn (HearingSubmission $submission): TimelineEvent => $this->submittedHearingEvent($submission))
             ->all();
+    }
+
+    private function submittedHearingEvent(HearingSubmission $submission): TimelineEvent
+    {
+        $hearing = $submission->hearing;
+        $hearingNumber = $hearing instanceof Hearing ? $hearing->hearing_number : 'Pronúncia';
+
+        return $this->factory->make(
+            id: 'hearing-submission-'.$submission->getKey(),
+            type: TimelineType::HearingSubmission,
+            title: 'Pronúncia recebida',
+            description: trim($hearingNumber.' · aguarda análise'),
+            route: route('backoffice.hearings.index'),
+            datetime: $submission->submitted_at,
+            priority: TimelinePriority::Medium,
+            icon: 'message',
+            tone: 'info',
+            workspace: TimelineWorkspace::Applications,
+            metadata: [
+                'hearing_submission_id' => $submission->getKey(),
+                'hearing_number' => $hearingNumber,
+                'status' => $submission->status->value,
+            ],
+        );
     }
 }

@@ -8,7 +8,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property HearingSubmissionStatus $status
+ * @property Carbon|null $submitted_at
+ * @property Carbon|null $reviewed_at
+ */
 class HearingSubmission extends Model
 {
     /** @use HasFactory<HearingSubmissionFactory> */

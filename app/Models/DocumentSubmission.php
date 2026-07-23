@@ -11,17 +11,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int|null $user_id
  * @property int|null $current_version_id
- * @property DocumentStatus|null $status
+ * @property DocumentStatus $status
  * @property string|null $storage_disk
  * @property string|null $storage_path
  * @property string|null $mime_type
  * @property int|null $file_size
  * @property string|null $checksum
+ * @property Carbon|null $submitted_at
+ * @property Carbon|null $reviewed_at
  * @property-read User|null $user
  * @property-read DocumentVersion|null $currentVersion
  */
@@ -181,11 +184,7 @@ class DocumentSubmission extends Model
 
     public function isReplaceable(): bool
     {
-        $status = $this->status instanceof DocumentStatus
-            ? $this->status
-            : DocumentStatus::tryFrom((string) $this->status);
-
-        return in_array($status, [
+        return in_array($this->status, [
             DocumentStatus::Submitted,
             DocumentStatus::Rejected,
             DocumentStatus::Expired,
