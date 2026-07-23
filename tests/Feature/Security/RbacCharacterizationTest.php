@@ -185,7 +185,7 @@ class RbacCharacterizationTest extends TestCase
         );
     }
 
-    public function test_document_review_routes_use_a_narrower_fixed_role_list_than_the_main_backoffice(): void
+    public function test_document_review_routes_keep_fixed_role_list_and_backoffice_guards(): void
     {
         $route = Route::getRoutes()->getByName('admin.document-reviews.index');
 
@@ -197,9 +197,9 @@ class RbacCharacterizationTest extends TestCase
             'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor',
             $middleware,
         );
-        $this->assertNotContains('active.backoffice', $middleware);
-        $this->assertNotContains('mfa.backoffice', $middleware);
-        $this->assertNotContains('log.backoffice', $middleware);
+        $this->assertContains('active.backoffice', $middleware);
+        $this->assertContains('mfa.backoffice', $middleware);
+        $this->assertContains('log.backoffice', $middleware);
     }
 
     /**

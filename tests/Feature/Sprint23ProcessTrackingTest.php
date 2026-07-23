@@ -75,6 +75,7 @@ class Sprint23ProcessTrackingTest extends TestCase
             ->assertDontSee('Nota técnica interna');
 
         $this->actingAs($staff)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.applications.timeline', $application))
             ->assertOk()
             ->assertSee('Nota técnica interna');

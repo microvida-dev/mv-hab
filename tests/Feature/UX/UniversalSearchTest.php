@@ -57,7 +57,8 @@ class UniversalSearchTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Pesquisar')
-            ->assertSee('Centro de Comandos')
+            ->assertSee('for="dashboard-sidebar-search"', false)
+            ->assertSee('aria-label="Pesquisar"', false)
             ->assertSee(route('backoffice.search.index'), false)
             ->assertDontSee('Preparado');
     }

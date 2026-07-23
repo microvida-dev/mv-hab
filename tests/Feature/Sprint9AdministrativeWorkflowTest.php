@@ -44,6 +44,7 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
 
         $technician = $this->userWithRole('municipal_technician');
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.administrative-processes.index'))
             ->assertOk();
     }
@@ -54,6 +55,7 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
         $technician = $this->userWithRole('municipal_technician');
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.application-intake.create-process', $application))
             ->assertRedirect();
 
@@ -73,6 +75,7 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
         ]);
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.application-intake.create-process', $application))
             ->assertSessionHasErrors('application');
     }
@@ -152,6 +155,7 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
         ], $application->user);
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.correction-responses.accept', $response), [
                 'review_notes' => 'Resposta suficiente para teste.',
             ])
@@ -166,6 +170,7 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
         );
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.administrative-decisions.store-admission', $process), [
                 'summary' => 'Candidatura admitida para classificação em teste.',
                 'grounds' => 'Fundamentação administrativa fictícia para teste.',
@@ -181,6 +186,7 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
         ]);
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.administrative-processes.show', $process))
             ->assertOk()
             ->assertSee('Decisões administrativas')
@@ -221,6 +227,7 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
         ]);
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.administrative-decisions.store-admission', $process), [
                 'summary' => 'Candidatura admitida para classificação em teste.',
                 'grounds' => 'Fundamentação administrativa fictícia para teste.',
@@ -228,6 +235,7 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
             ->assertRedirect();
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.administrative-processes.show', $process->refresh()))
             ->assertOk()
             ->assertSee('Condições para pontuação')

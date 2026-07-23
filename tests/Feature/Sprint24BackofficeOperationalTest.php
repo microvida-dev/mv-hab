@@ -47,11 +47,13 @@ class Sprint24BackofficeOperationalTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($this->userWithRole('administrator'))
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.operational.dashboard'))
             ->assertOk()
             ->assertSee('Painel operacional');
 
         $this->actingAs($this->userWithRole('administrator'))
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.operational.executive-dashboard'))
             ->assertOk()
             ->assertSee('Painel executivo');
@@ -63,6 +65,7 @@ class Sprint24BackofficeOperationalTest extends TestCase
         $application = $this->submittedApplication();
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.applications.report.generate', $application), [
                 'format' => 'html',
                 'include_documents' => '1',
@@ -77,6 +80,7 @@ class Sprint24BackofficeOperationalTest extends TestCase
         $this->assertStringContainsString('validação final compete aos serviços municipais', Storage::disk('local')->get($report->file_path));
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.applications.document-dossier.generate', $application), [
                 'include_rejected' => '1',
                 'include_expired' => '1',
@@ -103,6 +107,7 @@ class Sprint24BackofficeOperationalTest extends TestCase
         $application = $this->submittedApplication();
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.procedure-templates.store'), [
                 'type' => ProcedureTemplateType::ProcedureMinute->value,
                 'name' => 'Ata operacional teste',
@@ -116,12 +121,14 @@ class Sprint24BackofficeOperationalTest extends TestCase
         $this->assertSame(ProcedureTemplateStatus::Draft, $template->status);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.procedure-templates.publish', $template))
             ->assertRedirect();
 
         $this->assertSame(ProcedureTemplateStatus::Active, $template->refresh()->status);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.procedure-templates.documents.generate', $template), [
                 'application_id' => $application->id,
             ])
@@ -132,12 +139,14 @@ class Sprint24BackofficeOperationalTest extends TestCase
         Storage::disk('local')->assertExists($document->file_path);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.generated-documents.issue', $document))
             ->assertRedirect();
 
         $this->assertSame(GeneratedProcedureDocumentStatus::Approved, $document->refresh()->status);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.procedure-minutes.generate'), [
                 'procedure_template_id' => $template->id,
                 'application_id' => $application->id,
@@ -152,6 +161,7 @@ class Sprint24BackofficeOperationalTest extends TestCase
         Storage::disk('local')->assertExists($minute->file_path);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.procedure-minutes.approve', $minute))
             ->assertRedirect();
 
@@ -164,11 +174,13 @@ class Sprint24BackofficeOperationalTest extends TestCase
         $alert = InternalAlert::factory()->create(['assigned_to' => $admin->id]);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.internal-alerts.show', $alert))
             ->assertOk()
             ->assertSee($alert->title);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.internal-alerts.resolve', $alert), [
                 'resolution_notes' => 'Resolvido em teste.',
             ])
@@ -194,6 +206,7 @@ class Sprint24BackofficeOperationalTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.applications.process-confirmations.generate', $application))
             ->assertSessionHasNoErrors()
             ->assertRedirect();
@@ -203,6 +216,7 @@ class Sprint24BackofficeOperationalTest extends TestCase
         $this->assertContains($confirmation->status, [ProcessConfirmationStatus::Sent, ProcessConfirmationStatus::Failed, ProcessConfirmationStatus::Generated]);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.process-confirmations.send', $confirmation))
             ->assertRedirect();
 

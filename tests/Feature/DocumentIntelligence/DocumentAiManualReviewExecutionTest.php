@@ -31,6 +31,7 @@ class DocumentAiManualReviewExecutionTest extends TestCase
         $submission = $this->documentSubmission();
 
         $this->actingAs($this->userWithRole('administrator'))
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('admin.document-reviews.show', $submission))
             ->assertOk()
             ->assertSee('IA documental')
@@ -60,6 +61,7 @@ class DocumentAiManualReviewExecutionTest extends TestCase
         });
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-reviews.document-ai', $submission))
             ->assertRedirect(route('backoffice.document-ai.assistant.show', $analysis))
             ->assertSessionHas('success');
@@ -89,6 +91,7 @@ class DocumentAiManualReviewExecutionTest extends TestCase
         });
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.document-ai.assistant.recalculate', $analysis), [
                 'confirm_recalculate' => '1',
             ])

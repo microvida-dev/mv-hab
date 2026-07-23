@@ -49,11 +49,13 @@ class Sprint12AllocationTest extends TestCase
 
         $candidate = $this->userWithRole('candidate');
         $this->actingAs($candidate)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.allocation.runs.index'))
             ->assertForbidden();
 
         $technician = $this->userWithRole('municipal_technician');
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.allocation.runs.index'))
             ->assertOk();
     }
@@ -141,6 +143,7 @@ class Sprint12AllocationTest extends TestCase
         $ruleSet = AllocationRuleSet::query()->firstOrFail();
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.allocation.runs.store'), [
                 'definitive_list_id' => $list->id,
                 'allocation_rule_set_id' => $ruleSet->id,
@@ -170,11 +173,13 @@ class Sprint12AllocationTest extends TestCase
     {
         [$administrator, , , $list] = $this->allocationContext(candidateCount: 2, unitCount: 1);
         $ruleSet = AllocationRuleSet::query()->firstOrFail();
-        $this->actingAs($administrator)->post(route('backoffice.allocation.runs.store'), [
-            'definitive_list_id' => $list->id,
-            'allocation_rule_set_id' => $ruleSet->id,
-            'allocation_method' => AllocationMethod::Ranking->value,
-        ]);
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
+            ->post(route('backoffice.allocation.runs.store'), [
+                'definitive_list_id' => $list->id,
+                'allocation_rule_set_id' => $ruleSet->id,
+                'allocation_method' => AllocationMethod::Ranking->value,
+            ]);
 
         $offer = AllocationOffer::query()->with('allocation.application')->firstOrFail();
         $candidate = $offer->candidate;
@@ -207,6 +212,7 @@ class Sprint12AllocationTest extends TestCase
         $ruleSet = AllocationRuleSet::query()->firstOrFail();
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.allocation.runs.store'), [
                 'definitive_list_id' => $list->id,
                 'allocation_rule_set_id' => $ruleSet->id,
@@ -222,6 +228,7 @@ class Sprint12AllocationTest extends TestCase
 
         $auditor = $this->userWithRole('auditor');
         $this->actingAs($auditor)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.allocation.lotteries.audit', $lottery))
             ->assertOk()
             ->assertSee($lottery->audit_hash);

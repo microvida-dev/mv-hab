@@ -26,9 +26,9 @@ class PortugueseTerminologySmokeTest extends TestCase
         $this->actingAs($administrator)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Painel Principal')
+            ->assertSee('Visão global da operação')
             ->assertSee('Indicadores do perfil')
-            ->assertSee('Ações rápidas')
+            ->assertSee('Acesso rápido')
             ->assertSee('Favoritos')
             ->assertSee('Recentes')
             ->assertSee('Portal Público');

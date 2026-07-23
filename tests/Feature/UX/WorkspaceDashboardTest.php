@@ -25,7 +25,7 @@ class WorkspaceDashboardTest extends TestCase
         $this->actingAs($administrator)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Painel Principal')
+            ->assertSee('Visão global da operação')
             ->assertSee('Espaços de Trabalho')
             ->assertSee('Atendimento')
             ->assertSee('Concursos')

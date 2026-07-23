@@ -44,7 +44,7 @@ class CaseWorkspaceTest extends TestCase
         $this->actingAs($administrator)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Painel Principal')
+            ->assertSee('Visão global da operação')
             ->assertSee('Indicadores do perfil');
 
         $this->actingAs($administrator)

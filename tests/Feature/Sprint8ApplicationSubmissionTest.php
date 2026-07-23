@@ -274,11 +274,13 @@ class Sprint8ApplicationSubmissionTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.applications.index'))
             ->assertOk()
             ->assertSee($application->application_number);
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.applications.show', $application))
             ->assertOk()
             ->assertSee($application->application_number);

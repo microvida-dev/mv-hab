@@ -33,7 +33,7 @@ class SmartActionCenterTest extends TestCase
         $this->actingAs($administrator)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Centro de Trabalho')
+            ->assertSee('Centro de produtividade')
             ->assertSee('Hoje')
             ->assertSee('WTK-UX06-HOJE')
             ->assertSee('Abrir produtividade');
