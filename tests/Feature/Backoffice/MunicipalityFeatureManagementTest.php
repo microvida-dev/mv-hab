@@ -5,6 +5,7 @@ namespace Tests\Feature\Backoffice;
 use App\Enums\FeatureKey;
 use App\Models\Municipality;
 use App\Models\Permission;
+use App\Models\PlatformOperatorAssignment;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
@@ -57,6 +58,7 @@ class MunicipalityFeatureManagementTest extends TestCase
     public function test_platform_administrator_can_view_enable_and_disable_features(): void
     {
         $administrator = $this->userWithRole('administrator');
+        PlatformOperatorAssignment::factory()->for($administrator)->create();
         $municipality = Municipality::factory()->create();
 
         $this->actingAs($administrator)
@@ -108,6 +110,7 @@ class MunicipalityFeatureManagementTest extends TestCase
     public function test_justification_is_required_and_manipulated_payload_cannot_change_another_municipality(): void
     {
         $administrator = $this->userWithRole('administrator');
+        PlatformOperatorAssignment::factory()->for($administrator)->create();
         $target = Municipality::factory()->create();
         $other = Municipality::factory()->create();
 
@@ -150,6 +153,8 @@ class MunicipalityFeatureManagementTest extends TestCase
         $auditor = $this->userWithRole('auditor');
         $support = $this->userWithRole('support_agent');
 
+        PlatformOperatorAssignment::factory()->for($municipalAdministrator)->create();
+        PlatformOperatorAssignment::factory()->for($auditor)->create();
         $this->grantPermissions($candidate, 'candidate_feature_probe', ['municipality_features.view']);
         $this->grantPermissions($auditor, 'auditor_feature_probe', [
             'municipality_features.view',
@@ -185,6 +190,7 @@ class MunicipalityFeatureManagementTest extends TestCase
     public function test_unknown_feature_is_rejected(): void
     {
         $administrator = $this->userWithRole('administrator');
+        PlatformOperatorAssignment::factory()->for($administrator)->create();
         $municipality = Municipality::factory()->create();
 
         $this->actingAs($administrator)
