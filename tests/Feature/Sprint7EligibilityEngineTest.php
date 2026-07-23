@@ -179,9 +179,12 @@ class Sprint7EligibilityEngineTest extends TestCase
     public function test_admin_can_create_update_activate_and_archive_rule_set_with_audit(): void
     {
         $administrator = $this->userWithRole('administrator');
-        $program = Program::factory()->create();
+        $program = Program::factory()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.eligibility.rule-sets.store'), [
                 'program_id' => $program->id,
                 'name' => 'Regra administrativa de teste',
@@ -222,13 +225,16 @@ class Sprint7EligibilityEngineTest extends TestCase
         $candidate = $this->userWithRole('candidate');
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.eligibility.rule-sets.store'), [
                 'name' => 'Sem contexto',
                 'status' => EligibilityRuleSetStatus::Draft->value,
             ])
             ->assertSessionHasErrors(['program_id', 'contest_id']);
 
-        $program = Program::factory()->create();
+        $program = Program::factory()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         $this->actingAs($candidate)
             ->post(route('backoffice.eligibility.rule-sets.store'), [
                 'program_id' => $program->id,
@@ -240,7 +246,9 @@ class Sprint7EligibilityEngineTest extends TestCase
 
     public function test_contest_rule_set_precedes_program_and_draft_or_archived_sets_are_ignored(): void
     {
-        $program = Program::factory()->create();
+        $program = Program::factory()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         $contest = Contest::factory()->for($program)->create();
         $programSet = $this->activeRuleSet($program);
         $contestSet = $this->activeRuleSet($program, $contest);
@@ -334,7 +342,9 @@ class Sprint7EligibilityEngineTest extends TestCase
     public function test_candidate_without_registration_receives_insufficient_data_instead_of_ineligible(): void
     {
         $candidate = $this->userWithRole('candidate');
-        $program = Program::factory()->published()->create();
+        $program = Program::factory()->published()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         $contest = Contest::factory()->for($program)->open()->create();
         $this->activeRuleSet($program, $contest, [
             $this->criterion('registration_is_registered'),
@@ -419,7 +429,9 @@ class Sprint7EligibilityEngineTest extends TestCase
     public function test_admin_can_create_unique_criterion_and_updates_are_audited(): void
     {
         $administrator = $this->userWithRole('administrator');
-        $program = Program::factory()->create();
+        $program = Program::factory()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         $ruleSet = $this->activeRuleSet($program);
         $payload = [
             'code' => 'registration_is_registered_manual_review_test',
@@ -432,6 +444,7 @@ class Sprint7EligibilityEngineTest extends TestCase
         ];
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.eligibility.criteria.store', $ruleSet), $payload)
             ->assertRedirect();
         $criterion = EligibilityCriterion::query()->firstOrFail();

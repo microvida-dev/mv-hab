@@ -34,12 +34,12 @@ class AuditAccessRoutesCommandTest extends TestCase
         $this->assertGreaterThan(0, $payload['summary']['total_routes']);
 
         $this->assertSame(
-            752,
+            674,
             $payload['summary']['fixed_role_routes'],
         );
 
         $this->assertSame(
-            532,
+            454,
             $payload['summary']['backoffice_fixed_role_routes'],
         );
 
@@ -49,22 +49,22 @@ class AuditAccessRoutesCommandTest extends TestCase
         );
 
         $this->assertSame(
-            374,
+            452,
             $payload['summary']['permission_middleware_routes'],
         );
 
         $this->assertSame(
-            491,
+            413,
             $payload['summary']['backoffice_fixed_role_without_active_backoffice'],
         );
 
         $this->assertSame(
-            491,
+            413,
             $payload['summary']['backoffice_fixed_role_without_mfa_backoffice'],
         );
 
         $this->assertSame(
-            491,
+            413,
             $payload['summary']['backoffice_fixed_role_without_log_backoffice'],
         );
 

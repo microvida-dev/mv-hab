@@ -6,21 +6,30 @@ use App\Enums\DocumentAiClassificationStatus;
 use App\Enums\DocumentAiDocumentType;
 use App\Enums\DocumentAiOcrStatus;
 use App\Enums\DocumentAiStatus;
+use App\Enums\FeatureKey;
 use App\Models\DocumentAiAnalysis;
+use App\Models\Municipality;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class DocumentAiClassificationPanelTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
+
+    private Municipality $municipality;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed(SystemAccessSeeder::class);
+        $this->municipality = $this->municipalityWithFeatures(
+            FeatureKey::ApplicationReview,
+        );
     }
 
     public function test_classification_panel_is_protected_and_visible_to_backoffice_only(): void
@@ -35,6 +44,7 @@ class DocumentAiClassificationPanelTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($this->userWithRole('administrator'))
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.document-ai.classifications.index'))
             ->assertOk()
             ->assertSee('Classificação IA documental')
@@ -48,6 +58,7 @@ class DocumentAiClassificationPanelTest extends TestCase
         ]);
 
         $this->actingAs($this->userWithRole('municipal_technician'))
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.document-ai.classifications.show', $analysis))
             ->assertOk()
             ->assertSee('Texto OCR sensível oculto')
@@ -65,6 +76,7 @@ class DocumentAiClassificationPanelTest extends TestCase
         $analysis = $this->classifiedAnalysis();
 
         $this->actingAs($this->userWithRole('administrator'))
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.document-ai.classifications.manual-review', $analysis), [
                 'reason' => 'Confirmacao manual necessaria para teste.',
             ])
@@ -86,7 +98,7 @@ class DocumentAiClassificationPanelTest extends TestCase
      */
     private function classifiedAnalysis(array $overrides = []): DocumentAiAnalysis
     {
-        return DocumentAiAnalysis::factory()->completed()->create([
+        $analysis = DocumentAiAnalysis::factory()->completed()->create([
             'status' => DocumentAiStatus::Completed,
             'ocr_status' => DocumentAiOcrStatus::Completed,
             'ocr_available' => true,
@@ -100,11 +112,21 @@ class DocumentAiClassificationPanelTest extends TestCase
             'classification_requires_manual_review' => false,
             ...$overrides,
         ]);
+
+        $this->assignMunicipality($analysis->documentSubmission->user, $this->municipality);
+        $this->assignMunicipality(
+            $analysis->documentSubmission->adhesionRegistration->user,
+            $this->municipality,
+        );
+
+        return $analysis;
     }
 
     private function userWithRole(string $role): User
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         $roleModel = Role::query()->where('name', $role)->firstOrFail();
         $user->roles()->attach($roleModel);
 
