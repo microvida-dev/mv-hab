@@ -6,6 +6,7 @@ use App\Enums\DocumentStatus;
 use App\Enums\FeatureKey;
 use App\Models\DocumentAiAnalysis;
 use App\Models\DocumentSubmission;
+use App\Models\DocumentType;
 use App\Models\DocumentVersion;
 use App\Models\Municipality;
 use App\Models\Permission;
@@ -101,6 +102,33 @@ class DocumentReviewPermissionAccessTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.document-reviews.index'))
             ->assertOk();
+    }
+
+    public function test_review_index_renders_the_grouped_payload_from_loaded_relations(): void
+    {
+        $user = $this->userWithCustomRole(['documents.view']);
+        $candidate = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
+            'name' => 'Candidata Documental',
+            'email' => 'candidata.documental@example.test',
+        ]);
+        $documentType = DocumentType::factory()->create([
+            'name' => 'Declaração municipal de teste',
+        ]);
+
+        DocumentSubmission::factory()->create([
+            'document_type_id' => $documentType->id,
+            'user_id' => $candidate->id,
+            'status' => DocumentStatus::Submitted->value,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('admin.document-reviews.index'))
+            ->assertOk()
+            ->assertSeeText('Candidata Documental')
+            ->assertSeeText('candidata.documental@example.test')
+            ->assertSeeText('Declaração municipal de teste')
+            ->assertSeeText('Submetido');
     }
 
     public function test_user_without_documents_view_cannot_access_review_index(): void

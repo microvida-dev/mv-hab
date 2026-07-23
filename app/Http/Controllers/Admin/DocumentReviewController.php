@@ -3,22 +3,53 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\DocumentAccessAction;
+use App\Enums\DocumentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RejectDocumentSubmissionRequest;
 use App\Http\Requests\ValidateDocumentSubmissionRequest;
+use App\Models\AdhesionRegistration;
+use App\Models\Application;
 use App\Models\DocumentSubmission;
 use App\Models\DocumentType;
+use App\Models\User;
 use App\Services\DocumentIntelligence\DocumentAiManualAnalysisService;
 use App\Services\Documents\DocumentAccessService;
 use App\Services\Documents\DocumentReviewService;
 use App\Services\Municipalities\MunicipalRecordScopeService;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use LogicException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * @phpstan-type ReviewQueueDocument array{
+ *     submission: DocumentSubmission,
+ *     member_name: string,
+ *     member_hint: string,
+ *     requirement_label: string,
+ *     context_label: string,
+ *     key_field: string,
+ *     status_value: string,
+ *     status_label: string
+ * }
+ * @phpstan-type ReviewQueueStatusCount array{value: string, label: string, count: int}
+ * @phpstan-type ReviewQueueGroup array{
+ *     key: string,
+ *     candidate_name: string,
+ *     candidate_email: string|null,
+ *     application_id: int|string|null,
+ *     registration_id: int|string|null,
+ *     documents: Collection<int, ReviewQueueDocument>,
+ *     total: int,
+ *     status_counts: Collection<int, ReviewQueueStatusCount>,
+ *     last_submission_at: CarbonInterface|null,
+ *     is_open: bool
+ * }
+ */
 class DocumentReviewController extends Controller
 {
     public function __construct(
@@ -280,11 +311,19 @@ class DocumentReviewController extends Controller
         return 'Documento sem associação explícita ao agregado';
     }
 
+    /**
+     * @param  Collection<int, DocumentSubmission>  $items
+     * @return ReviewQueueGroup
+     */
     private function reviewQueueGroupPayload(Collection $items): array
     {
-        /** @var DocumentSubmission $first */
         $first = $items->first();
 
+        if (! $first instanceof DocumentSubmission) {
+            throw new LogicException('Um grupo de revisão documental não pode estar vazio.');
+        }
+
+        /** @var Collection<int, ReviewQueueDocument> $documents */
         $documents = $items
             ->map(fn (DocumentSubmission $submission): array => [
                 'submission' => $submission,
@@ -298,43 +337,146 @@ class DocumentReviewController extends Controller
             ])
             ->values();
 
+        /** @var Collection<int, ReviewQueueStatusCount> $statusCounts */
         $statusCounts = $items
             ->groupBy(fn (DocumentSubmission $submission): string => $this->reviewQueueStatusValue($submission))
-            ->map(fn (Collection $documents, string $status): array => [
-                'value' => $status,
-                'label' => $this->reviewQueueStatusLabel($documents->first()),
-                'count' => $documents->count(),
-            ])
+            ->map(fn (Collection $documents, string $status): array => $this->reviewQueueStatusCount(
+                $documents,
+                $status,
+            ))
             ->values();
 
         return [
             'key' => $this->reviewQueueGroupKey($first),
-            'candidate_name' => $first->application?->user?->name
-                ?? $first->user?->name
-                ?? $first->adhesionRegistration?->full_name
-                ?? $first->adhesionRegistration?->user?->name
-                ?? 'Candidato não indicado',
-            'candidate_email' => $first->application?->user?->email
-                ?? $first->user?->email
-                ?? $first->adhesionRegistration?->user?->email,
+            'candidate_name' => $this->reviewQueueCandidateName($first),
+            'candidate_email' => $this->reviewQueueCandidateEmail($first),
             'application_id' => $first->getAttribute('application_id') ?? $first->application?->id,
             'registration_id' => $first->getAttribute('adhesion_registration_id') ?? $first->adhesionRegistration?->id,
             'documents' => $documents,
             'total' => $items->count(),
             'status_counts' => $statusCounts,
-            'last_submission_at' => $items
-                ->max(fn (DocumentSubmission $submission) => $submission->submitted_at ?? $submission->created_at),
+            'last_submission_at' => $this->reviewQueueLatestSubmissionAt($items),
             'is_open' => $items->contains(
                 fn (DocumentSubmission $submission): bool => ! in_array($this->reviewQueueStatusValue($submission), ['validated'], true)
             ),
         ];
     }
 
+    /**
+     * @param  Collection<int, DocumentSubmission>  $documents
+     * @return ReviewQueueStatusCount
+     */
+    private function reviewQueueStatusCount(Collection $documents, string $status): array
+    {
+        $document = $documents->first();
+
+        if (! $document instanceof DocumentSubmission) {
+            throw new LogicException('Um estado da fila documental não pode ter um grupo vazio.');
+        }
+
+        return [
+            'value' => $status,
+            'label' => $this->reviewQueueStatusLabel($document),
+            'count' => $documents->count(),
+        ];
+    }
+
+    private function reviewQueueCandidateName(DocumentSubmission $submission): string
+    {
+        $candidate = $this->reviewQueueApplicationCandidate($submission);
+
+        if ($candidate instanceof User) {
+            return $candidate->name;
+        }
+
+        $candidate = $submission->getRelation('user');
+
+        if ($candidate instanceof User) {
+            return $candidate->name;
+        }
+
+        $registration = $submission->getRelation('adhesionRegistration');
+        $fullName = $registration instanceof AdhesionRegistration
+            ? $registration->getAttribute('full_name')
+            : null;
+
+        if (is_string($fullName) && $fullName !== '') {
+            return $fullName;
+        }
+
+        $candidate = $registration instanceof AdhesionRegistration
+            ? $registration->getRelation('user')
+            : null;
+
+        return $candidate instanceof User
+            ? $candidate->name
+            : 'Candidato não indicado';
+    }
+
+    private function reviewQueueCandidateEmail(DocumentSubmission $submission): ?string
+    {
+        $candidate = $this->reviewQueueApplicationCandidate($submission);
+
+        if ($candidate instanceof User) {
+            return $candidate->email;
+        }
+
+        $candidate = $submission->getRelation('user');
+
+        if ($candidate instanceof User) {
+            return $candidate->email;
+        }
+
+        $registration = $submission->getRelation('adhesionRegistration');
+        $candidate = $registration instanceof AdhesionRegistration
+            ? $registration->getRelation('user')
+            : null;
+
+        return $candidate instanceof User ? $candidate->email : null;
+    }
+
+    private function reviewQueueApplicationCandidate(DocumentSubmission $submission): ?User
+    {
+        $application = $submission->getRelation('application');
+        $candidate = $application instanceof Application
+            ? $application->getRelation('user')
+            : null;
+
+        return $candidate instanceof User ? $candidate : null;
+    }
+
+    /**
+     * @param  Collection<int, DocumentSubmission>  $items
+     */
+    private function reviewQueueLatestSubmissionAt(Collection $items): ?CarbonInterface
+    {
+        $latest = null;
+
+        foreach ($items as $submission) {
+            $date = $submission->submitted_at ?? $submission->created_at;
+
+            if (! $date instanceof CarbonInterface) {
+                continue;
+            }
+
+            if ($latest === null || $date->greaterThan($latest)) {
+                $latest = $date;
+            }
+        }
+
+        return $latest;
+    }
+
     private function reviewQueueRequirementLabel(DocumentSubmission $submission): string
     {
-        return $submission->requiredDocument?->name
-            ?? $submission->documentType?->name
-            ?? 'Documento sem requisito associado';
+        $documentType = $submission->getRelation('documentType');
+        $name = $documentType instanceof DocumentType
+            ? $documentType->getAttribute('name')
+            : null;
+
+        return is_string($name) && $name !== ''
+            ? $name
+            : 'Documento sem requisito associado';
     }
 
     private function reviewQueueContextLabel(DocumentSubmission $submission): string
@@ -398,22 +540,14 @@ class DocumentReviewController extends Controller
     {
         $status = $submission->status;
 
-        if ($status instanceof \BackedEnum) {
-            return (string) $status->value;
-        }
-
-        return (string) $status;
+        return $status instanceof DocumentStatus ? $status->value : '';
     }
 
     private function reviewQueueStatusLabel(DocumentSubmission $submission): string
     {
         $status = $submission->status;
 
-        if (is_object($status) && method_exists($status, 'label')) {
-            return $status->label();
-        }
-
-        return str((string) $status)->replace('_', ' ')->headline()->toString();
+        return $status instanceof DocumentStatus ? $status->label() : '';
     }
 
     public function preview(Request $request, DocumentSubmission $documentSubmission): StreamedResponse
@@ -447,43 +581,5 @@ class DocumentReviewController extends Controller
         }
 
         return $this->accessService->download($documentSubmission->load('currentVersion'), $this->authenticatedUser($request));
-    }
-
-    private function reviewQueueExtractedField(DocumentSubmission $submission, array $keys): ?string
-    {
-        $analysis = $submission->latestDocumentAiAnalysis;
-
-        if (! $analysis) {
-            return null;
-        }
-
-        $fields = $analysis->getAttribute('extracted_fields')
-            ?? $analysis->getAttribute('extracted_data')
-            ?? $analysis->getAttribute('fields')
-            ?? [];
-
-        if (is_string($fields)) {
-            $fields = json_decode($fields, true) ?: [];
-        }
-
-        if (! is_array($fields)) {
-            return null;
-        }
-
-        foreach ($keys as $key) {
-            $value = data_get($fields, $key);
-
-            if (blank($value)) {
-                continue;
-            }
-
-            if (is_array($value)) {
-                continue;
-            }
-
-            return (string) $value;
-        }
-
-        return null;
     }
 }
