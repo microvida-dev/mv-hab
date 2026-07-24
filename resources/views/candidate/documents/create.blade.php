@@ -3,7 +3,7 @@
         <x-mv.page-header
             eyebrow="Documentos"
             title="Submeter documento"
-            description="{{ $item['document_type']->name }} · {{ $item['target_label'] }}"
+            description="{{ $item['document_type']->name }} · {{ $item['target_label'] }}{{ ($item['required_submissions'] ?? 1) > 1 ? ' · Documento '.$item['requirement_instance'].'/'.$item['required_submissions'] : '' }}"
         >
             <x-slot name="actions">
                 <a href="{{ $application ? route('candidate.applications.review', $application) : route('candidate.documents.checklist') }}" class="mv-button-secondary">
@@ -26,7 +26,11 @@
 
                     <input type="hidden" name="document_type_id" value="{{ $item['document_type_id'] }}">
                     <input type="hidden" name="required_document_id" value="{{ $item['required_document_id'] }}">
-
+                    <input
+                        type="hidden"
+                        name="requirement_instance"
+                        value="{{ $item['requirement_instance'] ?? 1 }}"
+                    >
                     @if ($application)
                         <input type="hidden" name="application_public_id" value="{{ $application->public_id }}">
                     @endif

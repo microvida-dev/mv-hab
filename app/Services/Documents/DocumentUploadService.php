@@ -50,33 +50,100 @@ class DocumentUploadService
             ->where('is_active', true)
             ->whereKey($data['required_document_id'] ?? null)
             ->firstOrFail();
-        $application = $this->applicationFor($registration, $data['application_public_id'] ?? null);
+
+        $application = $this->applicationFor(
+            $registration,
+            $data['application_public_id'] ?? null,
+        );
+
         $this->ensureRuleScope($requiredDocument, $application);
-        $this->ensureTypeMatches($requiredDocument, (int) $data['document_type_id']);
+        $this->ensureTypeMatches(
+            $requiredDocument,
+            (int) $data['document_type_id'],
+        );
         $this->validateFile($requiredDocument, $file);
 
-        $target = $this->targetFor($registration, $requiredDocument->required_for, $data, $application);
-        $this->ensureNoActiveSubmission($registration, $requiredDocument, $target, $application);
+        $target = $this->targetFor(
+            $registration,
+            $requiredDocument->required_for,
+            $data,
+            $application,
+        );
 
-        $result = DB::transaction(function () use ($registration, $file, $data, $actor, $requiredDocument, $target, $application) {
-            $submission = new DocumentSubmission($this->safeSubmissionData($data));
+        $requirementInstance = $this->requirementInstanceFor(
+            $requiredDocument,
+            $data,
+        );
+
+        $result = DB::transaction(function () use (
+            $registration,
+            $file,
+            $data,
+            $actor,
+            $requiredDocument,
+            $target,
+            $application,
+            $requirementInstance,
+        ) {
+
+            // Serializa uploads concorrentes do mesmo registo de adesão.
+            // A validação de duplicação deve ocorrer dentro da transação.
+            $lockedRegistration = AdhesionRegistration::query()
+                ->whereKey($registration->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->ensureNoActiveSubmission(
+                registration: $lockedRegistration,
+                requiredDocument: $requiredDocument,
+                target: $target,
+                application: $application,
+                requirementInstance: $requirementInstance,
+            );
+
+            $submission = new DocumentSubmission(
+                $this->safeSubmissionData($data),
+            );
+
             $submission->forceFill([
                 'document_type_id' => $requiredDocument->document_type_id,
                 'required_document_id' => $requiredDocument->id,
+                'requirement_instance' => $requirementInstance,
                 'user_id' => $actor->id,
                 'adhesion_registration_id' => $registration->id,
                 'status' => DocumentStatus::Submitted,
                 'submitted_at' => now(),
                 'submitted_by' => $actor->id,
                 'application_id' => $application?->id,
-                ...$this->targetColumns($requiredDocument->required_for, $target),
+                ...$this->targetColumns(
+                    $requiredDocument->required_for,
+                    $target,
+                ),
             ]);
+
             $submission->save();
 
-            $version = $this->storeVersion($submission, $file, 1, $actor, $data['notes'] ?? null);
-            $this->syncSubmissionFile($submission, $version, $data);
+            $version = $this->storeVersion(
+                submission: $submission,
+                file: $file,
+                versionNumber: 1,
+                actor: $actor,
+                notes: $data['notes'] ?? null,
+            );
 
-            $this->accessService->record($submission, DocumentAccessAction::Upload, $version, $actor);
+            $this->syncSubmissionFile(
+                $submission,
+                $version,
+                $data,
+            );
+
+            $this->accessService->record(
+                $submission,
+                DocumentAccessAction::Upload,
+                $version,
+                $actor,
+            );
+
             $this->auditLogger->record(
                 event: AuditEvents::CREATE,
                 auditable: $submission,
@@ -87,12 +154,22 @@ class DocumentUploadService
                     'actor_id' => $actor->id,
                     'document_type_id' => $requiredDocument->document_type_id,
                     'required_document_id' => $requiredDocument->id,
+                    'requirement_instance' => $requirementInstance,
                     'version' => 1,
                 ],
             );
-            $this->scheduleDocumentAiAnalysis($submission, $actor);
 
-            return $submission->fresh(['documentType', 'requiredDocument', 'currentVersion', 'versions']);
+            $this->scheduleDocumentAiAnalysis(
+                $submission,
+                $actor,
+            );
+
+            return $submission->fresh([
+                'documentType',
+                'requiredDocument',
+                'currentVersion',
+                'versions',
+            ]);
         });
 
         assert($result instanceof DocumentSubmission);
@@ -339,32 +416,88 @@ class DocumentUploadService
         RequiredDocument $requiredDocument,
         Model $target,
         ?Application $application,
+        int $requirementInstance,
     ): void {
         $query = $registration->documentSubmissions()
             ->where('required_document_id', $requiredDocument->id)
+            ->where('requirement_instance', $requirementInstance)
             ->whereNotIn('status', [
                 DocumentStatus::Cancelled->value,
                 DocumentStatus::Replaced->value,
             ]);
 
         if ($application !== null) {
-            $query->where('application_id', $application->id);
+            $query->where(
+                'application_id',
+                $application->id,
+            );
         }
 
         match ($requiredDocument->required_for) {
-            DocumentAppliesTo::Household => $query->where('household_id', $target->getKey()),
-            DocumentAppliesTo::HouseholdMember => $query->where('household_member_id', $target->getKey()),
-            DocumentAppliesTo::IncomeRecord => $query->where('income_record_id', $target->getKey()),
-            DocumentAppliesTo::CurrentHousingSituation => $query->where('current_housing_situation_id', $target->getKey()),
-            DocumentAppliesTo::Application => $query->where('application_id', $target->getKey()),
+            DocumentAppliesTo::Household => $query
+                ->where(
+                    'household_id',
+                    $target->getKey(),
+                ),
+
+            DocumentAppliesTo::HouseholdMember => $query
+                ->where(
+                    'household_member_id',
+                    $target->getKey(),
+                ),
+
+            DocumentAppliesTo::IncomeRecord => $query
+                ->where(
+                    'income_record_id',
+                    $target->getKey(),
+                ),
+
+            DocumentAppliesTo::CurrentHousingSituation => $query
+                ->where(
+                    'current_housing_situation_id',
+                    $target->getKey(),
+                ),
+
+            DocumentAppliesTo::Application => $query
+                ->where(
+                    'application_id',
+                    $target->getKey(),
+                ),
+
             default => null,
         };
 
         if ($query->exists()) {
             throw ValidationException::withMessages([
-                'required_document_id' => 'Já existe uma submissão ativa para este documento. Use a substituição.',
+                'requirement_instance' => 'Já existe uma submissão ativa para esta posição documental. Use a substituição.',
             ]);
         }
+    }
+
+    /**
+     * @param  array{requirement_instance?: mixed}  $data
+     */
+    private function requirementInstanceFor(
+        RequiredDocument $requiredDocument,
+        array $data,
+    ): int {
+        $requiredSubmissions = max(
+            1,
+            (int) $requiredDocument->required_submissions,
+        );
+
+        $requirementInstance = (int) (
+            $data['requirement_instance'] ?? 1
+        );
+
+        if ($requirementInstance < 1
+            || $requirementInstance > $requiredSubmissions) {
+            throw ValidationException::withMessages([
+                'requirement_instance' => 'A posição documental selecionada não é válida para este requisito.',
+            ]);
+        }
+
+        return $requirementInstance;
     }
 
     /**

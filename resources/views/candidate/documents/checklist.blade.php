@@ -92,6 +92,12 @@
                                                     Obrigatório
                                                 </x-mv.badge>
                                             @endif
+
+                                            @if (($item['required_submissions'] ?? 1) > 1)
+                                                <x-mv.badge tone="neutral">
+                                                    Documento {{ $item['position_label'] }}
+                                                </x-mv.badge>
+                                            @endif
                                         </div>
                                         <p class="mt-1 text-sm text-ink-500">{{ $item['target_label'] }}</p>
                                         @if ($item['instructions'])
@@ -115,6 +121,7 @@
                                                 'required_document_id' => $item['required_document_id'],
                                                 'target_type' => $item['target_type'],
                                                 'target_id' => $item['target_id'],
+                                                'requirement_instance' => $item['requirement_instance'],
                                             ]) }}" class="mv-button-primary">
                                                 <x-ui-icon name="plus" class="h-4 w-4" />
                                                 Submeter

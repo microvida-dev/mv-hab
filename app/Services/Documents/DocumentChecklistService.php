@@ -33,6 +33,7 @@ class DocumentChecklistService
         $registration->loadMissing([
             'household.members.incomeRecords.incomeSource',
             'household.incomeRecords.incomeSource',
+            'household.incomeRecords.householdMember',
             'currentHousingSituation',
             'documentSubmissions.documentType',
             'documentSubmissions.currentVersion',
@@ -92,7 +93,7 @@ class DocumentChecklistService
     }
 
     /**
-     * @return Collection<int, mixed>
+     * @return Collection<int, array<string, mixed>>
      */
     private function itemsForRule(
         AdhesionRegistration $registration,
@@ -101,35 +102,94 @@ class DocumentChecklistService
     ): Collection {
         $appliesTo = $rule->required_for;
         $documentType = $rule->documentType;
+
         assert($documentType instanceof DocumentType);
 
-        return $this->targetsFor($registration, $appliesTo, $application)
-            ->filter(fn (Model $target) => $this->evaluator->applies($rule, $target))
-            ->map(function (Model $target) use ($registration, $rule, $application, $appliesTo, $documentType) {
-                $submission = $this->matchingSubmission($registration, $rule, $target, $application, $appliesTo);
-                $status = $submission instanceof DocumentSubmission ? $this->documentStatus($submission) : DocumentStatus::Missing;
+        $requiredSubmissions = max(
+            1,
+            (int) $rule->required_submissions,
+        );
 
-                return [
-                    'key' => $rule->id.'-'.$appliesTo->value.'-'.$target->getKey(),
-                    'required_document' => $rule,
-                    'document_type' => $documentType,
-                    'required_document_id' => $rule->id,
-                    'document_type_id' => $rule->document_type_id,
-                    'required_for' => $appliesTo,
-                    'group' => $this->groupLabel($appliesTo),
-                    'target_type' => $appliesTo->value,
-                    'target_id' => $target->getKey(),
-                    'target_label' => $this->targetLabel($target),
-                    'application' => $application,
-                    'instructions' => $rule->instructions ?: $documentType->description,
-                    'is_required' => $rule->is_required,
-                    'submission' => $submission,
-                    'status' => $status,
-                    'missing' => $submission === null,
-                    'rejected' => $status === DocumentStatus::Rejected,
-                    'validated' => $status === DocumentStatus::Validated,
-                ];
-            });
+        /** @var Collection<int, array<string, mixed>> $items */
+        $items = $this->targetsFor(
+            $registration,
+            $appliesTo,
+            $application,
+        )
+            ->filter(
+                fn (Model $target): bool => $this->evaluator->applies(
+                    $rule,
+                    $target,
+                ),
+            )
+            ->flatMap(function (Model $target) use (
+                $registration,
+                $rule,
+                $application,
+                $appliesTo,
+                $documentType,
+                $requiredSubmissions,
+            ): Collection {
+                return collect(range(1, $requiredSubmissions))
+                    ->map(function (int $requirementInstance) use (
+                        $registration,
+                        $rule,
+                        $target,
+                        $application,
+                        $appliesTo,
+                        $documentType,
+                        $requiredSubmissions,
+                    ): array {
+                        $submission = $this->matchingSubmission(
+                            registration: $registration,
+                            rule: $rule,
+                            target: $target,
+                            application: $application,
+                            appliesTo: $appliesTo,
+                            requirementInstance: $requirementInstance,
+                        );
+
+                        $status = $submission instanceof DocumentSubmission
+                            ? $this->documentStatus($submission)
+                            : DocumentStatus::Missing;
+
+                        return [
+                            'key' => implode('-', [
+                                $rule->id,
+                                $appliesTo->value,
+                                $target->getKey(),
+                                $requirementInstance,
+                            ]),
+                            'required_document' => $rule,
+                            'document_type' => $documentType,
+                            'required_document_id' => $rule->id,
+                            'document_type_id' => $rule->document_type_id,
+                            'required_for' => $appliesTo,
+                            'group' => $this->groupLabel($appliesTo),
+                            'target_type' => $appliesTo->value,
+                            'target_id' => $target->getKey(),
+                            'target_label' => $this->targetLabel($target),
+                            'application' => $application,
+                            'instructions' => $rule->instructions
+                                ?: $documentType->description,
+                            'is_required' => $rule->is_required,
+                            'requirement_instance' => $requirementInstance,
+                            'required_submissions' => $requiredSubmissions,
+                            'position_label' => $requiredSubmissions > 1
+                                ? $requirementInstance.'/'.$requiredSubmissions
+                                : null,
+                            'reference_period' => $submission?->reference_period,
+                            'submission' => $submission,
+                            'status' => $status,
+                            'missing' => $submission === null,
+                            'rejected' => $status === DocumentStatus::Rejected,
+                            'validated' => $status === DocumentStatus::Validated,
+                        ];
+                    });
+            })
+            ->values();
+
+        return $items;
     }
 
     /**
@@ -159,22 +219,29 @@ class DocumentChecklistService
         Model $target,
         ?Application $application,
         DocumentAppliesTo $appliesTo,
+        int $requirementInstance,
     ): ?DocumentSubmission {
         $query = $registration->documentSubmissions()
             ->with(['documentType', 'currentVersion', 'versions'])
             ->where('required_document_id', $rule->id)
+            ->where('requirement_instance', $requirementInstance)
             ->whereNotIn('status', [
                 DocumentStatus::Cancelled->value,
                 DocumentStatus::Replaced->value,
             ]);
 
-        if ($rule->program_id !== null || $rule->contest_id !== null || $appliesTo === DocumentAppliesTo::Application) {
+        if ($rule->program_id !== null
+            || $rule->contest_id !== null
+            || $appliesTo === DocumentAppliesTo::Application) {
             $query->where('application_id', $application?->id);
         }
 
         $this->applyTargetConstraint($query, $appliesTo, $target);
 
-        return $query->latest('updated_at')->latest('id')->first();
+        return $query
+            ->latest('updated_at')
+            ->latest('id')
+            ->first();
     }
 
     /**
@@ -256,7 +323,7 @@ class DocumentChecklistService
             $target instanceof AdhesionRegistration => 'Registo de Adesão',
             $target instanceof Household => (string) ($target->getAttribute('name') ?: 'Agregado familiar'),
             $target instanceof HouseholdMember => $target->full_name,
-            $target instanceof IncomeRecord => trim(((string) ($target->incomeSource?->getAttribute('name') ?: 'Rendimento')).' '.number_format((float) $target->monthly_amount, 2, ',', '.').' €/mês'),
+            $target instanceof IncomeRecord => $this->incomeRecordLabel($target),
             $target instanceof CurrentHousingSituation => $this->housingStatusLabel($target),
             $target instanceof Application => $target->application_number ?: 'Candidatura em rascunho',
             default => class_basename($target).' #'.$target->getKey(),
@@ -273,5 +340,30 @@ class DocumentChecklistService
         $status = $target->housing_status;
 
         return $status?->label() ?? 'Situação habitacional';
+    }
+
+    private function incomeRecordLabel(IncomeRecord $target): string
+    {
+        $parts = [];
+
+        $memberName = trim((string) $target->householdMember?->full_name);
+
+        if ($memberName !== '') {
+            $parts[] = $memberName;
+        }
+
+        $parts[] = (string) (
+            $target->incomeSource?->getAttribute('name')
+            ?: 'Rendimento'
+        );
+
+        $parts[] = number_format(
+            (float) $target->monthly_amount,
+            2,
+            ',',
+            '.',
+        ).' €/mês';
+
+        return implode(' · ', $parts);
     }
 }

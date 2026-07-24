@@ -165,40 +165,55 @@ class DocumentController extends Controller
      * @param  Collection<int, array<string, mixed>>  $items
      * @return array<string, mixed>|null
      */
-    private function selectedChecklistItem(Collection $items, Request $request): ?array
-    {
-        $item = $this->selectedChecklistItemByTarget($items, $request);
-
-        if ($item !== null) {
-            return $item;
-        }
-
+    private function selectedChecklistItem(
+        Collection $items,
+        Request $request,
+    ): ?array {
         if ($request->filled('item')) {
             $item = $items->firstWhere('key', $request->query('item'));
 
             return is_array($item) ? $item : null;
         }
 
-        return null;
+        return $this->selectedChecklistItemByTarget($items, $request);
     }
 
     /**
      * @param  Collection<int, array<string, mixed>>  $items
      * @return array<string, mixed>|null
      */
-    private function selectedChecklistItemByTarget(Collection $items, Request $request): ?array
-    {
+    private function selectedChecklistItemByTarget(
+        Collection $items,
+        Request $request,
+    ): ?array {
         if (! $request->filled('required_document_id')
             || ! $request->filled('target_type')
             || ! $request->filled('target_id')) {
             return null;
         }
 
-        $item = $items->first(function (array $item) use ($request): bool {
-            return isset($item['required_document_id'], $item['target_type'], $item['target_id'])
-                && (int) $item['required_document_id'] === $request->integer('required_document_id')
-                && $item['target_type'] === $request->query('target_type')
-                && (int) $item['target_id'] === $request->integer('target_id');
+        $requirementInstance = max(
+            1,
+            $request->integer('requirement_instance', 1),
+        );
+
+        $item = $items->first(function (array $item) use (
+            $request,
+            $requirementInstance,
+        ): bool {
+            return isset(
+                $item['required_document_id'],
+                $item['target_type'],
+                $item['target_id'],
+            )
+                && (int) $item['required_document_id']
+                    === $request->integer('required_document_id')
+                && $item['target_type']
+                    === $request->query('target_type')
+                && (int) $item['target_id']
+                    === $request->integer('target_id')
+                && (int) ($item['requirement_instance'] ?? 1)
+                    === $requirementInstance;
         });
 
         return is_array($item) ? $item : null;
