@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use App\Enums\ContractSignatureMethod;
 use App\Enums\ContractSignatureRole;
+use App\Models\Contract;
+use App\Models\LeaseContractSignature;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,7 +13,13 @@ class StoreLeaseContractSignatureRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $contract = $this->route('leaseContract');
+
+        return $contract instanceof Contract
+            && ($this->user()?->can(
+                'signBackoffice',
+                [LeaseContractSignature::class, $contract],
+            ) ?? false);
     }
 
     /**

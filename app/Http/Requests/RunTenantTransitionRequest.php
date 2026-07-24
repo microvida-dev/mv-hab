@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\TenantTransition;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RunTenantTransitionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can(
+            'runBackoffice',
+            TenantTransition::class,
+        ) ?? false;
     }
 
     /**

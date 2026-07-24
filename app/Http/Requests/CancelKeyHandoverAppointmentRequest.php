@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\KeyHandoverAppointment;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CancelKeyHandoverAppointmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $appointment = $this->route('keyHandoverAppointment');
+
+        return $appointment instanceof KeyHandoverAppointment
+            && ($this->user()?->can('cancelBackoffice', $appointment) ?? false);
     }
 
     /**

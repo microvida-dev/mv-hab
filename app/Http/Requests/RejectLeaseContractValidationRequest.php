@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\LeaseContractValidation;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RejectLeaseContractValidationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $validation = $this->route('leaseContractValidation');
+
+        return $validation instanceof LeaseContractValidation
+            && ($this->user()?->can('rejectBackoffice', $validation) ?? false);
     }
 
     /**

@@ -73,4 +73,90 @@ class ContractPolicy
             && $this->canAccess($user, 'documents', 'generate')
             && $this->municipalScope->ownsContract($user, $contract);
     }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view')
+            && $this->municipalScope->hasMunicipalOrGlobalScope($user);
+    }
+
+    public function viewBackoffice(User $user, Contract $contract): bool
+    {
+        return $this->viewAnyBackoffice($user)
+            && $this->municipalScope->ownsContract($user, $contract);
+    }
+
+    public function createBackoffice(User $user): bool
+    {
+        return $this->canMutateBackoffice($user, 'create')
+            && $this->municipalScope->hasMunicipalOrGlobalScope($user);
+    }
+
+    public function updateBackoffice(User $user, Contract $contract): bool
+    {
+        return $this->canMutateBackoffice($user, 'update')
+            && $this->municipalScope->ownsContract($user, $contract);
+    }
+
+    public function deleteBackoffice(User $user, Contract $contract): bool
+    {
+        return $this->canMutateBackoffice($user, 'delete')
+            && $this->municipalScope->ownsContract($user, $contract);
+    }
+
+    public function issueBackoffice(User $user, Contract $contract): bool
+    {
+        return $this->canMutateBackoffice($user, 'issue')
+            && $this->municipalScope->ownsContract($user, $contract);
+    }
+
+    public function activateBackoffice(User $user, Contract $contract): bool
+    {
+        return $this->canMutateBackoffice($user, 'activate')
+            && $this->municipalScope->ownsContract($user, $contract);
+    }
+
+    public function suspendBackoffice(User $user, Contract $contract): bool
+    {
+        return $this->canMutateBackoffice($user, 'suspend')
+            && $this->municipalScope->ownsContract($user, $contract);
+    }
+
+    public function terminateBackoffice(User $user, Contract $contract): bool
+    {
+        return $this->canMutateBackoffice($user, 'terminate')
+            && $this->municipalScope->ownsContract($user, $contract);
+    }
+
+    public function cancelBackoffice(User $user, Contract $contract): bool
+    {
+        return $this->canMutateBackoffice($user, 'cancel')
+            && $this->municipalScope->ownsContract($user, $contract);
+    }
+
+    public function signBackoffice(User $user, Contract $contract): bool
+    {
+        return $this->canMutateBackoffice($user, 'sign')
+            && $this->municipalScope->ownsContract($user, $contract);
+    }
+
+    public function validateBackoffice(User $user, Contract $contract): bool
+    {
+        return $this->canMutateBackoffice($user, 'validations.create')
+            && $this->municipalScope->ownsContract($user, $contract);
+    }
+
+    public function viewMaintenanceReportsBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'maintenance_reports.view')
+            && $this->municipalScope->hasMunicipalOrGlobalScope($user);
+    }
+
+    private function canMutateBackoffice(User $user, string $action): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, $action);
+    }
 }

@@ -7,6 +7,7 @@ use App\Models\AdministrativeDecision;
 use App\Models\AdministrativeProcess;
 use App\Models\AdministrativeProcessNote;
 use App\Models\AdministrativeTask;
+use App\Models\Allocation;
 use App\Models\AllocationRun;
 use App\Models\AnnualDocumentUpdateRequest;
 use App\Models\Application;
@@ -20,6 +21,8 @@ use App\Models\ComplaintDecision;
 use App\Models\Contest;
 use App\Models\ContestClosure;
 use App\Models\Contract;
+use App\Models\ContractClause;
+use App\Models\ContractTemplate;
 use App\Models\ControlledWithdrawal;
 use App\Models\CorrectionRequest;
 use App\Models\CorrectionResponse;
@@ -45,7 +48,10 @@ use App\Models\Hearing;
 use App\Models\HearingSubmission;
 use App\Models\Household;
 use App\Models\HousingApplication;
+use App\Models\HousingUnit;
+use App\Models\KeyHandoverAppointment;
 use App\Models\LeaseContractDocument;
+use App\Models\LeaseContractValidation;
 use App\Models\ListAutomationRun;
 use App\Models\LotteryDraw;
 use App\Models\LotteryResult;
@@ -54,6 +60,7 @@ use App\Models\Program;
 use App\Models\ProvisionalList;
 use App\Models\RankingSnapshot;
 use App\Models\RankingUpdateRun;
+use App\Models\RentCalculation;
 use App\Models\ReportAccessLog;
 use App\Models\ReportDownloadLog;
 use App\Models\ReportExport;
@@ -64,9 +71,13 @@ use App\Models\ScoringRuleSet;
 use App\Models\ScoringRun;
 use App\Models\SimulationSession;
 use App\Models\SimulatorConfiguration;
+use App\Models\TenantChargeRun;
+use App\Models\TenantCommunication;
 use App\Models\TenantFinancialAccount;
+use App\Models\TenantTransition;
 use App\Models\TieBreakerRule;
 use App\Models\User;
+use App\Models\WinnerRegistration;
 use App\Services\Platform\PlatformOperatorScopeService;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -81,6 +92,12 @@ class MunicipalRecordScopeService
     public function __construct(
         private readonly PlatformOperatorScopeService $platformScope,
     ) {}
+
+    public function hasMunicipalOrGlobalScope(User $user): bool
+    {
+        return $user->municipality_id !== null
+            || $this->platformScope->hasGlobalScope($user);
+    }
 
     /**
      * @param  Builder<Citizen>  $query
@@ -196,11 +213,128 @@ class MunicipalRecordScopeService
     }
 
     /**
+     * @param  Builder<Allocation>  $query
+     * @return Builder<Allocation>
+     */
+    public function allocations(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $allocations) use ($user): void {
+            $allocations
+                ->whereHas('program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('application.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsAllocation(User $user, Allocation $allocation): bool
+    {
+        return $this->allocations(Allocation::query()->whereKey($allocation), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<RentCalculation>  $query
+     * @return Builder<RentCalculation>
+     */
+    public function rentCalculations(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $calculations) use ($user): void {
+            $calculations
+                ->whereIn(
+                    'allocation_id',
+                    $this->allocations(Allocation::query(), $user)->select('id'),
+                )
+                ->orWhereHas('application.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsRentCalculation(User $user, RentCalculation $calculation): bool
+    {
+        return $this->rentCalculations(
+            RentCalculation::query()->whereKey($calculation),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<WinnerRegistration>  $query
+     * @return Builder<WinnerRegistration>
+     */
+    public function winnerRegistrations(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $winners) use ($user): void {
+            $winners
+                ->whereHas('application.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('lotteryDraw.contest.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsWinnerRegistration(User $user, WinnerRegistration $winner): bool
+    {
+        return $this->winnerRegistrations(
+            WinnerRegistration::query()->whereKey($winner),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<HousingUnit>  $query
+     * @return Builder<HousingUnit>
+     */
+    public function housingUnits(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        return $this->directMunicipalScope($query, $user);
+    }
+
+    public function ownsHousingUnit(User $user, HousingUnit $housingUnit): bool
+    {
+        return $this->housingUnits(
+            HousingUnit::query()->whereKey($housingUnit),
+            $user,
+        )->exists();
+    }
+
+    /**
      * @param  Builder<Contract>  $query
      * @return Builder<Contract>
      */
     public function contracts(Builder $query, User $user): Builder
     {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
         if ($user->municipality_id === null) {
             return $query->whereRaw('1 = 0');
         }
@@ -211,6 +345,10 @@ class MunicipalRecordScopeService
                     ->where('municipality_id', $user->municipality_id))
                 ->orWhereHas('application.program', fn (Builder $program): Builder => $program
                     ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('housingUnit', fn (Builder $housingUnit): Builder => $housingUnit
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('citizen', fn (Builder $citizen): Builder => $citizen
+                    ->where('municipality_id', $user->municipality_id))
                 ->orWhereHas('candidate', fn (Builder $tenant): Builder => $tenant
                     ->where('municipality_id', $user->municipality_id));
         });
@@ -219,6 +357,229 @@ class MunicipalRecordScopeService
     public function ownsContract(User $user, Contract $contract): bool
     {
         return $this->contracts(Contract::query()->whereKey($contract), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<ContractTemplate>  $query
+     * @return Builder<ContractTemplate>
+     */
+    public function contractTemplates(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $templates) use ($user): void {
+            $templates
+                ->whereHas('program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('contest.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsContractTemplate(User $user, ContractTemplate $template): bool
+    {
+        return $this->contractTemplates(
+            ContractTemplate::query()->whereKey($template),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<ContractClause>  $query
+     * @return Builder<ContractClause>
+     */
+    public function contractClauses(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $clauses) use ($user): void {
+            $clauses
+                ->whereHas('program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('contest.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsContractClause(User $user, ContractClause $clause): bool
+    {
+        return $this->contractClauses(
+            ContractClause::query()->whereKey($clause),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<LeaseContractValidation>  $query
+     * @return Builder<LeaseContractValidation>
+     */
+    public function leaseContractValidations(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'lease_contract_id',
+            $this->contracts(Contract::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsLeaseContractValidation(
+        User $user,
+        LeaseContractValidation $validation,
+    ): bool {
+        return $this->leaseContractValidations(
+            LeaseContractValidation::query()->whereKey($validation),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<KeyHandoverAppointment>  $query
+     * @return Builder<KeyHandoverAppointment>
+     */
+    public function keyHandoverAppointments(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $appointments) use ($user): void {
+            $appointments
+                ->whereHas('application.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('contest.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsKeyHandoverAppointment(
+        User $user,
+        KeyHandoverAppointment $appointment,
+    ): bool {
+        return $this->keyHandoverAppointments(
+            KeyHandoverAppointment::query()->whereKey($appointment),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<TenantTransition>  $query
+     * @return Builder<TenantTransition>
+     */
+    public function tenantTransitions(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $transitions) use ($user): void {
+            $transitions
+                ->whereHas('application.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsTenantTransition(User $user, TenantTransition $transition): bool
+    {
+        return $this->tenantTransitions(
+            TenantTransition::query()->whereKey($transition),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<TenantCommunication>  $query
+     * @return Builder<TenantCommunication>
+     */
+    public function tenantCommunications(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $communications) use ($user): void {
+            $communications
+                ->whereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                )
+                ->orWhereHas('tenant', fn (Builder $tenant): Builder => $tenant
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsTenantCommunication(
+        User $user,
+        TenantCommunication $communication,
+    ): bool {
+        return $this->tenantCommunications(
+            TenantCommunication::query()->whereKey($communication),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<TenantChargeRun>  $query
+     * @return Builder<TenantChargeRun>
+     */
+    public function tenantChargeRuns(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $runs) use ($user): void {
+            $runs
+                ->whereHas('items', fn (Builder $items): Builder => $items
+                    ->whereIn(
+                        'lease_contract_id',
+                        $this->contracts(Contract::query(), $user)->select('id'),
+                    ))
+                ->orWhere(function (Builder $emptyRuns) use ($user): void {
+                    $emptyRuns
+                        ->whereDoesntHave('items')
+                        ->whereHas('createdBy', fn (Builder $creator): Builder => $creator
+                            ->where('municipality_id', $user->municipality_id));
+                });
+        });
+    }
+
+    public function ownsTenantChargeRun(User $user, TenantChargeRun $run): bool
+    {
+        return $this->tenantChargeRuns(
+            TenantChargeRun::query()->whereKey($run),
+            $user,
+        )->exists();
     }
 
     /**

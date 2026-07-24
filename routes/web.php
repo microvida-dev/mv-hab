@@ -4735,6 +4735,86 @@ Route::middleware('auth')->group(function () {
                         'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
                     );
             }
+
+            $sprint47eRouteAccess = [
+                'backoffice.cases.contracts.show' => 'contracts.view',
+                'backoffice.contracts.clauses.activate' => 'contracts.clauses.activate',
+                'backoffice.contracts.clauses.archive' => 'contracts.clauses.archive',
+                'backoffice.contracts.clauses.create' => 'contracts.create',
+                'backoffice.contracts.clauses.edit' => 'contracts.update',
+                'backoffice.contracts.clauses.index' => 'contracts.view',
+                'backoffice.contracts.clauses.show' => 'contracts.view',
+                'backoffice.contracts.clauses.store' => 'contracts.create',
+                'backoffice.contracts.clauses.update' => 'contracts.update',
+                'backoffice.contracts.leases.activate' => 'contracts.activate',
+                'backoffice.contracts.leases.cancel' => 'contracts.cancel',
+                'backoffice.contracts.leases.create' => 'contracts.create',
+                'backoffice.contracts.leases.edit' => 'contracts.update',
+                'backoffice.contracts.leases.index' => 'contracts.view',
+                'backoffice.contracts.leases.issue' => 'contracts.issue',
+                'backoffice.contracts.leases.show' => 'contracts.view',
+                'backoffice.contracts.leases.store' => 'contracts.create',
+                'backoffice.contracts.leases.suspend' => 'contracts.suspend',
+                'backoffice.contracts.leases.terminate' => 'contracts.terminate',
+                'backoffice.contracts.leases.update' => 'contracts.update',
+                'backoffice.contracts.signatures.store' => 'contracts.sign',
+                'backoffice.contracts.templates.activate' => 'contracts.templates.activate',
+                'backoffice.contracts.templates.archive' => 'contracts.templates.archive',
+                'backoffice.contracts.templates.create' => 'contracts.create',
+                'backoffice.contracts.templates.duplicate' => 'contracts.templates.duplicate',
+                'backoffice.contracts.templates.edit' => 'contracts.update',
+                'backoffice.contracts.templates.index' => 'contracts.view',
+                'backoffice.contracts.templates.show' => 'contracts.view',
+                'backoffice.contracts.templates.store' => 'contracts.create',
+                'backoffice.contracts.templates.update' => 'contracts.update',
+                'backoffice.contracts.validations.approve' => 'contracts.validations.approve',
+                'backoffice.contracts.validations.reject' => 'contracts.validations.reject',
+                'backoffice.contracts.validations.store' => 'contracts.validations.create',
+                'backoffice.key-handovers.cancel' => 'contracts.key_handovers.cancel',
+                'backoffice.key-handovers.complete' => 'contracts.key_handovers.complete',
+                'backoffice.key-handovers.create' => 'contracts.key_handovers.schedule',
+                'backoffice.key-handovers.index' => 'contracts.key_handovers.view',
+                'backoffice.key-handovers.show' => 'contracts.key_handovers.view',
+                'backoffice.key-handovers.store' => 'contracts.key_handovers.schedule',
+                'backoffice.key-handovers.update' => 'contracts.key_handovers.update',
+                'backoffice.tenant-operations.charge-runs.index' => 'contracts.charge_runs.view',
+                'backoffice.tenant-operations.charge-runs.show' => 'contracts.charge_runs.view',
+                'backoffice.tenant-operations.charge-runs.store' => 'contracts.charge_runs.run',
+                'backoffice.tenant-operations.communications.index' => 'contracts.communications.view',
+                'backoffice.tenant-operations.communications.messages.store' => 'contracts.communications.message',
+                'backoffice.tenant-operations.communications.show' => 'contracts.communications.view',
+                'backoffice.tenant-operations.communications.store' => 'contracts.communications.create',
+                'backoffice.tenant-operations.dashboard' => 'contracts.dashboard',
+                'backoffice.tenant-operations.maintenance-reports.index' => 'contracts.maintenance_reports.view',
+                'backoffice.tenant-transitions.index' => 'contracts.tenant_transitions.view',
+                'backoffice.tenant-transitions.run' => 'contracts.tenant_transitions.run',
+                'contracts.create' => 'contracts.create',
+                'contracts.destroy' => 'contracts.delete',
+                'contracts.edit' => 'contracts.update',
+                'contracts.index' => 'contracts.view',
+                'contracts.show' => 'contracts.view',
+                'contracts.store' => 'contracts.create',
+                'contracts.update' => 'contracts.update',
+            ];
+
+            foreach ($sprint47eRouteAccess as $routeName => $permission) {
+                $route = Route::getRoutes()->getByName($routeName);
+
+                if ($route === null) {
+                    throw new LogicException("A rota {$routeName} do manifesto 47E não está registada.");
+                }
+
+                $route
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        "permission:{$permission}",
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    );
+            }
         });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

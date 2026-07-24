@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\ContractValidationType;
+use App\Models\Contract;
+use App\Models\LeaseContractValidation;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +12,19 @@ class ValidateLeaseContractRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $validation = $this->route('leaseContractValidation');
+
+        if ($validation instanceof LeaseContractValidation) {
+            return $this->user()?->can('approveBackoffice', $validation) ?? false;
+        }
+
+        $contract = $this->route('leaseContract');
+
+        return $contract instanceof Contract
+            && ($this->user()?->can(
+                'validateBackoffice',
+                [LeaseContractValidation::class, $contract],
+            ) ?? false);
     }
 
     /**

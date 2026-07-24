@@ -2,13 +2,21 @@
 
 namespace App\Http\Requests;
 
+use App\Models\TenantCommunication;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTenantCommunicationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        if ($this->routeIs('backoffice.*')) {
+            return $this->user()?->can(
+                'createBackoffice',
+                TenantCommunication::class,
+            ) ?? false;
+        }
+
+        return $this->user()?->can('create', TenantCommunication::class) ?? false;
     }
 
     /**
