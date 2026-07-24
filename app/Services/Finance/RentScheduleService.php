@@ -12,6 +12,7 @@ use App\Models\TenantFinancialAccount;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use App\Support\DecimalMoney;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -32,15 +33,23 @@ class RentScheduleService
     public function generateForContract(Contract $contract, User $actor, array $data = []): RentSchedule
     {
         return DB::transaction(function () use ($contract, $actor, $data) {
-            $account = $this->accounts->ensureForContract($contract, $actor);
+            $lockedContract = Contract::query()
+                ->whereKey($contract->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $account = $this->accounts->ensureForContract($lockedContract, $actor);
+            $account = TenantFinancialAccount::query()
+                ->whereKey($account->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-            $start = CarbonImmutable::parse($data['starts_on'] ?? $contract->start_date ?? now()->startOfMonth())->startOfMonth();
+            $start = CarbonImmutable::parse($data['starts_on'] ?? $lockedContract->start_date ?? now()->startOfMonth())->startOfMonth();
             $end = isset($data['ends_on'])
                 ? CarbonImmutable::parse($data['ends_on'])->startOfMonth()
-                : ($contract->end_date ? CarbonImmutable::parse($contract->end_date)->startOfMonth() : $start->addMonths(11));
-            $monthlyRent = (float) ($data['monthly_rent'] ?? $contract->monthly_rent ?? 0);
+                : ($lockedContract->end_date ? CarbonImmutable::parse($lockedContract->end_date)->startOfMonth() : $start->addMonths(11));
+            $monthlyRent = DecimalMoney::normalize($data['monthly_rent'] ?? $lockedContract->monthly_rent);
 
-            if ($monthlyRent <= 0) {
+            if (! DecimalMoney::isPositive($monthlyRent)) {
                 throw ValidationException::withMessages(['monthly_rent' => 'A renda mensal tem de ser superior a zero.']);
             }
 
@@ -53,14 +62,14 @@ class RentScheduleService
             $schedule = new RentSchedule;
             $schedule->forceFill([
                 'tenant_financial_account_id' => $account->id,
-                'lease_contract_id' => $contract->id,
-                'user_id' => $contract->user_id,
+                'lease_contract_id' => $lockedContract->id,
+                'user_id' => $lockedContract->user_id,
                 'status' => RentScheduleStatus::Active,
                 'schedule_type' => $data['schedule_type'] ?? 'initial',
                 'starts_on' => $start,
                 'ends_on' => $end,
                 'monthly_rent' => $monthlyRent,
-                'payment_day' => (int) ($data['payment_day'] ?? $contract->payment_day ?? 8),
+                'payment_day' => (int) ($data['payment_day'] ?? $lockedContract->payment_day ?? 8),
                 'issue_day' => (int) ($data['issue_day'] ?? 1),
                 'due_grace_days' => (int) ($data['due_grace_days'] ?? 0),
                 'source_rent_review_id' => $data['source_rent_review_id'] ?? null,
@@ -92,7 +101,11 @@ class RentScheduleService
             $dueDate = $period->day($dueDay)->addDays((int) $schedule->due_grace_days);
             $reference = $this->numbers->rentInstallmentReference($schedule->lease_contract_id, (int) $period->year, (int) $period->month);
 
-            $installment = RentInstallment::query()->firstOrNew(['reference' => $reference]);
+            $installment = RentInstallment::query()
+                ->where('reference', $reference)
+                ->lockForUpdate()
+                ->first() ?? new RentInstallment(['reference' => $reference]);
+            $isNew = ! $installment->exists;
             $installment->forceFill([
                 'tenant_financial_account_id' => $account->id,
                 'rent_schedule_id' => $schedule->id,
@@ -114,7 +127,16 @@ class RentScheduleService
                 'updated_by' => $actor->id,
             ])->save();
 
-            $this->transactions->record($account, FinancialTransactionType::InstallmentIssued, (float) $installment->amount_due, $installment, $actor, 'Prestação de renda emitida.');
+            if ($isNew) {
+                $this->transactions->record(
+                    $account,
+                    FinancialTransactionType::InstallmentIssued,
+                    DecimalMoney::normalize((string) $installment->amount_due),
+                    $installment,
+                    $actor,
+                    'Prestação de renda emitida.',
+                );
+            }
             $count++;
             $period = $period->addMonth();
         }

@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Support\AuditEvents;
+use App\Support\DecimalMoney;
 use Illuminate\Support\Facades\DB;
 
 class TenantChargeRunService
@@ -68,7 +69,7 @@ class TenantChargeRunService
 
             $generated = 0;
             $skipped = 0;
-            $total = 0.0;
+            $total = DecimalMoney::normalize(0);
 
             $contracts
                 ->with('financialAccount')
@@ -84,7 +85,9 @@ class TenantChargeRunService
                             'period_year' => $year,
                             'period_month' => $month,
                             'charge_type' => $chargeType->value,
-                            'amount' => $contract->monthly_rent,
+                            'amount' => DecimalMoney::normalize(
+                                (string) ($contract->getAttribute('monthly_rent') ?? '0'),
+                            ),
                             'notes' => 'Gerada por execução operacional de cobranças.',
                         ]);
 
@@ -109,7 +112,9 @@ class TenantChargeRunService
                         ]);
 
                         $before ? $skipped++ : $generated++;
-                        $total += $before ? 0 : (float) $invoice->amount_due;
+                        if (! $before) {
+                            $total = DecimalMoney::add($total, (string) $invoice->amount_due);
+                        }
                     }
                 });
 

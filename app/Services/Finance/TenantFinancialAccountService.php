@@ -9,6 +9,7 @@ use App\Models\TenantFinancialAccount;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class TenantFinancialAccountService
@@ -21,37 +22,43 @@ class TenantFinancialAccountService
 
     public function ensureForContract(Contract $contract, User $actor): TenantFinancialAccount
     {
-        $existing = $contract->financialAccount()->first();
+        return DB::transaction(function () use ($contract, $actor): TenantFinancialAccount {
+            $lockedContract = Contract::query()
+                ->whereKey($contract->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $existing = $lockedContract->financialAccount()->lockForUpdate()->first();
 
-        if ($existing) {
-            return $existing;
-        }
+            if ($existing instanceof TenantFinancialAccount) {
+                return $existing;
+            }
 
-        if ($contract->status !== ContractStatus::Active) {
-            throw ValidationException::withMessages([
-                'lease_contract_id' => 'A conta financeira só pode ser criada para contratos ativos.',
-            ]);
-        }
+            if ($lockedContract->status !== ContractStatus::Active) {
+                throw ValidationException::withMessages([
+                    'lease_contract_id' => 'A conta financeira só pode ser criada para contratos ativos.',
+                ]);
+            }
 
-        $account = new TenantFinancialAccount;
-        $account->forceFill([
-            'lease_contract_id' => $contract->id,
-            'application_id' => $contract->application_id,
-            'allocation_id' => $contract->allocation_id,
-            'user_id' => $contract->user_id,
-            'household_id' => $contract->household_id,
-            'housing_unit_id' => $contract->housing_unit_id,
-            'account_number' => $this->numbers->accountNumber(),
-            'status' => FinancialAccountStatus::Active,
-            'currency' => 'EUR',
-            'opened_at' => now(),
-            'created_by' => $actor->id,
-            'updated_by' => $actor->id,
-        ])->save();
+            $account = new TenantFinancialAccount;
+            $account->forceFill([
+                'lease_contract_id' => $lockedContract->id,
+                'application_id' => $lockedContract->application_id,
+                'allocation_id' => $lockedContract->allocation_id,
+                'user_id' => $lockedContract->user_id,
+                'household_id' => $lockedContract->household_id,
+                'housing_unit_id' => $lockedContract->housing_unit_id,
+                'account_number' => $this->numbers->accountNumber(),
+                'status' => FinancialAccountStatus::Active,
+                'currency' => 'EUR',
+                'opened_at' => now(),
+                'created_by' => $actor->id,
+                'updated_by' => $actor->id,
+            ])->save();
 
-        $this->auditLogger->record(AuditEvents::CREATE, $account, 'finance', 'financial_account_create', 'Conta financeira criada para contrato ativo.');
+            $this->auditLogger->record(AuditEvents::CREATE, $account, 'finance', 'financial_account_create', 'Conta financeira criada para contrato ativo.');
 
-        return $this->transactions->recalculateAccount($account);
+            return $this->transactions->recalculateAccount($account);
+        });
     }
 
     public function recalculate(TenantFinancialAccount $account): TenantFinancialAccount

@@ -12,6 +12,7 @@ use App\Models\RentRuleSet;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use App\Support\DecimalMoney;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -26,45 +27,50 @@ class RentCalculationService
 
     public function calculate(Allocation $allocation, User $actor, ?RentRuleSet $ruleSet = null, ?string $notes = null): RentCalculation
     {
-        $allocation->loadMissing(['application.household.incomeRecords', 'housingUnit', 'contestHousingUnit']);
-        $this->assertAllocationCanBeCalculated($allocation);
-        $resolvedRuleSet = $this->ruleSetResolver->resolve($allocation, $ruleSet);
-        $snapshot = $this->snapshotService->forAllocation($allocation, $resolvedRuleSet);
-        $membersCount = max((int) data_get($snapshot, 'household.members_count', 0), 1);
-        $monthlyIncome = (float) data_get($snapshot, 'household.monthly_income', 0);
-        $annualIncome = (float) data_get($snapshot, 'household.annual_income', 0);
+        return DB::transaction(function () use ($allocation, $actor, $ruleSet, $notes): RentCalculation {
+            $lockedAllocation = Allocation::query()
+                ->whereKey($allocation->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $lockedAllocation->loadMissing(['application.household.incomeRecords', 'housingUnit', 'contestHousingUnit']);
+            $this->assertAllocationCanBeCalculated($lockedAllocation);
+            $resolvedRuleSet = $this->ruleSetResolver->resolve($lockedAllocation, $ruleSet);
+            $snapshot = $this->snapshotService->forAllocation($lockedAllocation, $resolvedRuleSet);
+            $membersCount = max((int) data_get($snapshot, 'household.members_count', 0), 1);
+            $monthlyIncome = DecimalMoney::normalize((string) data_get($snapshot, 'household.monthly_income', '0'));
+            $annualIncome = DecimalMoney::normalize((string) data_get($snapshot, 'household.annual_income', '0'));
 
-        [$baseRent, $status, $technicalNotes] = $this->baseRent($resolvedRuleSet, $monthlyIncome);
-        $applicableRent = $baseRent === null ? null : $this->applyBounds($baseRent, $resolvedRuleSet);
-        $effortRate = $applicableRent !== null ? $this->effortRateService->calculate($applicableRent, $monthlyIncome) : null;
-        $depositAmount = $applicableRent !== null ? $this->depositAmount($applicableRent, $resolvedRuleSet) : null;
+            [$baseRent, $status, $technicalNotes] = $this->baseRent($resolvedRuleSet, $monthlyIncome);
+            $applicableRent = $baseRent === null ? null : $this->applyBounds($baseRent, $resolvedRuleSet);
+            $effortRate = $applicableRent !== null ? $this->effortRateService->calculate($applicableRent, $monthlyIncome) : null;
+            $depositAmount = $applicableRent !== null ? $this->depositAmount($applicableRent, $resolvedRuleSet) : null;
 
-        if ($monthlyIncome <= 0) {
-            $status = RentCalculationStatus::RequiresManualReview;
-            $technicalNotes = trim($technicalNotes."\nRendimento mensal inexistente ou igual a zero; cálculo requer revisão manual.");
-        }
+            if (! DecimalMoney::isPositive($monthlyIncome)) {
+                $status = RentCalculationStatus::RequiresManualReview;
+                $technicalNotes = trim($technicalNotes."\nRendimento mensal inexistente ou igual a zero; cálculo requer revisão manual.");
+            }
 
-        return DB::transaction(function () use ($allocation, $actor, $resolvedRuleSet, $snapshot, $membersCount, $monthlyIncome, $annualIncome, $baseRent, $status, $technicalNotes, $applicableRent, $effortRate, $depositAmount, $notes) {
             RentCalculation::query()
-                ->where('allocation_id', $allocation->id)
+                ->where('allocation_id', $lockedAllocation->id)
                 ->whereNotIn('status', [RentCalculationStatus::Rejected->value, RentCalculationStatus::Cancelled->value])
+                ->lockForUpdate()
                 ->update(['status' => RentCalculationStatus::Superseded->value]);
 
             $calculation = new RentCalculation([
                 'rent_rule_set_id' => $resolvedRuleSet->id,
-                'allocation_id' => $allocation->id,
-                'application_id' => $allocation->application_id,
-                'user_id' => $allocation->user_id,
-                'household_id' => $allocation->application?->household_id,
-                'housing_unit_id' => $allocation->housing_unit_id,
-                'contest_housing_unit_id' => $allocation->contest_housing_unit_id,
+                'allocation_id' => $lockedAllocation->id,
+                'application_id' => $lockedAllocation->application_id,
+                'user_id' => $lockedAllocation->user_id,
+                'household_id' => $lockedAllocation->application?->household_id,
+                'housing_unit_id' => $lockedAllocation->housing_unit_id,
+                'contest_housing_unit_id' => $lockedAllocation->contest_housing_unit_id,
                 'calculation_method' => $resolvedRuleSet->calculation_method,
                 'income_basis' => $resolvedRuleSet->income_basis,
                 'income_period' => $resolvedRuleSet->income_period,
                 'monthly_household_income' => $monthlyIncome,
                 'annual_household_income' => $annualIncome,
-                'monthly_income_per_capita' => round($monthlyIncome / $membersCount, 2),
-                'annual_income_per_capita' => round($annualIncome / $membersCount, 2),
+                'monthly_income_per_capita' => DecimalMoney::divide($monthlyIncome, $membersCount),
+                'annual_income_per_capita' => DecimalMoney::divide($annualIncome, $membersCount),
                 'calculated_effort_rate_percentage' => $effortRate,
                 'configured_effort_rate_percentage' => $resolvedRuleSet->effort_rate_percentage,
                 'base_rent' => $baseRent,
@@ -88,7 +94,7 @@ class RentCalculationService
                 'contracts',
                 'rent_calculation_create',
                 'Cálculo de renda criado.',
-                metadata: ['allocation_id' => $allocation->id],
+                metadata: ['allocation_id' => $lockedAllocation->id],
             );
 
             return $calculation->refresh();
@@ -97,32 +103,52 @@ class RentCalculationService
 
     public function approve(RentCalculation $calculation, User $actor, ?string $notes = null): RentCalculation
     {
-        if ($calculation->applicable_rent === null) {
-            throw ValidationException::withMessages(['rent_calculation' => 'Não é possível aprovar cálculo sem renda aplicável.']);
-        }
+        return DB::transaction(function () use ($calculation, $actor, $notes): RentCalculation {
+            $lockedCalculation = RentCalculation::query()
+                ->whereKey($calculation->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            if ($this->calculationHasStatus($lockedCalculation, RentCalculationStatus::Approved)) {
+                return $lockedCalculation;
+            }
 
-        $calculation->forceFill([
-            'status' => RentCalculationStatus::Approved,
-            'approved_at' => now(),
-            'approved_by' => $actor->id,
-            'summary' => $notes ?: $calculation->summary,
-        ])->save();
+            if ($lockedCalculation->applicable_rent === null) {
+                throw ValidationException::withMessages(['rent_calculation' => 'Não é possível aprovar cálculo sem renda aplicável.']);
+            }
 
-        $this->auditLogger->record(AuditEvents::APPROVE, $calculation, 'contracts', 'rent_calculation_approve', 'Cálculo de renda aprovado.');
+            $lockedCalculation->forceFill([
+                'status' => RentCalculationStatus::Approved,
+                'approved_at' => now(),
+                'approved_by' => $actor->id,
+                'summary' => $notes ?: $lockedCalculation->summary,
+            ])->save();
 
-        return $calculation->refresh();
+            $this->auditLogger->record(AuditEvents::APPROVE, $lockedCalculation, 'contracts', 'rent_calculation_approve', 'Cálculo de renda aprovado.');
+
+            return $lockedCalculation->refresh();
+        });
     }
 
     public function reject(RentCalculation $calculation, User $actor, string $reason): RentCalculation
     {
-        $calculation->forceFill([
-            'status' => RentCalculationStatus::Rejected,
-            'technical_notes' => trim(($calculation->technical_notes ?? '')."\nRejeição: ".$reason),
-        ])->save();
+        return DB::transaction(function () use ($calculation, $reason): RentCalculation {
+            $lockedCalculation = RentCalculation::query()
+                ->whereKey($calculation->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            if ($this->calculationHasStatus($lockedCalculation, RentCalculationStatus::Rejected)) {
+                return $lockedCalculation;
+            }
 
-        $this->auditLogger->record(AuditEvents::REJECT, $calculation, 'contracts', 'rent_calculation_reject', 'Cálculo de renda rejeitado.', metadata: ['actor_id' => $actor->id]);
+            $lockedCalculation->forceFill([
+                'status' => RentCalculationStatus::Rejected,
+                'technical_notes' => trim(($lockedCalculation->technical_notes ?? '')."\nRejeição: ".$reason),
+            ])->save();
 
-        return $calculation->refresh();
+            $this->auditLogger->record(AuditEvents::REJECT, $lockedCalculation, 'contracts', 'rent_calculation_reject', 'Cálculo de renda rejeitado.');
+
+            return $lockedCalculation->refresh();
+        });
     }
 
     private function assertAllocationCanBeCalculated(Allocation $allocation): void
@@ -135,7 +161,7 @@ class RentCalculationService
     /**
      * @return array<string|int, mixed>
      */
-    private function baseRent(RentRuleSet $ruleSet, float $monthlyIncome): array
+    private function baseRent(RentRuleSet $ruleSet, string $monthlyIncome): array
     {
         if ($ruleSet->calculation_method === RentCalculationMethod::Manual) {
             return [null, RentCalculationStatus::RequiresManualReview, 'Método manual configurado; requer revisão manual.'];
@@ -144,7 +170,7 @@ class RentCalculationService
         if ($ruleSet->calculation_method === RentCalculationMethod::FixedAmount) {
             $amount = $ruleSet->minimum_rent ?? $ruleSet->maximum_rent;
 
-            return [$amount !== null ? (float) $amount : null, $amount !== null ? RentCalculationStatus::Calculated : RentCalculationStatus::RequiresManualReview, $amount !== null ? '' : 'Valor fixo não configurado.'];
+            return [$amount !== null ? DecimalMoney::normalize((string) $amount) : null, $amount !== null ? RentCalculationStatus::Calculated : RentCalculationStatus::RequiresManualReview, $amount !== null ? '' : 'Valor fixo não configurado.'];
         }
 
         if ($ruleSet->calculation_method === RentCalculationMethod::IncomeBracket) {
@@ -157,11 +183,11 @@ class RentCalculationService
                 ->first();
 
             if ($rule?->fixed_amount !== null) {
-                return [(float) $rule->fixed_amount, RentCalculationStatus::Calculated, ''];
+                return [DecimalMoney::normalize((string) $rule->fixed_amount), RentCalculationStatus::Calculated, ''];
             }
 
             if ($rule?->percentage !== null) {
-                return [($monthlyIncome * (float) $rule->percentage) / 100, RentCalculationStatus::Calculated, ''];
+                return [DecimalMoney::percentage($monthlyIncome, (string) $rule->percentage), RentCalculationStatus::Calculated, ''];
             }
 
             return [null, RentCalculationStatus::RequiresManualReview, 'Não foi encontrado escalão de renda aplicável.'];
@@ -171,41 +197,51 @@ class RentCalculationService
             return [null, RentCalculationStatus::RequiresManualReview, 'Taxa de esforço não configurada.'];
         }
 
-        return [($monthlyIncome * (float) $ruleSet->effort_rate_percentage) / 100, RentCalculationStatus::Calculated, ''];
+        return [DecimalMoney::percentage($monthlyIncome, (string) $ruleSet->effort_rate_percentage), RentCalculationStatus::Calculated, ''];
     }
 
-    private function applyBounds(float $rent, RentRuleSet $ruleSet): float
+    private function applyBounds(string $rent, RentRuleSet $ruleSet): string
     {
         $bounded = $rent;
 
         if ($ruleSet->minimum_rent !== null) {
-            $bounded = max($bounded, (float) $ruleSet->minimum_rent);
+            $bounded = DecimalMoney::max($bounded, (string) $ruleSet->minimum_rent);
         }
 
         if ($ruleSet->maximum_rent !== null) {
-            $bounded = min($bounded, (float) $ruleSet->maximum_rent);
+            $bounded = DecimalMoney::min($bounded, (string) $ruleSet->maximum_rent);
         }
 
-        return round($bounded, (int) $ruleSet->rounding_precision);
+        return DecimalMoney::normalize($bounded, (int) $ruleSet->rounding_precision);
     }
 
-    private function depositAmount(float $rent, RentRuleSet $ruleSet): float
+    private function depositAmount(string $rent, RentRuleSet $ruleSet): string
     {
-        $deposit = $rent * (float) ($ruleSet->deposit_months ?? 0);
+        $deposit = DecimalMoney::multiply(
+            $rent,
+            $ruleSet->deposit_months === null ? null : (string) $ruleSet->deposit_months,
+        );
 
         if ($ruleSet->minimum_deposit !== null) {
-            $deposit = max($deposit, (float) $ruleSet->minimum_deposit);
+            $deposit = DecimalMoney::max($deposit, (string) $ruleSet->minimum_deposit);
         }
 
         if ($ruleSet->maximum_deposit !== null) {
-            $deposit = min($deposit, (float) $ruleSet->maximum_deposit);
+            $deposit = DecimalMoney::min($deposit, (string) $ruleSet->maximum_deposit);
         }
 
-        return round($deposit, 2);
+        return DecimalMoney::normalize($deposit);
     }
 
-    private function details(RentCalculation $calculation, RentRuleSet $ruleSet, float $monthlyIncome, ?float $baseRent, ?float $applicableRent, ?float $depositAmount, ?float $effortRate): void
-    {
+    private function details(
+        RentCalculation $calculation,
+        RentRuleSet $ruleSet,
+        string $monthlyIncome,
+        ?string $baseRent,
+        ?string $applicableRent,
+        ?string $depositAmount,
+        ?string $effortRate,
+    ): void {
         $rows = [
             ['income', 'Rendimento mensal agregado', 'income', $monthlyIncome, $monthlyIncome, 'Rendimento mensal considerado.'],
             ['base_rent', 'Renda base', 'rent', $monthlyIncome, $baseRent, 'Renda base calculada pela regra configurada.'],
@@ -226,5 +262,12 @@ class RentCalculationService
                 'technical_message' => 'Regra: '.$ruleSet->name,
             ]);
         }
+    }
+
+    private function calculationHasStatus(RentCalculation $calculation, RentCalculationStatus $expected): bool
+    {
+        $status = $calculation->getAttribute('status');
+
+        return $status === $expected || $status === $expected->value;
     }
 }

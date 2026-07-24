@@ -8,8 +8,11 @@ use App\Models\PaymentReceipt;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use App\Support\DecimalMoney;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PaymentReceiptService
 {
@@ -21,61 +24,116 @@ class PaymentReceiptService
 
     public function issue(LeasePayment $payment, User $actor, ?string $notes = null): PaymentReceipt
     {
-        if ((float) $payment->allocated_amount <= 0) {
-            throw ValidationException::withMessages(['payment' => 'Só é possível emitir comprovativo após imputação do pagamento.']);
+        $storedPath = null;
+
+        try {
+            return DB::transaction(function () use ($payment, $actor, $notes, &$storedPath): PaymentReceipt {
+                $lockedPayment = LeasePayment::query()
+                    ->whereKey($payment->getKey())
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if (! DecimalMoney::isPositive((string) $lockedPayment->allocated_amount)) {
+                    throw ValidationException::withMessages(['payment' => 'Só é possível emitir comprovativo após imputação do pagamento.']);
+                }
+
+                $existing = $lockedPayment->receipt()
+                    ->whereIn('status', [PaymentReceiptStatus::Issued->value, PaymentReceiptStatus::Reissued->value])
+                    ->first();
+
+                if ($existing instanceof PaymentReceipt) {
+                    return $existing;
+                }
+
+                $receipt = new PaymentReceipt;
+                $receipt->forceFill([
+                    'lease_payment_id' => $lockedPayment->id,
+                    'tenant_financial_account_id' => $lockedPayment->tenant_financial_account_id,
+                    'lease_contract_id' => $lockedPayment->lease_contract_id,
+                    'user_id' => $lockedPayment->user_id,
+                    'receipt_number' => $this->numbers->receiptNumber(),
+                    'status' => PaymentReceiptStatus::Issued,
+                    'issued_at' => now(),
+                    'total_amount' => $lockedPayment->allocated_amount,
+                    'currency' => $lockedPayment->currency,
+                    'mime_type' => 'text/html',
+                    'notes' => $notes,
+                    'issued_by' => $actor->id,
+                ])->save();
+
+                $html = view('backoffice.finance.receipts.document', [
+                    'receipt' => $receipt->load('leasePayment.allocations.rentInstallment', 'leaseContract', 'tenant'),
+                ])->render();
+                $storedPath = 'finance/receipts/'.$receipt->id.'/'.$receipt->receipt_number.'.html';
+                Storage::disk('local')->put($storedPath, $html);
+
+                $receipt->forceFill([
+                    'storage_disk' => 'local',
+                    'storage_path' => $storedPath,
+                    'checksum' => hash('sha256', $html),
+                ])->save();
+
+                $this->auditLogger->record(AuditEvents::CREATE, $receipt, 'finance', 'payment_receipt_issue', 'Comprovativo interno de pagamento emitido.');
+                $this->notifications->paymentReceiptIssued($receipt->refresh(), $actor);
+
+                return $receipt->refresh();
+            });
+        } catch (\Throwable $exception) {
+            if (is_string($storedPath) && Storage::disk('local')->exists($storedPath)) {
+                Storage::disk('local')->delete($storedPath);
+            }
+
+            throw $exception;
         }
-
-        $existing = $payment->receipt()
-            ->whereIn('status', [PaymentReceiptStatus::Issued->value, PaymentReceiptStatus::Reissued->value])
-            ->first();
-
-        if ($existing) {
-            return $existing;
-        }
-
-        $receipt = new PaymentReceipt;
-        $receipt->forceFill([
-            'lease_payment_id' => $payment->id,
-            'tenant_financial_account_id' => $payment->tenant_financial_account_id,
-            'lease_contract_id' => $payment->lease_contract_id,
-            'user_id' => $payment->user_id,
-            'receipt_number' => $this->numbers->receiptNumber(),
-            'status' => PaymentReceiptStatus::Issued,
-            'issued_at' => now(),
-            'total_amount' => $payment->allocated_amount,
-            'currency' => $payment->currency,
-            'mime_type' => 'text/html',
-            'notes' => $notes,
-            'issued_by' => $actor->id,
-        ])->save();
-
-        $html = view('backoffice.finance.receipts.document', ['receipt' => $receipt->load('leasePayment.allocations.rentInstallment', 'leaseContract', 'tenant')])->render();
-        $path = 'finance/receipts/'.$receipt->id.'/'.$receipt->receipt_number.'.html';
-        Storage::disk('local')->put($path, $html);
-
-        $receipt->forceFill([
-            'storage_disk' => 'local',
-            'storage_path' => $path,
-            'checksum' => hash('sha256', $html),
-        ])->save();
-
-        $this->auditLogger->record(AuditEvents::CREATE, $receipt, 'finance', 'payment_receipt_issue', 'Comprovativo interno de pagamento emitido.');
-        $this->notifications->paymentReceiptIssued($receipt->refresh(), $actor);
-
-        return $receipt->refresh();
     }
 
     public function cancel(PaymentReceipt $receipt, User $actor, string $reason): PaymentReceipt
     {
-        $receipt->forceFill([
-            'status' => PaymentReceiptStatus::Cancelled,
-            'cancelled_at' => now(),
-            'cancelled_by' => $actor->id,
-            'cancellation_reason' => $reason,
-        ])->save();
+        return DB::transaction(function () use ($receipt, $actor, $reason): PaymentReceipt {
+            $lockedReceipt = PaymentReceipt::query()
+                ->whereKey($receipt->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $this->auditLogger->record(AuditEvents::UPDATE, $receipt, 'finance', 'payment_receipt_cancel', 'Comprovativo interno cancelado.');
+            if ($this->receiptHasStatus($lockedReceipt, PaymentReceiptStatus::Cancelled)) {
+                return $lockedReceipt;
+            }
 
-        return $receipt->refresh();
+            $lockedReceipt->forceFill([
+                'status' => PaymentReceiptStatus::Cancelled,
+                'cancelled_at' => now(),
+                'cancelled_by' => $actor->id,
+                'cancellation_reason' => $reason,
+            ])->save();
+
+            $this->auditLogger->record(AuditEvents::UPDATE, $lockedReceipt, 'finance', 'payment_receipt_cancel', 'Comprovativo interno cancelado.');
+
+            return $lockedReceipt->refresh();
+        });
+    }
+
+    public function download(PaymentReceipt $receipt, User $actor): StreamedResponse
+    {
+        $disk = $receipt->storage_disk;
+        $path = $receipt->storage_path;
+
+        abort_if($disk === null || $path === null || ! Storage::disk($disk)->exists($path), 404);
+
+        $this->auditLogger->record(
+            AuditEvents::ACCESS,
+            $receipt,
+            'finance',
+            'payment_receipt_download',
+            'Comprovativo interno de pagamento descarregado.',
+        );
+
+        return Storage::disk($disk)->download($path, $receipt->receipt_number.'.html');
+    }
+
+    private function receiptHasStatus(PaymentReceipt $receipt, PaymentReceiptStatus $expected): bool
+    {
+        $status = $receipt->getAttribute('status');
+
+        return $status === $expected || $status === $expected->value;
     }
 }

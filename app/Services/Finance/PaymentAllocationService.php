@@ -13,6 +13,7 @@ use App\Models\TenantFinancialAccount;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use App\Support\DecimalMoney;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -23,20 +24,38 @@ class PaymentAllocationService
         private readonly AuditLogger $auditLogger,
     ) {}
 
-    public function allocate(LeasePayment $payment, RentInstallment $installment, User $actor, ?float $amount = null): PaymentAllocation
+    public function allocate(LeasePayment $payment, RentInstallment $installment, User $actor, int|string|null $amount = null): PaymentAllocation
     {
         return DB::transaction(function () use ($payment, $installment, $actor, $amount) {
-            if (! $this->paymentHasStatus($payment, [LeasePaymentStatus::Confirmed, LeasePaymentStatus::PartiallyAllocated])) {
+            $lockedPayment = LeasePayment::query()
+                ->whereKey($payment->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $lockedInstallment = RentInstallment::query()
+                ->whereKey($installment->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! $this->paymentHasStatus($lockedPayment, [LeasePaymentStatus::Confirmed, LeasePaymentStatus::PartiallyAllocated])) {
                 throw ValidationException::withMessages(['payment' => 'Só pagamentos confirmados podem ser imputados.']);
             }
 
-            if ($payment->tenant_financial_account_id !== $installment->tenant_financial_account_id) {
+            if ($lockedPayment->tenant_financial_account_id !== $lockedInstallment->tenant_financial_account_id) {
                 throw ValidationException::withMessages(['rent_installment_id' => 'A prestação não pertence à mesma conta financeira.']);
             }
 
-            $amount = $amount ?? min((float) $payment->unallocated_amount, (float) $installment->amount_outstanding);
+            $amount = $amount === null
+                ? DecimalMoney::min(
+                    (string) $lockedPayment->unallocated_amount,
+                    (string) $lockedInstallment->amount_outstanding,
+                )
+                : DecimalMoney::normalize($amount);
 
-            if ($amount <= 0 || $amount > (float) $payment->unallocated_amount || $amount > (float) $installment->amount_outstanding) {
+            if (
+                ! DecimalMoney::isPositive($amount)
+                || DecimalMoney::compare($amount, (string) $lockedPayment->unallocated_amount) === 1
+                || DecimalMoney::compare($amount, (string) $lockedInstallment->amount_outstanding) === 1
+            ) {
                 throw ValidationException::withMessages(['amount' => 'O valor a imputar é inválido.']);
             }
 
@@ -44,34 +63,43 @@ class PaymentAllocationService
             $allocation->forceFill([
                 'lease_payment_id' => $payment->id,
                 'rent_installment_id' => $installment->id,
-                'tenant_financial_account_id' => $payment->tenant_financial_account_id,
-                'lease_contract_id' => $payment->lease_contract_id,
-                'user_id' => $payment->user_id,
+                'tenant_financial_account_id' => $lockedPayment->tenant_financial_account_id,
+                'lease_contract_id' => $lockedPayment->lease_contract_id,
+                'user_id' => $lockedPayment->user_id,
                 'status' => PaymentAllocationStatus::Active,
                 'amount' => $amount,
                 'allocated_at' => now(),
                 'created_by' => $actor->id,
             ])->save();
 
-            $installmentPaid = (float) $installment->amount_paid + $amount;
-            $installmentOutstanding = max(0, (float) $installment->amount_due - $installmentPaid - (float) $installment->amount_waived);
-            $installment->forceFill([
+            $installmentPaid = DecimalMoney::add((string) $lockedInstallment->amount_paid, $amount);
+            $installmentOutstanding = DecimalMoney::max(
+                0,
+                DecimalMoney::subtract(
+                    DecimalMoney::subtract((string) $lockedInstallment->amount_due, $installmentPaid),
+                    (string) $lockedInstallment->amount_waived,
+                ),
+            );
+            $lockedInstallment->forceFill([
                 'amount_paid' => $installmentPaid,
                 'amount_outstanding' => $installmentOutstanding,
-                'status' => $installmentOutstanding <= 0 ? RentInstallmentStatus::Paid : RentInstallmentStatus::PartiallyPaid,
-                'paid_at' => $installmentOutstanding <= 0 ? now() : $installment->paid_at,
+                'status' => DecimalMoney::isPositive($installmentOutstanding) ? RentInstallmentStatus::PartiallyPaid : RentInstallmentStatus::Paid,
+                'paid_at' => DecimalMoney::isPositive($installmentOutstanding) ? $lockedInstallment->paid_at : now(),
                 'updated_by' => $actor->id,
             ])->save();
 
-            $paymentAllocated = (float) $payment->allocated_amount + $amount;
-            $paymentUnallocated = max(0, (float) $payment->amount - $paymentAllocated);
-            $payment->forceFill([
+            $paymentAllocated = DecimalMoney::add((string) $lockedPayment->allocated_amount, $amount);
+            $paymentUnallocated = DecimalMoney::max(
+                0,
+                DecimalMoney::subtract((string) $lockedPayment->amount, $paymentAllocated),
+            );
+            $lockedPayment->forceFill([
                 'allocated_amount' => $paymentAllocated,
                 'unallocated_amount' => $paymentUnallocated,
-                'status' => $paymentUnallocated <= 0 ? LeasePaymentStatus::Allocated : LeasePaymentStatus::PartiallyAllocated,
+                'status' => DecimalMoney::isPositive($paymentUnallocated) ? LeasePaymentStatus::PartiallyAllocated : LeasePaymentStatus::Allocated,
             ])->save();
 
-            $this->transactions->record($this->accountForPayment($payment), FinancialTransactionType::PaymentAllocated, (float) $amount * -1, $allocation, $actor, 'Pagamento imputado a prestação.');
+            $this->transactions->record($this->accountForPayment($lockedPayment), FinancialTransactionType::PaymentAllocated, DecimalMoney::negate($amount), $allocation, $actor, 'Pagamento imputado a prestação.');
             $this->auditLogger->record(AuditEvents::UPDATE, $allocation, 'finance', 'payment_allocate', 'Pagamento imputado a prestação de renda.');
 
             return $allocation->refresh();
@@ -82,7 +110,7 @@ class PaymentAllocationService
     {
         $count = 0;
 
-        while ((float) $payment->refresh()->unallocated_amount > 0) {
+        while (DecimalMoney::isPositive((string) $payment->refresh()->unallocated_amount)) {
             $installment = $this->accountForPayment($payment)
                 ->rentInstallments()
                 ->where('amount_outstanding', '>', 0)
@@ -103,40 +131,68 @@ class PaymentAllocationService
 
     public function reverse(PaymentAllocation $allocation, User $actor, string $reason): PaymentAllocation
     {
-        if (! $this->allocationHasStatus($allocation, PaymentAllocationStatus::Active)) {
-            return $allocation;
-        }
+        return DB::transaction(function () use ($allocation, $actor, $reason): PaymentAllocation {
+            $lockedAllocation = PaymentAllocation::query()
+                ->whereKey($allocation->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $installment = $this->installmentForAllocation($allocation);
-        $payment = $this->paymentForAllocation($allocation);
-        $amount = (float) $allocation->amount;
+            if (! $this->allocationHasStatus($lockedAllocation, PaymentAllocationStatus::Active)) {
+                return $lockedAllocation;
+            }
 
-        $allocation->forceFill([
-            'status' => PaymentAllocationStatus::Reversed,
-            'reversed_at' => now(),
-            'reversed_by' => $actor->id,
-            'notes' => trim(($allocation->notes ? $allocation->notes."\n" : '').'Estorno: '.$reason),
-        ])->save();
+            $installment = RentInstallment::query()
+                ->whereKey($this->installmentForAllocation($lockedAllocation)->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $payment = LeasePayment::query()
+                ->whereKey($this->paymentForAllocation($lockedAllocation)->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $amount = DecimalMoney::normalize((string) $lockedAllocation->amount);
 
-        $installmentPaid = max(0, (float) $installment->amount_paid - $amount);
-        $installmentOutstanding = max(0, (float) $installment->amount_due - $installmentPaid - (float) $installment->amount_waived);
-        $installment->forceFill([
-            'amount_paid' => $installmentPaid,
-            'amount_outstanding' => $installmentOutstanding,
-            'status' => $installmentPaid > 0 ? RentInstallmentStatus::PartiallyPaid : RentInstallmentStatus::Issued,
-            'paid_at' => null,
-            'updated_by' => $actor->id,
-        ])->save();
+            $lockedAllocation->forceFill([
+                'status' => PaymentAllocationStatus::Reversed,
+                'reversed_at' => now(),
+                'reversed_by' => $actor->id,
+                'notes' => trim(($lockedAllocation->notes ? $lockedAllocation->notes."\n" : '').'Estorno: '.$reason),
+            ])->save();
 
-        $payment->forceFill([
-            'allocated_amount' => max(0, (float) $payment->allocated_amount - $amount),
-            'unallocated_amount' => min((float) $payment->amount, (float) $payment->unallocated_amount + $amount),
-            'status' => LeasePaymentStatus::Confirmed,
-        ])->save();
+            $installmentPaid = DecimalMoney::max(
+                0,
+                DecimalMoney::subtract((string) $installment->amount_paid, $amount),
+            );
+            $installmentOutstanding = DecimalMoney::max(
+                0,
+                DecimalMoney::subtract(
+                    DecimalMoney::subtract((string) $installment->amount_due, $installmentPaid),
+                    (string) $installment->amount_waived,
+                ),
+            );
+            $installment->forceFill([
+                'amount_paid' => $installmentPaid,
+                'amount_outstanding' => $installmentOutstanding,
+                'status' => DecimalMoney::isPositive($installmentPaid) ? RentInstallmentStatus::PartiallyPaid : RentInstallmentStatus::Issued,
+                'paid_at' => null,
+                'updated_by' => $actor->id,
+            ])->save();
 
-        $this->transactions->recalculateAccount($this->accountForPayment($payment));
+            $payment->forceFill([
+                'allocated_amount' => DecimalMoney::max(
+                    0,
+                    DecimalMoney::subtract((string) $payment->allocated_amount, $amount),
+                ),
+                'unallocated_amount' => DecimalMoney::min(
+                    (string) $payment->amount,
+                    DecimalMoney::add((string) $payment->unallocated_amount, $amount),
+                ),
+                'status' => LeasePaymentStatus::Confirmed,
+            ])->save();
 
-        return $allocation->refresh();
+            $this->transactions->recalculateAccount($this->accountForPayment($payment));
+
+            return $lockedAllocation->refresh();
+        });
     }
 
     private function accountForPayment(LeasePayment $payment): TenantFinancialAccount

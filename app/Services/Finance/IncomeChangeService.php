@@ -9,6 +9,7 @@ use App\Models\TenantFinancialAccount;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class IncomeChangeService
@@ -67,32 +68,59 @@ class IncomeChangeService
 
     public function accept(IncomeChangeDeclaration $declaration, User $actor, ?string $notes = null): IncomeChangeDeclaration
     {
-        $review = $this->rentReviews->createFromIncomeChange($declaration, $actor);
+        return DB::transaction(function () use ($declaration, $actor, $notes): IncomeChangeDeclaration {
+            $lockedDeclaration = IncomeChangeDeclaration::query()
+                ->whereKey($declaration->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            if ($this->declarationHasStatus($lockedDeclaration, IncomeChangeStatus::Accepted)) {
+                return $lockedDeclaration;
+            }
 
-        $declaration->forceFill([
-            'status' => IncomeChangeStatus::Accepted,
-            'reviewed_at' => now(),
-            'reviewed_by' => $actor->id,
-            'review_notes' => $notes,
-            'rent_review_id' => $review->id,
-        ])->save();
+            $review = $this->rentReviews->createFromIncomeChange($lockedDeclaration, $actor);
 
-        $this->auditLogger->record(AuditEvents::APPROVE, $declaration, 'finance', 'income_change_accept', 'Declaração de alteração de rendimentos aceite.');
+            $lockedDeclaration->forceFill([
+                'status' => IncomeChangeStatus::Accepted,
+                'reviewed_at' => now(),
+                'reviewed_by' => $actor->id,
+                'review_notes' => $notes,
+                'rent_review_id' => $review->id,
+            ])->save();
 
-        return $declaration->refresh();
+            $this->auditLogger->record(AuditEvents::APPROVE, $lockedDeclaration, 'finance', 'income_change_accept', 'Declaração de alteração de rendimentos aceite.');
+
+            return $lockedDeclaration->refresh();
+        });
     }
 
     public function reject(IncomeChangeDeclaration $declaration, User $actor, string $reason): IncomeChangeDeclaration
     {
-        $declaration->forceFill([
-            'status' => IncomeChangeStatus::Rejected,
-            'reviewed_at' => now(),
-            'reviewed_by' => $actor->id,
-            'rejection_reason' => $reason,
-        ])->save();
+        return DB::transaction(function () use ($declaration, $actor, $reason): IncomeChangeDeclaration {
+            $lockedDeclaration = IncomeChangeDeclaration::query()
+                ->whereKey($declaration->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            if ($this->declarationHasStatus($lockedDeclaration, IncomeChangeStatus::Rejected)) {
+                return $lockedDeclaration;
+            }
 
-        $this->auditLogger->record(AuditEvents::REJECT, $declaration, 'finance', 'income_change_reject', 'Declaração de alteração de rendimentos rejeitada.');
+            $lockedDeclaration->forceFill([
+                'status' => IncomeChangeStatus::Rejected,
+                'reviewed_at' => now(),
+                'reviewed_by' => $actor->id,
+                'rejection_reason' => $reason,
+            ])->save();
 
-        return $declaration->refresh();
+            $this->auditLogger->record(AuditEvents::REJECT, $lockedDeclaration, 'finance', 'income_change_reject', 'Declaração de alteração de rendimentos rejeitada.');
+
+            return $lockedDeclaration->refresh();
+        });
+    }
+
+    private function declarationHasStatus(IncomeChangeDeclaration $declaration, IncomeChangeStatus $expected): bool
+    {
+        $status = $declaration->getAttribute('status');
+
+        return $status === $expected || $status === $expected->value;
     }
 }
