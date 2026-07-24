@@ -100,6 +100,10 @@ class HearingsComplaintsListsMunicipalBoundaryTest extends TestCase
             ->assertOk()
             ->assertSee($localList->list_number)
             ->assertDontSee($foreignList->list_number);
+        $this->getAs(
+            $actor,
+            route('backoffice.lists.automation.index', $localApplication->contest_id),
+        )->assertOk();
 
         $this->getAs(
             $actor,
@@ -112,6 +116,10 @@ class HearingsComplaintsListsMunicipalBoundaryTest extends TestCase
         $this->getAs(
             $actor,
             route('backoffice.lists.provisional.show', $foreignList),
+        )->assertForbidden();
+        $this->getAs(
+            $actor,
+            route('backoffice.lists.automation.index', $foreignApplication->contest_id),
         )->assertForbidden();
     }
 

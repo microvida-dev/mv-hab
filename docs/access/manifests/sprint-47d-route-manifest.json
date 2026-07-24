@@ -1330,7 +1330,7 @@
             "feature_candidate": null,
             "feature_final": "applications.review",
             "policy": "App\\Policies\\ContestPolicy",
-            "ability": "viewBackoffice",
+            "ability": "viewListsBackoffice",
             "form_request": null,
             "principal_model": "App\\Models\\Contest",
             "municipality_scope_source": "list/automation run -> contest/program -> municipality",

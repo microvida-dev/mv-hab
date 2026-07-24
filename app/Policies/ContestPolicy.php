@@ -48,45 +48,43 @@ class ContestPolicy
     public function viewAnyBackoffice(User $user): bool
     {
         return ! $user->hasRole('candidate')
-            && $user->municipality_id !== null
             && $this->canAccess($user, self::MODULE, 'view');
     }
 
     public function viewBackoffice(User $user, Contest $contest): bool
     {
         return ! $user->hasRole('candidate')
-            && (
-                $this->canAccess($user, self::MODULE, 'view')
-                || $this->canAccess($user, 'public_lists', 'view')
-            )
-            && $this->municipalScope->ownsContest($user, $contest);
+            && $this->canAccess($user, self::MODULE, 'view');
     }
 
     public function createBackoffice(User $user): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $user->municipality_id !== null
             && $this->canAccess($user, self::MODULE, 'create');
     }
 
     public function updateBackoffice(User $user, Contest $contest): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, self::MODULE, 'update')
-            && $this->municipalScope->ownsContest($user, $contest);
+            && $this->canAccess($user, self::MODULE, 'update');
     }
 
     public function deleteBackoffice(User $user, Contest $contest): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, self::MODULE, 'delete')
-            && $this->municipalScope->ownsContest($user, $contest);
+            && $this->canAccess($user, self::MODULE, 'delete');
     }
 
     public function publishBackoffice(User $user, Contest $contest): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, self::MODULE, 'publish')
+            && $this->canAccess($user, self::MODULE, 'publish');
+    }
+
+    public function viewListsBackoffice(User $user, Contest $contest): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, 'public_lists', 'view')
             && $this->municipalScope->ownsContest($user, $contest);
     }
 

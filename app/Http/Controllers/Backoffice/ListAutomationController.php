@@ -27,7 +27,7 @@ class ListAutomationController extends Controller
 
     public function index(Contest $contest): View
     {
-        Gate::authorize('viewBackoffice', $contest);
+        Gate::authorize('viewListsBackoffice', $contest);
         $runs = $this->municipalScope
             ->listAutomationRuns(
                 ListAutomationRun::query()->where('contest_id', $contest->getKey()),
