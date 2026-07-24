@@ -2,12 +2,12 @@
 
 ## Finanças, rendas, pagamentos, recibos e importações
 
-**Projeto:** MV-HAB  
-**Sprint:** 47F  
-**Branch:** `sprint-47f-finance-payments-permissions`  
-**Base:** Sprint 47E — commit `432b8148b2394fac2e20dffd1f695e7262847e9b`  
-**Data de decisão:** 24 de julho de 2026  
-**Estado:** implementação e testes concluídos; publicação Git pendente
+**Projeto:** MV-HAB
+**Sprint:** 47F
+**Branch:** `sprint-47f-finance-payments-permissions`
+**Base:** Sprint 47E — commit `432b8148b2394fac2e20dffd1f695e7262847e9b`
+**Data de decisão:** 24 de julho de 2026
+**Estado:** implementação, testes e publicação Git concluídos
 
 ---
 

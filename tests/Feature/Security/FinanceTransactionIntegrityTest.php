@@ -17,8 +17,6 @@ use App\Models\LeasePayment;
 use App\Models\Municipality;
 use App\Models\PaymentAllocation;
 use App\Models\PaymentImportBatch;
-use App\Models\PaymentImportRow;
-use App\Models\PaymentReceipt;
 use App\Models\Program;
 use App\Models\RentInstallment;
 use App\Models\RentSchedule;

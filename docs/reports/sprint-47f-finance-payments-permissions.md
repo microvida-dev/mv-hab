@@ -4,12 +4,12 @@
 
 ### Projeto
 
-**Plataforma:** MV-HAB  
-**Sprint:** 47F  
-**Branch:** `sprint-47f-finance-payments-permissions`  
-**Base da branch:** `432b8148b2394fac2e20dffd1f695e7262847e9b`  
-**Data:** 24 de julho de 2026  
-**Estado de geração:** `REPOSITORY_TESTS_PASS — PUBLICATION_PENDING`
+**Plataforma:** MV-HAB
+**Sprint:** 47F
+**Branch:** `sprint-47f-finance-payments-permissions`
+**Base da branch:** `432b8148b2394fac2e20dffd1f695e7262847e9b`
+**Data:** 24 de julho de 2026
+**Estado:** `REPOSITORY_PASS_DEPLOYMENT_GATED`
 
 ---
 
@@ -461,9 +461,7 @@ Antes de produção:
 
 Estado no momento de geração deste relatório:
 
-REPOSITORY_TESTS_PASS
-INVENTORY_RECONCILED
-PUBLICATION_PENDING
+REPOSITORY_PASS_DEPLOYMENT_GATED
 
 Após:
 

@@ -4,11 +4,11 @@
 
 ### Projeto
 
-**Plataforma:** MV-HAB  
-**Programa:** Migração permission-first  
-**Sprints:** 47E e 47F  
-**Data:** 24 de julho de 2026  
-**Estado:** implementação e testes concluídos; publicação final da 47F pendente
+**Plataforma:** MV-HAB
+**Programa:** Migração permission-first
+**Sprints:** 47E e 47F
+**Data:** 24 de julho de 2026
+**Estado:** `REPOSITORY_PASS_DEPLOYMENT_GATED`
 
 ---
 
@@ -128,9 +128,7 @@ Rotas candidate com role fixa:             220
 Rotas globais com permission middleware:   687
 Rotas sem guards completos:                178
 Estado
-REPOSITORY_TESTS_PASS
-INVENTORY_RECONCILED
-PUBLICATION_PENDING
+REPOSITORY_PASS_DEPLOYMENT_GATED
 
 Após publicação Git:
 
@@ -385,9 +383,7 @@ rollback preparado
 Sprint 47E
 REPOSITORY_PASS_DEPLOYMENT_GATED
 Sprint 47F no momento de geração
-REPOSITORY_TESTS_PASS
-INVENTORY_RECONCILED
-PUBLICATION_PENDING
+REPOSITORY_PASS_DEPLOYMENT_GATED
 Sprint 47F após publicação e igualdade local/remoto
 REPOSITORY_PASS_DEPLOYMENT_GATED
 
