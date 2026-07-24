@@ -20,6 +20,8 @@ class DocumentSubmissionFactory extends Factory
         return [
             'document_type_id' => DocumentType::factory(),
             'required_document_id' => null,
+            'requirement_instance' => 1,
+            'reference_period' => null,
             'user_id' => User::factory(),
             'adhesion_registration_id' => AdhesionRegistration::factory(),
             'status' => DocumentStatus::Submitted->value,
@@ -38,7 +40,7 @@ class DocumentSubmissionFactory extends Factory
 
     public function forRequiredDocument(RequiredDocument $requiredDocument): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (): array => [
             'document_type_id' => $requiredDocument->document_type_id,
             'required_document_id' => $requiredDocument->id,
         ]);

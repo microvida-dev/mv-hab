@@ -25,6 +25,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $checksum
  * @property Carbon|null $submitted_at
  * @property Carbon|null $reviewed_at
+ * @property int $requirement_instance
+ * @property Carbon|null $reference_period
  * @property-read User|null $user
  * @property-read DocumentVersion|null $currentVersion
  */
@@ -51,6 +53,8 @@ class DocumentSubmission extends Model
             'reviewed_at' => 'datetime',
             'validated_at' => 'datetime',
             'rejected_at' => 'datetime',
+            'requirement_instance' => 'integer',
+            'reference_period' => 'date',
         ];
     }
 

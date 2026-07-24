@@ -25,6 +25,10 @@ class RequiredDocumentFactory extends Factory
             'condition_value' => null,
             'is_required' => true,
             'is_active' => true,
+            'required_submissions' => 1,
+            'reference_period_unit' => null,
+            'requires_distinct_reference_periods' => false,
+            'reference_period_recency' => null,
             'instructions' => 'Regra documental fictícia para testes.',
             'sort_order' => 0,
         ];
