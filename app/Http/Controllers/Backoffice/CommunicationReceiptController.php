@@ -12,7 +12,7 @@ class CommunicationReceiptController extends Controller
 {
     public function download(CommunicationReceipt $communicationReceipt, CommunicationReceiptService $service): StreamedResponse
     {
-        Gate::authorize('view', $communicationReceipt);
+        Gate::authorize('downloadBackoffice', $communicationReceipt);
 
         return $service->download($communicationReceipt, $this->currentUser());
     }

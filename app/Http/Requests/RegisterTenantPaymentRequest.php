@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Models\TenantPayment;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RegisterTenantPaymentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasRole(['administrator', 'financial_manager', 'municipal_technician']) ?? false;
+        return $this->user()?->can('createBackoffice', TenantPayment::class) ?? false;
     }
 
     /**

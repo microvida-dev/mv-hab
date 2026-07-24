@@ -10,6 +10,7 @@ use App\Models\Allocation;
 use App\Models\RentCalculation;
 use App\Models\RentRuleSet;
 use App\Services\Contracts\RentCalculationService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,22 +18,38 @@ use Illuminate\Support\Facades\Gate;
 
 class RentCalculationController extends Controller
 {
-    public function __construct(private readonly RentCalculationService $service) {}
+    public function __construct(
+        private readonly RentCalculationService $service,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        Gate::authorize('viewAny', RentCalculation::class);
+        Gate::authorize('viewAnyBackoffice', RentCalculation::class);
+        $actor = $this->authenticatedUser($request);
 
         return view('backoffice.contracts.rent-calculations.index', [
-            'calculations' => RentCalculation::query()->with(['candidate', 'allocation', 'housingUnit', 'rentRuleSet'])->latest()->paginate(20),
-            'allocations' => Allocation::query()->readyForContract()->with(['candidate', 'housingUnit'])->get(),
-            'ruleSets' => RentRuleSet::query()->active()->orderBy('name')->get(),
+            'calculations' => $this->municipalScope
+                ->rentCalculations(RentCalculation::query(), $actor)
+                ->with(['candidate', 'allocation', 'housingUnit', 'rentRuleSet'])
+                ->latest()
+                ->paginate(20),
+            'allocations' => $this->municipalScope
+                ->allocations(Allocation::query(), $actor)
+                ->readyForContract()
+                ->with(['candidate', 'housingUnit'])
+                ->get(),
+            'ruleSets' => $this->municipalScope
+                ->rentRuleSets(RentRuleSet::query(), $actor)
+                ->active()
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
     public function show(RentCalculation $rentCalculation): View
     {
-        Gate::authorize('view', $rentCalculation);
+        Gate::authorize('viewBackoffice', $rentCalculation);
         $rentCalculation->load(['candidate', 'application', 'allocation', 'housingUnit', 'rentRuleSet', 'details', 'manualReviews']);
 
         return view('backoffice.contracts.rent-calculations.show', compact('rentCalculation'));
@@ -40,21 +57,25 @@ class RentCalculationController extends Controller
 
     public function calculate(CalculateRentRequest $request): RedirectResponse
     {
-        Gate::authorize('create', RentCalculation::class);
+        Gate::authorize('calculateBackoffice', RentCalculation::class);
 
         $validated = $request->validated();
+        $actor = $this->authenticatedUser($request);
 
-        $allocation = Allocation::query()
+        $allocation = $this->municipalScope
+            ->allocations(Allocation::query(), $actor)
             ->with('application')
             ->findOrFail((int) $validated['allocation_id']);
 
         $ruleSet = filled($validated['rent_rule_set_id'] ?? null)
-            ? RentRuleSet::query()->findOrFail((int) $validated['rent_rule_set_id'])
+            ? $this->municipalScope
+                ->rentRuleSets(RentRuleSet::query(), $actor)
+                ->findOrFail((int) $validated['rent_rule_set_id'])
             : null;
 
         $calculation = $this->service->calculate(
             $allocation,
-            $this->authenticatedUser($request),
+            $actor,
             $ruleSet,
             $validated['notes'] ?? null,
         );
@@ -65,7 +86,7 @@ class RentCalculationController extends Controller
 
     public function approve(ApproveRentCalculationRequest $request, RentCalculation $rentCalculation): RedirectResponse
     {
-        Gate::authorize('approve', $rentCalculation);
+        Gate::authorize('approveBackoffice', $rentCalculation);
         $this->service->approve($rentCalculation, $this->authenticatedUser($request), $request->validated('notes'));
 
         return back()->with('success', 'Cálculo aprovado.');
@@ -73,7 +94,7 @@ class RentCalculationController extends Controller
 
     public function reject(RejectRentCalculationRequest $request, RentCalculation $rentCalculation): RedirectResponse
     {
-        Gate::authorize('approve', $rentCalculation);
+        Gate::authorize('rejectBackoffice', $rentCalculation);
         $this->service->reject($rentCalculation, $this->authenticatedUser($request), $request->validated('reason'));
 
         return back()->with('success', 'Cálculo rejeitado.');
@@ -81,7 +102,7 @@ class RentCalculationController extends Controller
 
     public function recalculate(Request $request, RentCalculation $rentCalculation): RedirectResponse
     {
-        Gate::authorize('update', $rentCalculation);
+        Gate::authorize('recalculateBackoffice', $rentCalculation);
         $allocation = $rentCalculation->allocation;
         $ruleSet = $rentCalculation->rentRuleSet;
         abort_unless($allocation instanceof Allocation, 500);

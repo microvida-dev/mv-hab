@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Contract;
 use App\Models\TenantFinancialAccount;
 use App\Services\Finance\TenantFinancialAccountService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,13 +14,17 @@ use Illuminate\Support\Facades\Gate;
 
 class TenantFinancialAccountController extends Controller
 {
-    public function __construct(private readonly TenantFinancialAccountService $service) {}
+    public function __construct(
+        private readonly TenantFinancialAccountService $service,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
     public function index(): View
     {
-        Gate::authorize('viewAny', TenantFinancialAccount::class);
+        Gate::authorize('viewAnyBackoffice', TenantFinancialAccount::class);
 
-        $accounts = TenantFinancialAccount::query()
+        $accounts = $this->municipalScope
+            ->tenantFinancialAccounts(TenantFinancialAccount::query(), $this->currentUser())
             ->with(['tenant', 'leaseContract.housingUnit'])
             ->latest()
             ->paginate(20);
@@ -29,7 +34,7 @@ class TenantFinancialAccountController extends Controller
 
     public function show(TenantFinancialAccount $tenantFinancialAccount): View
     {
-        Gate::authorize('view', $tenantFinancialAccount);
+        Gate::authorize('viewBackoffice', $tenantFinancialAccount);
 
         $tenantFinancialAccount->load([
             'tenant',
@@ -45,14 +50,18 @@ class TenantFinancialAccountController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        Gate::authorize('create', TenantFinancialAccount::class);
+        Gate::authorize('createBackoffice', TenantFinancialAccount::class);
 
         $data = $request->validate([
             'lease_contract_id' => ['required', 'integer', 'exists:contracts,id'],
         ]);
 
-        $contract = Contract::query()->whereKey((int) $data['lease_contract_id'])->firstOrFail();
-        $account = $this->service->ensureForContract($contract, $this->authenticatedUser($request));
+        $actor = $this->authenticatedUser($request);
+        $contract = $this->municipalScope
+            ->contracts(Contract::query(), $actor)
+            ->whereKey((int) $data['lease_contract_id'])
+            ->firstOrFail();
+        $account = $this->service->ensureForContract($contract, $actor);
 
         return redirect()->route('backoffice.finance.accounts.show', $account)->with('success', 'Conta financeira criada ou localizada.');
     }

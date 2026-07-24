@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\TenantPayment;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ConfirmTenantPaymentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasRole(['administrator', 'financial_manager', 'municipal_technician']) ?? false;
+        $payment = $this->route('tenantPayment');
+
+        return $payment instanceof TenantPayment
+            && $this->user()?->can('confirmBackoffice', $payment) === true;
     }
 
     /**

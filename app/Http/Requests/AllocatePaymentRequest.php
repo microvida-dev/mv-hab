@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\LeasePayment;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AllocatePaymentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $payment = $this->route('leasePayment');
+
+        return $payment instanceof LeasePayment
+            && $this->user()?->can('allocateBackoffice', $payment) === true;
     }
 
     /**

@@ -18,7 +18,7 @@ class ContractDepositController extends Controller
 
     public function show(ContractDeposit $contractDeposit): View
     {
-        Gate::authorize('view', $contractDeposit);
+        Gate::authorize('viewBackoffice', $contractDeposit);
         $contractDeposit->load(['leaseContract.candidate', 'leaseContract.housingUnit']);
 
         return view('backoffice.contracts.deposits.show', compact('contractDeposit'));
@@ -26,7 +26,7 @@ class ContractDepositController extends Controller
 
     public function markRequested(Request $request, ContractDeposit $contractDeposit): RedirectResponse
     {
-        Gate::authorize('update', $contractDeposit);
+        Gate::authorize('requestBackoffice', $contractDeposit);
         $this->service->markRequested($contractDeposit, $this->authenticatedUser($request));
 
         return back()->with('success', 'Caução marcada como solicitada.');
@@ -34,7 +34,7 @@ class ContractDepositController extends Controller
 
     public function markPaid(MarkContractDepositPaidRequest $request, ContractDeposit $contractDeposit): RedirectResponse
     {
-        Gate::authorize('update', $contractDeposit);
+        Gate::authorize('markPaidBackoffice', $contractDeposit);
         $this->service->markPaid($contractDeposit, $this->authenticatedUser($request), $request->validated());
 
         return back()->with('success', 'Caução registada como paga manualmente.');
@@ -42,7 +42,7 @@ class ContractDepositController extends Controller
 
     public function markWaived(WaiveContractDepositRequest $request, ContractDeposit $contractDeposit): RedirectResponse
     {
-        Gate::authorize('update', $contractDeposit);
+        Gate::authorize('waiveBackoffice', $contractDeposit);
         $this->service->waive($contractDeposit, $this->authenticatedUser($request), $request->validated('reason'), $request->validated('internal_notes'));
 
         return back()->with('success', 'Caução dispensada.');
@@ -50,7 +50,7 @@ class ContractDepositController extends Controller
 
     public function cancel(Request $request, ContractDeposit $contractDeposit): RedirectResponse
     {
-        Gate::authorize('update', $contractDeposit);
+        Gate::authorize('cancelBackoffice', $contractDeposit);
         $this->service->cancel($contractDeposit, $this->authenticatedUser($request), $request->input('reason'));
 
         return back()->with('success', 'Caução cancelada.');

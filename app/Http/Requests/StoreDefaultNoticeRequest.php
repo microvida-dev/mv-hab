@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\DefaultNoticeType;
+use App\Models\DefaultNotice;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +11,7 @@ class StoreDefaultNoticeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('createBackoffice', DefaultNotice::class) ?? false;
     }
 
     /**

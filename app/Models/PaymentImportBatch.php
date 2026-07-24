@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\PaymentImportStatus;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -11,7 +12,7 @@ class PaymentImportBatch extends Model
 {
     use SoftDeletes;
 
-    protected $guarded = ['id', 'batch_number', 'status', 'row_count', 'matched_count', 'imported_count', 'failed_count', 'processed_at', 'reversed_at', 'created_by', 'processed_by', 'reversed_by', 'created_at', 'updated_at', 'deleted_at'];
+    protected $guarded = ['id', 'municipality_id', 'batch_number', 'status', 'row_count', 'matched_count', 'imported_count', 'failed_count', 'processed_at', 'reversed_at', 'created_by', 'processed_by', 'reversed_by', 'created_at', 'updated_at', 'deleted_at'];
 
     protected function casts(): array
     {
@@ -28,5 +29,13 @@ class PaymentImportBatch extends Model
     public function rows(): HasMany
     {
         return $this->hasMany(PaymentImportRow::class);
+    }
+
+    /**
+     * @return BelongsTo<Municipality, $this>
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 }

@@ -4815,6 +4815,127 @@ Route::middleware('auth')->group(function () {
                         'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
                     );
             }
+
+            $sprint47fRouteAccess = [
+                'backoffice.contracts.deposits.cancel' => 'finance.deposits.cancel',
+                'backoffice.contracts.deposits.paid' => 'finance.deposits.mark_paid',
+                'backoffice.contracts.deposits.requested' => 'finance.deposits.request',
+                'backoffice.contracts.deposits.show' => 'finance.deposits.view',
+                'backoffice.contracts.deposits.waived' => 'finance.deposits.waive',
+                'backoffice.contracts.rent-calculations.approve' => 'finance.rent_calculations.approve',
+                'backoffice.contracts.rent-calculations.calculate' => 'finance.rent_calculations.calculate',
+                'backoffice.contracts.rent-calculations.index' => 'finance.rent_calculations.view',
+                'backoffice.contracts.rent-calculations.recalculate' => 'finance.rent_calculations.recalculate',
+                'backoffice.contracts.rent-calculations.reject' => 'finance.rent_calculations.reject',
+                'backoffice.contracts.rent-calculations.show' => 'finance.rent_calculations.view',
+                'backoffice.contracts.rent-manual-reviews.approve' => 'finance.rent_manual_reviews.approve',
+                'backoffice.contracts.rent-manual-reviews.reject' => 'finance.rent_manual_reviews.reject',
+                'backoffice.contracts.rent-manual-reviews.store' => 'finance.rent_manual_reviews.create',
+                'backoffice.contracts.rent-rule-sets.activate' => 'finance.rent_rule_sets.activate',
+                'backoffice.contracts.rent-rule-sets.archive' => 'finance.rent_rule_sets.archive',
+                'backoffice.contracts.rent-rule-sets.create' => 'finance.rent_rule_sets.create',
+                'backoffice.contracts.rent-rule-sets.duplicate' => 'finance.rent_rule_sets.duplicate',
+                'backoffice.contracts.rent-rule-sets.edit' => 'finance.rent_rule_sets.update',
+                'backoffice.contracts.rent-rule-sets.index' => 'finance.rent_rule_sets.view',
+                'backoffice.contracts.rent-rule-sets.show' => 'finance.rent_rule_sets.view',
+                'backoffice.contracts.rent-rule-sets.store' => 'finance.rent_rule_sets.create',
+                'backoffice.contracts.rent-rule-sets.update' => 'finance.rent_rule_sets.update',
+                'backoffice.contracts.rent-rules.create' => 'finance.rent_rules.create',
+                'backoffice.contracts.rent-rules.edit' => 'finance.rent_rules.update',
+                'backoffice.contracts.rent-rules.index' => 'finance.rent_rules.view',
+                'backoffice.contracts.rent-rules.store' => 'finance.rent_rules.create',
+                'backoffice.contracts.rent-rules.update' => 'finance.rent_rules.update',
+                'backoffice.finance.accounts.detect-arrears' => 'finance.accounts.detect_arrears',
+                'backoffice.finance.accounts.index' => 'finance.accounts.view',
+                'backoffice.finance.accounts.show' => 'finance.accounts.view',
+                'backoffice.finance.accounts.statement' => 'finance.accounts.view',
+                'backoffice.finance.accounts.store' => 'finance.accounts.create',
+                'backoffice.finance.arrears.close' => 'finance.arrears.resolve',
+                'backoffice.finance.arrears.index' => 'finance.arrears.view',
+                'backoffice.finance.arrears.show' => 'finance.arrears.view',
+                'backoffice.finance.default-notices.cancel' => 'finance.default_notices.cancel',
+                'backoffice.finance.default-notices.create' => 'finance.default_notices.create',
+                'backoffice.finance.default-notices.index' => 'finance.default_notices.view',
+                'backoffice.finance.default-notices.issue' => 'finance.default_notices.issue',
+                'backoffice.finance.default-notices.show' => 'finance.default_notices.view',
+                'backoffice.finance.default-notices.store' => 'finance.default_notices.create',
+                'backoffice.finance.imports.create' => 'payments.imports.create',
+                'backoffice.finance.imports.index' => 'payments.imports.view',
+                'backoffice.finance.imports.process' => 'payments.imports.process',
+                'backoffice.finance.imports.show' => 'payments.imports.view',
+                'backoffice.finance.imports.store' => 'payments.imports.create',
+                'backoffice.finance.income-changes.accept' => 'finance.income_changes.approve',
+                'backoffice.finance.income-changes.index' => 'finance.income_changes.view',
+                'backoffice.finance.income-changes.reject' => 'finance.income_changes.reject',
+                'backoffice.finance.income-changes.show' => 'finance.income_changes.view',
+                'backoffice.finance.installments.index' => 'finance.installments.view',
+                'backoffice.finance.installments.issue' => 'finance.installments.issue',
+                'backoffice.finance.installments.show' => 'finance.installments.view',
+                'backoffice.finance.installments.waive' => 'finance.installments.waive',
+                'backoffice.finance.payments.allocate' => 'payments.allocate',
+                'backoffice.finance.payments.confirm' => 'payments.confirm',
+                'backoffice.finance.payments.create' => 'payments.create',
+                'backoffice.finance.payments.index' => 'payments.view',
+                'backoffice.finance.payments.reverse' => 'payments.reverse',
+                'backoffice.finance.payments.show' => 'payments.view',
+                'backoffice.finance.payments.store' => 'payments.create',
+                'backoffice.finance.receipts.cancel' => 'payments.receipts.cancel',
+                'backoffice.finance.receipts.download' => 'payments.receipts.download',
+                'backoffice.finance.receipts.generate' => 'payments.receipts.generate',
+                'backoffice.finance.receipts.index' => 'payments.receipts.view',
+                'backoffice.finance.receipts.show' => 'payments.receipts.view',
+                'backoffice.finance.regularization-agreements.approve' => 'finance.regularizations.approve',
+                'backoffice.finance.regularization-agreements.cancel' => 'finance.regularizations.cancel',
+                'backoffice.finance.regularization-agreements.create' => 'finance.regularizations.create',
+                'backoffice.finance.regularization-agreements.index' => 'finance.regularizations.view',
+                'backoffice.finance.regularization-agreements.show' => 'finance.regularizations.view',
+                'backoffice.finance.regularization-agreements.store' => 'finance.regularizations.create',
+                'backoffice.finance.rent-reviews.apply' => 'finance.rent_reviews.apply',
+                'backoffice.finance.rent-reviews.approve' => 'finance.rent_reviews.approve',
+                'backoffice.finance.rent-reviews.calculate' => 'finance.rent_reviews.calculate',
+                'backoffice.finance.rent-reviews.create' => 'finance.rent_reviews.create',
+                'backoffice.finance.rent-reviews.index' => 'finance.rent_reviews.view',
+                'backoffice.finance.rent-reviews.reject' => 'finance.rent_reviews.reject',
+                'backoffice.finance.rent-reviews.show' => 'finance.rent_reviews.view',
+                'backoffice.finance.rent-reviews.store' => 'finance.rent_reviews.create',
+                'backoffice.finance.schedules.generate' => 'finance.schedules.generate',
+                'backoffice.finance.schedules.index' => 'finance.schedules.view',
+                'backoffice.finance.schedules.show' => 'finance.schedules.view',
+                'backoffice.communications.receipts.download' => 'notifications.receipts.download',
+                'backoffice.tenant-operations.invoices.index' => 'payments.invoices.view',
+                'backoffice.tenant-operations.invoices.show' => 'payments.invoices.view',
+                'backoffice.tenant-operations.invoices.store' => 'payments.invoices.generate',
+                'backoffice.tenant-operations.payments.confirm' => 'payments.tenant.confirm',
+                'backoffice.tenant-operations.payments.index' => 'payments.tenant.view',
+                'backoffice.tenant-operations.payments.show' => 'payments.tenant.view',
+                'backoffice.tenant-operations.payments.store' => 'payments.tenant.create',
+                'payments.create' => 'payments.create',
+                'payments.destroy' => 'payments.delete',
+                'payments.edit' => 'payments.update',
+                'payments.index' => 'payments.view',
+                'payments.show' => 'payments.view',
+                'payments.store' => 'payments.create',
+                'payments.update' => 'payments.update',
+            ];
+
+            foreach ($sprint47fRouteAccess as $routeName => $permission) {
+                $route = Route::getRoutes()->getByName($routeName);
+
+                if ($route === null) {
+                    throw new LogicException("A rota {$routeName} do manifesto 47F não está registada.");
+                }
+
+                $route
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        "permission:{$permission}",
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    );
+            }
         });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -18,7 +18,7 @@ class ReviewIncomeChangeDeclarationRequest extends FormRequest
         $declaration = $this->route('incomeChangeDeclaration');
 
         return $declaration instanceof IncomeChangeDeclaration
-            && $this->user()?->hasPermissionTo('finance', 'update') === true;
+            && $this->user()?->can('approveBackoffice', $declaration) === true;
     }
 
     /**

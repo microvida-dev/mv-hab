@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\RentReview;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CalculateRentReviewRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $review = $this->route('rentReview');
+
+        return $review instanceof RentReview
+            && $this->user()?->can('calculateBackoffice', $review) === true;
     }
 
     /**

@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ContractDeposit;
 use Illuminate\Foundation\Http\FormRequest;
 
 class WaiveContractDepositRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $deposit = $this->route('contractDeposit');
+
+        return $deposit instanceof ContractDeposit
+            && $this->user()?->can('waiveBackoffice', $deposit) === true;
     }
 
     /**

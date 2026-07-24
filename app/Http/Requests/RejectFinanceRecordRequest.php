@@ -18,13 +18,13 @@ class RejectFinanceRecordRequest extends FormRequest
 
         $declaration = $this->route('incomeChangeDeclaration');
         if ($declaration instanceof IncomeChangeDeclaration) {
-            return $this->user()?->hasPermissionTo('finance', 'reject') === true;
+            return $this->user()?->can('rejectBackoffice', $declaration) === true;
         }
 
         $rentReview = $this->route('rentReview');
 
         return $rentReview instanceof RentReview
-            && $this->user()?->hasPermissionTo('finance', 'reject') === true;
+            && $this->user()?->can('rejectBackoffice', $rentReview) === true;
     }
 
     /**

@@ -15,17 +15,21 @@ use App\Models\ApplicationReport;
 use App\Models\ApplicationReview;
 use App\Models\ApplicationScore;
 use App\Models\ApplicationSimulationInconsistency;
+use App\Models\Arrear;
 use App\Models\Citizen;
+use App\Models\CommunicationReceipt;
 use App\Models\Complaint;
 use App\Models\ComplaintDecision;
 use App\Models\Contest;
 use App\Models\ContestClosure;
 use App\Models\Contract;
 use App\Models\ContractClause;
+use App\Models\ContractDeposit;
 use App\Models\ContractTemplate;
 use App\Models\ControlledWithdrawal;
 use App\Models\CorrectionRequest;
 use App\Models\CorrectionResponse;
+use App\Models\DefaultNotice;
 use App\Models\DefinitiveList;
 use App\Models\Document;
 use App\Models\DocumentAiAnalysis;
@@ -49,18 +53,30 @@ use App\Models\HearingSubmission;
 use App\Models\Household;
 use App\Models\HousingApplication;
 use App\Models\HousingUnit;
+use App\Models\IncomeChangeDeclaration;
 use App\Models\KeyHandoverAppointment;
 use App\Models\LeaseContractDocument;
 use App\Models\LeaseContractValidation;
+use App\Models\LeasePayment;
 use App\Models\ListAutomationRun;
 use App\Models\LotteryDraw;
 use App\Models\LotteryResult;
+use App\Models\Payment;
+use App\Models\PaymentImportBatch;
+use App\Models\PaymentReceipt;
 use App\Models\PostDrawReport;
 use App\Models\Program;
 use App\Models\ProvisionalList;
 use App\Models\RankingSnapshot;
 use App\Models\RankingUpdateRun;
+use App\Models\RegularizationAgreement;
 use App\Models\RentCalculation;
+use App\Models\RentInstallment;
+use App\Models\RentManualReview;
+use App\Models\RentReview;
+use App\Models\RentRule;
+use App\Models\RentRuleSet;
+use App\Models\RentSchedule;
 use App\Models\ReportAccessLog;
 use App\Models\ReportDownloadLog;
 use App\Models\ReportExport;
@@ -74,6 +90,8 @@ use App\Models\SimulatorConfiguration;
 use App\Models\TenantChargeRun;
 use App\Models\TenantCommunication;
 use App\Models\TenantFinancialAccount;
+use App\Models\TenantInvoice;
+use App\Models\TenantPayment;
 use App\Models\TenantTransition;
 use App\Models\TieBreakerRule;
 use App\Models\User;
@@ -259,6 +277,10 @@ class MunicipalRecordScopeService
                 ->whereIn(
                     'allocation_id',
                     $this->allocations(Allocation::query(), $user)->select('id'),
+                )
+                ->orWhereIn(
+                    'contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
                 )
                 ->orWhereHas('application.program', fn (Builder $program): Builder => $program
                     ->where('municipality_id', $user->municipality_id));
@@ -1292,10 +1314,33 @@ class MunicipalRecordScopeService
      */
     public function tenantFinancialAccounts(Builder $query, User $user): Builder
     {
-        return $query->whereIn(
-            'lease_contract_id',
-            $this->contracts(Contract::query(), $user)->select('id'),
-        );
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $accounts) use ($user): void {
+            $accounts
+                ->whereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                )
+                ->orWhereIn(
+                    'application_id',
+                    $this->applications(Application::query(), $user)->select('id'),
+                )
+                ->orWhereIn(
+                    'allocation_id',
+                    $this->allocations(Allocation::query(), $user)->select('id'),
+                )
+                ->orWhereHas('housingUnit', fn (Builder $housingUnit): Builder => $housingUnit
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('tenant', fn (Builder $tenant): Builder => $tenant
+                    ->where('municipality_id', $user->municipality_id));
+        });
     }
 
     public function ownsTenantFinancialAccount(
@@ -1304,6 +1349,534 @@ class MunicipalRecordScopeService
     ): bool {
         return $this->tenantFinancialAccounts(
             TenantFinancialAccount::query()->whereKey($account),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<ContractDeposit>  $query
+     * @return Builder<ContractDeposit>
+     */
+    public function contractDeposits(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $deposits) use ($user): void {
+            $deposits
+                ->whereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                )
+                ->orWhereIn(
+                    'application_id',
+                    $this->applications(Application::query(), $user)->select('id'),
+                )
+                ->orWhereIn(
+                    'allocation_id',
+                    $this->allocations(Allocation::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsContractDeposit(User $user, ContractDeposit $deposit): bool
+    {
+        return $this->contractDeposits(
+            ContractDeposit::query()->whereKey($deposit),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<RentManualReview>  $query
+     * @return Builder<RentManualReview>
+     */
+    public function rentManualReviews(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'rent_calculation_id',
+            $this->rentCalculations(RentCalculation::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsRentManualReview(User $user, RentManualReview $review): bool
+    {
+        return $this->rentManualReviews(
+            RentManualReview::query()->whereKey($review),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<RentRuleSet>  $query
+     * @return Builder<RentRuleSet>
+     */
+    public function rentRuleSets(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $ruleSets) use ($user): void {
+            $ruleSets
+                ->whereHas('program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhereHas('contest.program', fn (Builder $program): Builder => $program
+                    ->where('municipality_id', $user->municipality_id));
+        });
+    }
+
+    public function ownsRentRuleSet(User $user, RentRuleSet $ruleSet): bool
+    {
+        return $this->rentRuleSets(
+            RentRuleSet::query()->whereKey($ruleSet),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<RentRule>  $query
+     * @return Builder<RentRule>
+     */
+    public function rentRules(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'rent_rule_set_id',
+            $this->rentRuleSets(RentRuleSet::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsRentRule(User $user, RentRule $rule): bool
+    {
+        return $this->rentRules(RentRule::query()->whereKey($rule), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<RentSchedule>  $query
+     * @return Builder<RentSchedule>
+     */
+    public function rentSchedules(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $schedules) use ($user): void {
+            $schedules
+                ->whereIn(
+                    'tenant_financial_account_id',
+                    $this->tenantFinancialAccounts(
+                        TenantFinancialAccount::query(),
+                        $user,
+                    )->select('id'),
+                )
+                ->orWhereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsRentSchedule(User $user, RentSchedule $schedule): bool
+    {
+        return $this->rentSchedules(
+            RentSchedule::query()->whereKey($schedule),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<RentInstallment>  $query
+     * @return Builder<RentInstallment>
+     */
+    public function rentInstallments(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $installments) use ($user): void {
+            $installments
+                ->whereIn(
+                    'tenant_financial_account_id',
+                    $this->tenantFinancialAccounts(
+                        TenantFinancialAccount::query(),
+                        $user,
+                    )->select('id'),
+                )
+                ->orWhereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                )
+                ->orWhereIn(
+                    'rent_schedule_id',
+                    $this->rentSchedules(RentSchedule::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsRentInstallment(User $user, RentInstallment $installment): bool
+    {
+        return $this->rentInstallments(
+            RentInstallment::query()->whereKey($installment),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<LeasePayment>  $query
+     * @return Builder<LeasePayment>
+     */
+    public function leasePayments(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $payments) use ($user): void {
+            $payments
+                ->whereIn(
+                    'tenant_financial_account_id',
+                    $this->tenantFinancialAccounts(
+                        TenantFinancialAccount::query(),
+                        $user,
+                    )->select('id'),
+                )
+                ->orWhereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsLeasePayment(User $user, LeasePayment $payment): bool
+    {
+        return $this->leasePayments(
+            LeasePayment::query()->whereKey($payment),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<PaymentReceipt>  $query
+     * @return Builder<PaymentReceipt>
+     */
+    public function paymentReceipts(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $receipts) use ($user): void {
+            $receipts
+                ->whereIn(
+                    'tenant_financial_account_id',
+                    $this->tenantFinancialAccounts(
+                        TenantFinancialAccount::query(),
+                        $user,
+                    )->select('id'),
+                )
+                ->orWhereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                )
+                ->orWhereIn(
+                    'lease_payment_id',
+                    $this->leasePayments(LeasePayment::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsPaymentReceipt(User $user, PaymentReceipt $receipt): bool
+    {
+        return $this->paymentReceipts(
+            PaymentReceipt::query()->whereKey($receipt),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<Arrear>  $query
+     * @return Builder<Arrear>
+     */
+    public function arrears(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $arrears) use ($user): void {
+            $arrears
+                ->whereIn(
+                    'tenant_financial_account_id',
+                    $this->tenantFinancialAccounts(
+                        TenantFinancialAccount::query(),
+                        $user,
+                    )->select('id'),
+                )
+                ->orWhereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                )
+                ->orWhereIn(
+                    'rent_installment_id',
+                    $this->rentInstallments(RentInstallment::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsArrear(User $user, Arrear $arrear): bool
+    {
+        return $this->arrears(Arrear::query()->whereKey($arrear), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<DefaultNotice>  $query
+     * @return Builder<DefaultNotice>
+     */
+    public function defaultNotices(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $notices) use ($user): void {
+            $notices
+                ->whereIn(
+                    'tenant_financial_account_id',
+                    $this->tenantFinancialAccounts(
+                        TenantFinancialAccount::query(),
+                        $user,
+                    )->select('id'),
+                )
+                ->orWhereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                )
+                ->orWhereIn(
+                    'arrear_id',
+                    $this->arrears(Arrear::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsDefaultNotice(User $user, DefaultNotice $notice): bool
+    {
+        return $this->defaultNotices(
+            DefaultNotice::query()->whereKey($notice),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<RegularizationAgreement>  $query
+     * @return Builder<RegularizationAgreement>
+     */
+    public function regularizationAgreements(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $agreements) use ($user): void {
+            $agreements
+                ->whereIn(
+                    'tenant_financial_account_id',
+                    $this->tenantFinancialAccounts(
+                        TenantFinancialAccount::query(),
+                        $user,
+                    )->select('id'),
+                )
+                ->orWhereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsRegularizationAgreement(
+        User $user,
+        RegularizationAgreement $agreement,
+    ): bool {
+        return $this->regularizationAgreements(
+            RegularizationAgreement::query()->whereKey($agreement),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<RentReview>  $query
+     * @return Builder<RentReview>
+     */
+    public function rentReviews(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $reviews) use ($user): void {
+            $reviews
+                ->whereIn(
+                    'tenant_financial_account_id',
+                    $this->tenantFinancialAccounts(
+                        TenantFinancialAccount::query(),
+                        $user,
+                    )->select('id'),
+                )
+                ->orWhereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsRentReview(User $user, RentReview $review): bool
+    {
+        return $this->rentReviews(RentReview::query()->whereKey($review), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<IncomeChangeDeclaration>  $query
+     * @return Builder<IncomeChangeDeclaration>
+     */
+    public function incomeChangeDeclarations(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $declarations) use ($user): void {
+            $declarations
+                ->whereIn(
+                    'tenant_financial_account_id',
+                    $this->tenantFinancialAccounts(
+                        TenantFinancialAccount::query(),
+                        $user,
+                    )->select('id'),
+                )
+                ->orWhereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                )
+                ->orWhereIn(
+                    'rent_review_id',
+                    $this->rentReviews(RentReview::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsIncomeChangeDeclaration(
+        User $user,
+        IncomeChangeDeclaration $declaration,
+    ): bool {
+        return $this->incomeChangeDeclarations(
+            IncomeChangeDeclaration::query()->whereKey($declaration),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<PaymentImportBatch>  $query
+     * @return Builder<PaymentImportBatch>
+     */
+    public function paymentImportBatches(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where('municipality_id', $user->municipality_id);
+    }
+
+    public function ownsPaymentImportBatch(User $user, PaymentImportBatch $batch): bool
+    {
+        return $this->paymentImportBatches(
+            PaymentImportBatch::query()->whereKey($batch),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<TenantInvoice>  $query
+     * @return Builder<TenantInvoice>
+     */
+    public function tenantInvoices(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $invoices) use ($user): void {
+            $invoices
+                ->whereIn(
+                    'tenant_financial_account_id',
+                    $this->tenantFinancialAccounts(
+                        TenantFinancialAccount::query(),
+                        $user,
+                    )->select('id'),
+                )
+                ->orWhereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsTenantInvoice(User $user, TenantInvoice $invoice): bool
+    {
+        return $this->tenantInvoices(
+            TenantInvoice::query()->whereKey($invoice),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<TenantPayment>  $query
+     * @return Builder<TenantPayment>
+     */
+    public function tenantPayments(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $payments) use ($user): void {
+            $payments
+                ->whereIn(
+                    'tenant_financial_account_id',
+                    $this->tenantFinancialAccounts(
+                        TenantFinancialAccount::query(),
+                        $user,
+                    )->select('id'),
+                )
+                ->orWhereIn(
+                    'lease_contract_id',
+                    $this->contracts(Contract::query(), $user)->select('id'),
+                )
+                ->orWhereIn(
+                    'tenant_invoice_id',
+                    $this->tenantInvoices(TenantInvoice::query(), $user)->select('id'),
+                )
+                ->orWhereIn(
+                    'source_lease_payment_id',
+                    $this->leasePayments(LeasePayment::query(), $user)->select('id'),
+                );
+        });
+    }
+
+    public function ownsTenantPayment(User $user, TenantPayment $payment): bool
+    {
+        return $this->tenantPayments(
+            TenantPayment::query()->whereKey($payment),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<Payment>  $query
+     * @return Builder<Payment>
+     */
+    public function payments(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'contract_id',
+            $this->contracts(Contract::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsPayment(User $user, Payment $payment): bool
+    {
+        return $this->payments(Payment::query()->whereKey($payment), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<CommunicationReceipt>  $query
+     * @return Builder<CommunicationReceipt>
+     */
+    public function communicationReceipts(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereHas(
+            'communication.recipient',
+            fn (Builder $recipient): Builder => $recipient
+                ->where('municipality_id', $user->municipality_id),
+        );
+    }
+
+    public function ownsCommunicationReceipt(
+        User $user,
+        CommunicationReceipt $receipt,
+    ): bool {
+        return $this->communicationReceipts(
+            CommunicationReceipt::query()->whereKey($receipt),
             $user,
         )->exists();
     }

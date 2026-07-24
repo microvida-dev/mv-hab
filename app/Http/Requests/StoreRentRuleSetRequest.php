@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\RentCalculationMethod;
 use App\Enums\RentRuleSetStatus;
+use App\Models\RentRuleSet;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,7 +12,7 @@ class StoreRentRuleSetRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('createBackoffice', RentRuleSet::class) ?? false;
     }
 
     /**

@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Models\LeasePayment;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreLeasePaymentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('createBackoffice', LeasePayment::class) ?? false;
     }
 
     /**
