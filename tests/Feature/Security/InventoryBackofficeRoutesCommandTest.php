@@ -156,7 +156,7 @@ class InventoryBackofficeRoutesCommandTest extends TestCase
             '--format' => 'json',
             '--output' => $output,
             '--only-fixed-role' => true,
-            '--bounded-context' => 'contracts',
+            '--bounded-context' => 'maintenance',
             '--risk' => 'critical',
             '--missing-permission' => true,
         ])->assertSuccessful();
@@ -166,7 +166,7 @@ class InventoryBackofficeRoutesCommandTest extends TestCase
         $this->assertNotEmpty($routes);
         $this->assertTrue($routes->every(
             fn (array $route): bool => is_string($route['role_middleware_active'])
-                && $route['bounded_context'] === 'contracts'
+                && $route['bounded_context'] === 'maintenance'
                 && $route['risk'] === 'critical'
                 && $route['permission_semantically_adequate'] === false
         ));
