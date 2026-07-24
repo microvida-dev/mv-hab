@@ -197,12 +197,19 @@ class RepeatableDocumentChecklistTest extends TestCase
 
         $this->actingAs($candidate);
 
+        $referencePeriods = [
+            1 => now()->subMonthsNoOverflow(2)->format('Y-m'),
+            2 => now()->subMonthNoOverflow()->format('Y-m'),
+            3 => now()->format('Y-m'),
+        ];
+
         foreach ([1, 2, 3] as $instance) {
             $this->post(route('candidate.documents.store'), [
                 'document_type_id' => $requirement->document_type_id,
                 'required_document_id' => $requirement->id,
                 'income_record_id' => $income->id,
                 'requirement_instance' => $instance,
+                'reference_period' => $referencePeriods[$instance],
                 'file' => UploadedFile::fake()->create(
                     "recibo-{$instance}.pdf",
                     100,
@@ -235,6 +242,7 @@ class RepeatableDocumentChecklistTest extends TestCase
             'required_document_id' => $requirement->id,
             'income_record_id' => $income->id,
             'requirement_instance' => 2,
+            'reference_period' => $referencePeriods[2],
             'file' => UploadedFile::fake()->create(
                 'recibo-duplicado.pdf',
                 100,

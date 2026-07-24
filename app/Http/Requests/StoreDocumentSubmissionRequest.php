@@ -26,6 +26,10 @@ class StoreDocumentSubmissionRequest extends FormRequest
                 'min:1',
                 'max:255',
             ],
+            'reference_period' => [
+                'nullable',
+                'date_format:Y-m',
+            ],
             'household_member_id' => ['nullable', 'integer', 'exists:household_members,id'],
             'income_record_id' => ['nullable', 'integer', 'exists:income_records,id'],
             'current_housing_situation_id' => ['nullable', 'integer', 'exists:current_housing_situations,id'],

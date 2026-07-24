@@ -100,6 +100,12 @@
                                             @endif
                                         </div>
                                         <p class="mt-1 text-sm text-ink-500">{{ $item['target_label'] }}</p>
+                                        @if ($item['reference_period'])
+                                            <p class="mt-1 text-sm font-medium text-ink-700">
+                                                Período de referência:
+                                                {{ $item['reference_period']->translatedFormat('F Y') }}
+                                            </p>
+                                        @endif
                                         @if ($item['instructions'])
                                             <p class="mt-3 max-w-3xl text-sm leading-6 text-ink-600">{{ $item['instructions'] }}</p>
                                         @endif

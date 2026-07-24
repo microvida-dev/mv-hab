@@ -33,6 +33,40 @@
                         Ao substituir este documento, a versão anterior será mantida no histórico do processo e a nova versão ficará pendente de análise.
                     </x-mv.alert>
 
+                    @if (
+                        $submission->requiredDocument?->reference_period_unit
+                            === \App\Enums\DocumentReferencePeriodUnit::Month
+                    )
+                        <div>
+                            <x-input-label
+                                for="reference_period"
+                                value="Mês de referência"
+                            />
+
+                            <x-text-input
+                                id="reference_period"
+                                name="reference_period"
+                                type="month"
+                                class="mt-1 block w-full"
+                                :value="old(
+                                    'reference_period',
+                                    $submission->reference_period?->format('Y-m'),
+                                )"
+                                :max="now()->format('Y-m')"
+                                required
+                            />
+
+                            <p class="mt-2 text-xs leading-5 text-ink-500">
+                                Pode corrigir o mês de referência juntamente com a nova versão.
+                            </p>
+
+                            <x-input-error
+                                class="mt-2"
+                                :messages="$errors->get('reference_period')"
+                            />
+                        </div>
+                    @endif
+
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
                             <x-input-label for="issue_date" value="Data de emissão" />

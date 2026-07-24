@@ -169,13 +169,27 @@ class DocumentController extends Controller
         Collection $items,
         Request $request,
     ): ?array {
-        if ($request->filled('item')) {
-            $item = $items->firstWhere('key', $request->query('item'));
+        $item = $this->selectedChecklistItemByTarget(
+            $items,
+            $request,
+        );
 
-            return is_array($item) ? $item : null;
+        if ($item !== null) {
+            return $item;
         }
 
-        return $this->selectedChecklistItemByTarget($items, $request);
+        if ($request->filled('item')) {
+            $item = $items->firstWhere(
+                'key',
+                $request->query('item'),
+            );
+
+            return is_array($item)
+                ? $item
+                : null;
+        }
+
+        return null;
     }
 
     /**

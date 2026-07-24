@@ -53,6 +53,38 @@
                         <x-input-error class="mt-2" :messages="$errors->get('title')" />
                     </div>
 
+                    @if (
+                        $item['required_document']->reference_period_unit
+                            === \App\Enums\DocumentReferencePeriodUnit::Month
+                    )
+                        <div>
+                            <x-input-label
+                                for="reference_period"
+                                value="Mês de referência"
+                            />
+
+                            <x-text-input
+                                id="reference_period"
+                                name="reference_period"
+                                type="month"
+                                class="mt-1 block w-full"
+                                :value="old('reference_period')"
+                                :max="now()->format('Y-m')"
+                                required
+                            />
+
+                            <p class="mt-2 text-xs leading-5 text-ink-500">
+                                Indique o mês a que corresponde este documento.
+                                Cada posição deve corresponder a um mês diferente.
+                            </p>
+
+                            <x-input-error
+                                class="mt-2"
+                                :messages="$errors->get('reference_period')"
+                            />
+                        </div>
+                    @endif
+
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
                             <x-input-label for="issue_date" value="Data de emissão" />

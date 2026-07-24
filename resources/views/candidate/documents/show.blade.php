@@ -37,6 +37,30 @@
                         <p class="mt-1 font-semibold text-ink-900">{{ $submission->status->label() }}</p>
                     </div>
 
+                    @if (($submission->requiredDocument?->required_submissions ?? 1) > 1)
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-ink-500">
+                                Posição documental
+                            </p>
+
+                            <p class="mt-1 font-semibold text-ink-900">
+                                {{ $submission->requirement_instance }}/{{ $submission->requiredDocument->required_submissions }}
+                            </p>
+                        </div>
+                    @endif
+
+                    @if ($submission->reference_period)
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-ink-500">
+                                Período de referência
+                            </p>
+
+                            <p class="mt-1 font-semibold text-ink-900">
+                                {{ $submission->reference_period->translatedFormat('F Y') }}
+                            </p>
+                        </div>
+                    @endif
+
                     <div>
                         <p class="text-xs font-semibold uppercase text-ink-500">Submetido em</p>
                         <p class="mt-1 font-semibold text-ink-900">
