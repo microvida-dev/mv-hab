@@ -123,7 +123,7 @@ mesmos guards, Policy, scope e testes.
 | `backoffice.hearings.show` | `show` | high | `complaints.view` | Namespace de reclamações não distingue audiência. | `hearings.view` | nova | Consultar audiências | administrator, municipal_technician, jury, legal_manager, auditor | candidate no backoffice e perfis sem atribuição explícita | `applications.review` | `App\Policies\HearingPolicy` / `viewBackoffice` | audiência → candidatura → programa → Município | Sim | Logging de leitura | RTE, BND |
 | `backoffice.hearings.store` | `store` | high | `complaints.create` | Namespace de reclamações não distingue audiência. | `hearings.create` | nova | Criar audiências | administrator, municipal_technician | candidate, auditor e perfis sem atribuição explícita | `applications.review` | `App\Policies\HearingPolicy` / `createBackoffice` | audiência → candidatura → programa → Município | Sim | Obrigatória | RTE, BND |
 | `backoffice.lists.automation.definitive` | `generateDefinitive` | high | `—` | Sem permission; dependeria da role fixa. | `public_lists.generate` | nova | Gerar listas públicas | administrator, municipal_technician | candidate, auditor e perfis sem atribuição explícita | `applications.review` | `App\Policies\ContestPolicy` / `generateBackoffice` | lista/run → concurso/programa → Município | Sim | Obrigatória | RTE, BND |
-| `backoffice.lists.automation.index` | `index` | high | `contests.view` | Consulta de concurso não autoriza listas. | `public_lists.view` | reutilizada | Consultar listas públicas | templates existentes; candidate apenas nas rotas próprias | candidate no backoffice e perfis sem atribuição explícita | `applications.review` | `App\Policies\ContestPolicy` / `viewBackoffice` | lista/run → concurso/programa → Município | Sim | Logging de leitura | RTE, BND |
+| `backoffice.lists.automation.index` | `index` | high | `contests.view` | Consulta de concurso não autoriza listas. | `public_lists.view` | reutilizada | Consultar listas públicas | templates existentes; candidate apenas nas rotas próprias | candidate no backoffice e perfis sem atribuição explícita | `applications.review` | `App\Policies\ContestPolicy` / `viewListsBackoffice` | lista/run → concurso/programa → Município | Sim | Logging de leitura | RTE, BND |
 | `backoffice.lists.automation.provisional` | `generateProvisional` | high | `—` | Sem permission; dependeria da role fixa. | `public_lists.generate` | nova | Gerar listas públicas | administrator, municipal_technician | candidate, auditor e perfis sem atribuição explícita | `applications.review` | `App\Policies\ContestPolicy` / `generateBackoffice` | lista/run → concurso/programa → Município | Sim | Obrigatória | RTE, BND |
 | `backoffice.lists.definitive.archive` | `archive` | high | `public_lists.update` | Ação genérica não representa a transição específica. | `public_lists.archive` | nova | Arquivar listas públicas | administrator, municipal_technician | candidate, auditor e perfis sem atribuição explícita | `applications.review` | `App\Policies\DefinitiveListPolicy` / `archiveBackoffice` | lista/run → concurso/programa → Município | Sim | Obrigatória | RTE, BND |
 | `backoffice.lists.definitive.create` | `create` | high | `public_lists.create` | Ação genérica não representa a transição específica. | `public_lists.generate` | nova | Gerar listas públicas | administrator, municipal_technician | candidate, auditor e perfis sem atribuição explícita | `applications.review` | `App\Policies\DefinitiveListPolicy` / `generateAnyBackoffice` | lista/run → concurso/programa → Município | Sim | Logging de leitura | RTE, BND |
@@ -179,3 +179,33 @@ As permissions finais separam leitura de transições críticas e evitam herdar
 poderes por nome de role. A implementação só pode ser considerada concluída
 quando permission, FeatureKey, Policy, scope municipal, estado e auditoria
 forem cumulativamente satisfeitos.
+
+## Reconciliação final da implementação
+
+O gate PHPUnit completo revelou que a utilização inicial de
+`ContestPolicy::viewBackoffice` na automação de listas tinha alterado a
+semântica legacy das páginas gerais de Concursos. A correção ficou explícita
+no commit `38e5ce04`:
+
+- os métodos gerais `viewAnyBackoffice`, `viewBackoffice`,
+  `createBackoffice`, `updateBackoffice`, `deleteBackoffice` e
+  `publishBackoffice` mantêm o contrato anterior;
+- `viewListsBackoffice` autoriza exclusivamente
+  `public_lists.view` e confirma ownership municipal do concurso;
+- `generateBackoffice` mantém `public_lists.generate`, bloqueia auditor e
+  aplica o mesmo scope;
+- o manifesto foi corrigido apenas no campo `ability` da rota
+  `backoffice.lists.automation.index`; URI, método, permission, feature,
+  controller e modelo não mudaram;
+- o teste municipal prova acesso ao concurso local e recusa do concurso de
+  outro Município.
+
+Resultado final observado:
+
+- 78 rotas reconciliadas e migradas;
+- 41 permissions finais distintas;
+- 34 abilities distintas;
+- zero middleware `role:*` ativo nas rotas do manifesto;
+- zero Form Requests abrangidos com `authorize(): true`;
+- zero permissions atribuídas diretamente a utilizadores;
+- zero wildcards novos.
