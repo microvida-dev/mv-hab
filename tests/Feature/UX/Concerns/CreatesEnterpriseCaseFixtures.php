@@ -63,7 +63,13 @@ trait CreatesEnterpriseCaseFixtures
         string $expectedLabel,
         ?User $user = null,
     ): void {
-        $this->actingAs($user ?? $this->userWithRole())
+        $actor = $user ?? $this->userWithRole();
+
+        if ($case instanceof Contract) {
+            $this->scopeContractToUser($case, $actor);
+        }
+
+        $this->actingAs($actor)
             ->withSession(['mfa.verified_at' => now()])
             ->get(route($routeName, $case))
             ->assertOk()
@@ -73,5 +79,12 @@ trait CreatesEnterpriseCaseFixtures
             ->assertSee('Cronologia')
             ->assertSee('Checklist')
             ->assertSee('Painel do caso');
+    }
+
+    protected function scopeContractToUser(Contract $contract, User $user): void
+    {
+        $contract->housingUnit()->update([
+            'municipality_id' => $user->municipality_id,
+        ]);
     }
 }

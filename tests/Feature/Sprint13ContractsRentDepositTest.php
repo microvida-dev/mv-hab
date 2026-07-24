@@ -31,6 +31,7 @@ use App\Models\Household;
 use App\Models\HouseholdMember;
 use App\Models\HousingUnit;
 use App\Models\IncomeRecord;
+use App\Models\Municipality;
 use App\Models\Program;
 use App\Models\RentCalculation;
 use App\Models\RentRuleSet;
@@ -49,6 +50,7 @@ class Sprint13ContractsRentDepositTest extends TestCase
     {
         parent::setUp();
         $this->seed(SystemAccessSeeder::class);
+        session(['mfa.verified_at' => now()]);
     }
 
     public function test_contract_backoffice_and_candidate_routes_are_protected_by_role_and_ownership(): void
@@ -62,6 +64,7 @@ class Sprint13ContractsRentDepositTest extends TestCase
             ->assertForbidden();
 
         $technician = $this->userWithRole('municipal_technician');
+        $this->assignMunicipality($technician, Municipality::factory()->create());
         $this->actingAs($technician)
             ->get(route('backoffice.contracts.leases.index'))
             ->assertOk();

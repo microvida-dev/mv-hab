@@ -12,6 +12,7 @@ use App\Enums\TenantPaymentStatus;
 use App\Models\Contract;
 use App\Models\MaintenanceCategory;
 use App\Models\MaintenanceRequest;
+use App\Models\Municipality;
 use App\Models\PropertyInspection;
 use App\Models\TenantChargeRun;
 use App\Models\TenantCommunication;
@@ -192,11 +193,13 @@ class Sprint26TenantPostAwardTest extends TestCase
     private function tenantContext(): array
     {
         $this->seed(SystemAccessSeeder::class);
+        session(['mfa.verified_at' => now()]);
 
-        $candidate = User::factory()->create();
+        $municipality = Municipality::factory()->create();
+        $candidate = User::factory()->create(['municipality_id' => $municipality->id]);
         $candidate->assignRole('candidate');
 
-        $manager = User::factory()->create();
+        $manager = User::factory()->create(['municipality_id' => $municipality->id]);
         $manager->assignRole('financial_manager');
 
         $contract = Contract::factory()->create([
@@ -212,6 +215,7 @@ class Sprint26TenantPostAwardTest extends TestCase
             'activated_at' => now(),
             'activated_by' => $manager->id,
         ]);
+        $contract->housingUnit()->update(['municipality_id' => $municipality->id]);
 
         return compact('candidate', 'manager', 'contract');
     }
