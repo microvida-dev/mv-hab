@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Backoffice;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegisterWinnerRequest;
 use App\Models\LotteryResult;
-use App\Models\WinnerRegistration;
 use App\Services\Lottery\WinnerRegistrationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -16,7 +15,7 @@ class WinnerRegistrationController extends Controller
 
     public function store(RegisterWinnerRequest $request, LotteryResult $lotteryResult): RedirectResponse
     {
-        Gate::authorize('create', WinnerRegistration::class);
+        Gate::authorize('registerWinnerBackoffice', $lotteryResult);
 
         $winner = $this->winners->register($lotteryResult, $this->authenticatedUser($request), $request->validated());
 

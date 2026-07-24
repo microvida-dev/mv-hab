@@ -10,7 +10,7 @@ class RunDefinitiveListAutomationRequest extends RunProvisionalListAutomationReq
     public function rules(): array
     {
         return [
-            'contest_id' => ['nullable', 'exists:contests,id'],
+            'contest_id' => ['nullable', $this->municipalContestExistsRule()],
             'confirm_complaints_reviewed' => ['accepted'],
             'confirm_snapshot_generation' => ['accepted'],
         ];

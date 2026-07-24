@@ -3,14 +3,17 @@
 namespace App\Http\Requests;
 
 use App\Enums\AnonymizationMode;
+use App\Models\ProvisionalList;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class GenerateProvisionalListRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('generateBackoffice', ProvisionalList::class) ?? false;
     }
 
     /**
@@ -18,8 +21,19 @@ class GenerateProvisionalListRequest extends FormRequest
      */
     public function rules(): array
     {
+        $municipalityId = $this->user()->municipality_id ?? 0;
+
         return [
-            'ranking_snapshot_id' => ['required', 'exists:ranking_snapshots,id'],
+            'ranking_snapshot_id' => [
+                'required',
+                Rule::exists('ranking_snapshots', 'id')
+                    ->where(fn (Builder $query): Builder => $query->whereIn(
+                        'program_id',
+                        DB::table('programs')
+                            ->select('id')
+                            ->where('municipality_id', $municipalityId),
+                    )),
+            ],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:3000'],
             'publication_starts_at' => ['nullable', 'date'],

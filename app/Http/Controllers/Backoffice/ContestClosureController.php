@@ -17,7 +17,7 @@ class ContestClosureController extends Controller
 
     public function show(ContestClosure $contestClosure): View
     {
-        Gate::authorize('view', $contestClosure);
+        Gate::authorize('viewBackoffice', $contestClosure);
 
         $contestClosure->load('contest');
 

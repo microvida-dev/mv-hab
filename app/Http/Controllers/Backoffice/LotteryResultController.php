@@ -14,7 +14,7 @@ class LotteryResultController extends Controller
 
     public function index(LotteryDraw $lotteryDraw): View
     {
-        Gate::authorize('view', $lotteryDraw);
+        Gate::authorize('viewBackoffice', $lotteryDraw);
 
         return view('backoffice.lottery-draws.results', [
             'lotteryDraw' => $lotteryDraw,

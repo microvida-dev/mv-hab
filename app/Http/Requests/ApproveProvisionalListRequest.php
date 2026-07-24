@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ProvisionalList;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ApproveProvisionalListRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $list = $this->route('provisionalList');
+
+        return $list instanceof ProvisionalList
+            && ($this->user()?->can('approveBackoffice', $list) ?? false);
     }
 
     /**

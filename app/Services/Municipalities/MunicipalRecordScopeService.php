@@ -2,10 +2,12 @@
 
 namespace App\Services\Municipalities;
 
+use App\Models\AdditionalInformationRequest;
 use App\Models\AdministrativeDecision;
 use App\Models\AdministrativeProcess;
 use App\Models\AdministrativeProcessNote;
 use App\Models\AdministrativeTask;
+use App\Models\AllocationRun;
 use App\Models\AnnualDocumentUpdateRequest;
 use App\Models\Application;
 use App\Models\ApplicationReport;
@@ -16,9 +18,12 @@ use App\Models\Citizen;
 use App\Models\Complaint;
 use App\Models\ComplaintDecision;
 use App\Models\Contest;
+use App\Models\ContestClosure;
 use App\Models\Contract;
+use App\Models\ControlledWithdrawal;
 use App\Models\CorrectionRequest;
 use App\Models\CorrectionResponse;
+use App\Models\DefinitiveList;
 use App\Models\Document;
 use App\Models\DocumentAiAnalysis;
 use App\Models\DocumentAiField;
@@ -29,17 +34,24 @@ use App\Models\DocumentAiValidationRun;
 use App\Models\DocumentSubmission;
 use App\Models\DocumentTemplate;
 use App\Models\DocumentTemplateVersion;
+use App\Models\DrawConvocation;
 use App\Models\EligibilityCheck;
 use App\Models\EligibilityCriterion;
 use App\Models\EligibilityRuleSet;
 use App\Models\FutureApplicationDataReuse;
 use App\Models\GeneratedOfficialDocument;
 use App\Models\GeneratedProcedureDocument;
+use App\Models\Hearing;
+use App\Models\HearingSubmission;
 use App\Models\Household;
 use App\Models\HousingApplication;
 use App\Models\LeaseContractDocument;
+use App\Models\ListAutomationRun;
 use App\Models\LotteryDraw;
+use App\Models\LotteryResult;
+use App\Models\PostDrawReport;
 use App\Models\Program;
+use App\Models\ProvisionalList;
 use App\Models\RankingSnapshot;
 use App\Models\RankingUpdateRun;
 use App\Models\ReportAccessLog;
@@ -416,6 +428,145 @@ class MunicipalRecordScopeService
     {
         return $this->complaintDecisions(
             ComplaintDecision::query()->whereKey($decision),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<Hearing>  $query
+     * @return Builder<Hearing>
+     */
+    public function hearings(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'application_id',
+            $this->applications(Application::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsHearing(User $user, Hearing $hearing): bool
+    {
+        return $this->hearings(Hearing::query()->whereKey($hearing), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<HearingSubmission>  $query
+     * @return Builder<HearingSubmission>
+     */
+    public function hearingSubmissions(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'hearing_id',
+            $this->hearings(Hearing::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsHearingSubmission(User $user, HearingSubmission $submission): bool
+    {
+        return $this->hearingSubmissions(
+            HearingSubmission::query()->whereKey($submission),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<AdditionalInformationRequest>  $query
+     * @return Builder<AdditionalInformationRequest>
+     */
+    public function additionalInformationRequests(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'complaint_id',
+            $this->complaints(Complaint::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsAdditionalInformationRequest(
+        User $user,
+        AdditionalInformationRequest $request,
+    ): bool {
+        return $this->additionalInformationRequests(
+            AdditionalInformationRequest::query()->whereKey($request),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<ProvisionalList>  $query
+     * @return Builder<ProvisionalList>
+     */
+    public function provisionalLists(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'contest_id',
+            $this->contests(Contest::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsProvisionalList(User $user, ProvisionalList $list): bool
+    {
+        return $this->provisionalLists(
+            ProvisionalList::query()->whereKey($list),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<DefinitiveList>  $query
+     * @return Builder<DefinitiveList>
+     */
+    public function definitiveLists(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'contest_id',
+            $this->contests(Contest::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsDefinitiveList(User $user, DefinitiveList $list): bool
+    {
+        return $this->definitiveLists(
+            DefinitiveList::query()->whereKey($list),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<AllocationRun>  $query
+     * @return Builder<AllocationRun>
+     */
+    public function allocationRuns(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'contest_id',
+            $this->contests(Contest::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsAllocationRun(User $user, AllocationRun $run): bool
+    {
+        return $this->allocationRuns(
+            AllocationRun::query()->whereKey($run),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<ListAutomationRun>  $query
+     * @return Builder<ListAutomationRun>
+     */
+    public function listAutomationRuns(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'contest_id',
+            $this->contests(Contest::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsListAutomationRun(User $user, ListAutomationRun $run): bool
+    {
+        return $this->listAutomationRuns(
+            ListAutomationRun::query()->whereKey($run),
             $user,
         )->exists();
     }
@@ -1095,6 +1246,106 @@ class MunicipalRecordScopeService
     public function ownsLotteryDraw(User $user, LotteryDraw $draw): bool
     {
         return $this->lotteryDraws(LotteryDraw::query()->whereKey($draw), $user)->exists();
+    }
+
+    /**
+     * @param  Builder<LotteryResult>  $query
+     * @return Builder<LotteryResult>
+     */
+    public function lotteryResults(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'lottery_run_id',
+            $this->lotteryDraws(LotteryDraw::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsLotteryResult(User $user, LotteryResult $result): bool
+    {
+        return $this->lotteryResults(
+            LotteryResult::query()->whereKey($result),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<DrawConvocation>  $query
+     * @return Builder<DrawConvocation>
+     */
+    public function drawConvocations(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'lottery_run_id',
+            $this->lotteryDraws(LotteryDraw::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsDrawConvocation(User $user, DrawConvocation $convocation): bool
+    {
+        return $this->drawConvocations(
+            DrawConvocation::query()->whereKey($convocation),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<PostDrawReport>  $query
+     * @return Builder<PostDrawReport>
+     */
+    public function postDrawReports(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'lottery_run_id',
+            $this->lotteryDraws(LotteryDraw::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsPostDrawReport(User $user, PostDrawReport $report): bool
+    {
+        return $this->postDrawReports(
+            PostDrawReport::query()->whereKey($report),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<ControlledWithdrawal>  $query
+     * @return Builder<ControlledWithdrawal>
+     */
+    public function controlledWithdrawals(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'application_id',
+            $this->applications(Application::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsControlledWithdrawal(User $user, ControlledWithdrawal $withdrawal): bool
+    {
+        return $this->controlledWithdrawals(
+            ControlledWithdrawal::query()->whereKey($withdrawal),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<ContestClosure>  $query
+     * @return Builder<ContestClosure>
+     */
+    public function contestClosures(Builder $query, User $user): Builder
+    {
+        return $query->whereIn(
+            'contest_id',
+            $this->contests(Contest::query(), $user)->select('id'),
+        );
+    }
+
+    public function ownsContestClosure(User $user, ContestClosure $closure): bool
+    {
+        return $this->contestClosures(
+            ContestClosure::query()->whereKey($closure),
+            $user,
+        )->exists();
     }
 
     /**

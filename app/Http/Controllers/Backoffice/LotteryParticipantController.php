@@ -16,7 +16,7 @@ class LotteryParticipantController extends Controller
 
     public function load(LoadLotteryParticipantsRequest $request, LotteryDraw $lotteryDraw): RedirectResponse
     {
-        Gate::authorize('update', $lotteryDraw);
+        Gate::authorize('loadParticipantsBackoffice', $lotteryDraw);
 
         $this->participants->loadFromDefinitiveList($lotteryDraw, $this->authenticatedUser($request));
 
@@ -25,7 +25,7 @@ class LotteryParticipantController extends Controller
 
     public function lock(LockLotteryParticipantsRequest $request, LotteryDraw $lotteryDraw): RedirectResponse
     {
-        Gate::authorize('update', $lotteryDraw);
+        Gate::authorize('lockParticipantsBackoffice', $lotteryDraw);
 
         $this->participants->lock($lotteryDraw, $this->authenticatedUser($request));
 

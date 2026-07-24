@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\DefinitiveList;
 use Illuminate\Foundation\Http\FormRequest;
 
 class LockDefinitiveListRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $list = $this->route('definitiveList');
+
+        return $list instanceof DefinitiveList
+            && ($this->user()?->can('lockBackoffice', $list) ?? false);
     }
 
     /**

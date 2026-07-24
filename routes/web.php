@@ -1521,30 +1521,94 @@ Route::middleware('auth')->group(function () {
                         ->name('access-audit.index');
                 });
 
-                Route::resource('sorteios', BackofficeLotteryDrawController::class)
-                    ->parameters(['sorteios' => 'lotteryDraw'])
-                    ->names('lottery-draws')
-                    ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
-                Route::post('sorteios/{lotteryDraw}/participantes/carregar', [BackofficeLotteryParticipantController::class, 'load'])
-                    ->name('lottery-draws.participants.load');
-                Route::post('sorteios/{lotteryDraw}/participantes/bloquear', [BackofficeLotteryParticipantController::class, 'lock'])
-                    ->name('lottery-draws.participants.lock');
-                Route::post('sorteios/{lotteryDraw}/executar', [BackofficeLotteryDrawController::class, 'run'])
-                    ->name('lottery-draws.run');
-                Route::post('sorteios/{lotteryDraw}/validar', [BackofficeLotteryDrawController::class, 'validateResult'])
-                    ->name('lottery-draws.validate');
-                Route::post('sorteios/{lotteryDraw}/cancelar', [BackofficeLotteryDrawController::class, 'cancel'])
-                    ->name('lottery-draws.cancel');
-                Route::get('sorteios/{lotteryDraw}/resultados', [BackofficeLotteryResultController::class, 'index'])
-                    ->name('lottery-draws.results.index');
-                Route::post('sorteios/{lotteryDraw}/convocatorias/gerar', [BackofficeDrawConvocationController::class, 'generate'])
-                    ->name('lottery-draws.convocations.generate');
-                Route::get('sorteios/{lotteryDraw}/presencas', [BackofficeDrawAttendanceController::class, 'index'])
-                    ->name('lottery-draws.attendance.index');
-                Route::post('sorteios/{lotteryDraw}/presencas', [BackofficeDrawAttendanceController::class, 'store'])
-                    ->name('lottery-draws.attendance.store');
-                Route::post('sorteios/{lotteryDraw}/presencas/lote', [BackofficeDrawAttendanceController::class, 'bulkStore'])
-                    ->name('lottery-draws.attendance.bulk-store');
+                Route::middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'municipality.feature:applications.review',
+                ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->group(function (): void {
+                        Route::get('sorteios', [BackofficeLotteryDrawController::class, 'index'])
+                            ->middleware('permission:lotteries.view')
+                            ->name('lottery-draws.index');
+                        Route::get('sorteios/create', [BackofficeLotteryDrawController::class, 'create'])
+                            ->middleware('permission:lotteries.create')
+                            ->name('lottery-draws.create');
+                        Route::post('sorteios', [BackofficeLotteryDrawController::class, 'store'])
+                            ->middleware('permission:lotteries.create')
+                            ->name('lottery-draws.store');
+                        Route::get('sorteios/{lotteryDraw}', [BackofficeLotteryDrawController::class, 'show'])
+                            ->middleware('permission:lotteries.view')
+                            ->name('lottery-draws.show');
+                        Route::get('sorteios/{lotteryDraw}/edit', [BackofficeLotteryDrawController::class, 'edit'])
+                            ->middleware('permission:lotteries.update')
+                            ->name('lottery-draws.edit');
+                        Route::match(['put', 'patch'], 'sorteios/{lotteryDraw}', [BackofficeLotteryDrawController::class, 'update'])
+                            ->middleware('permission:lotteries.update')
+                            ->name('lottery-draws.update');
+                        Route::post('sorteios/{lotteryDraw}/participantes/carregar', [BackofficeLotteryParticipantController::class, 'load'])
+                            ->middleware('permission:lotteries.participants.load')
+                            ->name('lottery-draws.participants.load');
+                        Route::post('sorteios/{lotteryDraw}/participantes/bloquear', [BackofficeLotteryParticipantController::class, 'lock'])
+                            ->middleware('permission:lotteries.participants.lock')
+                            ->name('lottery-draws.participants.lock');
+                        Route::post('sorteios/{lotteryDraw}/executar', [BackofficeLotteryDrawController::class, 'run'])
+                            ->middleware('permission:lotteries.run')
+                            ->name('lottery-draws.run');
+                        Route::post('sorteios/{lotteryDraw}/validar', [BackofficeLotteryDrawController::class, 'validateResult'])
+                            ->middleware('permission:lotteries.validate')
+                            ->name('lottery-draws.validate');
+                        Route::post('sorteios/{lotteryDraw}/cancelar', [BackofficeLotteryDrawController::class, 'cancel'])
+                            ->middleware('permission:lotteries.cancel')
+                            ->name('lottery-draws.cancel');
+                        Route::get('sorteios/{lotteryDraw}/resultados', [BackofficeLotteryResultController::class, 'index'])
+                            ->middleware('permission:lotteries.view')
+                            ->name('lottery-draws.results.index');
+                        Route::post('sorteios/{lotteryDraw}/convocatorias/gerar', [BackofficeDrawConvocationController::class, 'generate'])
+                            ->middleware('permission:lotteries.convocations.generate')
+                            ->name('lottery-draws.convocations.generate');
+                        Route::get('sorteios/{lotteryDraw}/presencas', [BackofficeDrawAttendanceController::class, 'index'])
+                            ->middleware('permission:lotteries.view')
+                            ->name('lottery-draws.attendance.index');
+                        Route::post('sorteios/{lotteryDraw}/presencas', [BackofficeDrawAttendanceController::class, 'store'])
+                            ->middleware('permission:lotteries.attendance.manage')
+                            ->name('lottery-draws.attendance.store');
+                        Route::post('sorteios/{lotteryDraw}/presencas/lote', [BackofficeDrawAttendanceController::class, 'bulkStore'])
+                            ->middleware('permission:lotteries.attendance.manage')
+                            ->name('lottery-draws.attendance.bulk-store');
+
+                        Route::post('sorteios/{lotteryDraw}/relatorio-pos-sorteio/gerar', [BackofficePostDrawReportController::class, 'generate'])
+                            ->middleware('permission:lotteries.reports.generate')
+                            ->name('lottery-draws.post-draw-report.generate');
+
+                        Route::get('convocatorias-sorteio', [BackofficeDrawConvocationController::class, 'index'])
+                            ->middleware('permission:lotteries.view')
+                            ->name('draw-convocations.index');
+                        Route::get('convocatorias-sorteio/{drawConvocation}', [BackofficeDrawConvocationController::class, 'show'])
+                            ->middleware('permission:lotteries.view')
+                            ->name('draw-convocations.show');
+                        Route::post('convocatorias-sorteio/{drawConvocation}/enviar', [BackofficeDrawConvocationController::class, 'send'])
+                            ->middleware('permission:lotteries.convocations.send')
+                            ->name('draw-convocations.send');
+
+                        Route::post('resultados-sorteio/{lotteryResult}/vencedor', [BackofficeWinnerRegistrationController::class, 'store'])
+                            ->middleware('permission:lotteries.winners.register')
+                            ->name('lottery-results.winner.store');
+
+                        Route::get('relatorios-pos-sorteio/{postDrawReport}', [BackofficePostDrawReportController::class, 'show'])
+                            ->middleware('permission:lotteries.view')
+                            ->name('post-draw-reports.show');
+                        Route::get('relatorios-pos-sorteio/{postDrawReport}/download', [BackofficePostDrawReportController::class, 'download'])
+                            ->middleware('permission:lotteries.export')
+                            ->name('post-draw-reports.download');
+
+                        Route::get('fechos-concurso/{contestClosure}', [BackofficeContestClosureController::class, 'show'])
+                            ->middleware('permission:allocations.view')
+                            ->name('contest-closures.show');
+                    });
                 Route::post('sorteios/{lotteryDraw}/ranking/atualizar', [BackofficeRankingUpdateRunController::class, 'apply'])
                     ->middleware([
                         'active.backoffice',
@@ -1557,24 +1621,6 @@ Route::middleware('auth')->group(function () {
                         'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
                     )
                     ->name('lottery-draws.ranking.update');
-                Route::post('sorteios/{lotteryDraw}/relatorio-pos-sorteio/gerar', [BackofficePostDrawReportController::class, 'generate'])
-                    ->name('lottery-draws.post-draw-report.generate');
-
-                Route::get('convocatorias-sorteio', [BackofficeDrawConvocationController::class, 'index'])
-                    ->name('draw-convocations.index');
-                Route::get('convocatorias-sorteio/{drawConvocation}', [BackofficeDrawConvocationController::class, 'show'])
-                    ->name('draw-convocations.show');
-                Route::post('convocatorias-sorteio/{drawConvocation}/enviar', [BackofficeDrawConvocationController::class, 'send'])
-                    ->name('draw-convocations.send');
-
-                Route::post('resultados-sorteio/{lotteryResult}/vencedor', [BackofficeWinnerRegistrationController::class, 'store'])
-                    ->name('lottery-results.winner.store');
-
-                Route::get('relatorios-pos-sorteio/{postDrawReport}', [BackofficePostDrawReportController::class, 'show'])
-                    ->name('post-draw-reports.show');
-                Route::get('relatorios-pos-sorteio/{postDrawReport}/download', [BackofficePostDrawReportController::class, 'download'])
-                    ->name('post-draw-reports.download');
-
                 Route::get('entrega-chaves', [BackofficeKeyHandoverAppointmentController::class, 'index'])
                     ->name('key-handovers.index');
                 Route::get('entrega-chaves/criar', [BackofficeKeyHandoverAppointmentController::class, 'create'])
@@ -1595,8 +1641,6 @@ Route::middleware('auth')->group(function () {
                 Route::post('transicoes-inquilino', [BackofficeTenantTransitionController::class, 'run'])
                     ->name('tenant-transitions.run');
 
-                Route::get('fechos-concurso/{contestClosure}', [BackofficeContestClosureController::class, 'show'])
-                    ->name('contest-closures.show');
                 Route::post('concursos/{contest}/fechar', [BackofficeContestClosureController::class, 'close'])
                     ->name('contests.close');
 
@@ -2262,6 +2306,14 @@ Route::middleware('auth')->group(function () {
                     Route::get('inspections/{propertyInspection}', [BackofficeCaseWorkspaceController::class, 'inspection'])
                         ->name('inspections.show');
                     Route::get('complaints/{complaint}', [BackofficeCaseWorkspaceController::class, 'complaint'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'municipality.feature:applications.review',
+                            'permission:complaints.view',
+                        ])
+                        ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                         ->name('complaints.show');
                     Route::get('tickets/{supportTicket}', [BackofficeCaseWorkspaceController::class, 'ticket'])
                         ->name('tickets.show');
@@ -2586,20 +2638,48 @@ Route::middleware('auth')->group(function () {
                     ->name('document-ai.validations.show');
                 Route::post('documentos/ia/validacoes/{application}/reprocessar', [BackofficeDocumentAiValidationController::class, 'rerun'])
                     ->name('document-ai.validations.rerun');
-                Route::get('desistencias', [BackofficeControlledWithdrawalController::class, 'index'])
-                    ->name('withdrawals.index');
-                Route::get('desistencias/{controlledWithdrawal}', [BackofficeControlledWithdrawalController::class, 'show'])
-                    ->name('withdrawals.show');
-                Route::post('desistencias/{controlledWithdrawal}/processar', [BackofficeControlledWithdrawalController::class, 'process'])
-                    ->name('withdrawals.process');
+                Route::middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'municipality.feature:applications.review',
+                ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->group(function (): void {
+                        Route::get('desistencias', [BackofficeControlledWithdrawalController::class, 'index'])
+                            ->middleware('permission:allocations.view')
+                            ->name('withdrawals.index');
+                        Route::get('desistencias/{controlledWithdrawal}', [BackofficeControlledWithdrawalController::class, 'show'])
+                            ->middleware('permission:allocations.view')
+                            ->name('withdrawals.show');
+                        Route::post('desistencias/{controlledWithdrawal}/processar', [BackofficeControlledWithdrawalController::class, 'process'])
+                            ->middleware('permission:allocations.process_withdrawal')
+                            ->name('withdrawals.process');
+                    });
                 Route::get('reutilizacao-dados', [BackofficeFutureApplicationDataReuseController::class, 'index'])
                     ->name('data-reuse.index');
-                Route::get('audiencias-previas', [BackofficePreliminaryHearingSubmissionController::class, 'index'])
-                    ->name('preliminary-hearings.index');
-                Route::get('audiencias-previas/{preliminaryHearingSubmission}', [BackofficePreliminaryHearingSubmissionController::class, 'show'])
-                    ->name('preliminary-hearings.show');
-                Route::post('audiencias-previas/{preliminaryHearingSubmission}/decidir', [BackofficePreliminaryHearingSubmissionController::class, 'decide'])
-                    ->name('preliminary-hearings.decide');
+                Route::middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'municipality.feature:applications.review',
+                ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->group(function (): void {
+                        Route::get('audiencias-previas', [BackofficePreliminaryHearingSubmissionController::class, 'index'])
+                            ->middleware('permission:hearings.view')
+                            ->name('preliminary-hearings.index');
+                        Route::get('audiencias-previas/{preliminaryHearingSubmission}', [BackofficePreliminaryHearingSubmissionController::class, 'show'])
+                            ->middleware('permission:hearings.view')
+                            ->name('preliminary-hearings.show');
+                        Route::post('audiencias-previas/{preliminaryHearingSubmission}/decidir', [BackofficePreliminaryHearingSubmissionController::class, 'decide'])
+                            ->middleware('permission:hearings.review')
+                            ->name('preliminary-hearings.decide');
+                    });
 
                 Route::middleware([
                     'active.backoffice',
@@ -2866,48 +2946,129 @@ Route::middleware('auth')->group(function () {
                 Route::post('administrative-workflow-configs/{administrativeWorkflowConfig}/deactivate', [BackofficeAdministrativeWorkflowConfigController::class, 'deactivate'])
                     ->name('administrative-workflow-configs.deactivate');
 
-                Route::prefix('lists')->name('lists.')->group(function () {
-                    Route::get('automation/{contest}', [BackofficeListAutomationController::class, 'index'])
-                        ->name('automation.index');
-                    Route::post('automation/{contest}/provisional', [BackofficeListAutomationController::class, 'generateProvisional'])
-                        ->name('automation.provisional');
-                    Route::post('automation/{contest}/definitive', [BackofficeListAutomationController::class, 'generateDefinitive'])
-                        ->name('automation.definitive');
-                    Route::get('automation-runs/{listAutomationRun}', [BackofficeListAutomationController::class, 'show'])
-                        ->name('automation-runs.show');
-                    Route::post('automation-runs/{listAutomationRun}/approve', [BackofficeListAutomationController::class, 'approve'])
-                        ->name('automation-runs.approve');
+                Route::prefix('lists')
+                    ->name('lists.')
+                    ->middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'municipality.feature:applications.review',
+                    ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->group(function (): void {
+                        Route::get('automation/{contest}', [BackofficeListAutomationController::class, 'index'])
+                            ->middleware('permission:public_lists.view')
+                            ->name('automation.index');
+                        Route::post('automation/{contest}/provisional', [BackofficeListAutomationController::class, 'generateProvisional'])
+                            ->middleware('permission:public_lists.generate')
+                            ->name('automation.provisional');
+                        Route::post('automation/{contest}/definitive', [BackofficeListAutomationController::class, 'generateDefinitive'])
+                            ->middleware('permission:public_lists.generate')
+                            ->name('automation.definitive');
+                        Route::get('automation-runs/{listAutomationRun}', [BackofficeListAutomationController::class, 'show'])
+                            ->middleware('permission:public_lists.view')
+                            ->name('automation-runs.show');
+                        Route::post('automation-runs/{listAutomationRun}/approve', [BackofficeListAutomationController::class, 'approve'])
+                            ->middleware('permission:public_lists.approve')
+                            ->name('automation-runs.approve');
 
-                    Route::get('provisional', [BackofficeProvisionalListController::class, 'index'])->name('provisional.index');
-                    Route::get('provisional/create', [BackofficeProvisionalListController::class, 'create'])->name('provisional.create');
-                    Route::post('provisional', [BackofficeProvisionalListController::class, 'store'])->name('provisional.store');
-                    Route::get('provisional/{provisionalList}', [BackofficeProvisionalListController::class, 'show'])->name('provisional.show');
-                    Route::post('provisional/{provisionalList}/review', [BackofficeProvisionalListController::class, 'review'])->name('provisional.review');
-                    Route::post('provisional/{provisionalList}/approve', [BackofficeProvisionalListController::class, 'approve'])->name('provisional.approve');
-                    Route::post('provisional/{provisionalList}/publish', [BackofficeProvisionalListController::class, 'publish'])->name('provisional.publish');
-                    Route::post('provisional/{provisionalList}/open-complaint-period', [BackofficeProvisionalListController::class, 'openComplaintPeriod'])->name('provisional.open-complaint-period');
-                    Route::post('provisional/{provisionalList}/close-complaint-period', [BackofficeProvisionalListController::class, 'closeComplaintPeriod'])->name('provisional.close-complaint-period');
-                    Route::post('provisional/{provisionalList}/cancel', [BackofficeProvisionalListController::class, 'cancel'])->name('provisional.cancel');
-                    Route::post('provisional/{provisionalList}/archive', [BackofficeProvisionalListController::class, 'archive'])->name('provisional.archive');
+                        Route::get('provisional', [BackofficeProvisionalListController::class, 'index'])
+                            ->middleware('permission:public_lists.view')
+                            ->name('provisional.index');
+                        Route::get('provisional/create', [BackofficeProvisionalListController::class, 'create'])
+                            ->middleware('permission:public_lists.generate')
+                            ->name('provisional.create');
+                        Route::post('provisional', [BackofficeProvisionalListController::class, 'store'])
+                            ->middleware('permission:public_lists.generate')
+                            ->name('provisional.store');
+                        Route::get('provisional/{provisionalList}', [BackofficeProvisionalListController::class, 'show'])
+                            ->middleware('permission:public_lists.view')
+                            ->name('provisional.show');
+                        Route::post('provisional/{provisionalList}/review', [BackofficeProvisionalListController::class, 'review'])
+                            ->middleware('permission:public_lists.review')
+                            ->name('provisional.review');
+                        Route::post('provisional/{provisionalList}/approve', [BackofficeProvisionalListController::class, 'approve'])
+                            ->middleware('permission:public_lists.approve')
+                            ->name('provisional.approve');
+                        Route::post('provisional/{provisionalList}/publish', [BackofficeProvisionalListController::class, 'publish'])
+                            ->middleware('permission:public_lists.publish')
+                            ->name('provisional.publish');
+                        Route::post('provisional/{provisionalList}/open-complaint-period', [BackofficeProvisionalListController::class, 'openComplaintPeriod'])
+                            ->middleware('permission:public_lists.open_complaint_period')
+                            ->name('provisional.open-complaint-period');
+                        Route::post('provisional/{provisionalList}/close-complaint-period', [BackofficeProvisionalListController::class, 'closeComplaintPeriod'])
+                            ->middleware('permission:public_lists.close_complaint_period')
+                            ->name('provisional.close-complaint-period');
+                        Route::post('provisional/{provisionalList}/cancel', [BackofficeProvisionalListController::class, 'cancel'])
+                            ->middleware('permission:public_lists.cancel')
+                            ->name('provisional.cancel');
+                        Route::post('provisional/{provisionalList}/archive', [BackofficeProvisionalListController::class, 'archive'])
+                            ->middleware('permission:public_lists.archive')
+                            ->name('provisional.archive');
 
-                    Route::get('definitive', [BackofficeDefinitiveListController::class, 'index'])->name('definitive.index');
-                    Route::get('definitive/create', [BackofficeDefinitiveListController::class, 'create'])->name('definitive.create');
-                    Route::post('definitive', [BackofficeDefinitiveListController::class, 'store'])->name('definitive.store');
-                    Route::get('definitive/{definitiveList}', [BackofficeDefinitiveListController::class, 'show'])->name('definitive.show');
-                    Route::post('definitive/{definitiveList}/review', [BackofficeDefinitiveListController::class, 'review'])->name('definitive.review');
-                    Route::post('definitive/{definitiveList}/approve', [BackofficeDefinitiveListController::class, 'approve'])->name('definitive.approve');
-                    Route::post('definitive/{definitiveList}/publish', [BackofficeDefinitiveListController::class, 'publish'])->name('definitive.publish');
-                    Route::post('definitive/{definitiveList}/lock', [BackofficeDefinitiveListController::class, 'lock'])->name('definitive.lock');
-                    Route::post('definitive/{definitiveList}/archive', [BackofficeDefinitiveListController::class, 'archive'])->name('definitive.archive');
-                });
+                        Route::get('definitive', [BackofficeDefinitiveListController::class, 'index'])
+                            ->middleware('permission:public_lists.view')
+                            ->name('definitive.index');
+                        Route::get('definitive/create', [BackofficeDefinitiveListController::class, 'create'])
+                            ->middleware('permission:public_lists.generate')
+                            ->name('definitive.create');
+                        Route::post('definitive', [BackofficeDefinitiveListController::class, 'store'])
+                            ->middleware('permission:public_lists.generate')
+                            ->name('definitive.store');
+                        Route::get('definitive/{definitiveList}', [BackofficeDefinitiveListController::class, 'show'])
+                            ->middleware('permission:public_lists.view')
+                            ->name('definitive.show');
+                        Route::post('definitive/{definitiveList}/review', [BackofficeDefinitiveListController::class, 'review'])
+                            ->middleware('permission:public_lists.review')
+                            ->name('definitive.review');
+                        Route::post('definitive/{definitiveList}/approve', [BackofficeDefinitiveListController::class, 'approve'])
+                            ->middleware('permission:public_lists.approve')
+                            ->name('definitive.approve');
+                        Route::post('definitive/{definitiveList}/publish', [BackofficeDefinitiveListController::class, 'publish'])
+                            ->middleware('permission:public_lists.publish')
+                            ->name('definitive.publish');
+                        Route::post('definitive/{definitiveList}/lock', [BackofficeDefinitiveListController::class, 'lock'])
+                            ->middleware('permission:public_lists.lock')
+                            ->name('definitive.lock');
+                        Route::post('definitive/{definitiveList}/archive', [BackofficeDefinitiveListController::class, 'archive'])
+                            ->middleware('permission:public_lists.archive')
+                            ->name('definitive.archive');
+                    });
 
-                Route::get('complaints', [BackofficeComplaintController::class, 'index'])->name('complaints.index');
-                Route::get('complaints/{complaint}', [BackofficeComplaintController::class, 'show'])->name('complaints.show');
-                Route::post('complaints/{complaint}/assign', [BackofficeComplaintController::class, 'assign'])->name('complaints.assign');
-                Route::post('complaints/{complaint}/mark-received', [BackofficeComplaintController::class, 'markReceived'])->name('complaints.mark-received');
-                Route::post('complaints/{complaint}/start-review', [BackofficeComplaintController::class, 'startReview'])->name('complaints.start-review');
-                Route::post('complaints/{complaint}/reviews', [BackofficeComplaintReviewController::class, 'store'])->name('complaints.reviews.store');
-                Route::post('complaints/{complaint}/close', [BackofficeComplaintController::class, 'close'])->name('complaints.close');
+                Route::middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'municipality.feature:applications.review',
+                ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->group(function (): void {
+                        Route::get('complaints', [BackofficeComplaintController::class, 'index'])
+                            ->middleware('permission:complaints.view')
+                            ->name('complaints.index');
+                        Route::get('complaints/{complaint}', [BackofficeComplaintController::class, 'show'])
+                            ->middleware('permission:complaints.view')
+                            ->name('complaints.show');
+                        Route::post('complaints/{complaint}/assign', [BackofficeComplaintController::class, 'assign'])
+                            ->middleware('permission:complaints.assign')
+                            ->name('complaints.assign');
+                        Route::post('complaints/{complaint}/mark-received', [BackofficeComplaintController::class, 'markReceived'])
+                            ->middleware('permission:complaints.mark_received')
+                            ->name('complaints.mark-received');
+                        Route::post('complaints/{complaint}/start-review', [BackofficeComplaintController::class, 'startReview'])
+                            ->middleware('permission:complaints.review')
+                            ->name('complaints.start-review');
+                        Route::post('complaints/{complaint}/reviews', [BackofficeComplaintReviewController::class, 'store'])
+                            ->middleware('permission:complaints.review')
+                            ->name('complaints.reviews.store');
+                        Route::post('complaints/{complaint}/close', [BackofficeComplaintController::class, 'close'])
+                            ->middleware('permission:complaints.close')
+                            ->name('complaints.close');
+                    });
                 Route::middleware([
                     'active.backoffice',
                     'mfa.backoffice',
@@ -2934,22 +3095,63 @@ Route::middleware('auth')->group(function () {
                             ->middleware('permission:complaints.cancel')
                             ->name('complaint-decisions.cancel');
                     });
-                Route::get('complaints/{complaint}/additional-information/create', [BackofficeAdditionalInformationRequestController::class, 'create'])->name('additional-information-requests.create');
-                Route::post('complaints/{complaint}/additional-information', [BackofficeAdditionalInformationRequestController::class, 'store'])->name('additional-information-requests.store');
-                Route::get('additional-information-requests/{additionalInformationRequest}', [BackofficeAdditionalInformationRequestController::class, 'show'])->name('additional-information-requests.show');
-                Route::post('additional-information-requests/{additionalInformationRequest}/close', [BackofficeAdditionalInformationRequestController::class, 'close'])->name('additional-information-requests.close');
-                Route::post('additional-information-requests/{additionalInformationRequest}/mark-overdue', [BackofficeAdditionalInformationRequestController::class, 'markOverdue'])->name('additional-information-requests.mark-overdue');
+                Route::middleware([
+                    'active.backoffice',
+                    'mfa.backoffice',
+                    'log.backoffice',
+                    'municipality.feature:applications.review',
+                ])
+                    ->withoutMiddleware(
+                        'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                    )
+                    ->group(function (): void {
+                        Route::get('complaints/{complaint}/additional-information/create', [BackofficeAdditionalInformationRequestController::class, 'create'])
+                            ->middleware('permission:complaints.request_information')
+                            ->name('additional-information-requests.create');
+                        Route::post('complaints/{complaint}/additional-information', [BackofficeAdditionalInformationRequestController::class, 'store'])
+                            ->middleware('permission:complaints.request_information')
+                            ->name('additional-information-requests.store');
+                        Route::get('additional-information-requests/{additionalInformationRequest}', [BackofficeAdditionalInformationRequestController::class, 'show'])
+                            ->middleware('permission:complaints.view')
+                            ->name('additional-information-requests.show');
+                        Route::post('additional-information-requests/{additionalInformationRequest}/close', [BackofficeAdditionalInformationRequestController::class, 'close'])
+                            ->middleware('permission:complaints.close')
+                            ->name('additional-information-requests.close');
+                        Route::post('additional-information-requests/{additionalInformationRequest}/mark-overdue', [BackofficeAdditionalInformationRequestController::class, 'markOverdue'])
+                            ->middleware('permission:complaints.mark_overdue')
+                            ->name('additional-information-requests.mark-overdue');
 
-                Route::get('hearings', [BackofficeHearingController::class, 'index'])->name('hearings.index');
-                Route::get('hearings/create', [BackofficeHearingController::class, 'create'])->name('hearings.create');
-                Route::post('hearings', [BackofficeHearingController::class, 'store'])->name('hearings.store');
-                Route::get('hearings/{hearing}', [BackofficeHearingController::class, 'show'])->name('hearings.show');
-                Route::post('hearings/{hearing}/issue', [BackofficeHearingController::class, 'issue'])->name('hearings.issue');
-                Route::post('hearings/{hearing}/close', [BackofficeHearingController::class, 'close'])->name('hearings.close');
-                Route::post('hearings/{hearing}/cancel', [BackofficeHearingController::class, 'cancel'])->name('hearings.cancel');
-                Route::get('hearing-submissions/{hearingSubmission}', [BackofficeHearingSubmissionReviewController::class, 'show'])->name('hearing-submissions.show');
-                Route::post('hearing-submissions/{hearingSubmission}/accept', [BackofficeHearingSubmissionReviewController::class, 'accept'])->name('hearing-submissions.accept');
-                Route::post('hearing-submissions/{hearingSubmission}/reject', [BackofficeHearingSubmissionReviewController::class, 'reject'])->name('hearing-submissions.reject');
+                        Route::get('hearings', [BackofficeHearingController::class, 'index'])
+                            ->middleware('permission:hearings.view')
+                            ->name('hearings.index');
+                        Route::get('hearings/create', [BackofficeHearingController::class, 'create'])
+                            ->middleware('permission:hearings.create')
+                            ->name('hearings.create');
+                        Route::post('hearings', [BackofficeHearingController::class, 'store'])
+                            ->middleware('permission:hearings.create')
+                            ->name('hearings.store');
+                        Route::get('hearings/{hearing}', [BackofficeHearingController::class, 'show'])
+                            ->middleware('permission:hearings.view')
+                            ->name('hearings.show');
+                        Route::post('hearings/{hearing}/issue', [BackofficeHearingController::class, 'issue'])
+                            ->middleware('permission:hearings.issue')
+                            ->name('hearings.issue');
+                        Route::post('hearings/{hearing}/close', [BackofficeHearingController::class, 'close'])
+                            ->middleware('permission:hearings.close')
+                            ->name('hearings.close');
+                        Route::post('hearings/{hearing}/cancel', [BackofficeHearingController::class, 'cancel'])
+                            ->middleware('permission:hearings.cancel')
+                            ->name('hearings.cancel');
+                        Route::get('hearing-submissions/{hearingSubmission}', [BackofficeHearingSubmissionReviewController::class, 'show'])
+                            ->middleware('permission:hearings.view')
+                            ->name('hearing-submissions.show');
+                        Route::post('hearing-submissions/{hearingSubmission}/accept', [BackofficeHearingSubmissionReviewController::class, 'accept'])
+                            ->middleware('permission:hearings.accept')
+                            ->name('hearing-submissions.accept');
+                        Route::post('hearing-submissions/{hearingSubmission}/reject', [BackofficeHearingSubmissionReviewController::class, 'reject'])
+                            ->middleware('permission:hearings.reject')
+                            ->name('hearing-submissions.reject');
+                    });
 
                 Route::get('official-notifications', [BackofficeOfficialNotificationController::class, 'index'])->name('official-notifications.index');
                 Route::get('official-notifications/create', [BackofficeOfficialNotificationController::class, 'create'])->name('official-notifications.create');

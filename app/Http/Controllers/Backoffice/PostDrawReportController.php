@@ -20,7 +20,7 @@ class PostDrawReportController extends Controller
 
     public function generate(GeneratePostDrawReportRequest $request, LotteryDraw $lotteryDraw): RedirectResponse
     {
-        Gate::authorize('create', PostDrawReport::class);
+        Gate::authorize('generateReportBackoffice', $lotteryDraw);
 
         $report = $this->reports->generate($lotteryDraw, $this->authenticatedUser($request));
 
@@ -29,7 +29,7 @@ class PostDrawReportController extends Controller
 
     public function show(PostDrawReport $postDrawReport): View
     {
-        Gate::authorize('view', $postDrawReport);
+        Gate::authorize('viewBackoffice', $postDrawReport);
 
         $postDrawReport->load('lotteryDraw.results.candidate');
 
@@ -42,7 +42,7 @@ class PostDrawReportController extends Controller
 
     public function download(DownloadPostDrawReportRequest $request, PostDrawReport $postDrawReport): StreamedResponse
     {
-        Gate::authorize('view', $postDrawReport);
+        Gate::authorize('exportBackoffice', $postDrawReport);
 
         $report = $this->reports->markDownloaded($postDrawReport, $this->authenticatedUser($request));
 

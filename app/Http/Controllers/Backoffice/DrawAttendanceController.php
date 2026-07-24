@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Backoffice;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BulkRegisterDrawAttendanceRequest;
 use App\Http\Requests\RegisterDrawAttendanceRequest;
-use App\Models\DrawAttendance;
 use App\Models\LotteryDraw;
 use App\Services\Attendance\AttendanceSummaryService;
 use App\Services\Attendance\DrawAttendanceService;
@@ -22,7 +21,7 @@ class DrawAttendanceController extends Controller
 
     public function index(LotteryDraw $lotteryDraw): View
     {
-        Gate::authorize('viewAny', DrawAttendance::class);
+        Gate::authorize('viewBackoffice', $lotteryDraw);
 
         $lotteryDraw->load(['participants.candidate', 'convocations', 'attendances.candidate']);
 
@@ -34,7 +33,7 @@ class DrawAttendanceController extends Controller
 
     public function store(RegisterDrawAttendanceRequest $request, LotteryDraw $lotteryDraw): RedirectResponse
     {
-        Gate::authorize('create', DrawAttendance::class);
+        Gate::authorize('registerAttendanceBackoffice', $lotteryDraw);
 
         $this->attendances->register($lotteryDraw, $request->validated(), $this->authenticatedUser($request));
 
@@ -43,11 +42,13 @@ class DrawAttendanceController extends Controller
 
     public function bulkStore(BulkRegisterDrawAttendanceRequest $request, LotteryDraw $lotteryDraw): RedirectResponse
     {
-        Gate::authorize('create', DrawAttendance::class);
+        Gate::authorize('registerAttendanceBackoffice', $lotteryDraw);
 
-        foreach ($request->validated('attendances') as $attendance) {
-            $this->attendances->register($lotteryDraw, $attendance, $this->authenticatedUser($request));
-        }
+        $this->attendances->registerMany(
+            $lotteryDraw,
+            $request->validated('attendances'),
+            $this->authenticatedUser($request),
+        );
 
         return back()->with('success', 'Presenças registadas.');
     }

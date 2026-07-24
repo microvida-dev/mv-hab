@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Complaint;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreAdditionalInformationRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $complaint = $this->route('complaint');
+
+        return $complaint instanceof Complaint
+            && ($this->user()?->can('requestInformationBackoffice', $complaint) ?? false);
     }
 
     /**

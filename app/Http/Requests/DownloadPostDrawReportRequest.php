@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\PostDrawReport;
 use Illuminate\Foundation\Http\FormRequest;
 
 class DownloadPostDrawReportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $report = $this->route('postDrawReport');
+
+        return $report instanceof PostDrawReport
+            && ($this->user()?->can('exportBackoffice', $report) ?? false);
     }
 
     /**

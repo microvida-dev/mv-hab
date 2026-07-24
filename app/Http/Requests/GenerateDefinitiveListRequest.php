@@ -3,14 +3,17 @@
 namespace App\Http\Requests;
 
 use App\Enums\AnonymizationMode;
+use App\Models\DefinitiveList;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class GenerateDefinitiveListRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('generateBackoffice', DefinitiveList::class) ?? false;
     }
 
     /**
@@ -18,8 +21,20 @@ class GenerateDefinitiveListRequest extends FormRequest
      */
     public function rules(): array
     {
+        $municipalityId = $this->user()->municipality_id ?? 0;
+
         return [
-            'provisional_list_id' => ['required', 'exists:provisional_lists,id'],
+            'provisional_list_id' => [
+                'required',
+                Rule::exists('provisional_lists', 'id')
+                    ->where(fn (Builder $query): Builder => $query->whereIn(
+                        'contest_id',
+                        DB::table('contests')
+                            ->select('contests.id')
+                            ->join('programs', 'programs.id', '=', 'contests.program_id')
+                            ->where('programs.municipality_id', $municipalityId),
+                    )),
+            ],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:3000'],
             'publication_starts_at' => ['nullable', 'date'],
