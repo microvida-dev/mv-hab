@@ -60,13 +60,15 @@ class LotteryClosureFlowTest extends TestCase
         [$administrator, $contest, $allocationRun, $candidate, $otherCandidate] = $this->context();
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.lottery-draws.store'), [
                 'allocation_run_id' => $allocationRun->id,
                 'scheduled_at' => now()->addDay()->format('Y-m-d H:i:s'),
                 'location' => 'Sala de testes municipal',
                 'seed' => 'SPRINT-25-SEED',
             ])
-            ->assertRedirect();
+            ->assertSessionHas('success')
+            ->assertSessionHasNoErrors();
 
         $draw = LotteryDraw::query()->firstOrFail();
 
@@ -129,7 +131,7 @@ class LotteryClosureFlowTest extends TestCase
         $this->assertTrue($administrator->hasPermission('scoring.run'));
         $this->assertTrue(
             app(MunicipalityEntitlementService::class)->enabledFor(
-                $administrator->municipality,
+                $this->municipality,
                 FeatureKey::ApplicationReview,
             ),
         );

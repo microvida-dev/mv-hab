@@ -57,9 +57,13 @@ trait CreatesEnterpriseCaseFixtures
         ];
     }
 
-    protected function assertEnterpriseWorkspace(string $routeName, object $case, string $expectedLabel): void
-    {
-        $this->actingAs($this->userWithRole())
+    protected function assertEnterpriseWorkspace(
+        string $routeName,
+        object $case,
+        string $expectedLabel,
+        ?User $user = null,
+    ): void {
+        $this->actingAs($user ?? $this->userWithRole())
             ->withSession(['mfa.verified_at' => now()])
             ->get(route($routeName, $case))
             ->assertOk()
