@@ -16,6 +16,7 @@ use App\Models\Contract;
 use App\Models\LeaseContractDocument;
 use App\Models\MaintenanceCategory;
 use App\Models\MaintenanceRequest;
+use App\Models\Municipality;
 use App\Models\PropertyInspection;
 use App\Models\TenantFinancialAccount;
 use App\Models\TenantInvoice;
@@ -334,11 +335,13 @@ class QA26ContractsRentTenantPortalTest extends TestCase
     private function tenantContext(array $contractOverrides = []): array
     {
         $this->seed(SystemAccessSeeder::class);
+        session(['mfa.verified_at' => now()]);
 
-        $tenant = User::factory()->create();
+        $municipality = Municipality::factory()->create();
+        $tenant = User::factory()->create(['municipality_id' => $municipality->id]);
         $tenant->assignRole('candidate');
 
-        $manager = User::factory()->create();
+        $manager = User::factory()->create(['municipality_id' => $municipality->id]);
         $manager->assignRole('financial_manager');
         $manager->assignRole('maintenance_manager');
 
@@ -355,6 +358,7 @@ class QA26ContractsRentTenantPortalTest extends TestCase
             'activated_at' => now(),
             'activated_by' => $manager->id,
         ], $contractOverrides));
+        $contract->housingUnit()->update(['municipality_id' => $municipality->id]);
 
         app(TenantPortalAccessService::class)->ensureForUser($tenant, $manager);
         $account = app(TenantFinancialAccountService::class)->ensureForContract($contract, $manager);

@@ -251,6 +251,7 @@ class Sprint14FinanceTest extends TestCase
     private function financeContext(): array
     {
         $this->seed(SystemAccessSeeder::class);
+        session(['mfa.verified_at' => now()]);
 
         $candidate = User::factory()->create();
         $candidate->assignRole('candidate');

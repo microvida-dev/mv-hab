@@ -46,8 +46,14 @@ class RentCalculationDeterministicTest extends TestCase
     {
         $service = app(RentEffortRateService::class);
 
-        $this->assertSame(30.0, $service->calculate(300, 1000));
-        $this->assertNull($service->calculate(300, 0));
+        $this->assertSame(
+            '30.0000',
+            $service->calculate('300.00', '1000.00'),
+        );
+
+        $this->assertNull(
+            $service->calculate('300.00', '0.00'),
+        );
     }
 
     public function test_rent_calculation_applies_effort_rate_bounds_and_deposit(): void
