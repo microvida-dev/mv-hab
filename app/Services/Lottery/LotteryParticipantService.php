@@ -111,6 +111,10 @@ class LotteryParticipantService
                 ->lockForUpdate()
                 ->findOrFail($draw->id);
 
+            if ($draw->participants_locked_at !== null) {
+                return $draw->refresh();
+            }
+
             if ($draw->participants->isEmpty()) {
                 throw ValidationException::withMessages(['participants' => 'Carregue participantes antes de bloquear o sorteio.']);
             }

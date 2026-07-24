@@ -32,30 +32,34 @@ class ListPublicationService
      */
     public function publishProvisional(ProvisionalList $list, User $actor, array $data = []): ListPublication
     {
-        if ($this->provisionalStatus($list) !== ProvisionalListStatus::Approved) {
-            throw ValidationException::withMessages(['provisional_list' => 'A lista provisória deve estar aprovada antes da publicação.']);
-        }
+        return DB::transaction(function () use ($list, $actor, $data): ListPublication {
+            $list = ProvisionalList::query()->lockForUpdate()->findOrFail($list->id);
 
-        $notificationService = $this->notificationService;
+            if ($this->provisionalStatus($list) !== ProvisionalListStatus::Approved) {
+                throw ValidationException::withMessages(['provisional_list' => 'A lista provisória deve estar aprovada antes da publicação.']);
+            }
 
-        return $this->publish($list, $actor, ListPublicationType::ProvisionalList, $data, function () use ($list, $actor, $notificationService) {
-            $list->forceFill([
-                'status' => ProvisionalListStatus::Published,
-                'published_by' => $actor->id,
-                'published_at' => now(),
-                'public_visibility' => (bool) $list->public_visibility,
-            ])->save();
+            $notificationService = $this->notificationService;
 
-            $list->entries()->with('application')->each(function ($entry) use ($list, $actor, $notificationService) {
-                $notificationService->createInternal(
-                    user: $this->requiredCandidate($entry),
-                    type: OfficialNotificationType::ProvisionalListPublished,
-                    subject: 'Lista provisória publicada',
-                    body: 'A lista provisória do concurso foi publicada e pode ser consultada na área reservada.',
-                    notifiable: $list,
-                    application: $entry->application,
-                    actor: $actor,
-                );
+            return $this->publish($list, $actor, ListPublicationType::ProvisionalList, $data, function () use ($list, $actor, $notificationService) {
+                $list->forceFill([
+                    'status' => ProvisionalListStatus::Published,
+                    'published_by' => $actor->id,
+                    'published_at' => now(),
+                    'public_visibility' => (bool) $list->public_visibility,
+                ])->save();
+
+                $list->entries()->with('application')->each(function ($entry) use ($list, $actor, $notificationService) {
+                    $notificationService->createInternal(
+                        user: $this->requiredCandidate($entry),
+                        type: OfficialNotificationType::ProvisionalListPublished,
+                        subject: 'Lista provisória publicada',
+                        body: 'A lista provisória do concurso foi publicada e pode ser consultada na área reservada.',
+                        notifiable: $list,
+                        application: $entry->application,
+                        actor: $actor,
+                    );
+                });
             });
         });
     }
@@ -65,30 +69,34 @@ class ListPublicationService
      */
     public function publishDefinitive(DefinitiveList $list, User $actor, array $data = []): ListPublication
     {
-        if ($this->definitiveStatus($list) !== DefinitiveListStatus::Approved) {
-            throw ValidationException::withMessages(['definitive_list' => 'A lista definitiva deve estar aprovada antes da publicação.']);
-        }
+        return DB::transaction(function () use ($list, $actor, $data): ListPublication {
+            $list = DefinitiveList::query()->lockForUpdate()->findOrFail($list->id);
 
-        $notificationService = $this->notificationService;
+            if ($this->definitiveStatus($list) !== DefinitiveListStatus::Approved) {
+                throw ValidationException::withMessages(['definitive_list' => 'A lista definitiva deve estar aprovada antes da publicação.']);
+            }
 
-        return $this->publish($list, $actor, ListPublicationType::DefinitiveList, $data, function () use ($list, $actor, $notificationService) {
-            $list->forceFill([
-                'status' => DefinitiveListStatus::Published,
-                'published_by' => $actor->id,
-                'published_at' => now(),
-                'public_visibility' => (bool) $list->public_visibility,
-            ])->save();
+            $notificationService = $this->notificationService;
 
-            $list->entries()->with('application')->each(function ($entry) use ($list, $actor, $notificationService) {
-                $notificationService->createInternal(
-                    user: $this->requiredCandidate($entry),
-                    type: OfficialNotificationType::DefinitiveListPublished,
-                    subject: 'Lista definitiva publicada',
-                    body: 'A lista definitiva encontra-se disponível. Esta lista resulta da análise das candidaturas, reclamações e demais atos procedimentais aplicáveis.',
-                    notifiable: $list,
-                    application: $entry->application,
-                    actor: $actor,
-                );
+            return $this->publish($list, $actor, ListPublicationType::DefinitiveList, $data, function () use ($list, $actor, $notificationService) {
+                $list->forceFill([
+                    'status' => DefinitiveListStatus::Published,
+                    'published_by' => $actor->id,
+                    'published_at' => now(),
+                    'public_visibility' => (bool) $list->public_visibility,
+                ])->save();
+
+                $list->entries()->with('application')->each(function ($entry) use ($list, $actor, $notificationService) {
+                    $notificationService->createInternal(
+                        user: $this->requiredCandidate($entry),
+                        type: OfficialNotificationType::DefinitiveListPublished,
+                        subject: 'Lista definitiva publicada',
+                        body: 'A lista definitiva encontra-se disponível. Esta lista resulta da análise das candidaturas, reclamações e demais atos procedimentais aplicáveis.',
+                        notifiable: $list,
+                        application: $entry->application,
+                        actor: $actor,
+                    );
+                });
             });
         });
     }

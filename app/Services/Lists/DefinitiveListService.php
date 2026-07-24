@@ -19,6 +19,7 @@ use App\Models\ProvisionalListEntry;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use Closure;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -147,26 +148,34 @@ class DefinitiveListService
 
     public function sendToReview(DefinitiveList $list, User $actor): DefinitiveList
     {
-        if ($this->definitiveStatus($list) !== DefinitiveListStatus::Draft) {
-            throw ValidationException::withMessages(['definitive_list' => 'Apenas listas definitivas em rascunho podem seguir para revisão.']);
-        }
+        return $this->withLockedList($list, function (DefinitiveList $list) use ($actor): DefinitiveList {
+            if ($this->definitiveStatus($list) !== DefinitiveListStatus::Draft) {
+                throw ValidationException::withMessages(['definitive_list' => 'Apenas listas definitivas em rascunho podem seguir para revisão.']);
+            }
 
-        $list->forceFill(['status' => DefinitiveListStatus::UnderReview, 'reviewed_by' => $actor->id, 'reviewed_at' => now()])->save();
-        $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'definitive_list_review', 'Lista definitiva enviada para revisão.');
+            $list->forceFill(['status' => DefinitiveListStatus::UnderReview, 'reviewed_by' => $actor->id, 'reviewed_at' => now()])->save();
+            $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'definitive_list_review', 'Lista definitiva enviada para revisão.');
 
-        return $list->refresh();
+            return $list->refresh();
+        });
     }
 
     public function approve(DefinitiveList $list, User $actor): DefinitiveList
     {
-        if (! $this->definitiveStatusIsIn($list, [DefinitiveListStatus::Draft, DefinitiveListStatus::UnderReview])) {
-            throw ValidationException::withMessages(['definitive_list' => 'A lista definitiva não está num estado aprovável.']);
-        }
+        return $this->withLockedList($list, function (DefinitiveList $list) use ($actor): DefinitiveList {
+            if ($this->definitiveStatus($list) === DefinitiveListStatus::Approved) {
+                return $list;
+            }
 
-        $list->forceFill(['status' => DefinitiveListStatus::Approved, 'approved_by' => $actor->id, 'approved_at' => now()])->save();
-        $this->auditLogger->record(AuditEvents::APPROVE, $list, 'public_lists', 'definitive_list_approve', 'Lista definitiva aprovada.');
+            if (! $this->definitiveStatusIsIn($list, [DefinitiveListStatus::Draft, DefinitiveListStatus::UnderReview])) {
+                throw ValidationException::withMessages(['definitive_list' => 'A lista definitiva não está num estado aprovável.']);
+            }
 
-        return $list->refresh();
+            $list->forceFill(['status' => DefinitiveListStatus::Approved, 'approved_by' => $actor->id, 'approved_at' => now()])->save();
+            $this->auditLogger->record(AuditEvents::APPROVE, $list, 'public_lists', 'definitive_list_approve', 'Lista definitiva aprovada.');
+
+            return $list->refresh();
+        });
     }
 
     /**
@@ -186,26 +195,38 @@ class DefinitiveListService
 
     public function lock(DefinitiveList $list, User $actor): DefinitiveList
     {
-        if ($this->definitiveStatus($list) !== DefinitiveListStatus::Published) {
-            throw ValidationException::withMessages(['definitive_list' => 'A lista definitiva deve estar publicada antes de ser bloqueada.']);
-        }
+        return $this->withLockedList($list, function (DefinitiveList $list): DefinitiveList {
+            if ($this->definitiveStatus($list) === DefinitiveListStatus::Locked) {
+                return $list;
+            }
 
-        $list->forceFill(['status' => DefinitiveListStatus::Locked])->save();
-        $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'definitive_list_lock', 'Lista definitiva bloqueada para atribuição futura.');
+            if ($this->definitiveStatus($list) !== DefinitiveListStatus::Published) {
+                throw ValidationException::withMessages(['definitive_list' => 'A lista definitiva deve estar publicada antes de ser bloqueada.']);
+            }
 
-        return $list->refresh();
+            $list->forceFill(['status' => DefinitiveListStatus::Locked])->save();
+            $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'definitive_list_lock', 'Lista definitiva bloqueada para atribuição futura.');
+
+            return $list->refresh();
+        });
     }
 
     public function archive(DefinitiveList $list, User $actor): DefinitiveList
     {
-        if ($this->definitiveStatus($list) === DefinitiveListStatus::Locked) {
-            throw ValidationException::withMessages(['definitive_list' => 'Listas definitivas bloqueadas não devem ser arquivadas nesta sprint.']);
-        }
+        return $this->withLockedList($list, function (DefinitiveList $list): DefinitiveList {
+            if ($this->definitiveStatus($list) === DefinitiveListStatus::Archived) {
+                return $list;
+            }
 
-        $list->forceFill(['status' => DefinitiveListStatus::Archived])->save();
-        $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'definitive_list_archive', 'Lista definitiva arquivada.');
+            if ($this->definitiveStatus($list) === DefinitiveListStatus::Locked) {
+                throw ValidationException::withMessages(['definitive_list' => 'Listas definitivas bloqueadas não devem ser arquivadas nesta sprint.']);
+            }
 
-        return $list->refresh();
+            $list->forceFill(['status' => DefinitiveListStatus::Archived])->save();
+            $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'definitive_list_archive', 'Lista definitiva arquivada.');
+
+            return $list->refresh();
+        });
     }
 
     private function hasPendingComplaints(ProvisionalList $list): bool
@@ -312,5 +333,19 @@ class DefinitiveListService
     private function complaintDecisionRequiresListUpdate(ComplaintDecision $decision): bool
     {
         return (bool) $decision->getAttribute('requires_list_update');
+    }
+
+    /**
+     * @param  Closure(DefinitiveList): DefinitiveList  $transition
+     */
+    private function withLockedList(DefinitiveList $list, Closure $transition): DefinitiveList
+    {
+        return DB::transaction(function () use ($list, $transition): DefinitiveList {
+            $lockedList = DefinitiveList::query()
+                ->lockForUpdate()
+                ->findOrFail($list->id);
+
+            return $transition($lockedList);
+        });
     }
 }

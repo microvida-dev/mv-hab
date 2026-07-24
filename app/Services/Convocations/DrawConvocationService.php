@@ -25,6 +25,10 @@ class DrawConvocationService
     public function generate(LotteryDraw $draw, array $data, User $actor): Collection
     {
         return DB::transaction(function () use ($draw, $data, $actor): Collection {
+            $draw = LotteryDraw::query()
+                ->lockForUpdate()
+                ->findOrFail($draw->id);
+
             $participants = $draw->participants()
                 ->where('is_eligible', true)
                 ->whereIn('status', [
@@ -82,15 +86,36 @@ class DrawConvocationService
 
     public function send(DrawConvocation $convocation, User $actor): DrawConvocation
     {
-        $convocation->forceFill([
-            'status' => ConvocationStatus::Sent,
-            'sent_at' => now(),
-            'sent_by' => $actor->id,
-        ])->save();
+        return DB::transaction(function () use ($convocation, $actor): DrawConvocation {
+            $convocation = DrawConvocation::query()
+                ->lockForUpdate()
+                ->findOrFail($convocation->id);
 
-        $this->audit->record(AuditEvents::UPDATE, $convocation, 'communications', 'draw_convocation_send', 'Convocatória marcada como enviada.');
+            if (in_array($convocation->status, [
+                ConvocationStatus::Sent,
+                ConvocationStatus::Delivered,
+                ConvocationStatus::Read,
+            ], true)) {
+                return $convocation;
+            }
 
-        return $convocation->refresh();
+            if (! in_array($convocation->status, [
+                ConvocationStatus::Generated,
+                ConvocationStatus::Failed,
+            ], true)) {
+                throw ValidationException::withMessages(['draw_convocation' => 'A convocatória não se encontra num estado enviável.']);
+            }
+
+            $convocation->forceFill([
+                'status' => ConvocationStatus::Sent,
+                'sent_at' => now(),
+                'sent_by' => $actor->id,
+            ])->save();
+
+            $this->audit->record(AuditEvents::UPDATE, $convocation, 'communications', 'draw_convocation_send', 'Convocatória marcada como enviada.');
+
+            return $convocation->refresh();
+        });
     }
 
     public function markRead(DrawConvocation $convocation, User $candidate): DrawConvocation
