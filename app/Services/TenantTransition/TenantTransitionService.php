@@ -24,12 +24,30 @@ class TenantTransitionService
     public function run(WinnerRegistration $winner, User $actor): TenantTransition
     {
         return DB::transaction(function () use ($winner, $actor): TenantTransition {
-            $winner->loadMissing('latestKeyHandoverAppointment');
-            $validation = $this->validator->validate($winner);
-            $contract = $winner->allocation_id === null
+            /** @var WinnerRegistration $lockedWinner */
+            $lockedWinner = WinnerRegistration::query()
+                ->lockForUpdate()
+                ->with('latestKeyHandoverAppointment')
+                ->findOrFail($winner->getKey());
+
+            $transition = TenantTransition::query()
+                ->where('winner_registration_id', $lockedWinner->id)
+                ->where('application_id', $lockedWinner->application_id)
+                ->lockForUpdate()
+                ->first();
+
+            if (
+                $transition instanceof TenantTransition
+                && $transition->status === TenantTransitionStatus::Completed
+            ) {
+                return $transition;
+            }
+
+            $validation = $this->validator->validate($lockedWinner);
+            $contract = $lockedWinner->allocation_id === null
                 ? null
                 : Contract::query()
-                    ->where('allocation_id', $winner->allocation_id)
+                    ->where('allocation_id', $lockedWinner->allocation_id)
                     ->whereIn('status', [
                         ContractStatus::Preparation->value,
                         ContractStatus::Issued->value,
@@ -37,24 +55,28 @@ class TenantTransitionService
                         ContractStatus::Active->value,
                     ])
                     ->latest('id')
+                    ->lockForUpdate()
                     ->first();
             $account = $validation['blocked'] ? null : $this->provisioning->provision($contract, $actor);
-            $allocationHousingUnitId = $winner->allocation_id === null
+            $allocationHousingUnitId = $lockedWinner->allocation_id === null
                 ? null
-                : Allocation::query()->whereKey($winner->allocation_id)->value('housing_unit_id');
+                : Allocation::query()
+                    ->whereKey($lockedWinner->allocation_id)
+                    ->lockForUpdate()
+                    ->value('housing_unit_id');
 
-            $transition = TenantTransition::query()->firstOrNew([
-                'winner_registration_id' => $winner->id,
-                'application_id' => $winner->application_id,
+            $transition ??= new TenantTransition([
+                'winner_registration_id' => $lockedWinner->id,
+                'application_id' => $lockedWinner->application_id,
             ]);
 
             $transition->fill([
-                'key_handover_appointment_id' => $winner->latestKeyHandoverAppointment?->id,
-                'allocation_id' => $winner->allocation_id,
+                'key_handover_appointment_id' => $lockedWinner->latestKeyHandoverAppointment?->id,
+                'allocation_id' => $lockedWinner->allocation_id,
                 'lease_contract_id' => $contract?->id,
                 'tenant_financial_account_id' => $account?->id,
-                'user_id' => $winner->user_id,
-                'housing_unit_id' => $winner->housing_unit_id ?? ($allocationHousingUnitId === null ? null : (int) $allocationHousingUnitId),
+                'user_id' => $lockedWinner->user_id,
+                'housing_unit_id' => $lockedWinner->housing_unit_id ?? ($allocationHousingUnitId === null ? null : (int) $allocationHousingUnitId),
                 'preconditions' => $validation['preconditions'],
                 'warnings' => $validation['warnings'],
                 'metadata' => ['source' => 'sprint_25_transition'],
@@ -68,7 +90,14 @@ class TenantTransitionService
                 'completed_by' => $validation['blocked'] ? null : $actor->id,
             ])->save();
 
-            $this->audit->record(AuditEvents::UPDATE, $transition, 'allocations', 'tenant_transition_run', 'Transição para área de inquilino processada.');
+            $this->audit->record(
+                AuditEvents::UPDATE,
+                $transition,
+                'allocations',
+                'tenant_transition_run',
+                'Transição para área de inquilino processada.',
+                metadata: ['actor_id' => $actor->id],
+            );
 
             return $transition->refresh();
         });

@@ -60,25 +60,39 @@ class TenantCommunicationService
      */
     public function message(TenantCommunication $communication, User $actor, array $data): TenantCommunication
     {
-        $communication->messages()->create([
-            'user_id' => $actor->id,
-            'sender_type' => $data['sender_type'] ?? ($actor->hasRole('candidate') ? 'tenant' : 'municipality'),
-            'body' => $data['body'],
-            'visible_to_tenant' => $data['visible_to_tenant'] ?? true,
-            'created_by' => $actor->id,
-        ]);
+        return DB::transaction(function () use ($communication, $actor, $data): TenantCommunication {
+            /** @var TenantCommunication $locked */
+            $locked = TenantCommunication::query()
+                ->lockForUpdate()
+                ->findOrFail($communication->getKey());
 
-        $communication->forceFill([
-            'status' => $actor->hasRole('candidate')
-                ? TenantCommunicationStatus::AwaitingMunicipality
-                : TenantCommunicationStatus::AwaitingTenant,
-            'last_message_at' => now(),
-            'updated_by' => $actor->id,
-        ])->save();
+            $locked->messages()->create([
+                'user_id' => $actor->id,
+                'sender_type' => $data['sender_type'] ?? ($actor->hasRole('candidate') ? 'tenant' : 'municipality'),
+                'body' => $data['body'],
+                'visible_to_tenant' => $data['visible_to_tenant'] ?? true,
+                'created_by' => $actor->id,
+            ]);
 
-        $this->auditLogger->record(AuditEvents::UPDATE, $communication, 'communications', 'tenant_communication_message', 'Mensagem adicionada a comunicação de inquilino.');
+            $locked->forceFill([
+                'status' => $actor->hasRole('candidate')
+                    ? TenantCommunicationStatus::AwaitingMunicipality
+                    : TenantCommunicationStatus::AwaitingTenant,
+                'last_message_at' => now(),
+                'updated_by' => $actor->id,
+            ])->save();
 
-        return $communication->refresh();
+            $this->auditLogger->record(
+                AuditEvents::UPDATE,
+                $locked,
+                'communications',
+                'tenant_communication_message',
+                'Mensagem adicionada a comunicação de inquilino.',
+                metadata: ['actor_id' => $actor->id],
+            );
+
+            return $locked->refresh();
+        });
     }
 
     public function close(TenantCommunication $communication, User $actor): TenantCommunication

@@ -59,6 +59,8 @@ class CaseWorkspaceController extends Controller
      */
     public function contract(Request $request, Contract $contract): View
     {
+        Gate::authorize('viewBackoffice', $contract);
+
         return $this->enterpriseView($request, 'contract', $contract);
     }
 

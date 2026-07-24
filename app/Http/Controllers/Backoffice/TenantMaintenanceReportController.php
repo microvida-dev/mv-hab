@@ -14,7 +14,9 @@ class TenantMaintenanceReportController extends Controller
     public function index(GenerateMaintenanceReportRequest $request): View
     {
         return view('backoffice.maintenance-reports.index', [
-            'requests' => $this->reports->latestOpenRequests(),
+            'requests' => $this->reports->latestOpenRequests(
+                $this->authenticatedUser($request),
+            ),
         ]);
     }
 }

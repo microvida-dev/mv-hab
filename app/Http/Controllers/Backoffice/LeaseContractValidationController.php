@@ -17,26 +17,35 @@ class LeaseContractValidationController extends Controller
 
     public function store(ValidateLeaseContractRequest $request, Contract $leaseContract): RedirectResponse
     {
-        Gate::authorize('create', LeaseContractValidation::class);
-        $this->service->approve($leaseContract, $this->authenticatedUser($request), $request->validated());
+        Gate::authorize('validateBackoffice', [LeaseContractValidation::class, $leaseContract]);
+        $this->service->approve(
+            $leaseContract,
+            $this->authenticatedUser($request),
+            $request->validated(),
+        );
 
         return back()->with('success', 'Validação interna aprovada.');
     }
 
     public function approve(ValidateLeaseContractRequest $request, LeaseContractValidation $leaseContractValidation): RedirectResponse
     {
-        Gate::authorize('approve', $leaseContractValidation);
+        Gate::authorize('approveBackoffice', $leaseContractValidation);
         $leaseContract = $leaseContractValidation->leaseContract;
         abort_unless($leaseContract instanceof Contract, 500);
 
-        $this->service->approve($leaseContract, $this->authenticatedUser($request), $request->validated());
+        $this->service->approve(
+            $leaseContract,
+            $this->authenticatedUser($request),
+            $request->validated(),
+            $leaseContractValidation,
+        );
 
         return back()->with('success', 'Validação interna aprovada.');
     }
 
     public function reject(RejectLeaseContractValidationRequest $request, LeaseContractValidation $leaseContractValidation): RedirectResponse
     {
-        Gate::authorize('reject', $leaseContractValidation);
+        Gate::authorize('rejectBackoffice', $leaseContractValidation);
         $this->service->reject($leaseContractValidation, $this->authenticatedUser($request), $request->validated('rejection_reason'));
 
         return back()->with('success', 'Validação rejeitada.');

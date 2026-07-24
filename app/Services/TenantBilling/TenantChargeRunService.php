@@ -9,6 +9,7 @@ use App\Models\Contract;
 use App\Models\TenantChargeRun;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Support\AuditEvents;
 use Illuminate\Support\Facades\DB;
 
@@ -17,6 +18,7 @@ class TenantChargeRunService
     public function __construct(
         private readonly TenantInvoiceService $invoices,
         private readonly AuditLogger $auditLogger,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
     public function run(User $actor, int $year, int $month, ChargeType $chargeType = ChargeType::Rent): TenantChargeRun
@@ -26,6 +28,7 @@ class TenantChargeRunService
                 ->where('period_year', $year)
                 ->where('period_month', $month)
                 ->where('charge_type', $chargeType->value)
+                ->lockForUpdate()
                 ->first();
 
             if (! $run) {
@@ -41,6 +44,24 @@ class TenantChargeRunService
                 ])->save();
             }
 
+            $contracts = $this->municipalScope
+                ->contracts(Contract::query(), $actor)
+                ->where('status', ContractStatus::Active->value)
+                ->whereNotNull('user_id');
+            $hasPendingContracts = (clone $contracts)
+                ->whereNotIn(
+                    'id',
+                    $run->items()->select('lease_contract_id'),
+                )
+                ->exists();
+
+            if (
+                $run->status === ChargeRunStatus::Completed
+                && ! $hasPendingContracts
+            ) {
+                return $run;
+            }
+
             if ($run->status !== ChargeRunStatus::Running) {
                 $run->forceFill(['status' => ChargeRunStatus::Running, 'started_at' => now()])->save();
             }
@@ -49,9 +70,7 @@ class TenantChargeRunService
             $skipped = 0;
             $total = 0.0;
 
-            Contract::query()
-                ->where('status', ContractStatus::Active->value)
-                ->whereNotNull('user_id')
+            $contracts
                 ->with('financialAccount')
                 ->chunkById(100, function ($contracts) use ($actor, $year, $month, $chargeType, $run, &$generated, &$skipped, &$total): void {
                     foreach ($contracts as $contract) {
@@ -68,6 +87,15 @@ class TenantChargeRunService
                             'amount' => $contract->monthly_rent,
                             'notes' => 'Gerada por execução operacional de cobranças.',
                         ]);
+
+                        $alreadyRecorded = $run->items()
+                            ->where('lease_contract_id', $invoice->lease_contract_id)
+                            ->where('tenant_invoice_id', $invoice->id)
+                            ->exists();
+
+                        if ($alreadyRecorded) {
+                            continue;
+                        }
 
                         $run->items()->create([
                             'tenant_invoice_id' => $invoice->id,
@@ -88,14 +116,33 @@ class TenantChargeRunService
             $run->forceFill([
                 'status' => ChargeRunStatus::Completed,
                 'completed_at' => now(),
-                'generated_count' => $generated,
-                'skipped_count' => $skipped,
+                'generated_count' => $run->items()
+                    ->where('status', 'generated')
+                    ->count(),
+                'skipped_count' => $run->items()
+                    ->where('status', 'skipped_existing')
+                    ->count(),
                 'warning_count' => 0,
-                'total_amount' => $total,
+                'total_amount' => $run->items()
+                    ->where('status', 'generated')
+                    ->sum('amount'),
                 'warnings' => null,
             ])->save();
 
-            $this->auditLogger->record(AuditEvents::CREATE, $run, 'finance', 'tenant_charge_run_completed', 'Execução operacional de cobranças concluída.');
+            $this->auditLogger->record(
+                AuditEvents::CREATE,
+                $run,
+                'finance',
+                'tenant_charge_run_completed',
+                'Execução operacional de cobranças concluída.',
+                metadata: [
+                    'actor_id' => $actor->id,
+                    'municipality_id' => $actor->municipality_id,
+                    'generated_count' => $generated,
+                    'skipped_count' => $skipped,
+                    'generated_amount' => $total,
+                ],
+            );
 
             return $run->refresh();
         });

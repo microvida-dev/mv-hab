@@ -16,7 +16,7 @@ class LeaseContractSignatureController extends Controller
 
     public function store(StoreLeaseContractSignatureRequest $request, Contract $leaseContract): RedirectResponse
     {
-        Gate::authorize('create', LeaseContractSignature::class);
+        Gate::authorize('signBackoffice', [LeaseContractSignature::class, $leaseContract]);
         $this->service->store($leaseContract, $this->authenticatedUser($request), $request->validated());
 
         return back()->with('success', 'Assinatura/registo manual guardado.');

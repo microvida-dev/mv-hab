@@ -1,5 +1,3 @@
-@php($contractStatuses = \App\Enums\ContractStatus::options())
-
 <div class="grid gap-6 md:grid-cols-2">
     <div>
         <x-input-label for="citizen_id" value="Munícipe" />
@@ -45,15 +43,4 @@
         <x-input-error :messages="$errors->get('monthly_rent')" class="mt-2" />
     </div>
 
-    <div>
-        <x-input-label for="status" value="Estado" />
-        <select id="status" name="status" class="mv-input mt-1" required>
-            @foreach ($contractStatuses as $value => $label)
-                <option value="{{ $value }}" @selected(old('status', isset($contract) ? $contract->status->value : '') == $value)>
-                    {{ $label }}
-                </option>
-            @endforeach
-        </select>
-        <x-input-error :messages="$errors->get('status')" class="mt-2" />
-    </div>
 </div>

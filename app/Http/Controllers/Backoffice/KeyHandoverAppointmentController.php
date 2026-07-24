@@ -10,39 +10,65 @@ use App\Http\Requests\UpdateKeyHandoverAppointmentRequest;
 use App\Models\KeyHandoverAppointment;
 use App\Models\WinnerRegistration;
 use App\Services\KeyHandover\KeyHandoverAppointmentService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class KeyHandoverAppointmentController extends Controller
 {
-    public function __construct(private readonly KeyHandoverAppointmentService $appointments) {}
+    public function __construct(
+        private readonly KeyHandoverAppointmentService $appointments,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        Gate::authorize('viewAny', KeyHandoverAppointment::class);
+        Gate::authorize('viewAnyBackoffice', KeyHandoverAppointment::class);
+        $actor = $this->authenticatedUser($request);
 
         return view('backoffice.key-handovers.index', [
-            'appointments' => KeyHandoverAppointment::query()->with(['candidate', 'housingUnit'])->latest()->paginate(25),
-            'winners' => WinnerRegistration::query()->with(['candidate', 'housingUnit'])->latest()->get(),
+            'appointments' => $this->municipalScope
+                ->keyHandoverAppointments(KeyHandoverAppointment::query(), $actor)
+                ->with(['candidate', 'housingUnit'])
+                ->latest()
+                ->paginate(25),
+            'winners' => $this->municipalScope
+                ->winnerRegistrations(WinnerRegistration::query(), $actor)
+                ->with(['candidate', 'housingUnit'])
+                ->latest()
+                ->get(),
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        Gate::authorize('create', KeyHandoverAppointment::class);
+        Gate::authorize('createBackoffice', KeyHandoverAppointment::class);
 
         return view('backoffice.key-handovers.create', [
-            'winners' => WinnerRegistration::query()->with(['candidate', 'housingUnit'])->latest()->get(),
+            'winners' => $this->municipalScope
+                ->winnerRegistrations(
+                    WinnerRegistration::query(),
+                    $this->authenticatedUser($request),
+                )
+                ->with(['candidate', 'housingUnit'])
+                ->latest()
+                ->get(),
         ]);
     }
 
     public function store(StoreKeyHandoverAppointmentRequest $request): RedirectResponse
     {
-        Gate::authorize('create', KeyHandoverAppointment::class);
+        Gate::authorize('scheduleBackoffice', KeyHandoverAppointment::class);
 
         /** @var WinnerRegistration $winner */
-        $winner = WinnerRegistration::query()->findOrFail((int) $request->validated('winner_registration_id'));
+        $winner = $this->municipalScope
+            ->winnerRegistrations(
+                WinnerRegistration::query(),
+                $this->authenticatedUser($request),
+            )
+            ->findOrFail((int) $request->validated('winner_registration_id'));
         $appointment = $this->appointments->schedule($winner, $request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.key-handovers.show', $appointment)->with('success', 'Entrega de chaves agendada.');
@@ -50,7 +76,7 @@ class KeyHandoverAppointmentController extends Controller
 
     public function show(KeyHandoverAppointment $keyHandoverAppointment): View
     {
-        Gate::authorize('view', $keyHandoverAppointment);
+        Gate::authorize('viewBackoffice', $keyHandoverAppointment);
 
         $keyHandoverAppointment->load(['winnerRegistration', 'candidate', 'housingUnit']);
 
@@ -59,7 +85,7 @@ class KeyHandoverAppointmentController extends Controller
 
     public function update(UpdateKeyHandoverAppointmentRequest $request, KeyHandoverAppointment $keyHandoverAppointment): RedirectResponse
     {
-        Gate::authorize('update', $keyHandoverAppointment);
+        Gate::authorize('updateBackoffice', $keyHandoverAppointment);
 
         $this->appointments->update($keyHandoverAppointment, $request->validated(), $this->authenticatedUser($request));
 
@@ -68,7 +94,7 @@ class KeyHandoverAppointmentController extends Controller
 
     public function complete(CompleteKeyHandoverAppointmentRequest $request, KeyHandoverAppointment $keyHandoverAppointment): RedirectResponse
     {
-        Gate::authorize('update', $keyHandoverAppointment);
+        Gate::authorize('completeBackoffice', $keyHandoverAppointment);
 
         $this->appointments->complete($keyHandoverAppointment, $this->authenticatedUser($request), $request->validated('internal_notes'));
 
@@ -77,7 +103,7 @@ class KeyHandoverAppointmentController extends Controller
 
     public function cancel(CancelKeyHandoverAppointmentRequest $request, KeyHandoverAppointment $keyHandoverAppointment): RedirectResponse
     {
-        Gate::authorize('update', $keyHandoverAppointment);
+        Gate::authorize('cancelBackoffice', $keyHandoverAppointment);
 
         $this->appointments->cancel($keyHandoverAppointment, $this->authenticatedUser($request), (string) $request->validated('reason'));
 

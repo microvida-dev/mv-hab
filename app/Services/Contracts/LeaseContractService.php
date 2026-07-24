@@ -39,11 +39,36 @@ class LeaseContractService
      */
     public function createFromAllocation(Allocation $allocation, RentCalculation $calculation, ContractTemplate $template, User $actor, array $data): Contract
     {
-        $allocation->loadMissing(['application.adhesionRegistration', 'application.household', 'housingUnit', 'contestHousingUnit', 'activeOffer', 'program.municipality', 'contest']);
+        $allocationId = $allocation->getKey();
+        $calculationId = $calculation->getKey();
+        $templateId = $template->getKey();
 
-        $this->assertCanCreate($allocation, $calculation, $template);
+        return DB::transaction(function () use ($allocationId, $calculationId, $templateId, $actor, $data) {
+            /** @var Allocation $allocation */
+            $allocation = Allocation::query()
+                ->lockForUpdate()
+                ->with([
+                    'application.adhesionRegistration',
+                    'application.household',
+                    'housingUnit',
+                    'contestHousingUnit',
+                    'activeOffer',
+                    'program.municipality',
+                    'contest',
+                    'candidate',
+                ])
+                ->findOrFail($allocationId);
+            /** @var RentCalculation $calculation */
+            $calculation = RentCalculation::query()
+                ->lockForUpdate()
+                ->findOrFail($calculationId);
+            /** @var ContractTemplate $template */
+            $template = ContractTemplate::query()
+                ->lockForUpdate()
+                ->findOrFail($templateId);
 
-        return DB::transaction(function () use ($allocation, $calculation, $template, $actor, $data) {
+            $this->assertCanCreate($allocation, $calculation, $template);
+
             /** @var Application $application */
             $application = $allocation->getRelationValue('application');
             /** @var AdhesionRegistration|null $registration */
@@ -146,33 +171,68 @@ class LeaseContractService
      */
     public function updatePreparation(Contract $contract, array $data, User $actor): Contract
     {
-        if ($contract->status !== ContractStatus::Preparation) {
-            throw ValidationException::withMessages(['contract' => 'Só contratos em preparação podem ser editados nesta sprint.']);
-        }
+        return DB::transaction(function () use ($contract, $data, $actor): Contract {
+            /** @var Contract $locked */
+            $locked = Contract::query()
+                ->lockForUpdate()
+                ->findOrFail($contract->getKey());
 
-        $contract->fill($data);
-        $contract->forceFill(['updated_by' => $actor->id])->save();
-        $this->auditLogger->record(AuditEvents::UPDATE, $contract, 'contracts', 'lease_contract_update', 'Contrato em preparação atualizado.');
+            if ($locked->status !== ContractStatus::Preparation) {
+                throw ValidationException::withMessages([
+                    'contract' => 'Só contratos em preparação podem ser editados nesta sprint.',
+                ]);
+            }
 
-        return $contract->refresh();
+            $locked->fill($data);
+            $locked->forceFill(['updated_by' => $actor->id])->save();
+            $this->auditLogger->record(
+                AuditEvents::UPDATE,
+                $locked,
+                'contracts',
+                'lease_contract_update',
+                'Contrato em preparação atualizado.',
+                metadata: ['actor_id' => $actor->id],
+            );
+
+            return $locked->refresh();
+        });
     }
 
     public function issue(Contract $contract, User $actor, ?string $notes = null): Contract
     {
-        $contract->loadMissing(['deposit', 'generatedDocuments']);
+        return DB::transaction(function () use ($contract, $actor, $notes): Contract {
+            /** @var Contract $locked */
+            $locked = Contract::query()
+                ->lockForUpdate()
+                ->with(['deposit', 'generatedDocuments'])
+                ->findOrFail($contract->getKey());
 
-        if ($contract->generatedDocuments()->count() === 0) {
-            throw ValidationException::withMessages(['document' => 'Gere o documento contratual antes de emitir o contrato.']);
-        }
+            if ($locked->generatedDocuments->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'document' => 'Gere o documento contratual antes de emitir o contrato.',
+                ]);
+            }
 
-        if ($contract->deposit === null) {
-            throw ValidationException::withMessages(['deposit' => 'O contrato deve ter caução registada.']);
-        }
+            if ($locked->deposit === null) {
+                throw ValidationException::withMessages([
+                    'deposit' => 'O contrato deve ter caução registada.',
+                ]);
+            }
 
-        $issued = $this->statusService->transition($contract, ContractStatus::Issued, $actor, $notes);
-        $this->notificationService->issued($issued, $actor);
+            $wasIssued = $locked->status === ContractStatus::Issued;
+            $issued = $this->statusService->transition(
+                $locked,
+                ContractStatus::Issued,
+                $actor,
+                $notes,
+            );
 
-        return $issued;
+            if (! $wasIssued) {
+                $this->notificationService->issued($issued, $actor);
+            }
+
+            return $issued;
+        });
     }
 
     public function cancel(Contract $contract, User $actor, string $reason): Contract

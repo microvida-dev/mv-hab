@@ -25,31 +25,81 @@ class ContractActivationService
 
     public function activate(Contract $contract, User $actor, ?string $reason = null): Contract
     {
-        $contract->loadMissing(['deposit', 'validations', 'signatures', 'housingUnit', 'contestHousingUnit']);
-
-        if (! in_array($contract->status, [ContractStatus::Issued, ContractStatus::Signed], true)) {
-            throw ValidationException::withMessages(['contract' => 'O contrato deve estar emitido ou assinado para ativação.']);
-        }
-
-        if (! $contract->validations->contains(fn ($validation) => $validation->status === ContractValidationStatus::Approved)) {
-            throw ValidationException::withMessages(['validation' => 'A ativação exige validação interna aprovada.']);
-        }
-
-        if (! $contract->signatures->contains(fn ($signature) => $signature->status === ContractSignatureStatus::Signed)) {
-            throw ValidationException::withMessages(['signature' => 'A ativação exige assinatura ou registo manual assinado.']);
-        }
-
-        if ($contract->deposit && (float) $contract->deposit->amount > 0 && ! in_array($contract->deposit->status, [DepositStatus::Paid, DepositStatus::Waived], true)) {
-            throw ValidationException::withMessages(['deposit' => 'A caução deve estar paga manualmente ou dispensada antes da ativação.']);
-        }
-
         return DB::transaction(function () use ($contract, $actor, $reason) {
-            $active = $this->statusService->transition($contract, ContractStatus::Active, $actor, $reason);
+            /** @var Contract $locked */
+            $locked = Contract::query()
+                ->lockForUpdate()
+                ->with([
+                    'deposit',
+                    'validations',
+                    'signatures',
+                    'housingUnit',
+                    'contestHousingUnit',
+                ])
+                ->findOrFail($contract->getKey());
+
+            if ($locked->status === ContractStatus::Active) {
+                return $locked;
+            }
+
+            if (! in_array($locked->status, [
+                ContractStatus::Issued,
+                ContractStatus::Signed,
+                ContractStatus::Suspended,
+            ], true)) {
+                throw ValidationException::withMessages([
+                    'contract' => 'O contrato deve estar emitido, assinado ou suspenso para ativação.',
+                ]);
+            }
+
+            if (! $locked->validations->contains(
+                fn ($validation) => $validation->status === ContractValidationStatus::Approved,
+            )) {
+                throw ValidationException::withMessages([
+                    'validation' => 'A ativação exige validação interna aprovada.',
+                ]);
+            }
+
+            if (! $locked->signatures->contains(
+                fn ($signature) => $signature->status === ContractSignatureStatus::Signed,
+            )) {
+                throw ValidationException::withMessages([
+                    'signature' => 'A ativação exige assinatura ou registo manual assinado.',
+                ]);
+            }
+
+            if (
+                $locked->deposit
+                && (float) $locked->deposit->amount > 0
+                && ! in_array(
+                    $locked->deposit->status,
+                    [DepositStatus::Paid, DepositStatus::Waived],
+                    true,
+                )
+            ) {
+                throw ValidationException::withMessages([
+                    'deposit' => 'A caução deve estar paga manualmente ou dispensada antes da ativação.',
+                ]);
+            }
+
+            $active = $this->statusService->transition(
+                $locked,
+                ContractStatus::Active,
+                $actor,
+                $reason,
+            );
 
             $active->housingUnit?->forceFill(['status' => HousingUnitStatus::Occupied])->save();
             $active->contestHousingUnit?->forceFill(['status' => ContestHousingUnitStatus::Accepted])->save();
 
-            $this->auditLogger->record(AuditEvents::UPDATE, $active->housingUnit, 'contracts', 'housing_unit_contract_activation', 'Habitação marcada como ocupada por ativação contratual.');
+            $this->auditLogger->record(
+                AuditEvents::UPDATE,
+                $active->housingUnit,
+                'contracts',
+                'housing_unit_contract_activation',
+                'Habitação marcada como ocupada por ativação contratual.',
+                metadata: ['actor_id' => $actor->id],
+            );
             $this->notificationService->active($active, $actor);
 
             return $active->refresh();
