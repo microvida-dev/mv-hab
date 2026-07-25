@@ -65,6 +65,142 @@
         </div>
     </div>
 
+    <section class="rounded-2xl border border-ink-100 bg-ink-50/60 p-5">
+        <div>
+            <h2 class="text-sm font-semibold text-ink-900">
+                Submissões e períodos de referência
+            </h2>
+
+            <p class="mt-1 text-sm leading-6 text-ink-600">
+                Configure requisitos que exigem vários documentos,
+                como recibos de vencimento correspondentes a meses distintos.
+            </p>
+        </div>
+
+        <div class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div>
+                <x-input-label
+                    for="required_submissions"
+                    value="Número de submissões"
+                />
+
+                <x-text-input
+                    id="required_submissions"
+                    name="required_submissions"
+                    type="number"
+                    min="1"
+                    max="12"
+                    class="mt-1 block w-full"
+                    :value="old(
+                        'required_submissions',
+                        $requiredDocument?->required_submissions ?? 1,
+                    )"
+                    required
+                />
+
+                <x-input-error
+                    class="mt-2"
+                    :messages="$errors->get('required_submissions')"
+                />
+            </div>
+
+            <div>
+                <x-input-label
+                    for="reference_period_unit"
+                    value="Periodicidade"
+                />
+
+                <select
+                    id="reference_period_unit"
+                    name="reference_period_unit"
+                    class="mv-input mt-1 block w-full text-sm"
+                >
+                    <option value="">Sem período de referência</option>
+
+                    @foreach ($referencePeriodUnits as $value => $label)
+                        <option
+                            value="{{ $value }}"
+                            @selected(
+                                old(
+                                    'reference_period_unit',
+                                    $requiredDocument?->reference_period_unit?->value,
+                                ) === $value
+                            )
+                        >
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <x-input-error
+                    class="mt-2"
+                    :messages="$errors->get('reference_period_unit')"
+                />
+            </div>
+
+            <div>
+                <x-input-label
+                    for="reference_period_recency"
+                    value="Antiguidade máxima"
+                />
+
+                <x-text-input
+                    id="reference_period_recency"
+                    name="reference_period_recency"
+                    type="number"
+                    min="1"
+                    max="24"
+                    class="mt-1 block w-full"
+                    :value="old(
+                        'reference_period_recency',
+                        $requiredDocument?->reference_period_recency,
+                    )"
+                />
+
+                <p class="mt-2 text-xs leading-5 text-ink-500">
+                    Número máximo de períodos anteriores ao período atual.
+                </p>
+
+                <x-input-error
+                    class="mt-2"
+                    :messages="$errors->get('reference_period_recency')"
+                />
+            </div>
+
+            <label class="flex items-start gap-3 rounded-2xl border border-mvhab-support/30 bg-white p-4 text-sm text-ink-700">
+                <input
+                    type="hidden"
+                    name="requires_distinct_reference_periods"
+                    value="0"
+                >
+
+                <input
+                    type="checkbox"
+                    name="requires_distinct_reference_periods"
+                    value="1"
+                    class="mv-checkbox mt-0.5"
+                    @checked(
+                        old(
+                            'requires_distinct_reference_periods',
+                            $requiredDocument?->requires_distinct_reference_periods
+                                ?? false,
+                        )
+                    )
+                >
+
+                <span>
+                    <span class="block font-semibold text-ink-900">
+                        Exigir períodos distintos
+                    </span>
+
+                    <span class="mt-1 block text-xs leading-5 text-ink-500">
+                        Impede a utilização do mesmo mês em várias posições.
+                    </span>
+                </span>
+            </label>
+        </div>
+    </section>
+
     <div>
         <x-input-label for="instructions" value="Instruções para o candidato" />
         <textarea id="instructions" name="instructions" rows="3" class="mv-input mt-1 block w-full">{{ old('instructions', $requiredDocument?->instructions) }}</textarea>

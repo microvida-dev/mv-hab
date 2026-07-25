@@ -5,6 +5,7 @@ namespace App\Services\Documents;
 use App\Enums\AdhesionRegistrationStatus;
 use App\Enums\DocumentAccessAction;
 use App\Enums\DocumentAppliesTo;
+use App\Enums\DocumentReferencePeriodUnit;
 use App\Enums\DocumentStatus;
 use App\Models\AdhesionRegistration;
 use App\Models\Application;
@@ -20,6 +21,7 @@ use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\DocumentIntelligence\DocumentAiPipeline;
 use App\Support\AuditEvents;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -50,33 +52,118 @@ class DocumentUploadService
             ->where('is_active', true)
             ->whereKey($data['required_document_id'] ?? null)
             ->firstOrFail();
-        $application = $this->applicationFor($registration, $data['application_public_id'] ?? null);
+
+        $application = $this->applicationFor(
+            $registration,
+            $data['application_public_id'] ?? null,
+        );
+
         $this->ensureRuleScope($requiredDocument, $application);
-        $this->ensureTypeMatches($requiredDocument, (int) $data['document_type_id']);
+        $this->ensureTypeMatches(
+            $requiredDocument,
+            (int) $data['document_type_id'],
+        );
         $this->validateFile($requiredDocument, $file);
 
-        $target = $this->targetFor($registration, $requiredDocument->required_for, $data, $application);
-        $this->ensureNoActiveSubmission($registration, $requiredDocument, $target, $application);
+        $target = $this->targetFor(
+            $registration,
+            $requiredDocument->required_for,
+            $data,
+            $application,
+        );
 
-        $result = DB::transaction(function () use ($registration, $file, $data, $actor, $requiredDocument, $target, $application) {
-            $submission = new DocumentSubmission($this->safeSubmissionData($data));
+        $requirementInstance = $this->requirementInstanceFor(
+            $requiredDocument,
+            $data,
+        );
+
+        $referencePeriod = $this->referencePeriodFor(
+            $requiredDocument,
+            $data,
+        );
+
+        $result = DB::transaction(function () use (
+            $registration,
+            $file,
+            $data,
+            $actor,
+            $requiredDocument,
+            $target,
+            $application,
+            $requirementInstance,
+            $referencePeriod,
+        ) {
+
+            // Serializa uploads concorrentes do mesmo registo de adesão.
+            // A validação de duplicação deve ocorrer dentro da transação.
+            $lockedRegistration = AdhesionRegistration::query()
+                ->whereKey($registration->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->ensureNoActiveSubmission(
+                registration: $lockedRegistration,
+                requiredDocument: $requiredDocument,
+                target: $target,
+                application: $application,
+                requirementInstance: $requirementInstance,
+            );
+
+            $this->ensureDistinctReferencePeriod(
+                registration: $lockedRegistration,
+                requiredDocument: $requiredDocument,
+                targetColumns: $this->targetIdentityColumns(
+                    $requiredDocument->required_for,
+                    $target,
+                ),
+                applicationId: $application?->id,
+                referencePeriod: $referencePeriod,
+            );
+
+            $submission = new DocumentSubmission(
+                $this->safeSubmissionData($data),
+            );
+
             $submission->forceFill([
                 'document_type_id' => $requiredDocument->document_type_id,
                 'required_document_id' => $requiredDocument->id,
+                'requirement_instance' => $requirementInstance,
                 'user_id' => $actor->id,
                 'adhesion_registration_id' => $registration->id,
                 'status' => DocumentStatus::Submitted,
                 'submitted_at' => now(),
                 'submitted_by' => $actor->id,
                 'application_id' => $application?->id,
-                ...$this->targetColumns($requiredDocument->required_for, $target),
+                ...$this->targetColumns(
+                    $requiredDocument->required_for,
+                    $target,
+                ),
             ]);
+
             $submission->save();
 
-            $version = $this->storeVersion($submission, $file, 1, $actor, $data['notes'] ?? null);
-            $this->syncSubmissionFile($submission, $version, $data);
+            $version = $this->storeVersion(
+                submission: $submission,
+                file: $file,
+                versionNumber: 1,
+                actor: $actor,
+                notes: $data['notes'] ?? null,
+            );
 
-            $this->accessService->record($submission, DocumentAccessAction::Upload, $version, $actor);
+            $this->syncSubmissionFile(
+                submission: $submission,
+                version: $version,
+                data: $data,
+                referencePeriod: $referencePeriod,
+            );
+
+            $this->accessService->record(
+                $submission,
+                DocumentAccessAction::Upload,
+                $version,
+                $actor,
+            );
+
             $this->auditLogger->record(
                 event: AuditEvents::CREATE,
                 auditable: $submission,
@@ -87,12 +174,23 @@ class DocumentUploadService
                     'actor_id' => $actor->id,
                     'document_type_id' => $requiredDocument->document_type_id,
                     'required_document_id' => $requiredDocument->id,
+                    'requirement_instance' => $requirementInstance,
+                    'reference_period' => $referencePeriod?->toDateString(),
                     'version' => 1,
                 ],
             );
-            $this->scheduleDocumentAiAnalysis($submission, $actor);
 
-            return $submission->fresh(['documentType', 'requiredDocument', 'currentVersion', 'versions']);
+            $this->scheduleDocumentAiAnalysis(
+                $submission,
+                $actor,
+            );
+
+            return $submission->fresh([
+                'documentType',
+                'requiredDocument',
+                'currentVersion',
+                'versions',
+            ]);
         });
 
         assert($result instanceof DocumentSubmission);
@@ -120,7 +218,38 @@ class DocumentUploadService
         abort_if(! $requiredDocument instanceof RequiredDocument, 404);
         $this->validateFile($requiredDocument, $file);
 
-        $result = DB::transaction(function () use ($submission, $file, $data, $actor) {
+        $referencePeriod = $this->referencePeriodFor(
+            $requiredDocument,
+            $data,
+        );
+
+        $result = DB::transaction(function () use (
+            $submission,
+            $file,
+            $data,
+            $actor,
+            $registration,
+            $requiredDocument,
+            $referencePeriod,
+        ) {
+            AdhesionRegistration::query()
+                ->whereKey($registration->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->ensureDistinctReferencePeriod(
+                registration: $registration,
+                requiredDocument: $requiredDocument,
+                targetColumns: $this->submissionTargetIdentityColumns(
+                    $requiredDocument->required_for,
+                    $submission,
+                ),
+                applicationId: $submission->application_id,
+                referencePeriod: $referencePeriod,
+                excludedSubmission: $submission,
+            );
+
+            $previousReferencePeriod = $submission->reference_period?->toDateString();
             $previousStatus = $submission->status;
             $previousVersion = $submission->currentVersion;
             $nextVersion = ((int) $submission->versions()->max('version_number')) + 1;
@@ -130,7 +259,12 @@ class DocumentUploadService
             }
 
             $version = $this->storeVersion($submission, $file, $nextVersion, $actor, $data['notes'] ?? null);
-            $this->syncSubmissionFile($submission, $version, $data);
+            $this->syncSubmissionFile(
+                submission: $submission,
+                version: $version,
+                data: $data,
+                referencePeriod: $referencePeriod,
+            );
             $submission->forceFill([
                 'status' => DocumentStatus::Submitted,
                 'reviewed_at' => null,
@@ -154,6 +288,8 @@ class DocumentUploadService
                     'from_status' => $previousStatus->value,
                     'to_status' => DocumentStatus::Submitted->value,
                     'version' => $nextVersion,
+                    'from_reference_period' => $previousReferencePeriod,
+                    'to_reference_period' => $referencePeriod?->toDateString(),
                 ],
             );
             $this->scheduleDocumentAiAnalysis($submission, $actor);
@@ -223,8 +359,12 @@ class DocumentUploadService
     /**
      * @param  array{issue_date?: mixed, expiry_date?: mixed}  $data
      */
-    private function syncSubmissionFile(DocumentSubmission $submission, DocumentVersion $version, array $data): void
-    {
+    private function syncSubmissionFile(
+        DocumentSubmission $submission,
+        DocumentVersion $version,
+        array $data,
+        ?CarbonImmutable $referencePeriod,
+    ): void {
         $submission->forceFill([
             'original_filename' => $version->original_filename,
             'stored_filename' => $version->stored_filename,
@@ -234,6 +374,7 @@ class DocumentUploadService
             'file_size' => $version->file_size,
             'checksum' => $version->checksum,
             'current_version_id' => $version->id,
+            'reference_period' => $referencePeriod?->toDateString(),
             'issue_date' => $data['issue_date'] ?? null,
             'expiry_date' => $data['expiry_date'] ?? null,
         ]);
@@ -339,32 +480,263 @@ class DocumentUploadService
         RequiredDocument $requiredDocument,
         Model $target,
         ?Application $application,
+        int $requirementInstance,
     ): void {
         $query = $registration->documentSubmissions()
             ->where('required_document_id', $requiredDocument->id)
+            ->where('requirement_instance', $requirementInstance)
             ->whereNotIn('status', [
                 DocumentStatus::Cancelled->value,
                 DocumentStatus::Replaced->value,
             ]);
 
         if ($application !== null) {
-            $query->where('application_id', $application->id);
+            $query->where(
+                'application_id',
+                $application->id,
+            );
         }
 
         match ($requiredDocument->required_for) {
-            DocumentAppliesTo::Household => $query->where('household_id', $target->getKey()),
-            DocumentAppliesTo::HouseholdMember => $query->where('household_member_id', $target->getKey()),
-            DocumentAppliesTo::IncomeRecord => $query->where('income_record_id', $target->getKey()),
-            DocumentAppliesTo::CurrentHousingSituation => $query->where('current_housing_situation_id', $target->getKey()),
-            DocumentAppliesTo::Application => $query->where('application_id', $target->getKey()),
+            DocumentAppliesTo::Household => $query
+                ->where(
+                    'household_id',
+                    $target->getKey(),
+                ),
+
+            DocumentAppliesTo::HouseholdMember => $query
+                ->where(
+                    'household_member_id',
+                    $target->getKey(),
+                ),
+
+            DocumentAppliesTo::IncomeRecord => $query
+                ->where(
+                    'income_record_id',
+                    $target->getKey(),
+                ),
+
+            DocumentAppliesTo::CurrentHousingSituation => $query
+                ->where(
+                    'current_housing_situation_id',
+                    $target->getKey(),
+                ),
+
+            DocumentAppliesTo::Application => $query
+                ->where(
+                    'application_id',
+                    $target->getKey(),
+                ),
+
             default => null,
         };
 
         if ($query->exists()) {
             throw ValidationException::withMessages([
-                'required_document_id' => 'Já existe uma submissão ativa para este documento. Use a substituição.',
+                'requirement_instance' => 'Já existe uma submissão ativa para esta posição documental. Use a substituição.',
             ]);
         }
+    }
+
+    /**
+     * @param  array{requirement_instance?: mixed}  $data
+     */
+    private function requirementInstanceFor(
+        RequiredDocument $requiredDocument,
+        array $data,
+    ): int {
+        $requiredSubmissions = max(
+            1,
+            (int) $requiredDocument->required_submissions,
+        );
+
+        $requirementInstance = (int) (
+            $data['requirement_instance'] ?? 1
+        );
+
+        if ($requirementInstance < 1
+            || $requirementInstance > $requiredSubmissions) {
+            throw ValidationException::withMessages([
+                'requirement_instance' => 'A posição documental selecionada não é válida para este requisito.',
+            ]);
+        }
+
+        return $requirementInstance;
+    }
+
+    /**
+     * @param  array{reference_period?: mixed}  $data
+     */
+    private function referencePeriodFor(
+        RequiredDocument $requiredDocument,
+        array $data,
+    ): ?CarbonImmutable {
+        if ($requiredDocument->reference_period_unit
+            !== DocumentReferencePeriodUnit::Month) {
+            return null;
+        }
+
+        $value = $data['reference_period'] ?? null;
+
+        if (! is_string($value)
+            || preg_match('/^\d{4}-(0[1-9]|1[0-2])$/D', $value) !== 1) {
+            throw ValidationException::withMessages([
+                'reference_period' => 'Indique o mês de referência deste documento.',
+            ]);
+        }
+
+        $timezone = (string) config('app.timezone', 'UTC');
+
+        $parsedReferencePeriod = CarbonImmutable::createFromFormat(
+            '!Y-m',
+            $value,
+            $timezone,
+        );
+
+        if (! $parsedReferencePeriod instanceof CarbonImmutable) {
+            throw ValidationException::withMessages([
+                'reference_period' => 'O mês de referência indicado não é válido.',
+            ]);
+        }
+
+        $referencePeriod = $parsedReferencePeriod->startOfMonth();
+
+        $currentMonth = CarbonImmutable::now($timezone)
+            ->startOfMonth();
+
+        if ($referencePeriod->greaterThan($currentMonth)) {
+            throw ValidationException::withMessages([
+                'reference_period' => 'O período de referência não pode ser posterior ao mês atual.',
+            ]);
+        }
+
+        $recency = $requiredDocument->reference_period_recency;
+
+        if ($recency !== null) {
+            $earliestAllowedMonth = $currentMonth
+                ->subMonthsNoOverflow(max(0, (int) $recency));
+
+            if ($referencePeriod->lessThan($earliestAllowedMonth)) {
+                throw ValidationException::withMessages([
+                    'reference_period' => 'O período indicado excede a antiguidade máxima configurada para este documento.',
+                ]);
+            }
+        }
+
+        return $referencePeriod;
+    }
+
+    /**
+     * @param  array<string, int|string|null>  $targetColumns
+     */
+    private function ensureDistinctReferencePeriod(
+        AdhesionRegistration $registration,
+        RequiredDocument $requiredDocument,
+        array $targetColumns,
+        ?int $applicationId,
+        ?CarbonImmutable $referencePeriod,
+        ?DocumentSubmission $excludedSubmission = null,
+    ): void {
+        if ($referencePeriod === null
+            || ! $requiredDocument->requires_distinct_reference_periods) {
+            return;
+        }
+
+        $query = $registration->documentSubmissions()
+            ->where('required_document_id', $requiredDocument->id)
+            ->whereDate(
+                'reference_period',
+                $referencePeriod->toDateString(),
+            )
+            ->whereNotIn('status', [
+                DocumentStatus::Cancelled->value,
+                DocumentStatus::Replaced->value,
+            ]);
+
+        if ($requiredDocument->program_id !== null
+            || $requiredDocument->contest_id !== null
+            || $requiredDocument->required_for
+                === DocumentAppliesTo::Application) {
+            $query->where('application_id', $applicationId);
+        }
+
+        foreach ($targetColumns as $column => $value) {
+            $query->where($column, $value);
+        }
+
+        if ($excludedSubmission instanceof DocumentSubmission) {
+            $query->whereKeyNot($excludedSubmission->id);
+        }
+
+        if ($query->exists()) {
+            throw ValidationException::withMessages([
+                'reference_period' => 'Já existe um documento ativo para este período de referência.',
+            ]);
+        }
+    }
+
+    /**
+     * @return array<string, int|string|null>
+     */
+    private function targetIdentityColumns(
+        DocumentAppliesTo $appliesTo,
+        Model $target,
+    ): array {
+        return match ($appliesTo) {
+            DocumentAppliesTo::Household => [
+                'household_id' => $target->getKey(),
+            ],
+
+            DocumentAppliesTo::HouseholdMember => [
+                'household_member_id' => $target->getKey(),
+            ],
+
+            DocumentAppliesTo::IncomeRecord => [
+                'income_record_id' => $target->getKey(),
+            ],
+
+            DocumentAppliesTo::CurrentHousingSituation => [
+                'current_housing_situation_id' => $target->getKey(),
+            ],
+
+            DocumentAppliesTo::Application => [
+                'application_id' => $target->getKey(),
+            ],
+
+            default => [],
+        };
+    }
+
+    /**
+     * @return array<string, int|string|null>
+     */
+    private function submissionTargetIdentityColumns(
+        DocumentAppliesTo $appliesTo,
+        DocumentSubmission $submission,
+    ): array {
+        return match ($appliesTo) {
+            DocumentAppliesTo::Household => [
+                'household_id' => $submission->household_id,
+            ],
+
+            DocumentAppliesTo::HouseholdMember => [
+                'household_member_id' => $submission->household_member_id,
+            ],
+
+            DocumentAppliesTo::IncomeRecord => [
+                'income_record_id' => $submission->income_record_id,
+            ],
+
+            DocumentAppliesTo::CurrentHousingSituation => [
+                'current_housing_situation_id' => $submission->current_housing_situation_id,
+            ],
+
+            DocumentAppliesTo::Application => [
+                'application_id' => $submission->application_id,
+            ],
+
+            default => [],
+        };
     }
 
     /**

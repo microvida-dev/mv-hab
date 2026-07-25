@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\DocumentAppliesTo;
+use App\Enums\DocumentReferencePeriodUnit;
 use App\Enums\HousingStatus;
 use App\Enums\IncomeSourceType;
 use App\Enums\RequiredDocumentConditionOperator;
@@ -32,8 +33,33 @@ class RequiredDocumentSeeder extends Seeder
             ['recibo_renda', DocumentAppliesTo::CurrentHousingSituation, 'current_housing_situation.current_monthly_rent', RequiredDocumentConditionOperator::Exists, null, 'Obrigatório quando existe renda mensal declarada.'],
             ['declaracao_honra', DocumentAppliesTo::AdhesionRegistration, 'always', RequiredDocumentConditionOperator::Always, null, 'Declaração sob compromisso de honra para preparação do processo.'],
         ])->each(function (array $definition, int $index) {
-            [$documentCode, $requiredFor, $conditionKey, $operator, $conditionValue, $instructions] = $definition;
-            $documentType = DocumentType::query()->where('code', $documentCode)->firstOrFail();
+            [
+                $documentCode,
+                $requiredFor,
+                $conditionKey,
+                $operator,
+                $conditionValue,
+                $instructions,
+            ] = $definition;
+
+            $documentType = DocumentType::query()
+                ->where('code', $documentCode)
+                ->firstOrFail();
+
+            $isRepeatablePayslip =
+                $documentCode === 'recibos_vencimento';
+
+            $repeatableConfiguration = [
+                'required_submissions' => $isRepeatablePayslip ? 3 : 1,
+
+                'reference_period_unit' => $isRepeatablePayslip
+                    ? DocumentReferencePeriodUnit::Month->value
+                    : null,
+
+                'requires_distinct_reference_periods' => $isRepeatablePayslip,
+
+                'reference_period_recency' => $isRepeatablePayslip ? 3 : null,
+            ];
 
             RequiredDocument::query()->updateOrCreate(
                 [
@@ -48,8 +74,11 @@ class RequiredDocumentSeeder extends Seeder
                 [
                     'is_required' => true,
                     'is_active' => true,
-                    'instructions' => $instructions,
+                    'instructions' => $isRepeatablePayslip
+                        ? 'Submeta os três recibos de vencimento mais recentes disponíveis, relativos a meses distintos.'
+                        : $instructions,
                     'sort_order' => ($index + 1) * 10,
+                    ...$repeatableConfiguration,
                 ],
             );
         });

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DocumentAppliesTo;
+use App\Enums\DocumentReferencePeriodUnit;
 use App\Enums\RequiredDocumentConditionOperator;
 use Database\Factories\RequiredDocumentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,6 +25,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $is_active
  * @property string|null $instructions
  * @property-read DocumentType|null $documentType
+ * @property int $required_submissions
+ * @property DocumentReferencePeriodUnit|null $reference_period_unit
+ * @property bool $requires_distinct_reference_periods
+ * @property int|null $reference_period_recency
  */
 class RequiredDocument extends Model
 {
@@ -40,6 +45,10 @@ class RequiredDocument extends Model
         'condition_value',
         'is_required',
         'is_active',
+        'required_submissions',
+        'reference_period_unit',
+        'requires_distinct_reference_periods',
+        'reference_period_recency',
         'instructions',
         'sort_order',
     ];
@@ -51,6 +60,10 @@ class RequiredDocument extends Model
             'condition_operator' => RequiredDocumentConditionOperator::class,
             'is_required' => 'boolean',
             'is_active' => 'boolean',
+            'required_submissions' => 'integer',
+            'reference_period_unit' => DocumentReferencePeriodUnit::class,
+            'requires_distinct_reference_periods' => 'boolean',
+            'reference_period_recency' => 'integer',
             'sort_order' => 'integer',
         ];
     }

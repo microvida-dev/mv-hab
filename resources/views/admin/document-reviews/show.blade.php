@@ -26,6 +26,30 @@
                         <h2 class="text-base font-semibold text-ink-900">Detalhe do documento</h2>
 
                         <dl class="mt-5 grid gap-4 sm:grid-cols-2">
+                            @if (($submission->requiredDocument?->required_submissions ?? 1) > 1)
+                                <div>
+                                    <dt class="text-xs font-semibold uppercase text-ink-500">
+                                        Posição documental
+                                    </dt>
+
+                                    <dd class="mt-1 font-semibold text-ink-900">
+                                        {{ $submission->requirement_instance }}/{{ $submission->requiredDocument->required_submissions }}
+                                    </dd>
+                                </div>
+                            @endif
+
+                            @if ($submission->reference_period)
+                                <div>
+                                    <dt class="text-xs font-semibold uppercase text-ink-500">
+                                        Período de referência
+                                    </dt>
+
+                                    <dd class="mt-1 font-semibold text-ink-900">
+                                        {{ $submission->reference_period->translatedFormat('F Y') }}
+                                    </dd>
+                                </div>
+                            @endif
+
                             <div>
                                 <dt class="text-xs font-semibold uppercase text-ink-500">Estado</dt>
                                 <dd class="mt-1 font-semibold text-ink-900">{{ $submission->status->label() }}</dd>

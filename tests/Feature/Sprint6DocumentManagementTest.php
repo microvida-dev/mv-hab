@@ -305,6 +305,7 @@ class Sprint6DocumentManagementTest extends TestCase
                 'required_for' => DocumentAppliesTo::AdhesionRegistration->value,
                 'condition_key' => 'always',
                 'condition_operator' => 'always',
+                'required_submissions' => 1,
                 'is_required' => true,
                 'is_active' => true,
             ])

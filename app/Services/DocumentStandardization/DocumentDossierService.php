@@ -58,9 +58,25 @@ class DocumentDossierService
                 ]);
                 $record->forceFill([
                     'document_dossier_id' => $dossier->id,
+
                     'document_submission_id' => $item['document_submission_id'],
+
                     'required_document_id' => $item['required_document_id'],
+
                     'document_type_id' => $item['document_type_id'],
+
+                    'target_type' => $item['target_type'],
+
+                    'target_id' => $item['target_id'],
+
+                    'target_label' => $item['target_label'],
+
+                    'requirement_instance' => $item['requirement_instance'],
+
+                    'required_submissions' => $item['required_submissions'],
+
+                    'reference_period' => $item['reference_period'],
+
                     'status' => $item['status'],
                     'sort_order' => $item['sort_order'],
                     'is_required' => $item['is_required'],
