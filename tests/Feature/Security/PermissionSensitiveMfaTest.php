@@ -126,7 +126,12 @@ class PermissionSensitiveMfaTest extends TestCase
         $this->assertTrue($mfa->requiresMfa($exporter));
         $this->assertTrue($mfa->requiresMfa($technician));
         $this->assertTrue($mfa->requiresMfa($manual->refresh()));
-        $this->assertFalse($mfa->requiresMfa($support));
+        $this->assertTrue(
+            $support->hasPermission('visits.confirm'),
+        );
+        $this->assertTrue(
+            $mfa->requiresMfa($support),
+        );
     }
 
     /** @param list<string> $permissionNames */
@@ -155,7 +160,12 @@ class PermissionSensitiveMfaTest extends TestCase
 
         return $this->customRoleFromIds(
             $name,
-            array_map(fn ($id): int => (int) $id, $ids),
+            array_values(
+                array_map(
+                    static fn ($id): int => (int) $id,
+                    $ids,
+                ),
+            ),
             $active,
             $municipality,
         );
