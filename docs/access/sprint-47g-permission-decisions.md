@@ -13,8 +13,8 @@
 |---|---:|
 | Rotas reconciliadas | 96 |
 | Permissions finais únicas | 68 |
-| Permissions existentes | 11 |
-| Permissions novas | 57 |
+| Permissions existentes | 12 |
+| Permissions novas | 56 |
 | Leituras | 43 |
 | Mutações | 53 |
 | Manutenção | 51 |
@@ -44,6 +44,7 @@ Não são introduzidos novos `FeatureKey` na Sprint 47G.
 - `inspections.update`
 - `inspections.view`
 - `maintenance_requests.create`
+- `maintenance_requests.delete`
 - `maintenance_requests.reject`
 - `maintenance_requests.update`
 - `maintenance_requests.view`
@@ -93,7 +94,6 @@ Não são introduzidos novos `FeatureKey` na Sprint 47G.
 - `maintenance.suppliers.view`
 - `maintenance_requests.cancel`
 - `maintenance_requests.close`
-- `maintenance_requests.delete`
 - `maintenance_requests.resolve`
 - `maintenance_requests.review`
 - `maintenance_requests.schedule`
@@ -308,7 +308,7 @@ Não são introduzidos novos `FeatureKey` na Sprint 47G.
 - `maintenance-requests.create` → `createBackoffice`
 - `maintenance-requests.store` → `createBackoffice`
 
-### `maintenance_requests.delete` — new
+### `maintenance_requests.delete` — existing
 
 - `maintenance-requests.destroy` → `deleteBackoffice`
 
@@ -489,7 +489,7 @@ Não são introduzidos novos `FeatureKey` na Sprint 47G.
 | maintenance | `backoffice.maintenance.suppliers.update` | mutation | `maintenance.suppliers.update` | new | `App\Policies\MaintenanceSupplierPolicy` | `updateBackoffice` | Sim | required | Sim |
 | maintenance | `backoffice.properties.technical-history` | read | `housing_units.view` | existing | `App\Policies\HousingUnitPolicy` | `viewBackoffice` | Sim | recommended | Sim |
 | maintenance | `maintenance-requests.create` | read | `maintenance_requests.create` | existing | `App\Policies\MaintenanceRequestPolicy` | `createBackoffice` | Sim | recommended | Sim |
-| maintenance | `maintenance-requests.destroy` | mutation | `maintenance_requests.delete` | new | `App\Policies\MaintenanceRequestPolicy` | `deleteBackoffice` | Sim | required | Sim |
+| maintenance | `maintenance-requests.destroy` | mutation | `maintenance_requests.delete` | existing | `App\Policies\MaintenanceRequestPolicy` | `deleteBackoffice` | Sim | required | Sim |
 | maintenance | `maintenance-requests.edit` | read | `maintenance_requests.update` | existing | `App\Policies\MaintenanceRequestPolicy` | `updateBackoffice` | Sim | recommended | Sim |
 | maintenance | `maintenance-requests.index` | read | `maintenance_requests.view` | existing | `App\Policies\MaintenanceRequestPolicy` | `viewAnyBackoffice` | Sim | recommended | Sim |
 | maintenance | `maintenance-requests.show` | read | `maintenance_requests.view` | existing | `App\Policies\MaintenanceRequestPolicy` | `viewBackoffice` | Sim | recommended | Sim |

@@ -35,7 +35,18 @@
       "maintenance_categories": "híbrido explícito: is_system ou municipality_id",
       "inspection_checklist_templates": "híbrido explícito: is_system ou municipality_id",
       "maintenance_suppliers": "municipal por municipality_id; nulo fail-closed"
-    }
+    },
+    "permission_origin_corrections": [
+      {
+        "permission": "maintenance_requests.delete",
+        "route": "maintenance-requests.destroy",
+        "previous_origin": "new",
+        "resolved_origin": "existing",
+        "reason": "A permission já existe em config/mvhab.php e na tabela permissions; a matriz inicial omitiu-a do conjunto EXISTING_PERMISSIONS.",
+        "route_universe_changed": false,
+        "resolved_permission_changed": false
+      }
+    ]
   },
   "summary": {
     "expected_total": 96,
@@ -53,8 +64,8 @@
     "initial_form_requests_always_true": 32,
     "initial_mutation_audit_gaps": 17,
     "final_unique_permissions": 68,
-    "final_existing_unique_permissions": 11,
-    "final_new_unique_permissions": 57,
+    "final_existing_unique_permissions": 12,
+    "final_new_unique_permissions": 56,
     "critical_downloads_reclassified_private": 3,
     "feature_decision": "Sem FeatureKey adequada; não reutilizar features de candidaturas e não expandir entitlements comerciais na Sprint 47G"
   },
@@ -3691,7 +3702,7 @@
       "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
       "initial_permission_suggestion": "maintenance_requests.delete",
       "resolved_permission": "maintenance_requests.delete",
-      "permission_origin": "new",
+      "permission_origin": "existing",
       "initial_feature_candidate": null,
       "resolved_feature": null,
       "resolved_policy": "App\\Policies\\MaintenanceRequestPolicy",
@@ -3718,7 +3729,8 @@
       "reconciliation_amendments": [
         "permission reconciliada para maintenance_requests.delete",
         "ability reconciliada para deleteBackoffice",
-        "scope municipal fail-closed obrigatório antes de query, paginação, download ou mutação"
+        "scope municipal fail-closed obrigatório antes de query, paginação, download ou mutação",
+        "origem reconciliada de new para existing: maintenance_requests.delete já constava do catálogo declarativo e persistido no commit de origem"
       ]
     },
     {

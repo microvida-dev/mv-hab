@@ -70,8 +70,8 @@ slot ou confirmar uma visita.
 O catálogo final contém:
 
 - **68** permissions únicas;
-- **11** permissions reutilizadas;
-- **57** permissions novas.
+- **12** permissions reutilizadas;
+- **56** permissions novas.
 
 As abilities de backoffice usam nomes explícitos, como:
 
