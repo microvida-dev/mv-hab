@@ -21,7 +21,10 @@ use Illuminate\Support\Collection;
 
 class DocumentChecklistService
 {
-    public function __construct(private readonly RequiredDocumentEvaluator $evaluator) {}
+    public function __construct(
+        private readonly RequiredDocumentEvaluator $evaluator,
+        private readonly RequiredDocumentResolver $resolver,
+    ) {}
 
     /** @return array<string, mixed> */
     public function forRegistration(
@@ -47,26 +50,10 @@ class DocumentChecklistService
             ? $application->contest_id
             : ($contest instanceof Contest ? $contest->id : null);
 
-        $rules = RequiredDocument::query()
-            ->with('documentType')
-            ->where('is_active', true)
-            ->whereHas('documentType', fn ($query) => $query->where('is_active', true))
-            ->when(
-                $application || $programId || $contestId,
-                fn ($query) => $query
-                    ->where(fn ($scope) => $scope
-                        ->whereNull('program_id')
-                        ->orWhere('program_id', $programId))
-                    ->where(fn ($scope) => $scope
-                        ->whereNull('contest_id')
-                        ->orWhere('contest_id', $contestId)),
-                fn ($query) => $query
-                    ->whereNull('program_id')
-                    ->whereNull('contest_id'),
-            )
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
+        $rules = $this->resolver->resolve(
+            programId: $programId,
+            contestId: $contestId,
+        );
 
         $items = $rules
             ->flatMap(fn (RequiredDocument $rule) => $this->itemsForRule($registration, $rule, $application))

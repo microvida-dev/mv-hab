@@ -122,6 +122,7 @@ class DocumentConfigurationPermissionAccessTest extends TestCase
             'condition_key' => 'application.is_submitted',
             'condition_operator' => RequiredDocumentConditionOperator::IsTrue->value,
             'condition_value' => null,
+            'required_submissions' => 1,
             'is_required' => true,
             'is_active' => true,
             'instructions' => 'Documento obrigatório após submissão.',

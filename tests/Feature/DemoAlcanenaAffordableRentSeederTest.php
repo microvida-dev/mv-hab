@@ -101,7 +101,7 @@ class DemoAlcanenaAffordableRentSeederTest extends TestCase
         $this->assertSame(4, $scoring->tieBreakerRules()->count());
 
         $this->assertSame(11, DocumentType::query()->where('code', 'like', 'alcanena_%')->count());
-        $this->assertSame(11, RequiredDocument::query()->where('contest_id', $contest->id)->count());
+        $this->assertSame(12, RequiredDocument::query()->where('contest_id', $contest->id)->count());
         $this->assertSame(4, ContestHousingUnit::query()->where('contest_id', $contest->id)->count());
         $this->assertSame(4, TypologyAdequacyRule::query()->where('contest_id', $contest->id)->count());
         $this->assertSame(1, AllocationRuleSet::query()->where('contest_id', $contest->id)->count());

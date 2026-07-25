@@ -12,6 +12,7 @@ use App\Models\HouseholdMember;
 use App\Models\IncomeRecord;
 use App\Models\IncomeSource;
 use App\Services\Audit\AuditLogger;
+use App\Services\Documents\DocumentSubmissionContextResolver;
 use App\Support\AuditEvents;
 use BackedEnum;
 use Carbon\CarbonInterface;
@@ -21,7 +22,10 @@ use Illuminate\Validation\ValidationException;
 
 class ApplicationSnapshotService
 {
-    public function __construct(private readonly AuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly DocumentSubmissionContextResolver $documentContext,
+    ) {}
 
     public function create(Application $application): void
     {
@@ -33,6 +37,14 @@ class ApplicationSnapshotService
             'currentHousingSituation',
             'applicationDocuments.documentSubmission.currentVersion',
             'applicationDocuments.documentType',
+            'applicationDocuments.documentSubmission.requiredDocument',
+            'applicationDocuments.documentSubmission.adhesionRegistration',
+            'applicationDocuments.documentSubmission.household',
+            'applicationDocuments.documentSubmission.householdMember',
+            'applicationDocuments.documentSubmission.incomeRecord.incomeSource',
+            'applicationDocuments.documentSubmission.currentHousingSituation',
+            'applicationDocuments.documentSubmission.application',
+            'applicationDocuments.documentSubmission.contract',
             'contest',
             'program',
         ]);
@@ -125,9 +137,27 @@ class ApplicationSnapshotService
                     $documentSubmission = $document->getRelationValue('documentSubmission');
                     /** @var DocumentVersion|null $currentVersion */
                     $currentVersion = $documentSubmission->getRelationValue('currentVersion');
+                    $context = $this->documentContext->resolve(
+                        $documentSubmission,
+                    );
 
                     return [
                         'document_submission_id' => $document->document_submission_id,
+                        'required_document_id' => $context['required_document_id'],
+
+                        'target_type' => $context['target_type'],
+
+                        'target_id' => $context['target_id'],
+
+                        'target_label' => $context['target_label'],
+
+                        'requirement_instance' => $context['requirement_instance'],
+
+                        'required_submissions' => $context['required_submissions'],
+
+                        'position_label' => $context['position_label'],
+
+                        'reference_period' => $context['reference_period'],
                         'document_type_code' => $documentType->code,
                         'document_type_name' => $documentType->name,
                         'is_required' => $document->is_required,

@@ -7,7 +7,16 @@ use Database\Factories\DocumentDossierItemFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property string|null $target_type
+ * @property int|null $target_id
+ * @property string|null $target_label
+ * @property int $requirement_instance
+ * @property int $required_submissions
+ * @property Carbon|null $reference_period
+ */
 class DocumentDossierItem extends Model
 {
     /** @use HasFactory<DocumentDossierItemFactory> */
@@ -24,12 +33,32 @@ class DocumentDossierItem extends Model
         return [
             'status' => DocumentDossierItemStatus::class,
             'sort_order' => 'integer',
+            'target_id' => 'integer',
+            'requirement_instance' => 'integer',
+            'required_submissions' => 'integer',
+            'reference_period' => 'date',
             'is_required' => 'boolean',
             'is_missing' => 'boolean',
             'is_rejected' => 'boolean',
             'is_expired' => 'boolean',
             'is_validated' => 'boolean',
         ];
+    }
+
+    public function positionLabel(): ?string
+    {
+        if ($this->required_submissions <= 1) {
+            return null;
+        }
+
+        return $this->requirement_instance
+            .'/'
+            .$this->required_submissions;
+    }
+
+    public function referencePeriodLabel(): ?string
+    {
+        return $this->reference_period?->format('m/Y');
     }
 
     /** @return BelongsTo<DocumentDossier, $this> */

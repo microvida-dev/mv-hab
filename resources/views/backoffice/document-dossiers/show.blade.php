@@ -55,10 +55,56 @@
                                 <summary class="cursor-pointer text-sm font-semibold text-mvhab-primary">Ver itens normalizados</summary>
                                 <div class="mt-3 overflow-x-auto">
                                     <table class="mv-table">
-                                        <thead><tr><th>Documento</th><th>Estado</th><th>Observações</th></tr></thead>
+                                        <thead>
+                                            <tr>
+                                                <th>Documento</th>
+                                                <th>Âmbito</th>
+                                                <th>Posição</th>
+                                                <th>Período</th>
+                                                <th>Estado</th>
+                                                <th>Observações</th>
+                                            </tr>
+                                        </thead>
+
                                         <tbody>
                                             @foreach ($dossier->items as $item)
-                                                <tr><td>{{ $item->label }}</td><td>{{ $item->status->label() }}</td><td>{{ $item->notes ?? '—' }}</td></tr>
+                                                <tr>
+                                                    <td>
+                                                        <p class="font-semibold text-ink-900">
+                                                            {{ $item->label }}
+                                                        </p>
+
+                                                        <p class="mt-1 text-xs text-ink-500">
+                                                            {{ $item->category }}
+                                                        </p>
+                                                    </td>
+
+                                                    <td>
+                                                        {{ $item->target_label ?? '—' }}
+                                                    </td>
+
+                                                    <td>
+                                                        @if ($item->positionLabel())
+                                                            <span class="font-mono text-xs font-semibold">
+                                                                {{ $item->positionLabel() }}
+                                                            </span>
+                                                        @else
+                                                            —
+                                                        @endif
+                                                    </td>
+
+                                                    <td>
+                                                        {{ $item->referencePeriodLabel() ?? '—' }}
+                                                    </td>
+
+                                                    <td>
+                                                        {{ $item->status->label() }}
+                                                    </td>
+
+                                                    <td>
+                                                        {{ $item->notes ?? '—' }}
+                                                    </td>
+                                                </tr>
                                             @endforeach
                                         </tbody>
                                     </table>

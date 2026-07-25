@@ -86,7 +86,7 @@ class QA43AlcanenaLegalParameterizationTest extends TestCase
             $this->assertContains($code, $codes);
         }
 
-        $this->assertSame(11, RequiredDocument::query()->where('contest_id', $contest->id)->count());
+        $this->assertSame(12, RequiredDocument::query()->where('contest_id', $contest->id)->count());
         $this->assertDatabaseHas('required_documents', [
             'contest_id' => $contest->id,
             'condition_key' => 'household_member.is_pregnant',
