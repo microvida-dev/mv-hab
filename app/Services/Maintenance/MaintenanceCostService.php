@@ -5,11 +5,11 @@ namespace App\Services\Maintenance;
 use App\Enums\MaintenanceCostStatus;
 use App\Enums\MaintenanceCostType;
 use App\Enums\TechnicalHistoryEventType;
-use App\Models\HousingUnit;
 use App\Models\MaintenanceCost;
 use App\Models\MaintenanceRequest;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\OperationalMunicipalContextService;
 use App\Services\Properties\PropertyTechnicalHistoryService;
 use App\Support\AuditEvents;
 use Illuminate\Validation\ValidationException;
@@ -19,6 +19,7 @@ class MaintenanceCostService
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly PropertyTechnicalHistoryService $history,
+        private readonly OperationalMunicipalContextService $municipalContext,
     ) {}
 
     /**
@@ -26,12 +27,53 @@ class MaintenanceCostService
      */
     public function store(MaintenanceRequest $request, User $actor, array $data): MaintenanceCost
     {
+        $housingUnit = $this->municipalContext
+            ->maintenanceRequestHousingUnit(
+                $actor,
+                $request,
+            );
+
+        $contract = $this->municipalContext
+            ->contractForHousingUnit(
+                $request->lease_contract_id,
+                $housingUnit,
+            );
+
+        $intervention = $this->municipalContext
+            ->interventionForRequest(
+                $data['maintenance_intervention_id'] ?? null,
+                $request,
+            );
+
+        $maintenanceSupplierId = $data[
+            'maintenance_supplier_id'
+        ] ?? null;
+
+        $supplierAliasId = $data['supplier_id'] ?? null;
+
+        if (
+            $maintenanceSupplierId !== null
+            && $supplierAliasId !== null
+            && (string) $maintenanceSupplierId
+                !== (string) $supplierAliasId
+        ) {
+            throw ValidationException::withMessages([
+                'maintenance_supplier_id' => 'Os identificadores de fornecedor não coincidem.',
+            ]);
+        }
+
+        $supplier = $this->municipalContext
+            ->supplierForHousingUnit(
+                $maintenanceSupplierId ?? $supplierAliasId,
+                $housingUnit,
+            );
+
         $cost = MaintenanceCost::query()->create([
             'maintenance_request_id' => $request->id,
-            'maintenance_intervention_id' => $data['maintenance_intervention_id'] ?? null,
-            'housing_unit_id' => $request->housing_unit_id,
-            'lease_contract_id' => $request->lease_contract_id,
-            'maintenance_supplier_id' => $data['maintenance_supplier_id'] ?? $data['supplier_id'] ?? null,
+            'maintenance_intervention_id' => $intervention?->id,
+            'housing_unit_id' => $housingUnit->id,
+            'lease_contract_id' => $contract?->id,
+            'maintenance_supplier_id' => $supplier?->id,
             'cost_type' => $this->costTypeFromData($data),
             'description' => $data['description'],
             'amount' => $data['amount'],
@@ -42,12 +84,21 @@ class MaintenanceCostService
             'registered_by' => $actor->id,
             'registered_at' => now(),
         ]);
-        $cost->forceFill(['status' => MaintenanceCostStatus::Estimated])->save();
 
-        $this->auditLogger->record(AuditEvents::CREATE, $cost, 'maintenance_requests', 'maintenance_cost_registered', 'Custo de manutenção registado.');
+        $cost->forceFill([
+            'status' => MaintenanceCostStatus::Estimated,
+        ])->save();
+
+        $this->auditLogger->record(
+            AuditEvents::CREATE,
+            $cost,
+            'maintenance_requests',
+            'maintenance_cost_registered',
+            'Custo de manutenção registado.',
+        );
 
         $this->history->record(
-            $this->housingUnitForRequest($request),
+            $housingUnit,
             TechnicalHistoryEventType::MaintenanceCostRegistered,
             'Custo de manutenção registado',
             $cost->description,
@@ -76,21 +127,14 @@ class MaintenanceCostService
         return MaintenanceCostType::from($value);
     }
 
-    private function housingUnitForRequest(MaintenanceRequest $request): HousingUnit
-    {
-        $housingUnit = $request->housingUnit;
-
-        if (! $housingUnit instanceof HousingUnit) {
-            throw ValidationException::withMessages([
-                'housing_unit' => 'O pedido de manutenção não tem fogo associado.',
-            ]);
-        }
-
-        return $housingUnit;
-    }
-
     public function approve(MaintenanceCost $cost, User $actor): MaintenanceCost
     {
+        $this->municipalContext
+            ->maintenanceCostHousingUnit(
+                $actor,
+                $cost,
+            );
+
         $cost->forceFill([
             'status' => MaintenanceCostStatus::Approved,
             'approved_by' => $actor->id,
@@ -104,6 +148,12 @@ class MaintenanceCostService
 
     public function reject(MaintenanceCost $cost, User $actor, string $reason): MaintenanceCost
     {
+        $this->municipalContext
+            ->maintenanceCostHousingUnit(
+                $actor,
+                $cost,
+            );
+
         $cost->forceFill([
             'status' => MaintenanceCostStatus::Rejected,
             'approved_by' => $actor->id,

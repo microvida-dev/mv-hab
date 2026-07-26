@@ -6,16 +6,29 @@ use App\Http\Controllers\Controller;
 use App\Models\MaintenanceRequest;
 use App\Services\Maintenance\MaintenanceIndicatorService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class MaintenanceDashboardController extends Controller
 {
-    public function __construct(private readonly MaintenanceIndicatorService $indicators) {}
+    public function __construct(
+        private readonly MaintenanceIndicatorService $indicators,
+    ) {}
 
-    public function __invoke(): View
+    public function __invoke(Request $request): View
     {
-        Gate::authorize('viewAny', MaintenanceRequest::class);
+        Gate::authorize(
+            'viewAnyBackoffice',
+            MaintenanceRequest::class,
+        );
 
-        return view('backoffice.maintenance.dashboard', ['metrics' => $this->indicators->dashboard()]);
+        return view(
+            'backoffice.maintenance.dashboard',
+            [
+                'metrics' => $this->indicators->dashboard(
+                    $this->authenticatedUser($request),
+                ),
+            ],
+        );
     }
 }

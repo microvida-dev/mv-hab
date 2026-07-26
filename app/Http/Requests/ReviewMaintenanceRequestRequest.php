@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\MaintenanceUrgency;
+use App\Models\MaintenanceRequest;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +12,17 @@ class ReviewMaintenanceRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $actor = $this->user();
+        $maintenanceRequest = $this->route(
+            'maintenanceRequest',
+        );
+
+        return $actor instanceof User
+            && $maintenanceRequest instanceof MaintenanceRequest
+            && $actor->can(
+                'reviewBackoffice',
+                $maintenanceRequest,
+            );
     }
 
     /**
@@ -19,10 +31,24 @@ class ReviewMaintenanceRequestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'technical_priority' => ['nullable', Rule::enum(MaintenanceUrgency::class)],
-            'maintenance_category_id' => ['nullable', 'integer', 'exists:maintenance_categories,id'],
-            'urgency' => ['required', Rule::enum(MaintenanceUrgency::class)],
-            'review_notes' => ['nullable', 'string', 'max:3000'],
+            'technical_priority' => [
+                'nullable',
+                Rule::enum(MaintenanceUrgency::class),
+            ],
+            'maintenance_category_id' => [
+                'nullable',
+                'integer',
+                'exists:maintenance_categories,id',
+            ],
+            'urgency' => [
+                'required',
+                Rule::enum(MaintenanceUrgency::class),
+            ],
+            'review_notes' => [
+                'nullable',
+                'string',
+                'max:3000',
+            ],
         ];
     }
 }

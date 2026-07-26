@@ -54,6 +54,7 @@ use App\Models\Household;
 use App\Models\HousingApplication;
 use App\Models\HousingUnit;
 use App\Models\IncomeChangeDeclaration;
+use App\Models\InspectionChecklistTemplate;
 use App\Models\KeyHandoverAppointment;
 use App\Models\LeaseContractDocument;
 use App\Models\LeaseContractValidation;
@@ -61,11 +62,18 @@ use App\Models\LeasePayment;
 use App\Models\ListAutomationRun;
 use App\Models\LotteryDraw;
 use App\Models\LotteryResult;
+use App\Models\MaintenanceAssignment;
+use App\Models\MaintenanceCategory;
+use App\Models\MaintenanceCost;
+use App\Models\MaintenanceIntervention;
+use App\Models\MaintenanceRequest;
+use App\Models\MaintenanceSupplier;
 use App\Models\Payment;
 use App\Models\PaymentImportBatch;
 use App\Models\PaymentReceipt;
 use App\Models\PostDrawReport;
 use App\Models\Program;
+use App\Models\PropertyInspection;
 use App\Models\ProvisionalList;
 use App\Models\RankingSnapshot;
 use App\Models\RankingUpdateRun;
@@ -2527,6 +2535,428 @@ class MunicipalRecordScopeService
                 $includeApplicationReports,
             )->select('id'),
         );
+    }
+
+    /**
+     * @param  Builder<MaintenanceRequest>  $query
+     * @return Builder<MaintenanceRequest>
+     */
+    public function maintenanceRequests(
+        Builder $query,
+        User $user,
+    ): Builder {
+        return $query->whereIn(
+            'housing_unit_id',
+            $this->housingUnits(
+                HousingUnit::query(),
+                $user,
+            )->select('id'),
+        );
+    }
+
+    public function ownsMaintenanceRequest(
+        User $user,
+        MaintenanceRequest $request,
+    ): bool {
+        return $this->maintenanceRequests(
+            MaintenanceRequest::query()->whereKey($request),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<MaintenanceAssignment>  $query
+     * @return Builder<MaintenanceAssignment>
+     */
+    public function maintenanceAssignments(
+        Builder $query,
+        User $user,
+    ): Builder {
+        return $query->whereIn(
+            'maintenance_request_id',
+            $this->maintenanceRequests(
+                MaintenanceRequest::query(),
+                $user,
+            )->select('id'),
+        );
+    }
+
+    public function ownsMaintenanceAssignment(
+        User $user,
+        MaintenanceAssignment $assignment,
+    ): bool {
+        return $this->maintenanceAssignments(
+            MaintenanceAssignment::query()
+                ->whereKey($assignment),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<MaintenanceIntervention>  $query
+     * @return Builder<MaintenanceIntervention>
+     */
+    public function maintenanceInterventions(
+        Builder $query,
+        User $user,
+    ): Builder {
+        return $query->whereIn(
+            'maintenance_request_id',
+            $this->maintenanceRequests(
+                MaintenanceRequest::query(),
+                $user,
+            )->select('id'),
+        );
+    }
+
+    public function ownsMaintenanceIntervention(
+        User $user,
+        MaintenanceIntervention $intervention,
+    ): bool {
+        return $this->maintenanceInterventions(
+            MaintenanceIntervention::query()
+                ->whereKey($intervention),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<MaintenanceCost>  $query
+     * @return Builder<MaintenanceCost>
+     */
+    public function maintenanceCosts(
+        Builder $query,
+        User $user,
+    ): Builder {
+        return $query->whereIn(
+            'maintenance_request_id',
+            $this->maintenanceRequests(
+                MaintenanceRequest::query(),
+                $user,
+            )->select('id'),
+        );
+    }
+
+    public function ownsMaintenanceCost(
+        User $user,
+        MaintenanceCost $cost,
+    ): bool {
+        return $this->maintenanceCosts(
+            MaintenanceCost::query()->whereKey($cost),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<PropertyInspection>  $query
+     * @return Builder<PropertyInspection>
+     */
+    public function propertyInspections(
+        Builder $query,
+        User $user,
+    ): Builder {
+        return $query->whereIn(
+            'housing_unit_id',
+            $this->housingUnits(
+                HousingUnit::query(),
+                $user,
+            )->select('id'),
+        );
+    }
+
+    public function ownsPropertyInspection(
+        User $user,
+        PropertyInspection $inspection,
+    ): bool {
+        return $this->propertyInspections(
+            PropertyInspection::query()
+                ->whereKey($inspection),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<MaintenanceCategory>  $query
+     * @return Builder<MaintenanceCategory>
+     */
+    public function maintenanceCategories(
+        Builder $query,
+        User $user,
+    ): Builder {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query->where(
+                function (Builder $catalog): void {
+                    $catalog
+                        ->where(
+                            function (Builder $system): void {
+                                $system
+                                    ->where('is_system', true)
+                                    ->whereNull('municipality_id');
+                            },
+                        )
+                        ->orWhere(
+                            function (Builder $municipal): void {
+                                $municipal
+                                    ->where('is_system', false)
+                                    ->whereNotNull('municipality_id');
+                            },
+                        );
+                },
+            );
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $this->maintenanceCategoriesForMunicipality(
+            $query,
+            (int) $user->municipality_id,
+        );
+    }
+
+    /**
+     * @param  Builder<MaintenanceCategory>  $query
+     * @return Builder<MaintenanceCategory>
+     */
+    public function maintenanceCategoriesForMunicipality(
+        Builder $query,
+        int $municipalityId,
+    ): Builder {
+        return $query->where(
+            function (Builder $catalog) use (
+                $municipalityId,
+            ): void {
+                $catalog
+                    ->where(
+                        function (Builder $system): void {
+                            $system
+                                ->where('is_system', true)
+                                ->whereNull('municipality_id');
+                        },
+                    )
+                    ->orWhere(
+                        function (Builder $municipal) use (
+                            $municipalityId,
+                        ): void {
+                            $municipal
+                                ->where('is_system', false)
+                                ->where(
+                                    'municipality_id',
+                                    $municipalityId,
+                                );
+                        },
+                    );
+            },
+        );
+    }
+
+    public function ownsMaintenanceCategory(
+        User $user,
+        MaintenanceCategory $category,
+    ): bool {
+        return $this->maintenanceCategories(
+            MaintenanceCategory::query()
+                ->whereKey($category),
+            $user,
+        )->exists();
+    }
+
+    public function canMutateMaintenanceCategory(
+        User $user,
+        MaintenanceCategory $category,
+    ): bool {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $this->maintenanceCategories(
+                MaintenanceCategory::query()
+                    ->whereKey($category),
+                $user,
+            )->exists();
+        }
+
+        if ($user->municipality_id === null) {
+            return false;
+        }
+
+        return MaintenanceCategory::query()
+            ->whereKey($category)
+            ->where('is_system', false)
+            ->where(
+                'municipality_id',
+                $user->municipality_id,
+            )
+            ->exists();
+    }
+
+    /**
+     * @param  Builder<MaintenanceSupplier>  $query
+     * @return Builder<MaintenanceSupplier>
+     */
+    public function maintenanceSuppliers(
+        Builder $query,
+        User $user,
+    ): Builder {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query->whereNotNull('municipality_id');
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $this->maintenanceSuppliersForMunicipality(
+            $query,
+            (int) $user->municipality_id,
+        );
+    }
+
+    /**
+     * @param  Builder<MaintenanceSupplier>  $query
+     * @return Builder<MaintenanceSupplier>
+     */
+    public function maintenanceSuppliersForMunicipality(
+        Builder $query,
+        int $municipalityId,
+    ): Builder {
+        return $query->where(
+            'municipality_id',
+            $municipalityId,
+        );
+    }
+
+    public function ownsMaintenanceSupplier(
+        User $user,
+        MaintenanceSupplier $supplier,
+    ): bool {
+        return $this->maintenanceSuppliers(
+            MaintenanceSupplier::query()
+                ->whereKey($supplier),
+            $user,
+        )->exists();
+    }
+
+    public function canMutateMaintenanceSupplier(
+        User $user,
+        MaintenanceSupplier $supplier,
+    ): bool {
+        return $this->ownsMaintenanceSupplier(
+            $user,
+            $supplier,
+        );
+    }
+
+    /**
+     * @param  Builder<InspectionChecklistTemplate>  $query
+     * @return Builder<InspectionChecklistTemplate>
+     */
+    public function inspectionChecklistTemplates(
+        Builder $query,
+        User $user,
+    ): Builder {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query->where(
+                function (Builder $catalog): void {
+                    $catalog
+                        ->where(
+                            function (Builder $system): void {
+                                $system
+                                    ->where('is_system', true)
+                                    ->whereNull('municipality_id');
+                            },
+                        )
+                        ->orWhere(
+                            function (Builder $municipal): void {
+                                $municipal
+                                    ->where('is_system', false)
+                                    ->whereNotNull('municipality_id');
+                            },
+                        );
+                },
+            );
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $this
+            ->inspectionChecklistTemplatesForMunicipality(
+                $query,
+                (int) $user->municipality_id,
+            );
+    }
+
+    /**
+     * @param  Builder<InspectionChecklistTemplate>  $query
+     * @return Builder<InspectionChecklistTemplate>
+     */
+    public function inspectionChecklistTemplatesForMunicipality(
+        Builder $query,
+        int $municipalityId,
+    ): Builder {
+        return $query->where(
+            function (Builder $catalog) use (
+                $municipalityId,
+            ): void {
+                $catalog
+                    ->where(
+                        function (Builder $system): void {
+                            $system
+                                ->where('is_system', true)
+                                ->whereNull('municipality_id');
+                        },
+                    )
+                    ->orWhere(
+                        function (Builder $municipal) use (
+                            $municipalityId,
+                        ): void {
+                            $municipal
+                                ->where('is_system', false)
+                                ->where(
+                                    'municipality_id',
+                                    $municipalityId,
+                                );
+                        },
+                    );
+            },
+        );
+    }
+
+    public function ownsInspectionChecklistTemplate(
+        User $user,
+        InspectionChecklistTemplate $template,
+    ): bool {
+        return $this->inspectionChecklistTemplates(
+            InspectionChecklistTemplate::query()
+                ->whereKey($template),
+            $user,
+        )->exists();
+    }
+
+    public function canMutateInspectionChecklistTemplate(
+        User $user,
+        InspectionChecklistTemplate $template,
+    ): bool {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $this->inspectionChecklistTemplates(
+                InspectionChecklistTemplate::query()
+                    ->whereKey($template),
+                $user,
+            )->exists();
+        }
+
+        if ($user->municipality_id === null) {
+            return false;
+        }
+
+        return InspectionChecklistTemplate::query()
+            ->whereKey($template)
+            ->where('is_system', false)
+            ->where(
+                'municipality_id',
+                $user->municipality_id,
+            )
+            ->exists();
     }
 
     /**

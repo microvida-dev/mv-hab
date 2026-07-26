@@ -10,6 +10,7 @@ use App\Models\HousingUnit;
 use App\Models\MaintenanceRequest;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\OperationalMunicipalContextService;
 use App\Services\Properties\PropertyTechnicalHistoryService;
 use App\Support\AuditEvents;
 use Illuminate\Support\Carbon;
@@ -21,6 +22,7 @@ class MaintenanceStatusService
         private readonly AuditLogger $auditLogger,
         private readonly PropertyTechnicalHistoryService $history,
         private readonly MaintenanceNotificationService $notifications,
+        private readonly OperationalMunicipalContextService $municipalContext,
     ) {}
 
     /**
@@ -28,20 +30,58 @@ class MaintenanceStatusService
      */
     public function review(MaintenanceRequest $request, User $actor, array $data): MaintenanceRequest
     {
+        $housingUnit = $this->municipalContext
+            ->maintenanceRequestHousingUnit(
+                $actor,
+                $request,
+            );
+
+        $category = $this->municipalContext
+            ->categoryForHousingUnit(
+                $data['maintenance_category_id']
+                    ?? $request->maintenance_category_id,
+                $housingUnit,
+            );
+
         $request->forceFill([
-            'technical_priority' => MaintenanceUrgency::from($this->urgencyInput($request, $data['technical_priority'] ?? $data['urgency'] ?? null)),
-            'urgency' => MaintenanceUrgency::from($this->urgencyInput($request, $data['urgency'] ?? null)),
-            'maintenance_category_id' => $data['maintenance_category_id'] ?? $request->maintenance_category_id,
+            'technical_priority' => MaintenanceUrgency::from(
+                $this->urgencyInput(
+                    $request,
+                    $data['technical_priority']
+                        ?? $data['urgency']
+                        ?? null,
+                ),
+            ),
+            'urgency' => MaintenanceUrgency::from(
+                $this->urgencyInput(
+                    $request,
+                    $data['urgency'] ?? null,
+                ),
+            ),
+            'maintenance_category_id' => $category?->id,
             'review_notes' => $data['review_notes'] ?? null,
             'reviewed_at' => now(),
             'reviewed_by' => $actor->id,
         ])->save();
 
-        return $this->transition($request, MaintenanceRequestStatus::UnderReview, $actor, $this->stringOrNull($data['review_notes'] ?? null), OfficialNotificationType::MaintenanceRequestUnderReview);
+        return $this->transition(
+            $request,
+            MaintenanceRequestStatus::UnderReview,
+            $actor,
+            $this->stringOrNull(
+                $data['review_notes'] ?? null,
+            ),
+            OfficialNotificationType::MaintenanceRequestUnderReview,
+        );
     }
 
     public function schedule(MaintenanceRequest $request, User $actor, ?string $scheduledFor = null): MaintenanceRequest
     {
+        $this->municipalContext->maintenanceRequestHousingUnit(
+            $actor,
+            $request,
+        );
+
         $request->forceFill(['scheduled_for' => $scheduledFor ? Carbon::parse($scheduledFor) : $request->scheduled_for])->save();
 
         return $this->transition($request, MaintenanceRequestStatus::Scheduled, $actor, null, OfficialNotificationType::MaintenanceRequestScheduled);
@@ -49,6 +89,11 @@ class MaintenanceStatusService
 
     public function start(MaintenanceRequest $request, User $actor): MaintenanceRequest
     {
+        $this->municipalContext->maintenanceRequestHousingUnit(
+            $actor,
+            $request,
+        );
+
         return $this->transition($request, MaintenanceRequestStatus::InProgress, $actor, null, OfficialNotificationType::MaintenanceRequestInProgress);
     }
 
@@ -57,6 +102,11 @@ class MaintenanceStatusService
      */
     public function resolve(MaintenanceRequest $request, User $actor, array $data): MaintenanceRequest
     {
+        $this->municipalContext->maintenanceRequestHousingUnit(
+            $actor,
+            $request,
+        );
+
         $request->forceFill([
             'resolution_summary' => $data['resolution_summary'],
             'closure_notes' => $data['closure_notes'] ?? null,
@@ -71,6 +121,11 @@ class MaintenanceStatusService
      */
     public function reject(MaintenanceRequest $request, User $actor, array $data): MaintenanceRequest
     {
+        $this->municipalContext->maintenanceRequestHousingUnit(
+            $actor,
+            $request,
+        );
+
         $request->forceFill([
             'rejection_reason' => $data['rejection_reason'],
             'resolved_at' => now(),
@@ -84,6 +139,11 @@ class MaintenanceStatusService
      */
     public function close(MaintenanceRequest $request, User $actor, array $data = []): MaintenanceRequest
     {
+        $this->municipalContext->maintenanceRequestHousingUnit(
+            $actor,
+            $request,
+        );
+
         if (! $this->requestHasStatus($request, [MaintenanceRequestStatus::Resolved, MaintenanceRequestStatus::Rejected])) {
             throw ValidationException::withMessages(['status' => 'Só é possível fechar pedidos resolvidos ou rejeitados.']);
         }
@@ -99,6 +159,11 @@ class MaintenanceStatusService
 
     public function cancel(MaintenanceRequest $request, User $actor, ?string $reason = null): MaintenanceRequest
     {
+        $this->municipalContext->maintenanceRequestHousingUnit(
+            $actor,
+            $request,
+        );
+
         $request->forceFill([
             'cancelled_at' => now(),
             'cancelled_by' => $actor->id,

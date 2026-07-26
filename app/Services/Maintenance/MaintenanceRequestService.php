@@ -14,6 +14,7 @@ use App\Models\HousingUnit;
 use App\Models\MaintenanceRequest;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\OperationalMunicipalContextService;
 use App\Services\Properties\PropertyTechnicalHistoryService;
 use App\Support\AuditEvents;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,6 +30,7 @@ class MaintenanceRequestService
         private readonly PropertyTechnicalHistoryService $history,
         private readonly MaintenanceNotificationService $notifications,
         private readonly AuditLogger $auditLogger,
+        private readonly OperationalMunicipalContextService $municipalContext,
     ) {}
 
     /**
@@ -39,12 +41,26 @@ class MaintenanceRequestService
         unset($data['status'], $data['technical_priority'], $data['user_id'], $data['source'], $data['created_by'], $data['updated_by']);
 
         $contract = $this->resolveTenantContract($tenant, $data);
+        $housingUnit = $contract->housingUnit;
+
+        if (! $housingUnit instanceof HousingUnit) {
+            throw ValidationException::withMessages([
+                'housing_unit_id' => 'O contrato ativo não possui um fogo válido.',
+            ]);
+        }
+
+        $category = $this->municipalContext
+            ->categoryForHousingUnit(
+                $data['maintenance_category_id'] ?? null,
+                $housingUnit,
+            );
 
         return $this->create($tenant, array_merge($data, [
             'lease_contract_id' => $contract->id,
-            'housing_unit_id' => $contract->housing_unit_id,
+            'housing_unit_id' => $housingUnit->id,
             'application_id' => $contract->application_id,
             'user_id' => $tenant->id,
+            'maintenance_category_id' => $category?->id,
             'source' => MaintenanceSource::Tenant->value,
         ]), visibleToTenant: true);
     }
@@ -54,8 +70,37 @@ class MaintenanceRequestService
      */
     public function createFromBackoffice(User $actor, array $data): MaintenanceRequest
     {
+        $housingUnit = $this->municipalContext
+            ->housingUnitForActor(
+                $actor,
+                $data['housing_unit_id'] ?? null,
+            );
+
+        $contract = $this->municipalContext
+            ->contractForHousingUnit(
+                $data['lease_contract_id'] ?? null,
+                $housingUnit,
+            );
+
+        $application = $this->municipalContext
+            ->applicationForHousingUnit(
+                $data['application_id'] ?? null,
+                $housingUnit,
+            );
+
+        $category = $this->municipalContext
+            ->categoryForHousingUnit(
+                $data['maintenance_category_id'] ?? null,
+                $housingUnit,
+            );
+
         return $this->create($actor, array_merge($data, [
-            'source' => $data['source'] ?? MaintenanceSource::MunicipalTechnician->value,
+            'housing_unit_id' => $housingUnit->id,
+            'lease_contract_id' => $contract?->id,
+            'application_id' => $application?->id,
+            'maintenance_category_id' => $category?->id,
+            'source' => $data['source']
+                ?? MaintenanceSource::MunicipalTechnician->value,
             'created_by' => $actor->id,
         ]), visibleToTenant: false);
     }

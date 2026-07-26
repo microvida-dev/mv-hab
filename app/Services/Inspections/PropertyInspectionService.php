@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\Maintenance\MaintenanceNotificationService;
 use App\Services\Maintenance\MaintenanceNumberService;
+use App\Services\Municipalities\OperationalMunicipalContextService;
 use App\Services\Properties\PropertyTechnicalHistoryService;
 use App\Support\AuditEvents;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,7 @@ class PropertyInspectionService
         private readonly AuditLogger $auditLogger,
         private readonly PropertyTechnicalHistoryService $history,
         private readonly MaintenanceNotificationService $notifications,
+        private readonly OperationalMunicipalContextService $municipalContext,
     ) {}
 
     /**
@@ -34,30 +36,93 @@ class PropertyInspectionService
     public function store(User $actor, array $data): PropertyInspection
     {
         return DB::transaction(function () use ($actor, $data) {
+            $housingUnit = $this->municipalContext
+                ->housingUnitForActor(
+                    $actor,
+                    $data['housing_unit_id'] ?? null,
+                );
+
+            $contract = $this->municipalContext
+                ->contractForHousingUnit(
+                    $data['lease_contract_id'] ?? null,
+                    $housingUnit,
+                );
+
+            $application = $this->municipalContext
+                ->applicationForHousingUnit(
+                    $data['application_id'] ?? null,
+                    $housingUnit,
+                );
+
+            $template = $this->municipalContext
+                ->templateForHousingUnit(
+                    $data[
+                        'inspection_checklist_template_id'
+                    ] ?? null,
+                    $housingUnit,
+                );
+
+            $inspectorId = $this->municipalContext
+                ->inspectorIdForHousingUnit(
+                    $actor,
+                    $housingUnit,
+                    $data['inspector_user_id'] ?? null,
+                );
+
             $inspection = new PropertyInspection([
-                'housing_unit_id' => $data['housing_unit_id'],
-                'lease_contract_id' => $data['lease_contract_id'] ?? null,
-                'application_id' => $data['application_id'] ?? null,
-                'inspection_checklist_template_id' => $data['inspection_checklist_template_id'] ?? null,
+                'housing_unit_id' => $housingUnit->id,
+                'lease_contract_id' => $contract?->id,
+                'application_id' => $application?->id,
+                'inspection_checklist_template_id' => $template?->id,
                 'inspection_type' => $this->inspectionTypeFromData($data),
                 'scheduled_for' => $data['scheduled_for'] ?? null,
-                'inspector_user_id' => $data['inspector_user_id'] ?? $actor->id,
+                'inspector_user_id' => $inspectorId,
                 'summary' => $data['summary'] ?? null,
                 'internal_notes' => $data['internal_notes'] ?? null,
                 'created_by' => $actor->id,
             ]);
+
             $inspection->forceFill([
                 'inspection_number' => $this->numbers->inspectionNumber(),
-                'status' => ! empty($data['scheduled_for']) ? InspectionStatus::Scheduled : InspectionStatus::Draft,
+                'status' => ! empty($data['scheduled_for'])
+                    ? InspectionStatus::Scheduled
+                    : InspectionStatus::Draft,
             ])->save();
 
-            if ($inspection->inspection_checklist_template_id) {
-                $this->copyTemplateItems($inspection);
+            if (
+                $template instanceof InspectionChecklistTemplate
+            ) {
+                $this->copyTemplateItems(
+                    $inspection,
+                    $template,
+                );
             }
 
-            $this->auditLogger->record(AuditEvents::CREATE, $inspection, 'inspections', 'inspection_created', 'Vistoria criada.');
-            $this->history->record($this->housingUnitForInspection($inspection), TechnicalHistoryEventType::InspectionCreated, 'Vistoria criada', $this->inspectionTypeLabel($inspection), $actor, $inspection->leaseContract, inspection: $inspection);
-            $this->notifications->inspectionStatus($inspection, OfficialNotificationType::InspectionScheduled, 'Vistoria agendada', 'Foi registada uma vistoria associada à sua habitação.', $actor);
+            $this->auditLogger->record(
+                AuditEvents::CREATE,
+                $inspection,
+                'inspections',
+                'inspection_created',
+                'Vistoria criada.',
+            );
+
+            $this->history->record(
+                $housingUnit,
+                TechnicalHistoryEventType::InspectionCreated,
+                'Vistoria criada',
+                $this->inspectionTypeLabel($inspection),
+                $actor,
+                $inspection->leaseContract,
+                inspection: $inspection,
+            );
+
+            $this->notifications->inspectionStatus(
+                $inspection,
+                OfficialNotificationType::InspectionScheduled,
+                'Vistoria agendada',
+                'Foi registada uma vistoria associada à sua habitação.',
+                $actor,
+            );
 
             return $inspection->refresh();
         });
@@ -65,6 +130,12 @@ class PropertyInspectionService
 
     public function start(PropertyInspection $inspection, User $actor): PropertyInspection
     {
+        $this->municipalContext
+            ->propertyInspectionHousingUnit(
+                $actor,
+                $inspection,
+            );
+
         $inspection->forceFill(['status' => InspectionStatus::InProgress, 'started_at' => now()])->save();
 
         return $inspection->refresh();
@@ -75,6 +146,12 @@ class PropertyInspectionService
      */
     public function complete(PropertyInspection $inspection, User $actor, array $data): PropertyInspection
     {
+        $this->municipalContext
+            ->propertyInspectionHousingUnit(
+                $actor,
+                $inspection,
+            );
+
         $inspection->forceFill([
             'status' => InspectionStatus::Completed,
             'completed_at' => now(),
@@ -104,6 +181,12 @@ class PropertyInspectionService
 
     public function validate(PropertyInspection $inspection, User $actor): PropertyInspection
     {
+        $this->municipalContext
+            ->propertyInspectionHousingUnit(
+                $actor,
+                $inspection,
+            );
+
         $inspection->forceFill([
             'status' => InspectionStatus::Validated,
             'validated_at' => now(),
@@ -119,6 +202,12 @@ class PropertyInspectionService
 
     public function close(PropertyInspection $inspection, User $actor): PropertyInspection
     {
+        $this->municipalContext
+            ->propertyInspectionHousingUnit(
+                $actor,
+                $inspection,
+            );
+
         $inspection->forceFill(['status' => InspectionStatus::Closed])->save();
 
         return $inspection->refresh();
@@ -126,18 +215,22 @@ class PropertyInspectionService
 
     public function cancel(PropertyInspection $inspection, User $actor): PropertyInspection
     {
+        $this->municipalContext
+            ->propertyInspectionHousingUnit(
+                $actor,
+                $inspection,
+            );
+
         $inspection->forceFill(['status' => InspectionStatus::Cancelled])->save();
 
         return $inspection->refresh();
     }
 
-    private function copyTemplateItems(PropertyInspection $inspection): void
-    {
-        $template = InspectionChecklistTemplate::query()->with('items')->find($inspection->inspection_checklist_template_id);
-
-        if (! $template instanceof InspectionChecklistTemplate) {
-            return;
-        }
+    private function copyTemplateItems(
+        PropertyInspection $inspection,
+        InspectionChecklistTemplate $template,
+    ): void {
+        $template->loadMissing('items');
 
         foreach ($template->items as $item) {
             $inspection->items()->create([

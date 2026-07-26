@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\MaintenanceSupplierFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -13,7 +14,18 @@ class MaintenanceSupplier extends Model
     /** @use HasFactory<MaintenanceSupplierFactory> */
     use HasFactory, SoftDeletes;
 
-    protected $guarded = ['id'];
+    protected $guarded = [
+        'id',
+        'municipality_id',
+    ];
+
+    /**
+     * @return BelongsTo<Municipality, $this>
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
+    }
 
     /**
      * @return HasMany<MaintenanceAssignment, $this>

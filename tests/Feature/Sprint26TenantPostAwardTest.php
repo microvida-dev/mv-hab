@@ -33,11 +33,15 @@ class Sprint26TenantPostAwardTest extends TestCase
 
         $this->get(route('tenant.dashboard'))->assertRedirect();
 
+        $contractNumber = $context['contract']->contract_number;
+
+        $this->assertIsString($contractNumber);
+
         $this->actingAs($context['candidate'])
             ->get(route('tenant.dashboard'))
             ->assertOk()
             ->assertSee('Área do inquilino')
-            ->assertSee($context['contract']->contract_number);
+            ->assertSee($contractNumber);
 
         $otherCandidate = User::factory()->create();
         $otherCandidate->assignRole('candidate');
@@ -154,7 +158,15 @@ class Sprint26TenantPostAwardTest extends TestCase
     public function test_tenant_maintenance_and_inspections_use_existing_private_modules(): void
     {
         $context = $this->tenantContext();
-        $category = MaintenanceCategory::factory()->create(['default_urgency' => MaintenanceUrgency::Normal]);
+        $municipalityId = $context['manager']->municipality_id;
+
+        $this->assertIsInt($municipalityId);
+
+        $category = MaintenanceCategory::factory()->create([
+            'municipality_id' => $municipalityId,
+            'is_system' => false,
+            'default_urgency' => MaintenanceUrgency::Normal,
+        ]);
 
         $this->actingAs($context['candidate'])
             ->post(route('tenant.maintenance.store'), [
@@ -190,6 +202,13 @@ class Sprint26TenantPostAwardTest extends TestCase
             ->assertSee('Exploração pós-atribuição');
     }
 
+    /**
+     * @return array{
+     *     candidate: User,
+     *     manager: User,
+     *     contract: Contract
+     * }
+     */
     private function tenantContext(): array
     {
         $this->seed(SystemAccessSeeder::class);

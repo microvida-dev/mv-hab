@@ -3,6 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Enums\MaintenanceCostType;
+use App\Models\MaintenanceCost;
+use App\Models\MaintenanceRequest;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +13,20 @@ class StoreMaintenanceCostRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $actor = $this->user();
+        $maintenanceRequest = $this->route(
+            'maintenanceRequest',
+        );
+
+        return $actor instanceof User
+            && $maintenanceRequest instanceof MaintenanceRequest
+            && $actor->can(
+                'createBackoffice',
+                [
+                    MaintenanceCost::class,
+                    $maintenanceRequest,
+                ],
+            );
     }
 
     /**
@@ -19,17 +35,60 @@ class StoreMaintenanceCostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'maintenance_request_id' => ['nullable', 'integer', 'exists:maintenance_requests,id'],
-            'maintenance_intervention_id' => ['nullable', 'integer', 'exists:maintenance_interventions,id'],
-            'cost_type' => ['required', Rule::enum(MaintenanceCostType::class)],
-            'description' => ['required', 'string', 'max:3000'],
-            'amount' => ['required', 'numeric', 'min:0'],
-            'currency' => ['required', 'string', 'size:3'],
-            'supplier_id' => ['nullable', 'integer', 'exists:maintenance_suppliers,id'],
-            'maintenance_supplier_id' => ['nullable', 'integer', 'exists:maintenance_suppliers,id'],
-            'invoice_reference' => ['nullable', 'string', 'max:255'],
-            'notes' => ['nullable', 'string', 'max:3000'],
-            'internal_notes' => ['nullable', 'string', 'max:3000'],
+            'maintenance_request_id' => [
+                'nullable',
+                'integer',
+                'exists:maintenance_requests,id',
+            ],
+            'maintenance_intervention_id' => [
+                'nullable',
+                'integer',
+                'exists:maintenance_interventions,id',
+            ],
+            'cost_type' => [
+                'required',
+                Rule::enum(MaintenanceCostType::class),
+            ],
+            'description' => [
+                'required',
+                'string',
+                'max:3000',
+            ],
+            'amount' => [
+                'required',
+                'numeric',
+                'min:0',
+            ],
+            'currency' => [
+                'required',
+                'string',
+                'size:3',
+            ],
+            'supplier_id' => [
+                'nullable',
+                'integer',
+                'exists:maintenance_suppliers,id',
+            ],
+            'maintenance_supplier_id' => [
+                'nullable',
+                'integer',
+                'exists:maintenance_suppliers,id',
+            ],
+            'invoice_reference' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'notes' => [
+                'nullable',
+                'string',
+                'max:3000',
+            ],
+            'internal_notes' => [
+                'nullable',
+                'string',
+                'max:3000',
+            ],
         ];
     }
 }

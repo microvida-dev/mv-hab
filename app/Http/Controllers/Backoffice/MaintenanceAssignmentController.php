@@ -13,22 +13,56 @@ use Illuminate\Support\Facades\Gate;
 
 class MaintenanceAssignmentController extends Controller
 {
-    public function __construct(private readonly MaintenanceAssignmentService $assignments) {}
+    public function __construct(
+        private readonly MaintenanceAssignmentService $assignments,
+    ) {}
 
-    public function store(StoreMaintenanceAssignmentRequest $request, MaintenanceRequest $maintenanceRequest): RedirectResponse
-    {
-        Gate::authorize('create', MaintenanceAssignment::class);
-        $this->assignments->assign($maintenanceRequest, $this->authenticatedUser($request), $request->validated());
+    public function store(
+        StoreMaintenanceAssignmentRequest $request,
+        MaintenanceRequest $maintenanceRequest,
+    ): RedirectResponse {
+        Gate::authorize(
+            'createBackoffice',
+            [
+                MaintenanceAssignment::class,
+                $maintenanceRequest,
+            ],
+        );
 
-        return back()->with('success', 'Atribuição registada.');
+        $this->assignments->assign(
+            $maintenanceRequest,
+            $this->authenticatedUser($request),
+            $request->validated(),
+        );
+
+        return back()->with(
+            'success',
+            'Atribuição registada.',
+        );
     }
 
-    public function cancel(Request $request, MaintenanceAssignment $maintenanceAssignment): RedirectResponse
-    {
-        Gate::authorize('update', $maintenanceAssignment);
-        $data = $request->validate(['reason' => ['nullable', 'string', 'max:3000']]);
-        $this->assignments->cancel($maintenanceAssignment, $this->authenticatedUser($request), $data['reason'] ?? null);
+    public function cancel(
+        Request $request,
+        MaintenanceAssignment $maintenanceAssignment,
+    ): RedirectResponse {
+        Gate::authorize(
+            'cancelBackoffice',
+            $maintenanceAssignment,
+        );
 
-        return back()->with('success', 'Atribuição cancelada.');
+        $data = $request->validate([
+            'reason' => ['nullable', 'string', 'max:3000'],
+        ]);
+
+        $this->assignments->cancel(
+            $maintenanceAssignment,
+            $this->authenticatedUser($request),
+            $data['reason'] ?? null,
+        );
+
+        return back()->with(
+            'success',
+            'Atribuição cancelada.',
+        );
     }
 }

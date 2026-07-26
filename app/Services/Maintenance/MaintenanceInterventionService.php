@@ -9,6 +9,7 @@ use App\Models\MaintenanceIntervention;
 use App\Models\MaintenanceRequest;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\OperationalMunicipalContextService;
 use App\Services\Properties\PropertyTechnicalHistoryService;
 use App\Support\AuditEvents;
 use Illuminate\Validation\ValidationException;
@@ -18,6 +19,7 @@ class MaintenanceInterventionService
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly PropertyTechnicalHistoryService $history,
+        private readonly OperationalMunicipalContextService $municipalContext,
     ) {}
 
     /**
@@ -25,25 +27,64 @@ class MaintenanceInterventionService
      */
     public function store(MaintenanceRequest $request, User $actor, array $data): MaintenanceIntervention
     {
+        $housingUnit = $this->municipalContext
+            ->maintenanceRequestHousingUnit(
+                $actor,
+                $request,
+            );
+
+        $contract = $this->municipalContext
+            ->contractForHousingUnit(
+                $request->lease_contract_id,
+                $housingUnit,
+            );
+
+        $performedBy = $this->municipalContext
+            ->municipalUserForHousingUnit(
+                $data['performed_by_user_id'] ?? null,
+                $housingUnit,
+                'performed_by_user_id',
+            );
+
+        $supplier = $this->municipalContext
+            ->supplierForHousingUnit(
+                $data['maintenance_supplier_id'] ?? null,
+                $housingUnit,
+            );
+
         $intervention = $request->interventions()->create([
-            'housing_unit_id' => $request->housing_unit_id,
-            'lease_contract_id' => $request->lease_contract_id,
-            'performed_by_user_id' => $data['performed_by_user_id'] ?? null,
-            'maintenance_supplier_id' => $data['maintenance_supplier_id'] ?? null,
-            'status' => ! empty($data['scheduled_for']) ? MaintenanceInterventionStatus::Scheduled : MaintenanceInterventionStatus::Planned,
+            'housing_unit_id' => $housingUnit->id,
+            'lease_contract_id' => $contract?->id,
+            'performed_by_user_id' => $performedBy?->id,
+            'maintenance_supplier_id' => $supplier?->id,
+            'status' => ! empty($data['scheduled_for'])
+                ? MaintenanceInterventionStatus::Scheduled
+                : MaintenanceInterventionStatus::Planned,
             'scheduled_for' => $data['scheduled_for'] ?? null,
             'work_description' => $data['work_description'] ?? null,
             'materials_used' => $data['materials_used'] ?? null,
             'created_by' => $actor->id,
         ]);
 
-        $this->auditLogger->record(AuditEvents::CREATE, $intervention, 'maintenance_requests', 'maintenance_intervention_created', 'Intervenção de manutenção criada.');
+        $this->auditLogger->record(
+            AuditEvents::CREATE,
+            $intervention,
+            'maintenance_requests',
+            'maintenance_intervention_created',
+            'Intervenção de manutenção criada.',
+        );
 
         return $intervention;
     }
 
     public function start(MaintenanceIntervention $intervention, User $actor): MaintenanceIntervention
     {
+        $this->municipalContext
+            ->maintenanceInterventionHousingUnit(
+                $actor,
+                $intervention,
+            );
+
         $intervention->forceFill(['status' => MaintenanceInterventionStatus::InProgress, 'started_at' => now()])->save();
 
         return $intervention->refresh();
@@ -54,6 +95,12 @@ class MaintenanceInterventionService
      */
     public function complete(MaintenanceIntervention $intervention, User $actor, array $data): MaintenanceIntervention
     {
+        $this->municipalContext
+            ->maintenanceInterventionHousingUnit(
+                $actor,
+                $intervention,
+            );
+
         $intervention->forceFill([
             'status' => MaintenanceInterventionStatus::Completed,
             'completed_at' => now(),
@@ -97,6 +144,12 @@ class MaintenanceInterventionService
 
     public function cancel(MaintenanceIntervention $intervention, User $actor): MaintenanceIntervention
     {
+        $this->municipalContext
+            ->maintenanceInterventionHousingUnit(
+                $actor,
+                $intervention,
+            );
+
         $intervention->forceFill(['status' => MaintenanceInterventionStatus::Cancelled])->save();
 
         return $intervention->refresh();
