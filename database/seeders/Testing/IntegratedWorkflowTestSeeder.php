@@ -52,6 +52,7 @@ use App\Models\HousingUnit;
 use App\Models\IncomeRecord;
 use App\Models\LeasePayment;
 use App\Models\MaintenanceRequest;
+use App\Models\Municipality;
 use App\Models\OfficialNotification;
 use App\Models\Program;
 use App\Models\ProvisionalList;
@@ -74,6 +75,8 @@ use Illuminate\Support\Str;
 
 class IntegratedWorkflowTestSeeder extends Seeder
 {
+    private Municipality $municipality;
+
     private Program $program;
 
     private Contest $contest;
@@ -83,6 +86,7 @@ class IntegratedWorkflowTestSeeder extends Seeder
     public function run(): void
     {
         $this->call(SystemAccessSeeder::class);
+        $this->municipality = Municipality::factory()->create();
 
         $this->administrator = $this->user('s19-admin@example.test', 'Administrador QA Sprint 19', 'administrator');
         $technician = $this->user('s19-tecnico@example.test', 'Tecnico Municipal QA Sprint 19', 'municipal_technician');
@@ -91,6 +95,7 @@ class IntegratedWorkflowTestSeeder extends Seeder
         $this->user('s19-manutencao@example.test', 'Gestor Manutencao QA Sprint 19', 'maintenance_manager');
 
         $this->program = Program::factory()->published()->create([
+            'municipality_id' => $this->municipality->id,
             'name' => 'Programa QA Integrado Sprint 19',
             'slug' => 'programa-qa-integrado-sprint-19',
             'description' => 'Programa fictício para testes integrados de qualidade.',
@@ -380,11 +385,15 @@ class IntegratedWorkflowTestSeeder extends Seeder
         $user = User::query()->firstOrCreate(
             ['email' => $email],
             [
+                'municipality_id' => $this->municipality->id,
                 'name' => $name,
                 'password' => Hash::make(Str::random(40)),
                 'email_verified_at' => now(),
             ],
         );
+        $user->forceFill([
+            'municipality_id' => $this->municipality->id,
+        ])->save();
         $user->assignRole($role);
 
         return $user;

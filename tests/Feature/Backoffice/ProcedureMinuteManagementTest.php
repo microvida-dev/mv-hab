@@ -47,6 +47,7 @@ class ProcedureMinuteManagementTest extends TestCase
     public function test_administrator_sees_procedure_minutes_page(): void
     {
         $this->actingAs($this->userWithRole('administrator'))
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.procedure-minutes.index'))
             ->assertOk()
             ->assertSee('Atas do procedimento')
@@ -56,10 +57,11 @@ class ProcedureMinuteManagementTest extends TestCase
     public function test_administrator_generates_and_approves_alcanena_procedure_minute(): void
     {
         $admin = $this->userWithRole('administrator');
-        [$contest, $application] = $this->procedureDataSet();
+        [$contest, $application] = $this->procedureDataSet($admin);
         $template = $this->publishedTemplate($admin);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.procedure-minutes.generate'), [
                 'procedure_template_id' => $template->id,
                 'contest_id' => $contest->id,
@@ -92,12 +94,14 @@ class ProcedureMinuteManagementTest extends TestCase
         Storage::disk('local')->assertExists($minute->file_path);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.procedure-minutes.approve', $minute))
             ->assertRedirect();
 
         $this->assertSame(ProcedureMinuteStatus::Approved, $minute->refresh()->status);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.procedure-minutes.show', $minute))
             ->assertOk()
             ->assertDontSee('Aprovar ata');
@@ -119,15 +123,21 @@ class ProcedureMinuteManagementTest extends TestCase
     /**
      * @return array{0: Contest, 1: Application}
      */
-    private function procedureDataSet(): array
+    private function procedureDataSet(User $admin): array
     {
-        $program = Program::factory()->create(['name' => 'Arrendamento Municipal Acessível']);
+        $program = Program::factory()->create([
+            'municipality_id' => $admin->municipality_id,
+            'name' => 'Arrendamento Municipal Acessível',
+        ]);
         $contest = Contest::factory()->create([
             'program_id' => $program->id,
             'code' => '01/2026',
             'title' => 'Arrendamento Municipal Acessível de Alcanena',
         ]);
-        $candidate = User::factory()->create(['name' => 'Candidato Alcanena']);
+        $candidate = User::factory()->create([
+            'municipality_id' => $admin->municipality_id,
+            'name' => 'Candidato Alcanena',
+        ]);
         $application = Application::factory()
             ->submitted()
             ->create([
@@ -136,6 +146,7 @@ class ProcedureMinuteManagementTest extends TestCase
                 'user_id' => $candidate->id,
             ]);
         $housingUnit = HousingUnit::factory()->create([
+            'municipality_id' => $admin->municipality_id,
             'code' => 'ALC-T2-001',
             'typology' => 'T2',
             'locality' => 'Alcanena',

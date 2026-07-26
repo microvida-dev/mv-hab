@@ -119,6 +119,7 @@ class Sprint16CommunicationsTest extends TestCase
         $recipient = $this->userWithRole('candidate');
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.communications.templates.store'), [
                 'code' => 'test_notice',
                 'name' => 'Template de teste',
@@ -138,9 +139,11 @@ class Sprint16CommunicationsTest extends TestCase
         $this->assertSame(1, $version->version_number);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.communications.template-versions.approve', $version))
             ->assertRedirect();
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.communications.template-versions.activate', $version))
             ->assertRedirect();
 
@@ -148,15 +151,18 @@ class Sprint16CommunicationsTest extends TestCase
         $this->assertSame($version->id, $template->active_version_id);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.communications.templates.preview', $template))
             ->assertOk()
             ->assertSee('Conteúdo sem variáveis.');
 
         $this->actingAs($auditor)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.communications.logs.index'))
             ->assertOk();
 
         $this->actingAs($auditor)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.communications.logs.store'), [
                 'recipient_user_id' => $recipient->id,
                 'event_code' => 'audit.forbidden',

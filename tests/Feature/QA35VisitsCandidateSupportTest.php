@@ -196,7 +196,17 @@ class QA35VisitsCandidateSupportTest extends TestCase
         $user->assignRole($role);
 
         if ($teamName !== null) {
-            MunicipalTeam::query()->where('name', $teamName)->firstOrFail()->members()->syncWithoutDetaching([
+            $team = MunicipalTeam::query()
+                ->where('name', $teamName)
+                ->firstOrFail();
+
+            if ($municipality instanceof Municipality) {
+                $team->forceFill([
+                    'municipality_id' => $municipality->id,
+                ])->save();
+            }
+
+            $team->members()->syncWithoutDetaching([
                 $user->id => ['joined_at' => now(), 'role_in_team' => $teamName],
             ]);
         }

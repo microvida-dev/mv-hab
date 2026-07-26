@@ -23,6 +23,7 @@ class ProfileAnalyticsDashboardTest extends TestCase
         $this->createAnalyticsFixtures($technician);
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.analytics.index'))
             ->assertOk()
             ->assertSee('Documentos por validar')
@@ -31,6 +32,7 @@ class ProfileAnalyticsDashboardTest extends TestCase
 
         if (! $technician->hasPermission('finance.view') && ! $technician->hasPermission('reports.view_financial')) {
             $this->actingAs($technician)
+                ->withSession(['mfa.verified_at' => now()])
                 ->get(route('backoffice.analytics.index'))
                 ->assertDontSee('Rendas em aberto');
         }

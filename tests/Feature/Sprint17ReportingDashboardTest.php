@@ -62,16 +62,19 @@ class Sprint17ReportingDashboardTest extends TestCase
         $technician = $this->userWithRole('municipal_technician');
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.reports.operational'))
             ->assertOk()
             ->assertSee('Painel operacional')
             ->assertDontSee('reports.view_financial');
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.reports.executive'))
             ->assertForbidden();
 
         $this->actingAs($this->userWithRole('administrator'))
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.reports.executive'))
             ->assertOk()
             ->assertSee('Painel executivo');
@@ -104,12 +107,14 @@ class Sprint17ReportingDashboardTest extends TestCase
         $application = Application::factory()->submitted()->create(['program_id' => $program->id, 'contest_id' => $contest->id]);
         $report = ReportDefinition::query()->where('code', 'applications_by_contest')->firstOrFail();
 
-        $response = $this->actingAs($admin)->post(route('backoffice.reports.runs.store', $report), [
-            'program_id' => $program->id,
-            'contest_id' => $contest->id,
-            'format' => 'html',
-            'scope' => 'aggregated',
-        ]);
+        $response = $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
+            ->post(route('backoffice.reports.runs.store', $report), [
+                'program_id' => $program->id,
+                'contest_id' => $contest->id,
+                'format' => 'html',
+                'scope' => 'aggregated',
+            ]);
 
         $run = ReportRun::query()->firstOrFail();
         $response->assertRedirect(route('backoffice.reports.runs.show', $run));
@@ -118,6 +123,7 @@ class Sprint17ReportingDashboardTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['auditable_type' => $run->getMorphClass(), 'auditable_id' => $run->id]);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.reports.runs.show', $run))
             ->assertOk()
             ->assertSee($contest->title)
@@ -207,7 +213,10 @@ class Sprint17ReportingDashboardTest extends TestCase
             ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.reports.access-logs.index'))
             ->assertOk();
-        $this->actingAs($auditor)->post(route('backoffice.reports.definitions.store'), [])->assertForbidden();
+        $this->actingAs($auditor)
+            ->withSession(['mfa.verified_at' => now()])
+            ->post(route('backoffice.reports.definitions.store'), [])
+            ->assertForbidden();
     }
 
     private function userWithRole(string $role): User

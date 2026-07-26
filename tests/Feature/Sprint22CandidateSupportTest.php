@@ -41,6 +41,9 @@ class Sprint22CandidateSupportTest extends TestCase
         $otherCandidate = $this->userWithRole('candidate');
         $program = Program::factory()->published()->create();
         $contest = Contest::factory()->for($program)->open()->create();
+        $municipality = $program->municipality()->firstOrFail();
+        $this->assignMunicipality($candidate, $municipality);
+        $this->assignMunicipality($otherCandidate, $municipality);
         $staff = User::factory()->create([
             'municipality_id' => $program->municipality_id,
         ]);

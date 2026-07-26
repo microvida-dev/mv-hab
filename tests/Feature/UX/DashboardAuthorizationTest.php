@@ -31,6 +31,7 @@ class DashboardAuthorizationTest extends TestCase
         $auditor = $this->analyticsUser('auditor');
 
         $this->actingAs($auditor)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.analytics.index'))
             ->assertOk()
             ->assertSee('Centro Analítico Municipal')

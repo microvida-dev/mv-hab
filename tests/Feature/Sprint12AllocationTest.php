@@ -26,6 +26,7 @@ use App\Models\HouseholdMember;
 use App\Models\HousingUnit;
 use App\Models\LotteryRun;
 use App\Models\Program;
+use App\Models\ProvisionalList;
 use App\Models\TypologyAdequacyRule;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
@@ -150,6 +151,7 @@ class Sprint12AllocationTest extends TestCase
                 'allocation_method' => AllocationMethod::Ranking->value,
                 'notes' => 'Execução fictícia de teste.',
             ])
+            ->assertSessionHasNoErrors()
             ->assertRedirect();
 
         $allocation = Allocation::query()->firstOrFail();
@@ -179,7 +181,8 @@ class Sprint12AllocationTest extends TestCase
                 'definitive_list_id' => $list->id,
                 'allocation_rule_set_id' => $ruleSet->id,
                 'allocation_method' => AllocationMethod::Ranking->value,
-            ]);
+            ])
+            ->assertSessionHasNoErrors();
 
         $offer = AllocationOffer::query()->with('allocation.application')->firstOrFail();
         $candidate = $offer->candidate;
@@ -219,6 +222,7 @@ class Sprint12AllocationTest extends TestCase
                 'allocation_method' => AllocationMethod::Lottery->value,
                 'seed' => 'SPRINT-12-SEED',
             ])
+            ->assertSessionHasNoErrors()
             ->assertRedirect();
 
         $lottery = LotteryRun::query()->firstOrFail();
@@ -239,9 +243,19 @@ class Sprint12AllocationTest extends TestCase
         $administrator = $this->userWithRole('administrator');
         $program = Program::factory()->published()->create();
         $contest = Contest::factory()->for($program)->open()->create();
+        $municipality = $program->municipality()->firstOrFail();
+        $administrator->forceFill([
+            'municipality_id' => $municipality->id,
+        ])->save();
+        $provisionalList = ProvisionalList::factory()->create([
+            'program_id' => $program->id,
+            'contest_id' => $contest->id,
+            'generated_by' => $administrator->id,
+        ]);
         $list = DefinitiveList::factory()->create([
             'program_id' => $program->id,
             'contest_id' => $contest->id,
+            'provisional_list_id' => $provisionalList->id,
             'status' => DefinitiveListStatus::Locked->value,
             'generated_by' => $administrator->id,
             'approved_by' => $administrator->id,
@@ -274,6 +288,7 @@ class Sprint12AllocationTest extends TestCase
         $units = collect();
         for ($index = 0; $index < $unitCount; $index++) {
             $housingUnit = HousingUnit::factory()->create([
+                'municipality_id' => $municipality->id,
                 'code' => 'HU-S12-'.($index + 1),
                 'typology' => 'T2',
                 'bedrooms' => 2,
@@ -293,6 +308,9 @@ class Sprint12AllocationTest extends TestCase
         $applications = collect();
         for ($rank = 1; $rank <= $candidateCount; $rank++) {
             $candidate = $this->userWithRole('candidate');
+            $candidate->forceFill([
+                'municipality_id' => $municipality->id,
+            ])->save();
             $registration = AdhesionRegistration::factory()->registered()->for($candidate)->create([
                 'nif' => 'TEST-S12-'.fake()->unique()->numerify('#####'),
             ]);

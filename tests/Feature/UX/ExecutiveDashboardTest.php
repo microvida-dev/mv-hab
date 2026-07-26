@@ -31,6 +31,7 @@ class ExecutiveDashboardTest extends TestCase
         $this->createAnalyticsFixtures($administrator);
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.reports.executive'))
             ->assertOk()
             ->assertSee('Painel executivo')

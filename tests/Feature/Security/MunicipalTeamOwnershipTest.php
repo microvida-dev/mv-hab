@@ -35,7 +35,14 @@ class MunicipalTeamOwnershipTest extends TestCase
             'status' => WorkTask::STATUS_PENDING,
         ]);
 
-        $policy = new WorkTaskPolicy;
+        $legalUser->forceFill([
+            'municipality_id' => $legalTeam->municipality_id,
+        ])->save();
+        $supportUser->forceFill([
+            'municipality_id' => $legalTeam->municipality_id,
+        ])->save();
+
+        $policy = app(WorkTaskPolicy::class);
 
         $this->assertTrue($policy->view($legalUser, $task));
         $this->assertFalse($policy->view($supportUser, $task));
