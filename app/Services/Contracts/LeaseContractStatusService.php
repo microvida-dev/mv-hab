@@ -7,6 +7,7 @@ use App\Models\Contract;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class LeaseContractStatusService
@@ -23,11 +24,55 @@ class LeaseContractStatusService
 
     public function transition(Contract $contract, ContractStatus $target, User $actor, ?string $reason = null): Contract
     {
-        $from = $contract->status;
-        $fromValue = $from->value;
+        return DB::transaction(function () use ($contract, $target, $actor, $reason): Contract {
+            /** @var Contract $locked */
+            $locked = Contract::query()
+                ->lockForUpdate()
+                ->findOrFail($contract->getKey());
+            $fromValue = $locked->status->value;
 
-        if ($fromValue === $target->value) {
-            $contract->statusHistories()->create([
+            if ($fromValue === $target->value) {
+                return $locked;
+            }
+
+            if (! in_array($target->value, self::ALLOWED[$fromValue] ?? [], true)) {
+                throw ValidationException::withMessages([
+                    'status' => 'Transição de estado contratual não permitida.',
+                ]);
+            }
+
+            $payload = ['status' => $target];
+
+            if ($target === ContractStatus::Issued) {
+                $payload['issued_at'] = now();
+                $payload['issued_by'] = $actor->id;
+            }
+
+            if ($target === ContractStatus::Signed) {
+                $payload['signed_at'] = now();
+                $payload['signed_by'] = $actor->id;
+            }
+
+            if ($target === ContractStatus::Active) {
+                $payload['activated_at'] = now();
+                $payload['activated_by'] = $actor->id;
+                $payload['suspended_at'] = null;
+            }
+
+            if ($target === ContractStatus::Suspended) {
+                $payload['suspended_at'] = now();
+            }
+
+            if ($target === ContractStatus::Terminated) {
+                $payload['terminated_at'] = now();
+            }
+
+            if ($target === ContractStatus::Cancelled) {
+                $payload['cancelled_at'] = now();
+            }
+
+            $locked->forceFill($payload)->save();
+            $locked->statusHistories()->create([
                 'from_status' => $fromValue,
                 'to_status' => $target->value,
                 'changed_by' => $actor->id,
@@ -35,54 +80,16 @@ class LeaseContractStatusService
                 'created_at' => now(),
             ]);
 
-            return $contract->refresh();
-        }
+            $this->auditLogger->record(
+                AuditEvents::UPDATE,
+                $locked,
+                'contracts',
+                'lease_contract_status_'.$target->value,
+                'Estado do contrato atualizado.',
+                metadata: ['actor_id' => $actor->id],
+            );
 
-        if (! in_array($target->value, self::ALLOWED[$fromValue] ?? [], true)) {
-            throw ValidationException::withMessages(['status' => 'Transição de estado contratual não permitida.']);
-        }
-
-        $payload = ['status' => $target];
-
-        if ($target === ContractStatus::Issued) {
-            $payload['issued_at'] = now();
-            $payload['issued_by'] = $actor->id;
-        }
-
-        if ($target === ContractStatus::Signed) {
-            $payload['signed_at'] = now();
-            $payload['signed_by'] = $actor->id;
-        }
-
-        if ($target === ContractStatus::Active) {
-            $payload['activated_at'] = now();
-            $payload['activated_by'] = $actor->id;
-            $payload['suspended_at'] = null;
-        }
-
-        if ($target === ContractStatus::Suspended) {
-            $payload['suspended_at'] = now();
-        }
-
-        if ($target === ContractStatus::Terminated) {
-            $payload['terminated_at'] = now();
-        }
-
-        if ($target === ContractStatus::Cancelled) {
-            $payload['cancelled_at'] = now();
-        }
-
-        $contract->forceFill($payload)->save();
-        $contract->statusHistories()->create([
-            'from_status' => $fromValue,
-            'to_status' => $target->value,
-            'changed_by' => $actor->id,
-            'reason' => $reason,
-            'created_at' => now(),
-        ]);
-
-        $this->auditLogger->record(AuditEvents::UPDATE, $contract, 'contracts', 'lease_contract_status_'.$target->value, 'Estado do contrato atualizado.');
-
-        return $contract->refresh();
+            return $locked->refresh();
+        });
     }
 }

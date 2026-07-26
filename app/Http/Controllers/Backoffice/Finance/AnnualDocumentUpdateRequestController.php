@@ -9,26 +9,44 @@ use App\Http\Requests\StoreAnnualDocumentUpdateRequestRequest;
 use App\Models\AnnualDocumentUpdateRequest;
 use App\Models\TenantFinancialAccount;
 use App\Services\Finance\AnnualDocumentUpdateService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 
 class AnnualDocumentUpdateRequestController extends Controller
 {
-    public function __construct(private readonly AnnualDocumentUpdateService $service) {}
+    public function __construct(
+        private readonly AnnualDocumentUpdateService $service,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
     public function index(): View
     {
-        Gate::authorize('viewAny', AnnualDocumentUpdateRequest::class);
-        $requests = AnnualDocumentUpdateRequest::query()->with(['tenant', 'tenantFinancialAccount'])->latest()->paginate(25);
+        Gate::authorize('viewAnyBackoffice', AnnualDocumentUpdateRequest::class);
+        $requests = $this->municipalScope
+            ->annualDocumentUpdateRequests(
+                AnnualDocumentUpdateRequest::query(),
+                $this->currentUser(),
+            )
+            ->with(['tenant', 'tenantFinancialAccount'])
+            ->latest()
+            ->paginate(25);
 
         return view('backoffice.finance.annual-document-updates.index', compact('requests'));
     }
 
     public function store(StoreAnnualDocumentUpdateRequestRequest $request): RedirectResponse
     {
-        Gate::authorize('create', AnnualDocumentUpdateRequest::class);
+        Gate::authorize('createBackoffice', AnnualDocumentUpdateRequest::class);
         $account = TenantFinancialAccount::query()->findOrFail($request->integer('tenant_financial_account_id'));
+        abort_unless(
+            $this->municipalScope->ownsTenantFinancialAccount(
+                $this->authenticatedUser($request),
+                $account,
+            ),
+            404,
+        );
         $documentRequest = $this->service->request($account, $this->authenticatedUser($request), $request->validated());
 
         return redirect()->route('backoffice.finance.annual-document-updates.show', $documentRequest)->with('success', 'Pedido documental anual criado.');
@@ -36,7 +54,7 @@ class AnnualDocumentUpdateRequestController extends Controller
 
     public function show(AnnualDocumentUpdateRequest $annualDocumentUpdateRequest): View
     {
-        Gate::authorize('view', $annualDocumentUpdateRequest);
+        Gate::authorize('viewBackoffice', $annualDocumentUpdateRequest);
         $annualDocumentUpdateRequest->load(['tenant', 'tenantFinancialAccount', 'submissions.documentSubmission']);
 
         return view('backoffice.finance.annual-document-updates.show', compact('annualDocumentUpdateRequest'));
@@ -44,7 +62,7 @@ class AnnualDocumentUpdateRequestController extends Controller
 
     public function accept(ReviewIncomeChangeDeclarationRequest $request, AnnualDocumentUpdateRequest $annualDocumentUpdateRequest): RedirectResponse
     {
-        Gate::authorize('update', $annualDocumentUpdateRequest);
+        Gate::authorize('approveBackoffice', $annualDocumentUpdateRequest);
         $this->service->accept($annualDocumentUpdateRequest, $this->authenticatedUser($request), $request->validated('notes'));
 
         return back()->with('success', 'Pedido documental aceite.');
@@ -52,7 +70,7 @@ class AnnualDocumentUpdateRequestController extends Controller
 
     public function reject(RejectFinanceRecordRequest $request, AnnualDocumentUpdateRequest $annualDocumentUpdateRequest): RedirectResponse
     {
-        Gate::authorize('update', $annualDocumentUpdateRequest);
+        Gate::authorize('rejectBackoffice', $annualDocumentUpdateRequest);
         $this->service->reject($annualDocumentUpdateRequest, $this->authenticatedUser($request), $request->validated('reason'));
 
         return back()->with('success', 'Pedido documental rejeitado.');

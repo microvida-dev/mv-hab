@@ -6,10 +6,13 @@ use App\Enums\DefinitiveListStatus;
 use App\Models\DefinitiveList;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class DefinitiveListPolicy
 {
     use ChecksPermissions;
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -47,6 +50,71 @@ class DefinitiveListPolicy
     public function publish(User $user, DefinitiveList $list): bool
     {
         return ! $user->hasRole(['candidate', 'auditor']) && $this->canAccess($user, 'public_lists', 'publish');
+    }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $user->municipality_id !== null
+            && $this->canAccess($user, 'public_lists', 'view');
+    }
+
+    public function viewBackoffice(User $user, DefinitiveList $list): bool
+    {
+        return $this->viewAnyBackoffice($user)
+            && $this->municipalScope->ownsDefinitiveList($user, $list);
+    }
+
+    public function generateAnyBackoffice(User $user): bool
+    {
+        return $this->canGenerateBackoffice($user);
+    }
+
+    public function generateBackoffice(User $user): bool
+    {
+        return $this->canGenerateBackoffice($user);
+    }
+
+    public function reviewBackoffice(User $user, DefinitiveList $list): bool
+    {
+        return $this->canMutateBackoffice($user, $list, 'review');
+    }
+
+    public function approveBackoffice(User $user, DefinitiveList $list): bool
+    {
+        return $this->canMutateBackoffice($user, $list, 'approve');
+    }
+
+    public function publishBackoffice(User $user, DefinitiveList $list): bool
+    {
+        return $this->canMutateBackoffice($user, $list, 'publish');
+    }
+
+    public function lockBackoffice(User $user, DefinitiveList $list): bool
+    {
+        return $this->canMutateBackoffice($user, $list, 'lock');
+    }
+
+    public function archiveBackoffice(User $user, DefinitiveList $list): bool
+    {
+        return $this->canMutateBackoffice($user, $list, 'archive');
+    }
+
+    private function canGenerateBackoffice(User $user): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $user->municipality_id !== null
+            && $this->canAccess($user, 'public_lists', 'generate');
+    }
+
+    private function canMutateBackoffice(
+        User $user,
+        DefinitiveList $list,
+        string $action,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'public_lists', $action)
+            && $this->municipalScope->ownsDefinitiveList($user, $list);
     }
 
     /** @param  list<DefinitiveListStatus>  $statuses */

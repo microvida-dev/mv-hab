@@ -20,6 +20,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class CaseWorkspaceController extends Controller
 {
@@ -58,6 +59,8 @@ class CaseWorkspaceController extends Controller
      */
     public function contract(Request $request, Contract $contract): View
     {
+        Gate::authorize('viewBackoffice', $contract);
+
         return $this->enterpriseView($request, 'contract', $contract);
     }
 
@@ -82,6 +85,8 @@ class CaseWorkspaceController extends Controller
      */
     public function complaint(Request $request, Complaint $complaint): View
     {
+        Gate::authorize('viewBackoffice', $complaint);
+
         return $this->enterpriseView($request, 'complaint', $complaint);
     }
 

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Documents;
 
 use App\Enums\DocumentStatus;
+use App\Enums\FeatureKey;
 use App\Enums\HousingStatus;
 use App\Enums\IncomeSourceType;
 use App\Models\AdhesionRegistration;
@@ -22,10 +23,12 @@ use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class DocumentSecurityFlowTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     public function test_private_document_upload_download_review_and_cross_candidate_blocking(): void
@@ -42,13 +45,14 @@ class DocumentSecurityFlowTest extends TestCase
                 'document_type_id' => $requiredDocument->document_type_id,
                 'required_document_id' => $requiredDocument->id,
                 'household_member_id' => $member->id,
-                'file' => UploadedFile::fake()->create('identificacao-s19.pdf', 100, 'application/pdf'),
+                'file' => UploadedFile::fake()->create('Cartão de identidade 04_10_2022.pdf', 100, 'application/pdf'),
                 'storage_path' => 'public/leak.pdf',
                 'status' => DocumentStatus::Validated->value,
             ])
             ->assertRedirect();
 
         $submission = DocumentSubmission::query()->firstOrFail();
+        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $this->assertSame($candidate->id, $submission->user_id);
         $this->assertSame(DocumentStatus::Submitted, $submission->status);
         $this->assertStringStartsWith('documents/'.$registration->id.'/'.$submission->id.'/1/', $submission->storage_path);
@@ -65,15 +69,32 @@ class DocumentSecurityFlowTest extends TestCase
             ->assertOk();
 
         $this->actingAs($technician)
-            ->get(route('admin.document-reviews.download', $submission))
+            ->withSession([
+                'mfa.verified_at' => now(),
+            ]);
+
+        $this->get(route('admin.document-reviews.download', $submission))
             ->assertOk();
 
-        $this->actingAs($technician)
-            ->post(route('admin.document-reviews.reject', $submission), [
-                'rejection_reason' => 'Documento fictício ilegível para regressão Sprint 19.',
-                'internal_notes' => 'Nota interna não visível ao candidato.',
-            ])
+        $this->post(route('admin.document-reviews.reject', $submission), [
+            'rejection_reason' => 'Documento fictício ilegível para regressão Sprint 19.',
+            'internal_notes' => 'Nota interna não visível ao candidato.',
+        ])
             ->assertRedirect(route('admin.document-reviews.show', $submission));
+
+        $this->get(route('admin.document-reviews.preview', $submission))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
+
+        $this->assertDatabaseHas('document_access_logs', [
+            'document_submission_id' => $submission->id,
+            'action' => 'preview',
+        ]);
+
+        $this->assertDatabaseHas('audit_events', [
+            'event_code' => 'document.previewed',
+        ]);
 
         $this->actingAs($candidate)
             ->get(route('candidate.documents.show', $submission->fresh()))
@@ -174,5 +195,43 @@ class DocumentSecurityFlowTest extends TestCase
         $user->assignRole($role);
 
         return $user;
+    }
+
+    public function test_candidate_cannot_preview_another_candidates_document_in_admin_review(): void
+    {
+        Storage::fake('local');
+
+        [$candidate, $registration, $household] = $this->candidateWithDocumentContext();
+        [$otherCandidate] = $this->candidateWithDocumentContext('other-preview');
+
+        $requiredDocument = $this->requiredDocument('documento_identificacao');
+        $member = $household->members()->firstOrFail();
+
+        $this->actingAs($candidate)
+            ->post(route('candidate.documents.store'), [
+                'document_type_id' => $requiredDocument->document_type_id,
+                'required_document_id' => $requiredDocument->id,
+                'household_member_id' => $member->id,
+                'file' => UploadedFile::fake()->create('identificacao-preview.pdf', 100, 'application/pdf'),
+            ])
+            ->assertRedirect();
+
+        $submission = DocumentSubmission::query()
+            ->where('adhesion_registration_id', $registration->id)
+            ->latest('id')
+            ->firstOrFail();
+
+        $this->actingAs($otherCandidate)
+            ->get(route('admin.document-reviews.preview', $submission))
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('document_access_logs', [
+            'document_submission_id' => $submission->id,
+            'action' => 'preview',
+        ]);
+
+        $this->assertDatabaseMissing('audit_events', [
+            'event_code' => 'document.previewed',
+        ]);
     }
 }

@@ -1,0 +1,3916 @@
+{
+    "schema_version": 1,
+    "generated_for": "TECH-TEST-001",
+    "summary": {
+        "base_commit": "49507e7cee0519c010dfa5dd0967bff0652a62df",
+        "head_commit_audited": "d00406d3b22fee5dabfd326495eac752d9276312",
+        "files_total": 93,
+        "added": 45,
+        "modified": 48,
+        "by_sprint": {
+            "45B": 50,
+            "45C": 16,
+            "45D": 27
+        },
+        "by_classification": {
+            "correta": 45,
+            "correta mas acoplada": 48
+        },
+        "high_risk": 43,
+        "multi_municipality": 2
+    },
+    "reviewed_warnings": [
+        {
+            "files": [
+                "tests/Feature/Security/AuditAccessRoutesCommandTest.php"
+            ],
+            "decision": "correta",
+            "justification": "Os assertSame removidos foram substituídos por assertSame formatados com os novos contadores reais."
+        },
+        {
+            "files": [
+                "tests/Feature/Security/RbacCharacterizationTest.php"
+            ],
+            "decision": "correta",
+            "justification": "A recusa por fixed-role foi substituída por sucesso com permission explícita, refletindo o requisito 45B; guards e middleware são verificados."
+        },
+        {
+            "files": [
+                "tests/Feature/Security/CustomRoleEffectivePermissionTest.php",
+                "tests/Feature/Security/RequirePermissionMiddlewareTest.php"
+            ],
+            "decision": "correta",
+            "justification": "A wildcard é o objeto expresso destes testes e não uma fixture de conveniência."
+        }
+    ],
+    "files": [
+        {
+            "path": "tests/Concerns/InteractsWithMunicipalFeatures.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "4d3b8c62756eb6fa325e8d6ce1bc3a911eed107f",
+            "origin_commit_subject": "feat(access): aplicar funcionalidades aos fluxos de candidaturas",
+            "test_type": "feature",
+            "functional_domain": "segurança e autorização",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignMunicipality",
+                "enableMunicipalityFeature",
+                "enableMunicipalityFeatures",
+                "municipalityWithFeatures"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: API variádica, Municipality explícito no enable e sem ativação global/default."
+        },
+        {
+            "path": "tests/Feature/Backoffice/CustomRoleManagementTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "540ca2b7cb0c73b66de149055956c8a83c427bbb",
+            "origin_commit_subject": "feat(access): gerir perfis municipais personalizados",
+            "test_type": "feature",
+            "functional_domain": "RBAC e perfis municipais",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "applications.view",
+                "documents.view",
+                "roles.update",
+                "roles.view"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 43,
+                "methods": [
+                    "assertContains",
+                    "assertDatabaseHas",
+                    "assertDatabaseMissing",
+                    "assertEqualsCanonicalizing",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk",
+                    "assertRedirect",
+                    "assertSame",
+                    "assertSee",
+                    "assertSessionHasErrors",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Backoffice/MunicipalRoleTemplateTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "9f0266ceee95d25a435366d8920b3512f5db5be0",
+            "origin_commit_subject": "feat(access): adicionar modelos de perfis municipais",
+            "test_type": "feature",
+            "functional_domain": "RBAC e perfis municipais",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "applications.create",
+                "documents.create"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 25,
+                "methods": [
+                    "assertContains",
+                    "assertDoesNotMatchRegularExpression",
+                    "assertEqualsCanonicalizing",
+                    "assertFalse",
+                    "assertMatchesRegularExpression",
+                    "assertNotNull",
+                    "assertOk",
+                    "assertRedirect",
+                    "assertSame",
+                    "assertSee",
+                    "assertSessionHasErrors",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Backoffice/MunicipalityFeatureManagementTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "175c0b32ed6611daf3206d32c6a13e07b7cf6a33",
+            "origin_commit_subject": "feat(entitlements): adicionar administração de plataforma",
+            "test_type": "feature",
+            "functional_domain": "entitlements municipais",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "ApplicationExport",
+                "ApplicationIntake"
+            ],
+            "permissions_assigned": [
+                "applications.unknown"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 25,
+                "methods": [
+                    "assertContains",
+                    "assertDatabaseHas",
+                    "assertDatabaseMissing",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotFound",
+                    "assertNotNull",
+                    "assertOk",
+                    "assertRedirect",
+                    "assertSee",
+                    "assertSessionHasErrors"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Backoffice/PermissionMatrixTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "9aebfc0974a68c689f560b867f217d8c26caba6a",
+            "origin_commit_subject": "feat(access): adicionar matriz de permissões agrupada",
+            "test_type": "feature",
+            "functional_domain": "permissões e middleware",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "applications.view",
+                "documents.approve"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 21,
+                "methods": [
+                    "assertDatabaseMissing",
+                    "assertDontSee",
+                    "assertFalse",
+                    "assertOk",
+                    "assertRedirect",
+                    "assertSame",
+                    "assertSee",
+                    "assertSeeInOrder",
+                    "assertSessionHasErrors",
+                    "assertSessionHasInput",
+                    "assertStringContainsString"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/DocumentIntelligence/DocumentAiManualReviewExecutionTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "documentos e revisão documental",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignDocumentMunicipality",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Documents/DocumentSecurityFlowTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "d1245d047e4e912cfdbbd99df01a76870ee69a5d",
+            "origin_commit_subject": "feat(access): authorize document review workflow by permission",
+            "test_type": "feature",
+            "functional_domain": "documentos e revisão documental",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignDocumentMunicipality",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Entitlements/MunicipalityEntitlementServiceTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "74e2e1c97673898bee55ff02860216a204dc4131",
+            "origin_commit_subject": "feat(entitlements): aplicar dependências e auditoria transacional",
+            "test_type": "feature",
+            "functional_domain": "entitlements municipais",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "ApplicationIntake",
+                "ApplicationReview"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 11,
+                "methods": [
+                    "assertDatabaseMissing",
+                    "assertFalse",
+                    "assertSame",
+                    "assertTrue",
+                    "expectException"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Entitlements/MunicipalityFeatureDependencyTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "74e2e1c97673898bee55ff02860216a204dc4131",
+            "origin_commit_subject": "feat(entitlements): aplicar dependências e auditoria transacional",
+            "test_type": "feature",
+            "functional_domain": "entitlements municipais",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "ApplicationExport",
+                "ApplicationIntake",
+                "ApplicationReview"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 7,
+                "methods": [
+                    "assertFalse",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Entitlements/MunicipalityFeatureEntitlementPersistenceTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "5745f1fd4343b2ce178e7524a6ecb05ff7384579",
+            "origin_commit_subject": "feat(entitlements): persistir funcionalidades por município",
+            "test_type": "feature",
+            "functional_domain": "entitlements municipais",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "ApplicationExport",
+                "ApplicationIntake",
+                "ApplicationReview"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 11,
+                "methods": [
+                    "assertCount",
+                    "assertDatabaseCount",
+                    "assertDatabaseMissing",
+                    "assertFalse",
+                    "assertSame",
+                    "assertTrue",
+                    "expectException"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Entitlements/MunicipalityFeatureNavigationTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "4d3b8c62756eb6fa325e8d6ce1bc3a911eed107f",
+            "origin_commit_subject": "feat(access): aplicar funcionalidades aos fluxos de candidaturas",
+            "test_type": "feature",
+            "functional_domain": "entitlements municipais",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "ApplicationIntake",
+                "ApplicationReview"
+            ],
+            "permissions_assigned": [
+                "applications.view",
+                "dashboard.view",
+                "documents.view"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 11,
+                "methods": [
+                    "assertContains",
+                    "assertFalse",
+                    "assertNotContains",
+                    "assertNotNull",
+                    "assertNull",
+                    "assertSame",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithPermissions"
+            ],
+            "multi_municipality_coverage": true,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Integrated/FullHousingProgramFlowTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "f693e2005f45fc963d2e84fe60e98f58c17ab4ef",
+            "origin_commit_subject": "test(access): alinhar regressões com MFA e permissões do painel",
+            "test_type": "feature",
+            "functional_domain": "segurança e autorização",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Performance/BasicLoadSmokeTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "f693e2005f45fc963d2e84fe60e98f58c17ab4ef",
+            "origin_commit_subject": "test(access): alinhar regressões com MFA e permissões do painel",
+            "test_type": "feature",
+            "functional_domain": "segurança e autorização",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/PublicPortal/PublicHousingOfferSprint20Test.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "bf7674b5c1f91dd861111d2fffd9fe04144cefed",
+            "origin_commit_subject": "feat(access): authorize public housing content by permission",
+            "test_type": "feature",
+            "functional_domain": "portal público de fogos",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 1,
+                "methods": [
+                    "assertRedirect"
+                ]
+            },
+            "assertions_removed": {
+                "count": 1,
+                "methods": [
+                    "assertRedirect"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/QA45DashboardsKpisMunicipalReportsTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "f693e2005f45fc963d2e84fe60e98f58c17ab4ef",
+            "origin_commit_subject": "test(access): alinhar regressões com MFA e permissões do painel",
+            "test_type": "feature",
+            "functional_domain": "relatórios e exportações",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Reports/MunicipalExportsSecurityTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "5e696dbd58bdc5a0294f7dfd814f78fe963a2253",
+            "origin_commit_subject": "fix(access): permitir perfis personalizados nos fluxos de candidaturas",
+            "test_type": "feature",
+            "functional_domain": "segurança e autorização",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Reports/MunicipalReportsAuthorizationTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "5e696dbd58bdc5a0294f7dfd814f78fe963a2253",
+            "origin_commit_subject": "fix(access): permitir perfis personalizados nos fluxos de candidaturas",
+            "test_type": "feature",
+            "functional_domain": "relatórios e exportações",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/AdditionalDocumentBackofficePermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "4f712c60ac5ccea577bc2e59616f5d75f21ba2ac",
+            "origin_commit_subject": "feat(access): authorize additional document workflow by permission",
+            "test_type": "feature",
+            "functional_domain": "documentos e revisão documental",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "applications.update",
+                "applications.view",
+                "documents.approve",
+                "documents.create",
+                "documents.reject",
+                "documents.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 24,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertNotSame",
+                    "assertOk"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/AdministrativeProcessBackofficePolicyTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "276d278262040487d5693c0c91a257055d14fff4",
+            "origin_commit_subject": "feat(access): authorize administrative process views by permission",
+            "test_type": "feature",
+            "functional_domain": "processo administrativo",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "administrative_processes.audit",
+                "administrative_processes.create",
+                "administrative_processes.view"
+            ],
+            "policies_involved": [
+                "AdministrativeProcessBackofficePolicy"
+            ],
+            "assertions_added": {
+                "count": 8,
+                "methods": [
+                    "assertCount",
+                    "assertFalse",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/AdministrativeProcessBackofficeRouteAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "276d278262040487d5693c0c91a257055d14fff4",
+            "origin_commit_subject": "feat(access): authorize administrative process views by permission",
+            "test_type": "feature",
+            "functional_domain": "processo administrativo",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "administrative_processes.audit",
+                "administrative_processes.create",
+                "administrative_processes.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 15,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/AdministrativeProcessIndexPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "a09fb04519a5558eafa011f57652df841b4225cc",
+            "origin_commit_subject": "feat(access): authorize administrative process index by permission",
+            "test_type": "feature",
+            "functional_domain": "processo administrativo",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "administrative_processes.create",
+                "administrative_processes.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 13,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/AdministrativeProcessMutationPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "18c56b03c12e9593eb89af5067b958e18f9c7302",
+            "origin_commit_subject": "feat(access): authorize administrative process mutations by permission",
+            "test_type": "feature",
+            "functional_domain": "processo administrativo",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "administrative_processes.update",
+                "administrative_processes.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 13,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertNotSame"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/AllocationLotteriesPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "f07e3d3882aadfdfa683049044fbad640a89bafa",
+            "origin_commit_subject": "feat(access): authorize allocation lotteries by permission",
+            "test_type": "feature",
+            "functional_domain": "atribuição",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "allocations.approve",
+                "allocations.audit",
+                "allocations.create",
+                "allocations.update",
+                "allocations.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 45,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk",
+                    "assertRedirect",
+                    "assertSame",
+                    "assertSessionHasErrors",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/AllocationOperationsPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "cb961abbd6b8bc08fd5bce5ae2d328fc69907e6a",
+            "origin_commit_subject": "feat(access): authorize allocation operations by permission",
+            "test_type": "feature",
+            "functional_domain": "atribuição",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "allocations.create",
+                "allocations.update",
+                "allocations.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 54,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk",
+                    "assertRedirect",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/AllocationReportsPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "aa363cf00fd281ed267af1a83c24b6ed7794a697",
+            "origin_commit_subject": "feat(access): authorize allocation reports by permission",
+            "test_type": "feature",
+            "functional_domain": "atribuição",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "allocations.approve",
+                "allocations.create",
+                "allocations.export",
+                "allocations.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 41,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk",
+                    "assertRedirect",
+                    "assertSame",
+                    "assertStringNotContainsString",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/AllocationRuleSetsPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "382e8f9c38b61e7a8bee6d153777285ad8ab1915",
+            "origin_commit_subject": "feat(access): authorize allocation rule sets by permission",
+            "test_type": "feature",
+            "functional_domain": "atribuição",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "allocations.approve",
+                "allocations.create",
+                "allocations.update",
+                "allocations.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 55,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertDatabaseHas",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk",
+                    "assertRedirect",
+                    "assertSame",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/AllocationRunsPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "30d24b46f814d36ee2397776a3e29061729351d3",
+            "origin_commit_subject": "feat(access): authorize allocation runs by permission",
+            "test_type": "feature",
+            "functional_domain": "atribuição",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "allocations.approve",
+                "allocations.create",
+                "allocations.reject",
+                "allocations.update",
+                "allocations.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 45,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk",
+                    "assertRedirect",
+                    "assertSame",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/ApplicationArtifactPolicyTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "9b6224ea3e300032a77e4253bdaaf6255de1c932",
+            "origin_commit_subject": "feat(access): authorize application artifacts by permission",
+            "test_type": "feature",
+            "functional_domain": "artefactos de candidatura",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [
+                "documents.create",
+                "documents.export",
+                "documents.view",
+                "reports.create",
+                "reports.export",
+                "reports.view"
+            ],
+            "policies_involved": [
+                "ApplicationArtifactPolicy"
+            ],
+            "assertions_added": {
+                "count": 17,
+                "methods": [
+                    "assertCount",
+                    "assertFalse",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Security/ApplicationArtifactRouteAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "9b6224ea3e300032a77e4253bdaaf6255de1c932",
+            "origin_commit_subject": "feat(access): authorize application artifacts by permission",
+            "test_type": "feature",
+            "functional_domain": "artefactos de candidatura",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "applications.export",
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [
+                "applications.view",
+                "documents.create",
+                "documents.view",
+                "reports.create",
+                "reports.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 17,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertNotSame",
+                    "assertOk"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Security/ApplicationBackofficePolicyTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "6f5bd09fbf4dcacaa01b2343eaf074d590fdbda7",
+            "origin_commit_subject": "feat(access): authorize backoffice applications by permission",
+            "test_type": "feature",
+            "functional_domain": "candidaturas backoffice",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [
+                "applications.audit",
+                "applications.create",
+                "applications.update",
+                "applications.view"
+            ],
+            "policies_involved": [
+                "ApplicationBackofficePolicy"
+            ],
+            "assertions_added": {
+                "count": 13,
+                "methods": [
+                    "assertCount",
+                    "assertFalse",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Security/ApplicationBackofficeRouteAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "6f5bd09fbf4dcacaa01b2343eaf074d590fdbda7",
+            "origin_commit_subject": "feat(access): authorize backoffice applications by permission",
+            "test_type": "feature",
+            "functional_domain": "candidaturas backoffice",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [
+                "applications.audit",
+                "applications.create",
+                "applications.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 17,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Security/ApplicationFeatureEntitlementAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "4d3b8c62756eb6fa325e8d6ce1bc3a911eed107f",
+            "origin_commit_subject": "feat(access): aplicar funcionalidades aos fluxos de candidaturas",
+            "test_type": "feature",
+            "functional_domain": "entitlements de candidaturas",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "ApplicationExport",
+                "ApplicationIntake",
+                "ApplicationReview",
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [
+                "administrative_processes.create",
+                "applications.view",
+                "dashboard.view",
+                "reports.export",
+                "reports.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 17,
+                "methods": [
+                    "assertDatabaseCount",
+                    "assertForbidden",
+                    "assertOk",
+                    "assertRedirect",
+                    "assertSame"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithPermissions"
+            ],
+            "multi_municipality_coverage": true,
+            "risk": "alto",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Security/ApplicationIntakePermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "e6f07496fbc2fb35d69753bc53892a2a86510c5c",
+            "origin_commit_subject": "feat(access): authorize application intake by permission",
+            "test_type": "feature",
+            "functional_domain": "receção de candidaturas",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "ApplicationIntake",
+                "applications.intake"
+            ],
+            "permissions_assigned": [
+                "administrative_processes.create",
+                "administrative_processes.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 15,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk",
+                    "assertRedirect"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/ApplicationProcessTrackingPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "5cb20423c0d5176a20f79c3dc1368b99c1bfd1e9",
+            "origin_commit_subject": "feat(access): authorize application process tracking by permission",
+            "test_type": "feature",
+            "functional_domain": "acompanhamento processual",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [
+                "applications.approve",
+                "applications.create",
+                "applications.update",
+                "applications.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 21,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertNotSame",
+                    "assertOk"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Security/ApplicationReviewPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3499f38b1885b36413f383429c7cabe14f03d419",
+            "origin_commit_subject": "feat(access): authorize application reviews by permission",
+            "test_type": "feature",
+            "functional_domain": "análise de candidaturas",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "applications.review",
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [
+                "administrative_processes.create",
+                "administrative_processes.update",
+                "administrative_processes.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 16,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "municipalityWithFeatures",
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Security/AuditAccessRoutesCommandTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "e6f07496fbc2fb35d69753bc53892a2a86510c5c",
+            "origin_commit_subject": "feat(access): authorize application intake by permission",
+            "test_type": "feature",
+            "functional_domain": "auditoria de rotas",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "applications.export",
+                "applications.intake",
+                "applications.review"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 105,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertNotNull",
+                    "assertSame"
+                ]
+            },
+            "assertions_removed": {
+                "count": 9,
+                "methods": [
+                    "assertContains",
+                    "assertSame",
+                    "assertTrue"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Contadores estritos atualizados para os valores reais; assertions equivalentes preservadas."
+        },
+        {
+            "path": "tests/Feature/Security/CandidateBackofficeBoundaryTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "d476de63a7e24429e1826e107dd8214846f80228",
+            "origin_commit_subject": "security: bloquear candidatos no backoffice municipal",
+            "test_type": "feature",
+            "functional_domain": "boundary candidato/backoffice",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "documents.approve",
+                "documents.view",
+                "roles.view"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 3,
+                "methods": [
+                    "assertForbidden",
+                    "assertOk"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/CustomRoleAuditTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "a21fdc10805187607f93057b3d54266205c04533",
+            "origin_commit_subject": "test(audit): cobrir ciclo de vida dos perfis municipais",
+            "test_type": "feature",
+            "functional_domain": "RBAC e perfis municipais",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "applications.view",
+                "documents.view",
+                "permissions_added",
+                "permissions_removed"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 35,
+                "methods": [
+                    "assertArrayNotHasKey",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNull",
+                    "assertRedirect",
+                    "assertSame",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/CustomRoleEffectivePermissionTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "fd8ca341b58e8d0bb05fd5167565f0e2e8d7f5ea",
+            "origin_commit_subject": "feat(access): proteger perfis de sistema e municipais",
+            "test_type": "feature",
+            "functional_domain": "RBAC e perfis municipais",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": false,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "applications.view"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 9,
+                "methods": [
+                    "assertFalse",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Wildcard mantido exclusivamente para testar a semântica wildcard do RBAC."
+        },
+        {
+            "path": "tests/Feature/Security/DocumentConfigurationPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "af767d47d50a9ba1c9904410a4f2341af1104b6c",
+            "origin_commit_subject": "feat(access): authorize document configuration by permission",
+            "test_type": "feature",
+            "functional_domain": "documentos e revisão documental",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "documents.create",
+                "documents.delete",
+                "documents.update",
+                "documents.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 24,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/DocumentDossierRouteIntegrityTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "acf3b5c3157475bd58b7ad05395c28d3e0370300",
+            "origin_commit_subject": "fix(routes): remove obsolete document dossier update endpoint",
+            "test_type": "feature",
+            "functional_domain": "documentos e revisão documental",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 4,
+                "methods": [
+                    "assertNotNull",
+                    "assertNull",
+                    "assertStringContainsString",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/DocumentReviewPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "d1245d047e4e912cfdbbd99df01a76870ee69a5d",
+            "origin_commit_subject": "feat(access): authorize document review workflow by permission",
+            "test_type": "feature",
+            "functional_domain": "documentos e revisão documental",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "ApplicationIntake",
+                "ApplicationReview",
+                "applications.review"
+            ],
+            "permissions_assigned": [
+                "documents.approve",
+                "documents.reject",
+                "documents.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 37,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertDatabaseHas",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertHeader",
+                    "assertNotNull",
+                    "assertOk",
+                    "assertRedirect"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/HousingUnitPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "67b7205eed19eed1adb63213a6f59d4a1a7c75dc",
+            "origin_commit_subject": "feat(access): authorize housing units and contest assignments by permission",
+            "test_type": "feature",
+            "functional_domain": "fogos municipais",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "allocations.create",
+                "allocations.update",
+                "allocations.view",
+                "housing_units.create",
+                "housing_units.delete",
+                "housing_units.update",
+                "housing_units.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 40,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertDatabaseHas",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/InitialMunicipalRoleProfilesTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "5e696dbd58bdc5a0294f7dfd814f78fe963a2253",
+            "origin_commit_subject": "fix(access): permitir perfis personalizados nos fluxos de candidaturas",
+            "test_type": "feature",
+            "functional_domain": "RBAC e perfis municipais",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [
+                "administrative_processes.create",
+                "documents.approve",
+                "documents.reject",
+                "eligibility.view",
+                "reports.audit",
+                "reports.export",
+                "reports.view",
+                "roles.id"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 74,
+                "methods": [
+                    "assertContains",
+                    "assertDatabaseHas",
+                    "assertDontSee",
+                    "assertExists",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotContains",
+                    "assertNotNull",
+                    "assertOk",
+                    "assertProhibitedDomains",
+                    "assertRedirect",
+                    "assertSame",
+                    "assertSee",
+                    "assertSessionHasNoErrors",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Security/MunicipalityFeatureAuditTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "175c0b32ed6611daf3206d32c6a13e07b7cf6a33",
+            "origin_commit_subject": "feat(entitlements): adicionar administração de plataforma",
+            "test_type": "feature",
+            "functional_domain": "entitlements municipais",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "ApplicationIntake",
+                "ApplicationReview"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 10,
+                "methods": [
+                    "assertDatabaseMissing",
+                    "assertFalse",
+                    "assertSame",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/MunicipalityFeatureMiddlewareTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "4d3b8c62756eb6fa325e8d6ce1bc3a911eed107f",
+            "origin_commit_subject": "feat(access): aplicar funcionalidades aos fluxos de candidaturas",
+            "test_type": "feature",
+            "functional_domain": "entitlements municipais",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "ApplicationIntake",
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [
+                "administrative_processes.create",
+                "dashboard.view"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 5,
+                "methods": [
+                    "assertForbidden",
+                    "assertNotFound",
+                    "assertOk",
+                    "assertSee"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithPermissions"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Security/PermissionSensitiveMfaTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "8546ad48abfc56a9062ee9bae715f83c90cf2110",
+            "origin_commit_subject": "feat(security): impor MFA por permissões sensíveis ativas",
+            "test_type": "feature",
+            "functional_domain": "permissões e middleware",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [
+                "applications.view",
+                "documents.approve",
+                "documents.reject",
+                "documents.view"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 15,
+                "methods": [
+                    "assertFalse",
+                    "assertOk",
+                    "assertRedirect",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Security/ProgramContestPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "2d92504754379b03c30658bba137706471d7ee87",
+            "origin_commit_subject": "feat(access): authorize programs and contests by permission",
+            "test_type": "feature",
+            "functional_domain": "programas e concursos",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "contests.create",
+                "contests.delete",
+                "contests.publish",
+                "contests.update",
+                "contests.view",
+                "programs.create",
+                "programs.delete",
+                "programs.publish",
+                "programs.update",
+                "programs.view"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 38,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/PublicHousingUnitPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "bf7674b5c1f91dd861111d2fffd9fe04144cefed",
+            "origin_commit_subject": "feat(access): authorize public housing content by permission",
+            "test_type": "feature",
+            "functional_domain": "fogos municipais",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "documents.create",
+                "documents.delete",
+                "documents.update",
+                "documents.view",
+                "housing_units.update",
+                "housing_units.view"
+            ],
+            "policies_involved": [
+                "Policy real do recurso/rota (sem mock)"
+            ],
+            "assertions_added": {
+                "count": 45,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertDatabaseHas",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/PublicPortalSettingsPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "cff66fc381914ab17c76448b057a272c2cb52876",
+            "origin_commit_subject": "feat(access): authorize public portal settings by permission",
+            "test_type": "feature",
+            "functional_domain": "configuração do portal público",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "public_portal_links",
+                "public_portal_settings_"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 50,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertDatabaseHas",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk",
+                    "assertRedirect",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/RbacCharacterizationTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "e6f07496fbc2fb35d69753bc53892a2a86510c5c",
+            "origin_commit_subject": "feat(access): authorize application intake by permission",
+            "test_type": "feature",
+            "functional_domain": "RBAC",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "applications.intake",
+                "applications.review",
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [
+                "dashboard.view",
+                "documents.view"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 8,
+                "methods": [
+                    "assertContains",
+                    "assertFalse",
+                    "assertOk",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 10,
+                "methods": [
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertIsString",
+                    "assertNotContains",
+                    "assertSame"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Expectativas atualizadas para permission middleware, MFA efetivo e guards adicionados."
+        },
+        {
+            "path": "tests/Feature/Security/RequirePermissionMiddlewareTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "03cd51a1aa3be5a5c1f4507ffcf0a914375a625c",
+            "origin_commit_subject": "feat(access): add generic permission middleware",
+            "test_type": "feature",
+            "functional_domain": "permissões e middleware",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "applications.*",
+                "applications.view",
+                "documents.view",
+                "reports.view"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 8,
+                "methods": [
+                    "assertForbidden",
+                    "assertOk",
+                    "assertRedirect",
+                    "assertSeeText"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithPermissions"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Wildcard mantido exclusivamente para testar a semântica wildcard do RBAC."
+        },
+        {
+            "path": "tests/Feature/Security/SystemRoleProtectionTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "fd8ca341b58e8d0bb05fd5167565f0e2e8d7f5ea",
+            "origin_commit_subject": "feat(access): proteger perfis de sistema e municipais",
+            "test_type": "feature",
+            "functional_domain": "RBAC e perfis municipais",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": false,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 12,
+                "methods": [
+                    "assertDatabaseHas",
+                    "assertEqualsCanonicalizing",
+                    "assertFalse",
+                    "assertNotSame",
+                    "assertSame",
+                    "assertTrue",
+                    "expectException"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Security/TypologyAdequacyRulesPermissionAccessTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "e0ae31558301fc9613a0cc08fd118e125cd238ef",
+            "origin_commit_subject": "feat(access): authorize typology adequacy rules by permission",
+            "test_type": "feature",
+            "functional_domain": "regras de tipologia",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [
+                "allocations.create",
+                "allocations.update",
+                "allocations.view",
+                "typology_adequacy_rules",
+                "typology_rules_"
+            ],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 50,
+                "methods": [
+                    "assertContains",
+                    "assertCount",
+                    "assertDatabaseHas",
+                    "assertDatabaseMissing",
+                    "assertFalse",
+                    "assertForbidden",
+                    "assertNotNull",
+                    "assertOk",
+                    "assertRedirect",
+                    "assertTrue"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithCustomRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Sprint12AllocationTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "67b7205eed19eed1adb63213a6f59d4a1a7c75dc",
+            "origin_commit_subject": "feat(access): authorize housing units and contest assignments by permission",
+            "test_type": "feature",
+            "functional_domain": "atribuição",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 1,
+                "methods": [
+                    "assertSessionHasErrors"
+                ]
+            },
+            "assertions_removed": {
+                "count": 1,
+                "methods": [
+                    "assertSessionHasErrors"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Sprint17ReportingDashboardTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "5e696dbd58bdc5a0294f7dfd814f78fe963a2253",
+            "origin_commit_subject": "fix(access): permitir perfis personalizados nos fluxos de candidaturas",
+            "test_type": "feature",
+            "functional_domain": "relatórios",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 3,
+                "methods": [
+                    "assertOk",
+                    "assertSessionHasNoErrors"
+                ]
+            },
+            "assertions_removed": {
+                "count": 3,
+                "methods": [
+                    "assertOk",
+                    "assertSessionHasNoErrors"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Sprint23ProcessTrackingTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "acompanhamento processual",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Sprint24BackofficeOperationalTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "operação backoffice",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Sprint3PortalProgramsTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "2d92504754379b03c30658bba137706471d7ee87",
+            "origin_commit_subject": "feat(access): authorize programs and contests by permission",
+            "test_type": "feature",
+            "functional_domain": "portal público",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Sprint6DocumentManagementTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "af767d47d50a9ba1c9904410a4f2341af1104b6c",
+            "origin_commit_subject": "feat(access): authorize document configuration by permission",
+            "test_type": "feature",
+            "functional_domain": "documentos e revisão documental",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignDocumentMunicipality",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Sprint7EligibilityEngineTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45C",
+            "origin_commit": "f693e2005f45fc963d2e84fe60e98f58c17ab4ef",
+            "origin_commit_subject": "test(access): alinhar regressões com MFA e permissões do painel",
+            "test_type": "feature",
+            "functional_domain": "elegibilidade",
+            "reason_for_change": "Cobrir perfis municipais, permissões efetivas, MFA e boundary de candidato.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "ApplicationIntake",
+                "ApplicationReview"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Feature/Sprint8ApplicationSubmissionTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "candidaturas",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/Sprint9AdministrativeWorkflowTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "processo administrativo",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": true,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/AccessibilitySmokeTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 2,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "assertions_removed": {
+                "count": 2,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/ApplicationCaseWorkspaceTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "81ab187bd065323efc3b8e0de934149f7066be11",
+            "origin_commit_subject": "test(entitlements): alinhar fixtures ao contexto municipal",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/CaseChecklistTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "81ab187bd065323efc3b8e0de934149f7066be11",
+            "origin_commit_subject": "test(entitlements): alinhar fixtures ao contexto municipal",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/CaseNextActionTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "81ab187bd065323efc3b8e0de934149f7066be11",
+            "origin_commit_subject": "test(entitlements): alinhar fixtures ao contexto municipal",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/CaseTimelineTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "81ab187bd065323efc3b8e0de934149f7066be11",
+            "origin_commit_subject": "test(entitlements): alinhar fixtures ao contexto municipal",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/CaseWorkspaceAuthorizationTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "81ab187bd065323efc3b8e0de934149f7066be11",
+            "origin_commit_subject": "test(entitlements): alinhar fixtures ao contexto municipal",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/CaseWorkspaceResponsiveSmokeTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "81ab187bd065323efc3b8e0de934149f7066be11",
+            "origin_commit_subject": "test(entitlements): alinhar fixtures ao contexto municipal",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/CaseWorkspaceRgpdTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "81ab187bd065323efc3b8e0de934149f7066be11",
+            "origin_commit_subject": "test(entitlements): alinhar fixtures ao contexto municipal",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/CaseWorkspaceTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 1,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "assertions_removed": {
+                "count": 1,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/CaseWorkspaceVisualConsistencyTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "81ab187bd065323efc3b8e0de934149f7066be11",
+            "origin_commit_subject": "test(entitlements): alinhar fixtures ao contexto municipal",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/Concerns/CreatesEnterpriseCaseFixtures.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "81ab187bd065323efc3b8e0de934149f7066be11",
+            "origin_commit_subject": "test(entitlements): alinhar fixtures ao contexto municipal",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/DashboardVisualConsistencyTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 3,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "assertions_removed": {
+                "count": 3,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Cobertura UX preservada; fixture municipal explícita revista na 46A."
+        },
+        {
+            "path": "tests/Feature/UX/DesignSystemRgpdTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "81ab187bd065323efc3b8e0de934149f7066be11",
+            "origin_commit_subject": "test(entitlements): alinhar fixtures ao contexto municipal",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/MainDashboardVisualStructureTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 2,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "assertions_removed": {
+                "count": 2,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Cobertura UX preservada; fixture municipal explícita revista na 46A."
+        },
+        {
+            "path": "tests/Feature/UX/MunicipalUnifiedPlatformTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 4,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "assertions_removed": {
+                "count": 4,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Cobertura UX preservada; fixture municipal explícita revista na 46A."
+        },
+        {
+            "path": "tests/Feature/UX/PortugueseTerminologySmokeTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 2,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "assertions_removed": {
+                "count": 2,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/PortugueseTerminologyTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "81ab187bd065323efc3b8e0de934149f7066be11",
+            "origin_commit_subject": "test(entitlements): alinhar fixtures ao contexto municipal",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality",
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/PriorityOperationsQueueTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "81ab187bd065323efc3b8e0de934149f7066be11",
+            "origin_commit_subject": "test(entitlements): alinhar fixtures ao contexto municipal",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/ProfileDashboardTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 2,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "assertions_removed": {
+                "count": 4,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/ProfileDashboardWidgetsTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "4d3b8c62756eb6fa325e8d6ce1bc3a911eed107f",
+            "origin_commit_subject": "feat(access): aplicar funcionalidades aos fluxos de candidaturas",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/SmartActionCenterTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 1,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "assertions_removed": {
+                "count": 1,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Cobertura UX preservada; fixture municipal explícita revista na 46A."
+        },
+        {
+            "path": "tests/Feature/UX/UnifiedPlatformAccessibilityTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 3,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "assertions_removed": {
+                "count": 3,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Cobertura UX preservada; fixture municipal explícita revista na 46A."
+        },
+        {
+            "path": "tests/Feature/UX/UniversalSearchTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 2,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "assertions_removed": {
+                "count": 1,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Feature/UX/WorkspaceDashboardTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "feature",
+            "functional_domain": "experiência de utilização",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 1,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "assertions_removed": {
+                "count": 1,
+                "methods": [
+                    "assertSee"
+                ]
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "médio",
+            "classification": "correta mas acoplada",
+            "required_action": "Cobertura UX preservada; fixture municipal explícita revista na 46A."
+        },
+        {
+            "path": "tests/Unit/Cases/CaseWorkspaceServiceTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "81ab187bd065323efc3b8e0de934149f7066be11",
+            "origin_commit_subject": "test(entitlements): alinhar fixtures ao contexto municipal",
+            "test_type": "unitário",
+            "functional_domain": "Case Workspace",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "assignApplicationMunicipality"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "baixo",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Unit/Dashboard/DashboardWidgetRegistryTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "4d3b8c62756eb6fa325e8d6ce1bc3a911eed107f",
+            "origin_commit_subject": "feat(access): aplicar funcionalidades aos fluxos de candidaturas",
+            "test_type": "unitário",
+            "functional_domain": "dashboard",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "baixo",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Unit/Dashboard/ProfileDashboardServiceTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "81ab187bd065323efc3b8e0de934149f7066be11",
+            "origin_commit_subject": "test(entitlements): alinhar fixtures ao contexto municipal",
+            "test_type": "unitário",
+            "functional_domain": "dashboard",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "baixo",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        },
+        {
+            "path": "tests/Unit/DocumentIntelligence/DocumentDuplicateDetectorTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45B",
+            "origin_commit": "3135d6f21de7e80f47d41a7eb6f2c24f6b0646e7",
+            "origin_commit_subject": "test(access): alinhar regressões com guards backoffice",
+            "test_type": "unitário",
+            "functional_domain": "documentos e revisão documental",
+            "reason_for_change": "Caracterizar a migração de fixed-role para permission middleware e Policies reais.",
+            "mfa_changed": false,
+            "municipality_changed": false,
+            "entitlement_changed": false,
+            "features_activated": [],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "baixo",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Unit/Entitlements/FeatureKeyTest.php",
+            "git_status": "A",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "352357dac86a68e2ab4d2bbe6f9d48e25920f6c4",
+            "origin_commit_subject": "feat(entitlements): adicionar catálogo municipal tipado",
+            "test_type": "unitário",
+            "functional_domain": "infraestrutura técnica",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": false,
+            "entitlement_changed": true,
+            "features_activated": [
+                "ApplicationExport",
+                "ApplicationIntake",
+                "ApplicationReview"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 9,
+                "methods": [
+                    "assertNotContains",
+                    "assertSame"
+                ]
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [],
+            "multi_municipality_coverage": false,
+            "risk": "alto",
+            "classification": "correta",
+            "required_action": "Sem correção funcional; manter como regressão ativa."
+        },
+        {
+            "path": "tests/Unit/Search/UniversalSearchServiceTest.php",
+            "git_status": "M",
+            "probable_origin_sprint": "45D",
+            "origin_commit": "4d3b8c62756eb6fa325e8d6ce1bc3a911eed107f",
+            "origin_commit_subject": "feat(access): aplicar funcionalidades aos fluxos de candidaturas",
+            "test_type": "unitário",
+            "functional_domain": "pesquisa universal",
+            "reason_for_change": "Cobrir entitlements municipais fail-closed e isolamento por Município.",
+            "mfa_changed": false,
+            "municipality_changed": true,
+            "entitlement_changed": true,
+            "features_activated": [
+                "FeatureKey::cases() (removido na 46A)"
+            ],
+            "permissions_assigned": [],
+            "policies_involved": [],
+            "assertions_added": {
+                "count": 0,
+                "methods": []
+            },
+            "assertions_removed": {
+                "count": 0,
+                "methods": []
+            },
+            "mocks_added": [],
+            "mocks_removed": [],
+            "helpers_used": [
+                "municipalityWithFeatures",
+                "userWithRole"
+            ],
+            "multi_municipality_coverage": false,
+            "risk": "baixo",
+            "classification": "correta mas acoplada",
+            "required_action": "Corrigida na 46A: substituída a ativação global por features explícitas e mínimas."
+        }
+    ]
+}

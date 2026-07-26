@@ -18,6 +18,7 @@ use App\Services\DocumentIntelligence\DocumentValidationValuePresenter;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class DocumentAiValidationController extends Controller
@@ -31,30 +32,32 @@ class DocumentAiValidationController extends Controller
 
     public function index(FilterDocumentAiValidationsRequest $request): View
     {
-        Gate::authorize('viewAny', DocumentAiValidationRun::class);
+        Gate::authorize('viewAnyBackoffice', DocumentAiValidation::class);
+        $actor = $this->authenticatedUser($request);
         $filters = array_filter(
             $request->validated(),
             static fn (mixed $value): bool => $value !== null && $value !== ''
         );
 
         return view('backoffice.document-ai.validations.index', [
-            'runs' => $this->dashboardService->runs($filters),
+            'runs' => $this->dashboardService->runs($filters, $actor),
             'filters' => $filters,
-            'totals' => $this->dashboardService->totals(),
+            'totals' => $this->dashboardService->totals($actor),
         ]);
     }
 
-    public function show(Application $application): View
+    public function show(Request $request, Application $application): View
     {
-        Gate::authorize('viewAny', DocumentAiValidationRun::class);
+        Gate::authorize('viewBackoffice', $application);
+        $actor = $this->authenticatedUser($request);
         $application->loadMissing(['user', 'contest']);
-        $run = $this->dashboardService->latestRunFor($application);
+        $run = $this->dashboardService->latestRunFor($application, $actor);
         $validations = collect();
         $canViewSensitive = false;
         $canViewHealth = false;
 
         if ($run instanceof DocumentAiValidationRun) {
-            Gate::authorize('view', $run);
+            Gate::authorize('viewBackoffice', $run);
 
             $validations = $run->validations
                 ->sortBy(function (DocumentAiValidation $validation): string {
@@ -99,9 +102,9 @@ class DocumentAiValidationController extends Controller
         ]);
     }
 
-    public function validation(DocumentAiValidation $validation): View
+    public function validation(Request $request, DocumentAiValidation $validation): View
     {
-        Gate::authorize('view', $validation);
+        Gate::authorize('viewBackoffice', $validation);
         $validation->loadMissing(['run.application.user', 'analysis.documentSubmission.documentType']);
         $canViewSensitive = request()->user()?->can('viewSensitive', $validation) ?? false;
         $canViewHealth = request()->user()?->can('viewHealth', $validation) ?? false;
@@ -130,7 +133,7 @@ class DocumentAiValidationController extends Controller
 
     public function markManualReview(MarkDocumentAiValidationReviewRequest $request, DocumentAiValidation $validation): RedirectResponse
     {
-        Gate::authorize('markManualReview', $validation);
+        Gate::authorize('reviewBackoffice', $validation);
 
         $validation->forceFill([
             'status' => DocumentAiValidationStatus::ManualReview,
@@ -166,7 +169,7 @@ class DocumentAiValidationController extends Controller
 
     public function rerun(RerunDocumentAiValidationRequest $request, Application $application): RedirectResponse
     {
-        Gate::authorize('rerun', DocumentAiValidationRun::class);
+        Gate::authorize('analyzeDocumentsBackoffice', $application);
 
         $this->pipeline->processApplication($application, $request->user());
 

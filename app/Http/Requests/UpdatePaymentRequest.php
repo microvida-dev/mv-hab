@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\PaymentStatus;
+use App\Models\Payment;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +11,10 @@ class UpdatePaymentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $payment = $this->route('payment');
+
+        return $payment instanceof Payment
+            && $this->user()?->can('updateBackoffice', $payment) === true;
     }
 
     /**

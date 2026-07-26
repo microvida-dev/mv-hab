@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\PermissionReview;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CompletePermissionReviewRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasPermission('settings.audit') || $this->user()?->hasPermission('audit_logs.audit');
+        $review = $this->route('permissionReview');
+
+        return $review instanceof PermissionReview
+            && ($this->user()?->can('complete', $review) ?? false);
     }
 
     /**

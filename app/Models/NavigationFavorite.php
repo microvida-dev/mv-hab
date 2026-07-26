@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'resource_type',
     'resource_id',
     'metadata',
+    'sort_order',
 ])]
 class NavigationFavorite extends Model
 {
@@ -24,6 +25,7 @@ class NavigationFavorite extends Model
         return [
             'route_parameters' => 'array',
             'metadata' => 'array',
+            'sort_order' => 'integer',
         ];
     }
 

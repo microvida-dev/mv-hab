@@ -2,6 +2,7 @@
 
 namespace App\Services\Agenda;
 
+use App\Data\Dashboard\TimelineEvent;
 use App\Enums\Agenda\AgendaView;
 use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Models\User;
@@ -95,36 +96,50 @@ final readonly class AgendaService
 
     /**
      * @param  array<string, mixed>  $dashboard
-     * @return Collection<int, \App\Data\Dashboard\TimelineEvent>
+     * @return Collection<int, TimelineEvent>
      */
     public function nextEvents(User $user, int $limit = 5, array $dashboard = []): Collection
     {
         return $this->timeline
             ->eventsForUser($user, $dashboard)
-            ->sortBy([
-                fn ($event): int => $event->datetime?->timestamp ?? PHP_INT_MAX,
-                fn ($event): int => $event->priorityWeight(),
-                fn ($event): string => mb_strtolower($event->title),
-            ])
+            ->sort(fn (TimelineEvent $left, TimelineEvent $right): int => $this->compareEvents($left, $right))
             ->take($limit)
             ->values();
     }
 
     /**
      * @param  array<string, mixed>  $dashboard
-     * @return Collection<int, \App\Data\Dashboard\TimelineEvent>
+     * @return Collection<int, TimelineEvent>
      */
     public function nextCriticalEvents(User $user, int $limit = 5, array $dashboard = []): Collection
     {
         return $this->timeline
             ->eventsForUser($user, $dashboard)
-            ->filter(fn ($event): bool => $event->priority === TimelinePriority::Critical)
-            ->sortBy([
-                fn ($event): int => $event->datetime?->timestamp ?? PHP_INT_MAX,
-                fn ($event): int => $event->priorityWeight(),
-                fn ($event): string => mb_strtolower($event->title),
-            ])
+            ->filter(fn (TimelineEvent $event): bool => $event->priority === TimelinePriority::Critical)
+            ->sort(fn (TimelineEvent $left, TimelineEvent $right): int => $this->compareEvents($left, $right))
             ->take($limit)
             ->values();
+    }
+
+    private function compareEvents(TimelineEvent $left, TimelineEvent $right): int
+    {
+        $byDate = $this->eventTimestamp($left) <=> $this->eventTimestamp($right);
+
+        if ($byDate !== 0) {
+            return $byDate;
+        }
+
+        $byPriority = $left->priorityWeight() <=> $right->priorityWeight();
+
+        return $byPriority !== 0
+            ? $byPriority
+            : strcasecmp($left->title, $right->title);
+    }
+
+    private function eventTimestamp(TimelineEvent $event): int
+    {
+        return $event->datetime === null
+            ? PHP_INT_MAX
+            : $event->datetime->getTimestamp();
     }
 }

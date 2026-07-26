@@ -8,7 +8,8 @@ class GenerateDocumentDossierRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasPermissionTo('documents', 'export') || $this->user()?->hasPermissionTo('documents', 'view');
+        return $this->user()?->hasPermissionTo('documents', 'create')
+            || $this->user()?->hasPermissionTo('documents', 'export');
     }
 
     /**

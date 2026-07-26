@@ -15,18 +15,20 @@ class ApplicationIntakeController extends Controller
 {
     public function __construct(private readonly ApplicationIntakeService $intakeService) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
         Gate::authorize('create', AdministrativeProcess::class);
 
         return view('backoffice.application-intake.index', [
-            'applications' => $this->intakeService->pendingApplications()->paginate(20),
+            'applications' => $this->intakeService
+                ->pendingApplications($this->authenticatedUser($request))
+                ->paginate(20),
         ]);
     }
 
     public function createProcess(Request $request, Application $application): RedirectResponse
     {
-        Gate::authorize('create', AdministrativeProcess::class);
+        Gate::authorize('createForApplication', [AdministrativeProcess::class, $application]);
         $process = $this->intakeService->createProcess($application, $this->authenticatedUser($request));
 
         return to_route('backoffice.administrative-processes.show', $process)

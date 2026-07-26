@@ -24,4 +24,22 @@ class ReserveListPolicy
     {
         return ! $user->hasRole(['candidate', 'auditor']) && $this->canAccess($user, 'allocations', 'update');
     }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, 'allocations', 'view');
+    }
+
+    public function viewBackoffice(User $user, ReserveList $reserveList): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, 'allocations', 'view');
+    }
+
+    public function updateBackoffice(User $user, ReserveList $reserveList): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'allocations', 'update');
+    }
 }

@@ -227,6 +227,11 @@ class DocumentClassificationPipeline
      */
     private function recordFlag(DocumentAiAnalysis $analysis, array $data): DocumentAiFlag
     {
+        DocumentAiFlag::query()
+            ->where('document_ai_analysis_id', $analysis->id)
+            ->where('code', $data['code'])
+            ->delete();
+
         $flag = new DocumentAiFlag([
             'code' => $data['code'],
             'severity' => $data['severity'],

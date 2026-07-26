@@ -11,7 +11,10 @@ class UpdateTieBreakerRuleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('update', $this->route('tieBreakerRule')) ?? false;
+        return $this->user()?->can(
+            'updateBackoffice',
+            $this->route('tieBreakerRule'),
+        ) ?? false;
     }
 
     /**

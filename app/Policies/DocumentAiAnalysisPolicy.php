@@ -5,12 +5,15 @@ namespace App\Policies;
 use App\Models\DocumentAiAnalysis;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class DocumentAiAnalysisPolicy
 {
     use ChecksPermissions;
 
     private const MODULE = 'documents';
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -30,8 +33,7 @@ class DocumentAiAnalysisPolicy
     {
         return ! $user->hasRole('candidate')
             && (
-                $this->canAccess($user, self::MODULE, 'audit')
-                || $user->hasPermission('audit_logs.view')
+                $user->hasPermission('audit_logs.view')
                 || $user->hasPermission('*')
             );
     }
@@ -50,8 +52,7 @@ class DocumentAiAnalysisPolicy
     {
         return ! $user->hasRole('candidate')
             && (
-                $this->canAccess($user, self::MODULE, 'audit')
-                || $user->hasPermission('audit_logs.view')
+                $user->hasPermission('audit_logs.view')
                 || $user->hasPermission('privacy.view')
                 || $user->hasPermission('*')
             );
@@ -75,5 +76,45 @@ class DocumentAiAnalysisPolicy
                 || $this->canAccess($user, self::MODULE, 'update')
                 || $this->canAccess($user, self::MODULE, 'audit')
             );
+    }
+
+    public function reviewBackoffice(User $user, DocumentAiAnalysis $analysis): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'review_ai')
+            && $this->municipalScope->ownsDocumentAiAnalysis($user, $analysis);
+    }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view')
+            && $user->municipality_id !== null;
+    }
+
+    public function auditAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'audit')
+            && $user->municipality_id !== null;
+    }
+
+    public function viewBackoffice(User $user, DocumentAiAnalysis $analysis): bool
+    {
+        return $this->viewAnyBackoffice($user)
+            && $this->municipalScope->ownsDocumentAiAnalysis($user, $analysis);
+    }
+
+    public function auditBackoffice(User $user, DocumentAiAnalysis $analysis): bool
+    {
+        return $this->auditAnyBackoffice($user)
+            && $this->municipalScope->ownsDocumentAiAnalysis($user, $analysis);
+    }
+
+    public function analyzeBackoffice(User $user, DocumentAiAnalysis $analysis): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'analyze')
+            && $this->municipalScope->ownsDocumentAiAnalysis($user, $analysis);
     }
 }

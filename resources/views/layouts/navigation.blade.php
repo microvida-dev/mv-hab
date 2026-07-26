@@ -15,74 +15,74 @@
         ],
         'Programas' => [
             ['label' => 'Programas', 'route' => 'admin.programs.index', 'active' => 'admin.programs.*', 'icon' => 'document', 'model' => \App\Models\Program::class],
-            ['label' => 'Concursos', 'route' => 'admin.contests.index', 'active' => 'admin.contests.*', 'icon' => 'file', 'model' => \App\Models\Contest::class],
+            ['label' => 'Concursos', 'route' => 'admin.contests.index', 'active' => 'admin.contests.*', 'icon' => 'document', 'model' => \App\Models\Contest::class],
             ['label' => 'Tipos documentais', 'route' => 'admin.document-types.index', 'active' => 'admin.document-types.*', 'icon' => 'document', 'model' => \App\Models\DocumentType::class],
-            ['label' => 'Regras documentais', 'route' => 'admin.required-documents.index', 'active' => 'admin.required-documents.*', 'icon' => 'file', 'model' => \App\Models\RequiredDocument::class],
+            ['label' => 'Regras documentais', 'route' => 'admin.required-documents.index', 'active' => 'admin.required-documents.*', 'icon' => 'document', 'model' => \App\Models\RequiredDocument::class],
             ['label' => 'Regras de elegibilidade', 'route' => 'backoffice.eligibility.rule-sets.index', 'active' => 'backoffice.eligibility.rule-sets.*', 'icon' => 'check', 'model' => \App\Models\EligibilityRuleSet::class],
             ['label' => 'Classificação', 'route' => 'backoffice.scoring.rule-sets.index', 'active' => 'backoffice.scoring.*', 'icon' => 'check', 'model' => \App\Models\ScoringRuleSet::class],
         ],
         'Atendimento' => [
             ['label' => 'Munícipes', 'route' => 'citizens.index', 'active' => 'citizens.*', 'icon' => 'users'],
             ['label' => 'Agregados', 'route' => 'households.index', 'active' => 'households.*', 'icon' => 'users'],
-            ['label' => 'Candidaturas formais', 'route' => 'backoffice.applications.index', 'active' => 'backoffice.applications.*', 'icon' => 'file', 'model' => \App\Models\Application::class],
+            ['label' => 'Candidaturas formais', 'route' => 'backoffice.applications.index', 'active' => 'backoffice.applications.*', 'icon' => 'document', 'model' => \App\Models\Application::class],
             ['label' => 'Indicadores do simulador', 'route' => 'backoffice.simulator.insights.index', 'active' => 'backoffice.simulator.*', 'icon' => 'dashboard', 'permission' => 'simulator.view'],
-            ['label' => 'Receção administrativa', 'route' => 'backoffice.application-intake.index', 'active' => 'backoffice.application-intake.*', 'icon' => 'file', 'model' => \App\Models\AdministrativeProcess::class],
+            ['label' => 'Receção administrativa', 'route' => 'backoffice.application-intake.index', 'active' => 'backoffice.application-intake.*', 'icon' => 'document', 'model' => \App\Models\AdministrativeProcess::class],
             ['label' => 'Processos administrativos', 'route' => 'backoffice.administrative-processes.index', 'active' => 'backoffice.administrative-processes.*', 'icon' => 'document', 'model' => \App\Models\AdministrativeProcess::class],
             ['label' => 'Tarefas administrativas', 'route' => 'backoffice.administrative-tasks.index', 'active' => 'backoffice.administrative-tasks.*', 'icon' => 'check', 'model' => \App\Models\AdministrativeTask::class],
-            ['label' => 'Candidaturas CRM', 'route' => 'applications.index', 'active' => 'applications.*', 'icon' => 'file'],
+            ['label' => 'Candidaturas CRM', 'route' => 'applications.index', 'active' => 'applications.*', 'icon' => 'document'],
             ['label' => 'Revisão documental', 'route' => 'admin.document-reviews.index', 'active' => 'admin.document-reviews.*', 'icon' => 'document', 'model' => \App\Models\DocumentSubmission::class],
             ['label' => 'Classificação IA', 'route' => 'backoffice.document-ai.classifications.index', 'active' => 'backoffice.document-ai.classifications.*', 'icon' => 'check', 'model' => \App\Models\DocumentAiAnalysis::class],
             ['label' => 'Extração IA', 'route' => 'backoffice.document-ai.extractions.index', 'active' => 'backoffice.document-ai.extractions.*', 'icon' => 'document', 'model' => \App\Models\DocumentAiAnalysis::class],
-            ['label' => 'Validação IA', 'route' => 'backoffice.document-ai.validations.index', 'active' => 'backoffice.document-ai.validations.*', 'icon' => 'alert', 'model' => \App\Models\DocumentAiValidationRun::class],
-            ['label' => 'Assistente IA', 'route' => 'backoffice.document-ai.assistant.index', 'active' => 'backoffice.document-ai.assistant.*', 'icon' => 'alert', 'model' => \App\Models\DocumentAiScore::class],
+            ['label' => 'Validação IA', 'route' => 'backoffice.document-ai.validations.index', 'active' => 'backoffice.document-ai.validations.*', 'icon' => 'warning', 'model' => \App\Models\DocumentAiValidationRun::class],
+            ['label' => 'Assistente IA', 'route' => 'backoffice.document-ai.assistant.index', 'active' => 'backoffice.document-ai.assistant.*', 'icon' => 'warning', 'model' => \App\Models\DocumentAiScore::class],
             ['label' => 'Verificações de elegibilidade', 'route' => 'backoffice.eligibility.checks.index', 'active' => 'backoffice.eligibility.checks.*', 'icon' => 'check', 'model' => \App\Models\EligibilityCheck::class],
             ['label' => 'Documentos', 'route' => 'documents.index', 'active' => 'documents.*', 'icon' => 'document'],
             ['label' => 'Visitas abertas', 'route' => 'backoffice.visit-availabilities.index', 'active' => 'backoffice.visit-availabilities.*', 'icon' => 'home', 'model' => \App\Models\VisitAvailability::class],
             ['label' => 'Horários de visita', 'route' => 'backoffice.visit-slots.index', 'active' => 'backoffice.visit-slots.*', 'icon' => 'check', 'model' => \App\Models\VisitSlot::class],
             ['label' => 'Visitas agendadas', 'route' => 'backoffice.housing-visits.index', 'active' => 'backoffice.housing-visits.*', 'icon' => 'home', 'model' => \App\Models\HousingVisit::class],
-            ['label' => 'Tickets de apoio', 'route' => 'backoffice.support-tickets.index', 'active' => 'backoffice.support-tickets.*', 'icon' => 'alert', 'model' => \App\Models\SupportTicket::class],
+            ['label' => 'Tickets de apoio', 'route' => 'backoffice.support-tickets.index', 'active' => 'backoffice.support-tickets.*', 'icon' => 'warning', 'model' => \App\Models\SupportTicket::class],
             ['label' => 'FAQ contextual', 'route' => 'backoffice.contextual-faqs.index', 'active' => 'backoffice.contextual-faqs.*', 'icon' => 'check', 'model' => \App\Models\ContextualFaq::class],
-            ['label' => 'Inconsistências', 'route' => 'backoffice.application-inconsistencies.index', 'active' => 'backoffice.application-inconsistencies.*', 'icon' => 'alert', 'model' => \App\Models\ApplicationSimulationInconsistency::class],
+            ['label' => 'Inconsistências', 'route' => 'backoffice.application-inconsistencies.index', 'active' => 'backoffice.application-inconsistencies.*', 'icon' => 'warning', 'model' => \App\Models\ApplicationSimulationInconsistency::class],
         ],
         'Atribuição' => [
             ['label' => 'Execuções', 'route' => 'backoffice.allocation.runs.index', 'active' => 'backoffice.allocation.runs.*', 'icon' => 'check', 'model' => \App\Models\AllocationRun::class],
             ['label' => 'Habitações por concurso', 'route' => 'backoffice.allocation.contest-housing-units.index', 'active' => 'backoffice.allocation.contest-housing-units.*', 'icon' => 'home', 'model' => \App\Models\ContestHousingUnit::class],
             ['label' => 'Regras de adequação', 'route' => 'backoffice.allocation.typology-rules.index', 'active' => 'backoffice.allocation.typology-rules.*', 'icon' => 'document', 'model' => \App\Models\TypologyAdequacyRule::class],
             ['label' => 'Regras de atribuição', 'route' => 'backoffice.allocation.rule-sets.index', 'active' => 'backoffice.allocation.rule-sets.*', 'icon' => 'document', 'model' => \App\Models\AllocationRuleSet::class],
-            ['label' => 'Atribuições', 'route' => 'backoffice.allocation.allocations.index', 'active' => 'backoffice.allocation.allocations.*', 'icon' => 'file', 'model' => \App\Models\Allocation::class],
-            ['label' => 'Ofertas', 'route' => 'backoffice.allocation.offers.index', 'active' => 'backoffice.allocation.offers.*', 'icon' => 'file', 'model' => \App\Models\AllocationOffer::class],
+            ['label' => 'Atribuições', 'route' => 'backoffice.allocation.allocations.index', 'active' => 'backoffice.allocation.allocations.*', 'icon' => 'document', 'model' => \App\Models\Allocation::class],
+            ['label' => 'Ofertas', 'route' => 'backoffice.allocation.offers.index', 'active' => 'backoffice.allocation.offers.*', 'icon' => 'document', 'model' => \App\Models\AllocationOffer::class],
             ['label' => 'Sorteios', 'route' => 'backoffice.allocation.lotteries.index', 'active' => 'backoffice.allocation.lotteries.*', 'icon' => 'check', 'model' => \App\Models\LotteryRun::class],
             ['label' => 'Listas suplentes', 'route' => 'backoffice.allocation.reserve-lists.index', 'active' => 'backoffice.allocation.reserve-lists.*', 'icon' => 'users', 'model' => \App\Models\ReserveList::class],
             ['label' => 'Relatórios', 'route' => 'backoffice.allocation.reports.index', 'active' => 'backoffice.allocation.reports.*', 'icon' => 'document', 'model' => \App\Models\AllocationReport::class],
         ],
         'Contratação' => [
-            ['label' => 'Regras de renda', 'route' => 'backoffice.contracts.rent-rule-sets.index', 'active' => 'backoffice.contracts.rent-rule-sets.*', 'icon' => 'wallet', 'model' => \App\Models\RentRuleSet::class],
-            ['label' => 'Cálculos de renda', 'route' => 'backoffice.contracts.rent-calculations.index', 'active' => 'backoffice.contracts.rent-calculations.*', 'icon' => 'wallet', 'model' => \App\Models\RentCalculation::class],
+            ['label' => 'Regras de renda', 'route' => 'backoffice.contracts.rent-rule-sets.index', 'active' => 'backoffice.contracts.rent-rule-sets.*', 'icon' => 'finance', 'model' => \App\Models\RentRuleSet::class],
+            ['label' => 'Cálculos de renda', 'route' => 'backoffice.contracts.rent-calculations.index', 'active' => 'backoffice.contracts.rent-calculations.*', 'icon' => 'finance', 'model' => \App\Models\RentCalculation::class],
             ['label' => 'Minutas', 'route' => 'backoffice.contracts.templates.index', 'active' => 'backoffice.contracts.templates.*', 'icon' => 'document', 'model' => \App\Models\ContractTemplate::class],
-            ['label' => 'Cláusulas', 'route' => 'backoffice.contracts.clauses.index', 'active' => 'backoffice.contracts.clauses.*', 'icon' => 'file', 'model' => \App\Models\ContractClause::class],
+            ['label' => 'Cláusulas', 'route' => 'backoffice.contracts.clauses.index', 'active' => 'backoffice.contracts.clauses.*', 'icon' => 'document', 'model' => \App\Models\ContractClause::class],
             ['label' => 'Contratos processuais', 'route' => 'backoffice.contracts.leases.index', 'active' => 'backoffice.contracts.leases.*', 'icon' => 'document', 'model' => \App\Models\Contract::class],
         ],
         'Financeiro' => [
-            ['label' => 'Contas financeiras', 'route' => 'backoffice.finance.accounts.index', 'active' => 'backoffice.finance.accounts.*', 'icon' => 'wallet', 'model' => \App\Models\TenantFinancialAccount::class],
-            ['label' => 'Prestações de renda', 'route' => 'backoffice.finance.installments.index', 'active' => 'backoffice.finance.installments.*', 'icon' => 'file', 'model' => \App\Models\RentInstallment::class],
-            ['label' => 'Pagamentos de renda', 'route' => 'backoffice.finance.payments.index', 'active' => 'backoffice.finance.payments.*', 'icon' => 'wallet', 'model' => \App\Models\LeasePayment::class],
-            ['label' => 'Incumprimentos', 'route' => 'backoffice.finance.arrears.index', 'active' => 'backoffice.finance.arrears.*', 'icon' => 'alert', 'model' => \App\Models\Arrear::class],
+            ['label' => 'Contas financeiras', 'route' => 'backoffice.finance.accounts.index', 'active' => 'backoffice.finance.accounts.*', 'icon' => 'finance', 'model' => \App\Models\TenantFinancialAccount::class],
+            ['label' => 'Prestações de renda', 'route' => 'backoffice.finance.installments.index', 'active' => 'backoffice.finance.installments.*', 'icon' => 'document', 'model' => \App\Models\RentInstallment::class],
+            ['label' => 'Pagamentos de renda', 'route' => 'backoffice.finance.payments.index', 'active' => 'backoffice.finance.payments.*', 'icon' => 'finance', 'model' => \App\Models\LeasePayment::class],
+            ['label' => 'Incumprimentos', 'route' => 'backoffice.finance.arrears.index', 'active' => 'backoffice.finance.arrears.*', 'icon' => 'warning', 'model' => \App\Models\Arrear::class],
             ['label' => 'Revisões de renda', 'route' => 'backoffice.finance.rent-reviews.index', 'active' => 'backoffice.finance.rent-reviews.*', 'icon' => 'check', 'model' => \App\Models\RentReview::class],
         ],
         'Património' => [
             ['label' => 'Habitações', 'route' => 'housing-units.index', 'active' => 'housing-units.*', 'icon' => 'home'],
             ['label' => 'Portal público', 'route' => 'backoffice.public-portal.settings.edit', 'active' => 'backoffice.public-portal.*', 'icon' => 'dashboard', 'permission' => 'settings.view'],
             ['label' => 'Ligações públicas', 'route' => 'backoffice.public-portal.links.index', 'active' => 'backoffice.public-portal.links.*', 'icon' => 'document', 'permission' => 'settings.view'],
-            ['label' => 'Contratos', 'route' => 'contracts.index', 'active' => 'contracts.*', 'icon' => 'file'],
-            ['label' => 'Pagamentos', 'route' => 'payments.index', 'active' => 'payments.*', 'icon' => 'wallet'],
-            ['label' => 'Manutenção', 'route' => 'backoffice.maintenance.index', 'active' => 'backoffice.maintenance.*', 'icon' => 'tool', 'model' => \App\Models\MaintenanceRequest::class],
+            ['label' => 'Contratos', 'route' => 'contracts.index', 'active' => 'contracts.*', 'icon' => 'document'],
+            ['label' => 'Pagamentos', 'route' => 'payments.index', 'active' => 'payments.*', 'icon' => 'finance'],
+            ['label' => 'Manutenção', 'route' => 'backoffice.maintenance.index', 'active' => 'backoffice.maintenance.*', 'icon' => 'maintenance', 'model' => \App\Models\MaintenanceRequest::class],
             ['label' => 'Vistorias', 'route' => 'backoffice.inspections.index', 'active' => 'backoffice.inspections.*', 'icon' => 'check', 'model' => \App\Models\PropertyInspection::class],
         ],
         'Análise' => [
             ['label' => 'Relatórios', 'route' => 'backoffice.reports.index', 'active' => 'backoffice.reports.index', 'icon' => 'document', 'model' => \App\Models\ReportDefinition::class],
             ['label' => 'Painel operacional', 'route' => 'backoffice.reports.operational', 'active' => 'backoffice.reports.operational', 'icon' => 'dashboard', 'model' => \App\Models\DashboardDefinition::class],
             ['label' => 'Painel executivo', 'route' => 'backoffice.reports.executive', 'active' => 'backoffice.reports.executive', 'icon' => 'dashboard', 'model' => \App\Models\DashboardDefinition::class, 'permission' => 'reports.view_executive'],
-            ['label' => 'Exportações', 'route' => 'backoffice.reports.exports.index', 'active' => 'backoffice.reports.exports.*', 'icon' => 'file', 'model' => \App\Models\ReportExport::class],
+            ['label' => 'Exportações', 'route' => 'backoffice.reports.exports.index', 'active' => 'backoffice.reports.exports.*', 'icon' => 'document', 'model' => \App\Models\ReportExport::class],
         ],
         'Segurança e RGPD' => [
             ['label' => 'Painel de segurança', 'route' => 'backoffice.security.dashboard', 'active' => 'backoffice.security.dashboard', 'icon' => 'dashboard', 'permission' => 'settings.view'],
@@ -92,18 +92,18 @@
             ['label' => 'Auditoria de acessos', 'route' => 'backoffice.access-audit.index', 'active' => 'backoffice.access-audit.*', 'icon' => 'document', 'permission' => 'access_audit.view'],
             ['label' => 'MFA', 'route' => 'backoffice.security.mfa.index', 'active' => 'backoffice.security.mfa.*', 'icon' => 'check', 'permission' => 'settings.view'],
             ['label' => 'Auditoria', 'route' => 'backoffice.security.audit.events.index', 'active' => 'backoffice.security.audit.*', 'icon' => 'document', 'permission' => 'audit_logs.view'],
-            ['label' => 'Pedidos RGPD', 'route' => 'backoffice.security.privacy.requests.index', 'active' => 'backoffice.security.privacy.requests.*', 'icon' => 'file', 'permission' => 'privacy.view'],
-            ['label' => 'Alertas', 'route' => 'backoffice.security.alerts.index', 'active' => 'backoffice.security.alerts.*', 'icon' => 'alert', 'permission' => 'settings.audit'],
+            ['label' => 'Pedidos RGPD', 'route' => 'backoffice.security.privacy.requests.index', 'active' => 'backoffice.security.privacy.requests.*', 'icon' => 'document', 'permission' => 'privacy.view'],
+            ['label' => 'Alertas', 'route' => 'backoffice.security.alerts.index', 'active' => 'backoffice.security.alerts.*', 'icon' => 'warning', 'permission' => 'settings.audit'],
             ['label' => 'Checklists', 'route' => 'backoffice.security.checklists.index', 'active' => 'backoffice.security.checklists.*', 'icon' => 'check', 'permission' => 'settings.audit'],
         ],
         'Comunicações' => [
-            ['label' => 'Centro de comunicações', 'route' => 'backoffice.communications.index', 'active' => 'backoffice.communications.index', 'icon' => 'alert', 'model' => \App\Models\CommunicationLog::class],
+            ['label' => 'Centro de comunicações', 'route' => 'backoffice.communications.index', 'active' => 'backoffice.communications.index', 'icon' => 'warning', 'model' => \App\Models\CommunicationLog::class],
             ['label' => 'Histórico', 'route' => 'backoffice.communications.logs.index', 'active' => 'backoffice.communications.logs.*', 'icon' => 'document', 'model' => \App\Models\CommunicationLog::class],
-            ['label' => 'Modelos', 'route' => 'backoffice.communications.templates.index', 'active' => 'backoffice.communications.templates.*', 'icon' => 'file', 'model' => \App\Models\NotificationTemplate::class],
+            ['label' => 'Modelos', 'route' => 'backoffice.communications.templates.index', 'active' => 'backoffice.communications.templates.*', 'icon' => 'document', 'model' => \App\Models\NotificationTemplate::class],
             ['label' => 'Regras por evento', 'route' => 'backoffice.communications.event-rules.index', 'active' => 'backoffice.communications.event-rules.*', 'icon' => 'check', 'model' => \App\Models\NotificationEventRule::class],
             ['label' => 'Variáveis', 'route' => 'backoffice.communications.variables.index', 'active' => 'backoffice.communications.variables.*', 'icon' => 'document', 'model' => \App\Models\TemplateVariable::class],
             ['label' => 'Modelos documentais', 'route' => 'backoffice.document-templates.index', 'active' => 'backoffice.document-templates.*', 'icon' => 'document', 'model' => \App\Models\DocumentTemplate::class],
-            ['label' => 'Documentos oficiais', 'route' => 'backoffice.official-documents.index', 'active' => 'backoffice.official-documents.*', 'icon' => 'file', 'model' => \App\Models\GeneratedOfficialDocument::class],
+            ['label' => 'Documentos oficiais', 'route' => 'backoffice.official-documents.index', 'active' => 'backoffice.official-documents.*', 'icon' => 'document', 'model' => \App\Models\GeneratedOfficialDocument::class],
         ],
     ];
 
@@ -200,7 +200,7 @@
 
 <aside
     :class="sidebarCollapsed ? 'w-28' : 'w-72'"
-    class="fixed inset-y-0 left-0 z-40 hidden flex-col overflow-hidden border-r border-ink-100 bg-ink-50 transition-all duration-300 lg:flex"
+    class="fixed inset-y-0 left-0 z-40 hidden flex-col overflow-visible border-r border-ink-100 bg-ink-50 transition-all duration-300 lg:flex"
 >
     <div
         class="relative flex h-20 items-center border-b border-ink-100"
@@ -284,7 +284,7 @@
                 </form>
             </div>
         @else
-            <x-dropdown align="right" width="48">
+            <x-dropdown align="side" width="56">
                 <x-slot name="trigger">
                     <button
                         class="flex w-full items-center rounded-2xl border border-ink-100 bg-mvhab-surface px-3 py-3 text-left transition hover:bg-mvhab-surface"

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\MaintenanceSupplier;
+use App\Models\Municipality;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -15,7 +16,10 @@ class MaintenanceSupplierFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => 'Fornecedor Demo '.fake()->unique()->numberBetween(100, 999),
+            'municipality_id' => Municipality::factory(),
+            'name' => 'Fornecedor Demo '.fake()
+                ->unique()
+                ->numberBetween(100, 999),
             'contact_person' => 'Contacto técnico demo',
             'email' => fake()->safeEmail(),
             'phone' => '210000000',

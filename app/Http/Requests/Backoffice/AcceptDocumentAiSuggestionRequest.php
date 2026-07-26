@@ -12,7 +12,7 @@ class AcceptDocumentAiSuggestionRequest extends FormRequest
         $suggestion = $this->route('suggestion');
 
         return $suggestion instanceof DocumentAiSuggestion
-            && ($this->user()?->can('accept', $suggestion) ?? false);
+            && ($this->user()?->can('reviewBackoffice', $suggestion) ?? false);
     }
 
     /**

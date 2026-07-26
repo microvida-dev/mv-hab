@@ -6,15 +6,16 @@ use App\Data\Dashboard\TimelineEvent;
 use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
+use App\Enums\InternalAlertStatus;
 use App\Models\InternalAlert;
 use App\Models\User;
-use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\BaseTimelineProvider;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 
 class InternalAlertTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
-        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory,
     ) {}
 
     public function forUser(User $user, array $dashboard = []): array
@@ -25,7 +26,10 @@ class InternalAlertTimelineProvider extends BaseTimelineProvider
 
         return InternalAlert::query()
             ->whereNotNull('due_at')
-            ->whereNotIn('status', ['resolved', 'dismissed'])
+            ->whereNotIn('status', [
+                InternalAlertStatus::Resolved->value,
+                InternalAlertStatus::Dismissed->value,
+            ])
             ->orderBy('due_at')
             ->limit(20)
             ->get()
@@ -44,7 +48,7 @@ class InternalAlertTimelineProvider extends BaseTimelineProvider
                 workspace: TimelineWorkspace::Administration,
                 metadata: [
                     'internal_alert_id' => $alert->getKey(),
-                    'status' => $alert->status,
+                    'status' => $alert->status->value,
                 ],
             ))
             ->all();

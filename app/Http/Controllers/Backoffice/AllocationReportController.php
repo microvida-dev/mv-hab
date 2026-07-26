@@ -20,7 +20,7 @@ class AllocationReportController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('viewAny', AllocationReport::class);
+        Gate::authorize('viewAnyBackoffice', AllocationReport::class);
 
         return view('backoffice.allocation.reports.index', [
             'reports' => AllocationReport::query()->with(['contest', 'allocationRun'])->latest()->paginate(15),
@@ -30,7 +30,7 @@ class AllocationReportController extends Controller
 
     public function store(GenerateAllocationReportRequest $request): RedirectResponse
     {
-        Gate::authorize('create', AllocationReport::class);
+        Gate::authorize('createBackoffice', AllocationReport::class);
         $run = AllocationRun::query()->findOrFail($request->integer('allocation_run_id'));
         $report = $this->reportService->generate($run, $this->authenticatedUser($request));
 
@@ -39,7 +39,7 @@ class AllocationReportController extends Controller
 
     public function show(AllocationReport $allocationReport): View
     {
-        Gate::authorize('view', $allocationReport);
+        Gate::authorize('viewBackoffice', $allocationReport);
         $allocationReport->load(['allocationRun', 'contest', 'generatedBy', 'approvedBy']);
 
         return view('backoffice.allocation.reports.show', compact('allocationReport'));
@@ -47,7 +47,7 @@ class AllocationReportController extends Controller
 
     public function approve(ApproveAllocationReportRequest $request, AllocationReport $allocationReport): RedirectResponse
     {
-        Gate::authorize('approve', $allocationReport);
+        Gate::authorize('approveBackoffice', $allocationReport);
         $this->reportService->approve($allocationReport, $this->authenticatedUser($request));
 
         return back()->with('success', 'Relatório aprovado.');
@@ -55,7 +55,7 @@ class AllocationReportController extends Controller
 
     public function download(AllocationReport $allocationReport): StreamedResponse
     {
-        Gate::authorize('view', $allocationReport);
+        Gate::authorize('exportBackoffice', $allocationReport);
 
         abort_unless($allocationReport->file_path && Storage::disk($allocationReport->file_disk ?? 'local')->exists($allocationReport->file_path), 404);
 

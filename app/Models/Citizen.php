@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\CitizenFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Citizen extends Model
@@ -27,6 +28,14 @@ class Citizen extends Model
         return [
             'birth_date' => 'date',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Municipality, $this>
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 
     /**

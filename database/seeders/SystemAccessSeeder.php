@@ -4,12 +4,15 @@ namespace Database\Seeders;
 
 use App\Models\Permission;
 use App\Models\Role;
+use App\Services\Access\SystemRoleDefinitionRegistry;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 
 class SystemAccessSeeder extends Seeder
 {
+    public function __construct(private readonly SystemRoleDefinitionRegistry $roles) {}
+
     public function run(): void
     {
         $permissions = collect($this->permissionDefinitions())
@@ -36,13 +39,15 @@ class SystemAccessSeeder extends Seeder
             ],
         );
 
-        foreach ($this->roleDefinitions() as $name => $definition) {
+        foreach ($this->roles->all() as $name => $definition) {
             $role = Role::query()->updateOrCreate(
                 ['name' => $name],
                 [
+                    'municipality_id' => null,
                     'label' => $definition['label'],
                     'scope' => 'system',
                     'is_system' => true,
+                    'is_active' => true,
                 ],
             );
 
@@ -92,39 +97,6 @@ class SystemAccessSeeder extends Seeder
             }
 
             $definitions[$module] = array_values(array_filter($actions, 'is_string'));
-        }
-
-        return $definitions;
-    }
-
-    /**
-     * @return array<string, array{label: string, permissions: list<string>}>
-     */
-    private function roleDefinitions(): array
-    {
-        $config = Config::get('mvhab.roles', []);
-
-        if (! is_array($config)) {
-            return [];
-        }
-
-        $definitions = [];
-        foreach ($config as $name => $definition) {
-            if (! is_string($name) || ! is_array($definition)) {
-                continue;
-            }
-
-            $label = $definition['label'] ?? null;
-            $permissions = $definition['permissions'] ?? null;
-
-            if (! is_string($label) || ! is_array($permissions)) {
-                continue;
-            }
-
-            $definitions[$name] = [
-                'label' => $label,
-                'permissions' => array_values(array_filter($permissions, 'is_string')),
-            ];
         }
 
         return $definitions;

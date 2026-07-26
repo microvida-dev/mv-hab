@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Citizen;
 use App\Models\Document;
+use App\Models\Municipality;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -14,7 +15,10 @@ class DocumentFactory extends Factory
     public function definition(): array
     {
         return [
-            'citizen_id' => Citizen::factory(),
+            'municipality_id' => Municipality::factory(),
+            'citizen_id' => fn (array $attributes) => Citizen::factory()->create([
+                'municipality_id' => $attributes['municipality_id'],
+            ]),
             'housing_application_id' => null,
             'contract_id' => null,
             'name' => fake()->unique()->lexify('documento_????').'.pdf',

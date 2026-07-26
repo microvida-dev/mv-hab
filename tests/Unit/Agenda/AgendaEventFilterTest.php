@@ -45,9 +45,17 @@ class AgendaEventFilterTest extends TestCase
                 status: TimelineStatus::Scheduled,
                 workspace: TimelineWorkspace::Patrimony,
             ),
+            new TimelineEvent(
+                id: 'without-date',
+                type: TimelineType::Visit,
+                title: 'Sem data',
+                priority: TimelinePriority::High,
+                status: TimelineStatus::Scheduled,
+                workspace: TimelineWorkspace::Patrimony,
+            ),
         ]);
 
-        $filtered = (new AgendaEventFilter())->apply($events, new AgendaFilters(
+        $filtered = (new AgendaEventFilter)->apply($events, new AgendaFilters(
             workspace: TimelineWorkspace::Patrimony,
             priority: TimelinePriority::High,
             status: TimelineStatus::Scheduled,
@@ -59,6 +67,7 @@ class AgendaEventFilterTest extends TestCase
         $this->assertCount(1, $filtered);
         $this->assertSame('match', $filtered->first()?->id);
     }
+
     public function test_it_filters_events_by_technician_id_from_metadata(): void
     {
         $events = new Collection([
@@ -78,12 +87,11 @@ class AgendaEventFilterTest extends TestCase
             ),
         ]);
 
-        $filtered = (new AgendaEventFilter())->apply($events, new AgendaFilters(
+        $filtered = (new AgendaEventFilter)->apply($events, new AgendaFilters(
             technicianId: 15,
         ));
 
         $this->assertCount(1, $filtered);
         $this->assertSame('assigned', $filtered->first()?->id);
     }
-
 }

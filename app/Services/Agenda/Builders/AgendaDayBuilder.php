@@ -12,8 +12,8 @@ use Illuminate\Support\Collection;
 final readonly class AgendaDayBuilder
 {
     public function __construct(
-        private AgendaTimelineRepository $timeline = new AgendaTimelineRepository(),
-        private TimelineMetricsService $metrics = new TimelineMetricsService(),
+        private AgendaTimelineRepository $timeline = new AgendaTimelineRepository,
+        private TimelineMetricsService $metrics = new TimelineMetricsService,
     ) {}
 
     /**

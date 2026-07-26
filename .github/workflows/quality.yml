@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -25,21 +28,26 @@ jobs:
       FILESYSTEM_DISK: local
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
 
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
           php-version: "8.4"
-          extensions: mbstring, dom, fileinfo, sqlite, pdo_sqlite
+          extensions: bcmath, mbstring, dom, fileinfo, sqlite, pdo_sqlite
           coverage: none
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "22"
           cache: npm
 
       - name: Validate Composer metadata
         run: composer validate --strict
+
+      - name: Audit Composer dependencies
+        run: composer audit
 
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
@@ -95,14 +103,20 @@ jobs:
         run: |
           php artisan tinker --execute="dump(config('cache.default')); dump(config('session.driver')); dump(config('queue.default')); dump(config('database.default')); dump(config('database.connections.sqlite.database'));"
 
-      - name: Check code style
-        run: ./vendor/bin/pint --test
+      - name: Check changed PHP code style
+        if: github.event_name == 'pull_request'
+        env:
+          QUALITY_BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: composer quality:pint:changed
+
+      - name: Check global code style
+        run: composer quality:pint
 
       - name: Build frontend assets
         run: npm run build
 
       - name: Run PHPUnit test suite
-        run: php -d memory_limit=-1 ./vendor/bin/phpunit --configuration phpunit.xml
+        run: php -d memory_limit=1G ./vendor/bin/phpunit --configuration phpunit.xml
 
       - name: Validate route registration
         run: php artisan route:list --except-vendor

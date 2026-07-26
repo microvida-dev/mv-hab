@@ -34,4 +34,33 @@ class ContestHousingUnitPolicy
     {
         return ! $user->hasRole(['candidate', 'auditor']) && $this->canAccess($user, 'allocations', 'update');
     }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, 'allocations', 'view');
+    }
+
+    public function viewBackoffice(User $user, ContestHousingUnit $unit): bool
+    {
+        return $this->viewAnyBackoffice($user);
+    }
+
+    public function createBackoffice(User $user): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'allocations', 'create');
+    }
+
+    public function updateBackoffice(User $user, ContestHousingUnit $unit): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'allocations', 'update');
+    }
+
+    public function deleteBackoffice(User $user, ContestHousingUnit $unit): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'allocations', 'update');
+    }
 }

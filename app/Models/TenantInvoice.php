@@ -10,7 +10,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property TenantInvoiceStatus $status
+ * @property Carbon|null $due_date
+ * @property-read User|null $tenant
+ */
 class TenantInvoice extends Model
 {
     /** @use HasFactory<TenantInvoiceFactory> */

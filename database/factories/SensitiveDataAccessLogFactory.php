@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Municipality;
 use App\Models\SensitiveDataAccessLog;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -12,6 +13,10 @@ class SensitiveDataAccessLogFactory extends Factory
     public function definition(): array
     {
         return [
+            'municipality_id' => fn (): int => (int) (
+                Municipality::query()->value('id')
+                ?? Municipality::factory()->create()->id
+            ),
             'user_id' => User::factory(),
             'subject_user_id' => User::factory(),
             'resource_type' => User::class,

@@ -42,6 +42,6 @@ class ReportDefinitionPolicy
 
     public function export(User $user, ReportDefinition $report): bool
     {
-        return $this->view($user, $report) && $user->hasPermission('reports.export');
+        return $this->permissions->canExportDefinition($user, $report);
     }
 }

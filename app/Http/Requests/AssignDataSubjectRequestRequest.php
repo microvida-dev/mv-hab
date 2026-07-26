@@ -2,13 +2,19 @@
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class AssignDataSubjectRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return ! $this->user()?->hasRole('candidate') && $this->user()?->hasPermission('privacy.update');
+        $user = $this->user();
+
+        return $user instanceof User
+            && $user->municipality_id !== null
+            && $user->hasPermission('privacy.assign');
     }
 
     /**
@@ -16,6 +22,12 @@ class AssignDataSubjectRequestRequest extends FormRequest
      */
     public function rules(): array
     {
-        return ['assigned_to' => ['required', 'exists:users,id']];
+        return [
+            'assigned_to' => [
+                'required',
+                Rule::exists('users', 'id')
+                    ->where('municipality_id', $this->user()?->municipality_id),
+            ],
+        ];
     }
 }

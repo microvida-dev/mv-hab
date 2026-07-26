@@ -12,6 +12,7 @@ use App\Http\Requests\PublishDefinitiveListRequest;
 use App\Models\DefinitiveList;
 use App\Models\ProvisionalList;
 use App\Services\Lists\DefinitiveListService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,20 +20,29 @@ use Illuminate\Support\Facades\Gate;
 
 class DefinitiveListController extends Controller
 {
-    public function __construct(private readonly DefinitiveListService $service) {}
+    public function __construct(
+        private readonly DefinitiveListService $service,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        Gate::authorize('viewAny', DefinitiveList::class);
-        $lists = DefinitiveList::query()->with(['program', 'contest', 'provisionalList'])->withCount('entries')->latest()->paginate(20);
+        Gate::authorize('viewAnyBackoffice', DefinitiveList::class);
+        $lists = $this->municipalScope
+            ->definitiveLists(DefinitiveList::query(), $this->authenticatedUser($request))
+            ->with(['program', 'contest', 'provisionalList'])
+            ->withCount('entries')
+            ->latest()
+            ->paginate(20);
 
         return view('backoffice.lists.definitive.index', compact('lists'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        Gate::authorize('create', DefinitiveList::class);
-        $provisionalLists = ProvisionalList::query()
+        Gate::authorize('generateAnyBackoffice', DefinitiveList::class);
+        $provisionalLists = $this->municipalScope
+            ->provisionalLists(ProvisionalList::query(), $this->authenticatedUser($request))
             ->with(['contest', 'program'])
             ->where('status', ProvisionalListStatus::ComplaintPeriodClosed->value)
             ->doesntHave('definitiveList')
@@ -47,8 +57,10 @@ class DefinitiveListController extends Controller
 
     public function store(GenerateDefinitiveListRequest $request): RedirectResponse
     {
-        Gate::authorize('create', DefinitiveList::class);
-        $provisionalList = ProvisionalList::query()->findOrFail($request->integer('provisional_list_id'));
+        Gate::authorize('generateBackoffice', DefinitiveList::class);
+        $provisionalList = $this->municipalScope
+            ->provisionalLists(ProvisionalList::query(), $this->authenticatedUser($request))
+            ->findOrFail($request->integer('provisional_list_id'));
         $list = $this->service->generateFromProvisional($provisionalList, $request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.lists.definitive.show', $list)->with('success', 'Lista definitiva gerada.');
@@ -56,7 +68,7 @@ class DefinitiveListController extends Controller
 
     public function show(DefinitiveList $definitiveList): View
     {
-        Gate::authorize('view', $definitiveList);
+        Gate::authorize('viewBackoffice', $definitiveList);
         $definitiveList->load(['program', 'contest', 'provisionalList', 'entries.application.user', 'changeLogs', 'publications']);
 
         return view('backoffice.lists.definitive.show', compact('definitiveList'));
@@ -64,7 +76,7 @@ class DefinitiveListController extends Controller
 
     public function review(Request $request, DefinitiveList $definitiveList): RedirectResponse
     {
-        Gate::authorize('update', $definitiveList);
+        Gate::authorize('reviewBackoffice', $definitiveList);
         $this->service->sendToReview($definitiveList, $this->authenticatedUser($request));
 
         return back()->with('success', 'Lista definitiva enviada para revisão.');
@@ -72,7 +84,7 @@ class DefinitiveListController extends Controller
 
     public function approve(ApproveDefinitiveListRequest $request, DefinitiveList $definitiveList): RedirectResponse
     {
-        Gate::authorize('approve', $definitiveList);
+        Gate::authorize('approveBackoffice', $definitiveList);
         $this->service->approve($definitiveList, $this->authenticatedUser($request));
 
         return back()->with('success', 'Lista definitiva aprovada.');
@@ -80,7 +92,7 @@ class DefinitiveListController extends Controller
 
     public function publish(PublishDefinitiveListRequest $request, DefinitiveList $definitiveList): RedirectResponse
     {
-        Gate::authorize('publish', $definitiveList);
+        Gate::authorize('publishBackoffice', $definitiveList);
         $this->service->publish($definitiveList, $this->authenticatedUser($request), $request->validated());
 
         return back()->with('success', 'Lista definitiva publicada.');
@@ -88,7 +100,7 @@ class DefinitiveListController extends Controller
 
     public function lock(LockDefinitiveListRequest $request, DefinitiveList $definitiveList): RedirectResponse
     {
-        Gate::authorize('publish', $definitiveList);
+        Gate::authorize('lockBackoffice', $definitiveList);
         $this->service->lock($definitiveList, $this->authenticatedUser($request));
 
         return back()->with('success', 'Lista definitiva bloqueada.');
@@ -96,7 +108,7 @@ class DefinitiveListController extends Controller
 
     public function archive(Request $request, DefinitiveList $definitiveList): RedirectResponse
     {
-        Gate::authorize('update', $definitiveList);
+        Gate::authorize('archiveBackoffice', $definitiveList);
         $this->service->archive($definitiveList, $this->authenticatedUser($request));
 
         return back()->with('success', 'Lista definitiva arquivada.');

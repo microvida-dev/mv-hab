@@ -17,6 +17,10 @@ class ReplaceDocumentSubmissionRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'reference_period' => [
+                'nullable',
+                'date_format:Y-m',
+            ],
             'issue_date' => ['nullable', 'date'],
             'expiry_date' => ['nullable', 'date', 'after_or_equal:issue_date'],
             'file' => ['required', 'file', 'max:10240', 'mimetypes:application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif', 'mimes:pdf,jpg,jpeg,png,webp,heic,heif'],

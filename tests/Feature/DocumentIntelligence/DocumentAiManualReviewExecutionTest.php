@@ -4,6 +4,7 @@ namespace Tests\Feature\DocumentIntelligence;
 
 use App\Enums\DocumentAiStatus;
 use App\Enums\DocumentStatus;
+use App\Enums\FeatureKey;
 use App\Models\DocumentAiAnalysis;
 use App\Models\DocumentSubmission;
 use App\Models\DocumentVersion;
@@ -13,10 +14,12 @@ use App\Services\DocumentIntelligence\DocumentAiManualAnalysisService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class DocumentAiManualReviewExecutionTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -29,8 +32,11 @@ class DocumentAiManualReviewExecutionTest extends TestCase
     public function test_document_review_page_exposes_document_ai_execution_action(): void
     {
         $submission = $this->documentSubmission();
+        $administrator = $this->userWithRole('administrator');
+        $this->assignDocumentMunicipality($administrator, $submission, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
-        $this->actingAs($this->userWithRole('administrator'))
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('admin.document-reviews.show', $submission))
             ->assertOk()
             ->assertSee('IA documental')
@@ -48,6 +54,7 @@ class DocumentAiManualReviewExecutionTest extends TestCase
             'status' => DocumentAiStatus::Completed,
         ]);
         $technician = $this->userWithRole('municipal_technician');
+        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->mock(DocumentAiManualAnalysisService::class, function ($mock) use ($analysis, $submission, $technician): void {
             $mock->shouldReceive('execute')
@@ -60,6 +67,7 @@ class DocumentAiManualReviewExecutionTest extends TestCase
         });
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-reviews.document-ai', $submission))
             ->assertRedirect(route('backoffice.document-ai.assistant.show', $analysis))
             ->assertSessionHas('success');
@@ -77,6 +85,7 @@ class DocumentAiManualReviewExecutionTest extends TestCase
             'ocr_available' => false,
         ]);
         $administrator = $this->userWithRole('administrator');
+        $this->assignDocumentMunicipality($administrator, $submission, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->mock(DocumentAiManualAnalysisService::class, function ($mock) use ($analysis, $administrator): void {
             $mock->shouldReceive('reprocess')
@@ -89,6 +98,7 @@ class DocumentAiManualReviewExecutionTest extends TestCase
         });
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.document-ai.assistant.recalculate', $analysis), [
                 'confirm_recalculate' => '1',
             ])

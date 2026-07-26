@@ -18,14 +18,14 @@ class AdditionalInformationRequestController extends Controller
 
     public function create(Complaint $complaint): View
     {
-        Gate::authorize('create', AdditionalInformationRequest::class);
+        Gate::authorize('requestInformationBackoffice', $complaint);
 
         return view('backoffice.additional-information-requests.create', compact('complaint'));
     }
 
     public function store(StoreAdditionalInformationRequestRequest $request, Complaint $complaint): RedirectResponse
     {
-        Gate::authorize('create', AdditionalInformationRequest::class);
+        Gate::authorize('requestInformationBackoffice', $complaint);
         $informationRequest = $this->service->create($complaint, $request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.additional-information-requests.show', $informationRequest)->with('success', 'Pedido complementar emitido.');
@@ -33,7 +33,7 @@ class AdditionalInformationRequestController extends Controller
 
     public function show(AdditionalInformationRequest $additionalInformationRequest): View
     {
-        Gate::authorize('view', $additionalInformationRequest);
+        Gate::authorize('viewBackoffice', $additionalInformationRequest);
         $additionalInformationRequest->load(['complaint', 'application', 'candidate', 'issuedBy', 'responses.documentSubmission']);
 
         return view('backoffice.additional-information-requests.show', compact('additionalInformationRequest'));
@@ -41,7 +41,7 @@ class AdditionalInformationRequestController extends Controller
 
     public function close(Request $request, AdditionalInformationRequest $additionalInformationRequest): RedirectResponse
     {
-        Gate::authorize('update', $additionalInformationRequest);
+        Gate::authorize('closeBackoffice', $additionalInformationRequest);
         $this->service->close($additionalInformationRequest, $this->authenticatedUser($request));
 
         return back()->with('success', 'Pedido complementar fechado.');
@@ -49,7 +49,7 @@ class AdditionalInformationRequestController extends Controller
 
     public function markOverdue(Request $request, AdditionalInformationRequest $additionalInformationRequest): RedirectResponse
     {
-        Gate::authorize('update', $additionalInformationRequest);
+        Gate::authorize('markOverdueBackoffice', $additionalInformationRequest);
         $this->service->markOverdue($additionalInformationRequest, $this->authenticatedUser($request));
 
         return back()->with('success', 'Pedido complementar marcado como vencido.');

@@ -16,7 +16,7 @@ class HearingSubmissionReviewController extends Controller
 
     public function show(HearingSubmission $hearingSubmission): View
     {
-        Gate::authorize('view', $hearingSubmission);
+        Gate::authorize('viewBackoffice', $hearingSubmission);
         $hearingSubmission->load(['hearing', 'candidate', 'application', 'documentSubmission']);
 
         return view('backoffice.hearings.show', ['hearing' => $hearingSubmission->hearing]);
@@ -24,7 +24,7 @@ class HearingSubmissionReviewController extends Controller
 
     public function accept(ReviewHearingSubmissionRequest $request, HearingSubmission $hearingSubmission): RedirectResponse
     {
-        Gate::authorize('review', $hearingSubmission);
+        Gate::authorize('acceptBackoffice', $hearingSubmission);
         $data = $request->validated();
         $data['accepted'] = true;
         $this->service->review($hearingSubmission, $data, $this->authenticatedUser($request));
@@ -34,7 +34,7 @@ class HearingSubmissionReviewController extends Controller
 
     public function reject(ReviewHearingSubmissionRequest $request, HearingSubmission $hearingSubmission): RedirectResponse
     {
-        Gate::authorize('review', $hearingSubmission);
+        Gate::authorize('rejectBackoffice', $hearingSubmission);
         $data = $request->validated();
         $data['accepted'] = false;
         $this->service->review($hearingSubmission, $data, $this->authenticatedUser($request));

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\LotteryDrawType;
+use App\Models\LotteryDraw;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +11,10 @@ class UpdateLotteryDrawRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $draw = $this->route('lotteryDraw');
+
+        return $draw instanceof LotteryDraw
+            && ($this->user()?->can('updateBackoffice', $draw) ?? false);
     }
 
     /**

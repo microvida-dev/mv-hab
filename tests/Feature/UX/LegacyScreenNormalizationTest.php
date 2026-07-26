@@ -21,8 +21,10 @@ class LegacyScreenNormalizationTest extends TestCase
     public function test_enterprise_workspace_provides_normalized_entry_point_to_legacy_detail(): void
     {
         $contract = Contract::factory()->create();
+        $actor = $this->userWithRole();
+        $this->scopeContractToUser($contract, $actor);
 
-        $this->actingAs($this->userWithRole())
+        $this->actingAs($actor)
             ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.cases.contracts.show', $contract))
             ->assertOk()

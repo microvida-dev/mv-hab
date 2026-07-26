@@ -18,8 +18,10 @@ use App\Models\RentCalculation;
 use App\Services\Contracts\ContractActivationService;
 use App\Services\Contracts\LeaseContractService;
 use App\Services\Contracts\LeaseContractStatusService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class LeaseContractController extends Controller
@@ -28,43 +30,71 @@ class LeaseContractController extends Controller
         private readonly LeaseContractService $service,
         private readonly ContractActivationService $activationService,
         private readonly LeaseContractStatusService $statusService,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        Gate::authorize('viewAny', Contract::class);
+        Gate::authorize('viewAnyBackoffice', Contract::class);
 
         return view('backoffice.contracts.leases.index', [
-            'contracts' => Contract::query()->processual()->with(['candidate', 'housingUnit', 'contest', 'deposit'])->latest()->paginate(20),
+            'contracts' => $this->municipalScope
+                ->contracts(Contract::query(), $this->authenticatedUser($request))
+                ->processual()
+                ->with(['candidate', 'housingUnit', 'contest', 'deposit'])
+                ->latest()
+                ->paginate(20),
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        Gate::authorize('create', Contract::class);
+        Gate::authorize('createBackoffice', Contract::class);
+        $actor = $this->authenticatedUser($request);
 
         return view('backoffice.contracts.leases.create', [
-            'allocations' => Allocation::query()->readyForContract()->doesntHave('leaseContract')->with(['candidate', 'housingUnit', 'application'])->get(),
-            'calculations' => RentCalculation::query()->where('status', 'approved')->with(['allocation', 'candidate'])->latest()->get(),
-            'templates' => ContractTemplate::query()->active()->orderBy('name')->get(),
+            'allocations' => $this->municipalScope
+                ->allocations(Allocation::query(), $actor)
+                ->readyForContract()
+                ->doesntHave('leaseContract')
+                ->with(['candidate', 'housingUnit', 'application'])
+                ->get(),
+            'calculations' => $this->municipalScope
+                ->rentCalculations(RentCalculation::query(), $actor)
+                ->where('status', 'approved')
+                ->with(['allocation', 'candidate'])
+                ->latest()
+                ->get(),
+            'templates' => $this->municipalScope
+                ->contractTemplates(ContractTemplate::query(), $actor)
+                ->active()
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
     public function store(StoreLeaseContractRequest $request): RedirectResponse
     {
-        Gate::authorize('create', Contract::class);
+        Gate::authorize('createBackoffice', Contract::class);
 
         $validated = $request->validated();
+        $actor = $this->authenticatedUser($request);
 
-        $allocation = Allocation::query()->findOrFail((int) $validated['allocation_id']);
-        $calculation = RentCalculation::query()->findOrFail((int) $validated['rent_calculation_id']);
-        $template = ContractTemplate::query()->findOrFail((int) $validated['contract_template_id']);
+        $allocation = $this->municipalScope
+            ->allocations(Allocation::query(), $actor)
+            ->findOrFail((int) $validated['allocation_id']);
+        $calculation = $this->municipalScope
+            ->rentCalculations(RentCalculation::query(), $actor)
+            ->findOrFail((int) $validated['rent_calculation_id']);
+        $template = $this->municipalScope
+            ->contractTemplates(ContractTemplate::query(), $actor)
+            ->findOrFail((int) $validated['contract_template_id']);
 
         $contract = $this->service->createFromAllocation(
             $allocation,
             $calculation,
             $template,
-            $this->authenticatedUser($request),
+            $actor,
             $validated,
         );
 
@@ -74,7 +104,7 @@ class LeaseContractController extends Controller
 
     public function show(Contract $leaseContract): View
     {
-        Gate::authorize('view', $leaseContract);
+        Gate::authorize('viewBackoffice', $leaseContract);
         $leaseContract->load([
             'candidate',
             'application',
@@ -98,14 +128,14 @@ class LeaseContractController extends Controller
 
     public function edit(Contract $leaseContract): View
     {
-        Gate::authorize('update', $leaseContract);
+        Gate::authorize('updateBackoffice', $leaseContract);
 
         return view('backoffice.contracts.leases.edit', compact('leaseContract'));
     }
 
     public function update(UpdateLeaseContractRequest $request, Contract $leaseContract): RedirectResponse
     {
-        Gate::authorize('update', $leaseContract);
+        Gate::authorize('updateBackoffice', $leaseContract);
         $this->service->updatePreparation($leaseContract, $request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.contracts.leases.show', $leaseContract)->with('success', 'Contrato atualizado.');
@@ -113,7 +143,7 @@ class LeaseContractController extends Controller
 
     public function issue(IssueLeaseContractRequest $request, Contract $leaseContract): RedirectResponse
     {
-        Gate::authorize('issue', $leaseContract);
+        Gate::authorize('issueBackoffice', $leaseContract);
         $this->service->issue($leaseContract, $this->authenticatedUser($request), $request->validated('issue_notes'));
 
         return back()->with('success', 'Contrato emitido.');
@@ -121,7 +151,7 @@ class LeaseContractController extends Controller
 
     public function activate(ActivateLeaseContractRequest $request, Contract $leaseContract): RedirectResponse
     {
-        Gate::authorize('activate', $leaseContract);
+        Gate::authorize('activateBackoffice', $leaseContract);
         $this->activationService->activate($leaseContract, $this->authenticatedUser($request), $request->validated('activation_reason'));
 
         return back()->with('success', 'Contrato ativado.');
@@ -129,7 +159,7 @@ class LeaseContractController extends Controller
 
     public function suspend(SuspendLeaseContractRequest $request, Contract $leaseContract): RedirectResponse
     {
-        Gate::authorize('update', $leaseContract);
+        Gate::authorize('suspendBackoffice', $leaseContract);
         $this->statusService->transition($leaseContract, ContractStatus::Suspended, $this->authenticatedUser($request), $request->validated('reason'));
 
         return back()->with('success', 'Contrato suspenso.');
@@ -137,7 +167,7 @@ class LeaseContractController extends Controller
 
     public function terminate(TerminateLeaseContractRequest $request, Contract $leaseContract): RedirectResponse
     {
-        Gate::authorize('update', $leaseContract);
+        Gate::authorize('terminateBackoffice', $leaseContract);
         $this->statusService->transition($leaseContract, ContractStatus::Terminated, $this->authenticatedUser($request), $request->validated('reason'));
 
         return back()->with('success', 'Contrato terminado.');
@@ -145,7 +175,7 @@ class LeaseContractController extends Controller
 
     public function cancel(CancelLeaseContractRequest $request, Contract $leaseContract): RedirectResponse
     {
-        Gate::authorize('update', $leaseContract);
+        Gate::authorize('cancelBackoffice', $leaseContract);
         $this->service->cancel($leaseContract, $this->authenticatedUser($request), $request->validated('reason'));
 
         return back()->with('success', 'Contrato cancelado.');

@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\LandlordDashboardSnapshot;
 use Illuminate\Foundation\Http\FormRequest;
 
 class FilterLandlordDashboardRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasRole(['administrator', 'municipal_technician', 'financial_manager', 'maintenance_manager', 'auditor']) ?? false;
+        return $this->user()?->can(
+            'viewAnyBackoffice',
+            LandlordDashboardSnapshot::class,
+        ) ?? false;
     }
 
     /**

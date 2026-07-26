@@ -9,7 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property MaintenanceInterventionStatus $status
+ * @property Carbon|null $scheduled_for
+ * @property-read MaintenanceRequest|null $maintenanceRequest
+ */
 class MaintenanceIntervention extends Model
 {
     /** @use HasFactory<MaintenanceInterventionFactory> */

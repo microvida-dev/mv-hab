@@ -25,10 +25,10 @@ class DashboardVisualConsistencyTest extends TestCase
         $this->actingAs($technician)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Centro de Operações Municipal da Habitação')
-            ->assertSee('Painel Principal')
+            ->assertSee('Operação técnica')
+            ->assertSee('Foco técnico')
             ->assertSee('Indicadores do perfil')
-            ->assertSee('Ações rápidas')
+            ->assertSee('Atalhos')
             ->assertSee('Alertas e prazos')
             ->assertSee('mv-badge', false)
             ->assertSee('mv-card', false);

@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\CorrectionResponse;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ReviewCorrectionResponseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $response = $this->route('correctionResponse');
+
+        return $response instanceof CorrectionResponse
+            && $this->user()?->can('decideBackoffice', $response) === true;
     }
 
     /**

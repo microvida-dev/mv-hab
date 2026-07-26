@@ -5,7 +5,6 @@ namespace Tests\Unit\Dashboard;
 use App\Data\Dashboard\TimelineEvent;
 use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
-use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Services\Dashboard\Timeline\NextActionResolver;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -34,7 +33,7 @@ class NextActionResolverTest extends TestCase
             ),
         ]);
 
-        $resolved = (new NextActionResolver())->resolve($events);
+        $resolved = (new NextActionResolver)->resolve($events);
 
         $this->assertSame('past-high', $resolved?->id);
     }
@@ -60,14 +59,14 @@ class NextActionResolverTest extends TestCase
             ),
         ]);
 
-        $resolved = (new NextActionResolver())->resolve($events);
+        $resolved = (new NextActionResolver)->resolve($events);
 
         $this->assertSame('complaint', $resolved?->id);
     }
 
     public function test_it_returns_null_without_events(): void
     {
-        $resolved = (new NextActionResolver())->resolve(new Collection());
+        $resolved = (new NextActionResolver)->resolve(new Collection);
 
         $this->assertNull($resolved);
     }

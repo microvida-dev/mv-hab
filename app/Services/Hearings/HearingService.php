@@ -25,30 +25,34 @@ class HearingService
      */
     public function create(array $data, User $actor): Hearing
     {
-        $application = Application::query()->findOrFail($data['application_id']);
+        return DB::transaction(function () use ($data): Hearing {
+            $application = Application::query()->findOrFail($data['application_id']);
 
-        $hearing = new Hearing($data);
-        $hearing->forceFill([
-            'application_id' => $application->id,
-            'user_id' => $application->user_id,
-            'hearing_number' => $this->generateHearingNumber(),
-            'status' => HearingStatus::Draft,
-        ])->save();
+            $hearing = new Hearing($data);
+            $hearing->forceFill([
+                'application_id' => $application->id,
+                'user_id' => $application->user_id,
+                'hearing_number' => $this->generateHearingNumber(),
+                'status' => HearingStatus::Draft,
+            ])->save();
 
-        $this->auditLogger->record(AuditEvents::CREATE, $hearing, 'complaints', 'hearing_create', 'Audiência de interessados criada.');
+            $this->auditLogger->record(AuditEvents::CREATE, $hearing, 'complaints', 'hearing_create', 'Audiência de interessados criada.');
 
-        return $hearing->refresh();
+            return $hearing->refresh();
+        });
     }
 
     public function issue(Hearing $hearing, User $actor): Hearing
     {
-        if ($this->hearingStatus($hearing) !== HearingStatus::Draft) {
-            throw ValidationException::withMessages(['hearing' => 'Apenas audiências em rascunho podem ser emitidas.']);
-        }
-
         $notificationService = $this->notificationService;
 
         return DB::transaction(function () use ($hearing, $actor, $notificationService) {
+            $hearing = Hearing::query()->lockForUpdate()->findOrFail($hearing->id);
+
+            if ($this->hearingStatus($hearing) !== HearingStatus::Draft) {
+                throw ValidationException::withMessages(['hearing' => 'Apenas audiências em rascunho podem ser emitidas.']);
+            }
+
             $hearing->forceFill([
                 'status' => HearingStatus::Open,
                 'issued_by' => $actor->id,
@@ -74,22 +78,47 @@ class HearingService
 
     public function close(Hearing $hearing, User $actor): Hearing
     {
-        $hearing->forceFill(['status' => HearingStatus::Closed, 'closed_at' => now()])->save();
-        $this->auditLogger->record(AuditEvents::UPDATE, $hearing, 'complaints', 'hearing_close', 'Audiência de interessados fechada.');
+        return DB::transaction(function () use ($hearing): Hearing {
+            $hearing = Hearing::query()->lockForUpdate()->findOrFail($hearing->id);
 
-        return $hearing->refresh();
+            if ($this->hearingStatus($hearing) === HearingStatus::Closed) {
+                return $hearing;
+            }
+
+            if (! $this->hearingStatusIsIn($hearing, [
+                HearingStatus::Open,
+                HearingStatus::Submitted,
+                HearingStatus::UnderReview,
+                HearingStatus::Completed,
+            ])) {
+                throw ValidationException::withMessages(['hearing' => 'A audiência não se encontra num estado que permita o fecho.']);
+            }
+
+            $hearing->forceFill(['status' => HearingStatus::Closed, 'closed_at' => now()])->save();
+            $this->auditLogger->record(AuditEvents::UPDATE, $hearing, 'complaints', 'hearing_close', 'Audiência de interessados fechada.');
+
+            return $hearing->refresh();
+        });
     }
 
     public function cancel(Hearing $hearing, User $actor): Hearing
     {
-        if ($this->hearingStatus($hearing) === HearingStatus::Completed) {
-            throw ValidationException::withMessages(['hearing' => 'Audiências concluídas não podem ser canceladas.']);
-        }
+        return DB::transaction(function () use ($hearing): Hearing {
+            $hearing = Hearing::query()->lockForUpdate()->findOrFail($hearing->id);
 
-        $hearing->forceFill(['status' => HearingStatus::Cancelled, 'candidate_visible' => false])->save();
-        $this->auditLogger->record(AuditEvents::UPDATE, $hearing, 'complaints', 'hearing_cancel', 'Audiência de interessados cancelada.');
+            if ($this->hearingStatus($hearing) === HearingStatus::Cancelled) {
+                return $hearing;
+            }
 
-        return $hearing->refresh();
+            if ($this->hearingStatusIsIn($hearing, [HearingStatus::Completed, HearingStatus::Closed])) {
+                throw ValidationException::withMessages(['hearing' => 'Audiências concluídas ou fechadas não podem ser canceladas.']);
+            }
+
+            $hearing->forceFill(['status' => HearingStatus::Cancelled, 'candidate_visible' => false])->save();
+            $this->auditLogger->record(AuditEvents::UPDATE, $hearing, 'complaints', 'hearing_cancel', 'Audiência de interessados cancelada.');
+
+            return $hearing->refresh();
+        });
     }
 
     private function generateHearingNumber(): string
@@ -113,6 +142,16 @@ class HearingService
         }
 
         return is_string($status) ? HearingStatus::tryFrom($status) : null;
+    }
+
+    /**
+     * @param  list<HearingStatus>  $statuses
+     */
+    private function hearingStatusIsIn(Hearing $hearing, array $statuses): bool
+    {
+        $status = $this->hearingStatus($hearing);
+
+        return $status !== null && in_array($status, $statuses, true);
     }
 
     private function requiredCandidate(Hearing $hearing): User

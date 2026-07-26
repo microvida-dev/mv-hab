@@ -13,6 +13,7 @@ use App\Models\TenantFinancialAccount;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use App\Support\DecimalMoney;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -26,33 +27,39 @@ class RentReviewService
     ) {}
 
     /**
-     * @param  array<string, bool|float|int|string|null>  $data
+     * @param  array<string, bool|int|string|null>  $data
      */
     public function store(TenantFinancialAccount $account, User $actor, array $data): RentReview
     {
-        $contract = $this->contractForAccount($account);
+        return DB::transaction(function () use ($account, $actor, $data): RentReview {
+            $lockedAccount = TenantFinancialAccount::query()
+                ->whereKey($account->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $contract = $this->contractForAccount($lockedAccount);
 
-        $review = new RentReview;
-        $review->forceFill([
-            'tenant_financial_account_id' => $account->id,
-            'lease_contract_id' => $account->lease_contract_id,
-            'user_id' => $account->user_id,
-            'household_id' => $account->household_id,
-            'requested_by' => $actor->id,
-            'status' => RentReviewStatus::Requested,
-            'review_type' => $this->reviewTypeFromData($data),
-            'current_rent' => $contract->monthly_rent,
-            'proposed_rent' => $data['proposed_rent'] ?? null,
-            'effective_from' => $data['effective_from'] ?? now()->addMonth()->startOfMonth(),
-            'requested_at' => now(),
-            'reason' => $data['reason'] ?? null,
-            'internal_notes' => $data['internal_notes'] ?? null,
-        ])->save();
+            $review = new RentReview;
+            $review->forceFill([
+                'tenant_financial_account_id' => $lockedAccount->id,
+                'lease_contract_id' => $lockedAccount->lease_contract_id,
+                'user_id' => $lockedAccount->user_id,
+                'household_id' => $lockedAccount->household_id,
+                'requested_by' => $actor->id,
+                'status' => RentReviewStatus::Requested,
+                'review_type' => $this->reviewTypeFromData($data),
+                'current_rent' => DecimalMoney::normalize((string) $contract->monthly_rent),
+                'proposed_rent' => isset($data['proposed_rent']) ? DecimalMoney::normalize((string) $data['proposed_rent']) : null,
+                'effective_from' => $data['effective_from'] ?? now()->addMonth()->startOfMonth(),
+                'requested_at' => now(),
+                'reason' => $data['reason'] ?? null,
+                'internal_notes' => $data['internal_notes'] ?? null,
+            ])->save();
 
-        $this->auditLogger->record(AuditEvents::CREATE, $review, 'finance', 'rent_review_create', 'Revisão de renda criada.');
-        $this->notifications->rentReviewRequested($review->refresh(), $actor);
+            $this->auditLogger->record(AuditEvents::CREATE, $review, 'finance', 'rent_review_create', 'Revisão de renda criada.');
+            $this->notifications->rentReviewRequested($review->refresh(), $actor);
 
-        return $review->refresh();
+            return $review->refresh();
+        });
     }
 
     public function createFromIncomeChange(IncomeChangeDeclaration $declaration, User $actor): RentReview
@@ -68,101 +75,149 @@ class RentReviewService
         return $review;
     }
 
-    public function calculate(RentReview $review, User $actor, ?float $proposedRent = null): RentReview
+    public function calculate(RentReview $review, User $actor, int|string|null $proposedRent = null): RentReview
     {
-        $account = $this->accountForReview($review);
-        $household = $account->household;
-        $household = $household instanceof Household ? $household : null;
-        $monthlyIncome = $household ? (float) $household->incomeRecords()->sum('monthly_amount') : 0.0;
-        $proposedRent = $proposedRent ?? (float) ($review->proposed_rent ?: $review->current_rent);
+        return DB::transaction(function () use ($review, $actor, $proposedRent): RentReview {
+            $lockedReview = RentReview::query()
+                ->whereKey($review->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $account = $this->accountForReview($lockedReview);
+            $household = $account->household;
+            $household = $household instanceof Household ? $household : null;
+            $monthlyIncome = DecimalMoney::normalize(
+                (string) ($household?->incomeRecords()->sum('monthly_amount') ?? '0'),
+            );
+            $rentCandidate = $proposedRent
+                ?? ($lockedReview->proposed_rent !== null
+                    ? (string) $lockedReview->proposed_rent
+                    : (string) $lockedReview->current_rent);
+            $resolvedRent = DecimalMoney::normalize(
+                $rentCandidate,
+            );
 
-        $review->forceFill([
-            'status' => RentReviewStatus::Calculated,
-            'proposed_rent' => $proposedRent,
-            'calculated_at' => now(),
-            'reviewed_by' => $actor->id,
-            'income_snapshot' => [
-                'monthly_household_income' => $monthlyIncome,
-                'household_id' => $household?->id,
-            ],
-            'calculation_snapshot' => [
-                'method' => 'manual_review_without_external_integrations',
-                'current_rent' => (float) $review->current_rent,
-                'proposed_rent' => $proposedRent,
-            ],
-        ])->save();
+            $lockedReview->forceFill([
+                'status' => RentReviewStatus::Calculated,
+                'proposed_rent' => $resolvedRent,
+                'calculated_at' => now(),
+                'reviewed_by' => $actor->id,
+                'income_snapshot' => [
+                    'monthly_household_income' => $monthlyIncome,
+                    'household_id' => $household?->id,
+                ],
+                'calculation_snapshot' => [
+                    'method' => 'manual_review_without_external_integrations',
+                    'current_rent' => DecimalMoney::normalize((string) $lockedReview->current_rent),
+                    'proposed_rent' => $resolvedRent,
+                ],
+            ])->save();
 
-        $this->auditLogger->record(AuditEvents::UPDATE, $review, 'finance', 'rent_review_calculate', 'Revisão de renda calculada manualmente.');
+            $this->auditLogger->record(AuditEvents::UPDATE, $lockedReview, 'finance', 'rent_review_calculate', 'Revisão de renda calculada manualmente.');
 
-        return $review->refresh();
+            return $lockedReview->refresh();
+        });
     }
 
-    public function approve(RentReview $review, User $actor, float $approvedRent): RentReview
+    public function approve(RentReview $review, User $actor, int|string $approvedRent): RentReview
     {
-        if ($approvedRent <= 0) {
+        $approved = DecimalMoney::normalize($approvedRent);
+        if (! DecimalMoney::isPositive($approved)) {
             throw ValidationException::withMessages(['approved_rent' => 'A renda aprovada tem de ser superior a zero.']);
         }
 
-        $review->forceFill([
-            'status' => RentReviewStatus::Approved,
-            'approved_rent' => $approvedRent,
-            'approved_at' => now(),
-            'approved_by' => $actor->id,
-        ])->save();
+        return DB::transaction(function () use ($review, $actor, $approved): RentReview {
+            $lockedReview = RentReview::query()
+                ->whereKey($review->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            if ($this->reviewHasStatus($lockedReview, RentReviewStatus::Approved)) {
+                return $lockedReview;
+            }
 
-        $this->auditLogger->record(AuditEvents::APPROVE, $review, 'finance', 'rent_review_approve', 'Revisão de renda aprovada.');
+            $lockedReview->forceFill([
+                'status' => RentReviewStatus::Approved,
+                'approved_rent' => $approved,
+                'approved_at' => now(),
+                'approved_by' => $actor->id,
+            ])->save();
 
-        return $review->refresh();
+            $this->auditLogger->record(AuditEvents::APPROVE, $lockedReview, 'finance', 'rent_review_approve', 'Revisão de renda aprovada.');
+
+            return $lockedReview->refresh();
+        });
     }
 
     public function reject(RentReview $review, User $actor, string $reason): RentReview
     {
-        $review->forceFill([
-            'status' => RentReviewStatus::Rejected,
-            'rejected_at' => now(),
-            'reviewed_by' => $actor->id,
-            'rejection_reason' => $reason,
-        ])->save();
+        return DB::transaction(function () use ($review, $actor, $reason): RentReview {
+            $lockedReview = RentReview::query()
+                ->whereKey($review->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            if ($this->reviewHasStatus($lockedReview, RentReviewStatus::Rejected)) {
+                return $lockedReview;
+            }
 
-        $this->auditLogger->record(AuditEvents::REJECT, $review, 'finance', 'rent_review_reject', 'Revisão de renda rejeitada.');
+            $lockedReview->forceFill([
+                'status' => RentReviewStatus::Rejected,
+                'rejected_at' => now(),
+                'reviewed_by' => $actor->id,
+                'rejection_reason' => $reason,
+            ])->save();
 
-        return $review->refresh();
+            $this->auditLogger->record(AuditEvents::REJECT, $lockedReview, 'finance', 'rent_review_reject', 'Revisão de renda rejeitada.');
+
+            return $lockedReview->refresh();
+        });
     }
 
     public function apply(RentReview $review, User $actor): RentReview
     {
         return DB::transaction(function () use ($review, $actor) {
-            if (! $this->isApprovedStatus($review) || ! $review->approved_rent) {
+            $lockedReview = RentReview::query()
+                ->whereKey($review->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            if ($this->reviewHasStatus($lockedReview, RentReviewStatus::Applied)) {
+                return $lockedReview;
+            }
+
+            if (
+                ! $this->isApprovedStatus($lockedReview)
+                || ! DecimalMoney::isPositive(
+                    $lockedReview->approved_rent === null ? null : (string) $lockedReview->approved_rent,
+                )
+            ) {
                 throw ValidationException::withMessages(['review' => 'A revisão tem de estar aprovada antes de ser aplicada.']);
             }
 
-            $contract = $this->contractForReview($review);
+            $contract = $this->contractForReview($lockedReview);
             $schedule = $this->schedules->generateForContract($contract, $actor, [
-                'starts_on' => $review->effective_from ?? now()->addMonth()->startOfMonth(),
+                'starts_on' => $lockedReview->effective_from ?? now()->addMonth()->startOfMonth(),
                 'ends_on' => $contract->end_date,
-                'monthly_rent' => $review->approved_rent,
+                'monthly_rent' => $lockedReview->approved_rent,
                 'payment_day' => $contract->payment_day ?? 8,
                 'schedule_type' => 'rent_review',
-                'source_rent_review_id' => $review->id,
+                'source_rent_review_id' => $lockedReview->id,
             ]);
 
             $contract->forceFill([
-                'monthly_rent' => $review->approved_rent,
+                'monthly_rent' => $lockedReview->approved_rent,
                 'updated_by' => $actor->id,
             ])->save();
 
-            $review->forceFill([
+            $lockedReview->forceFill([
                 'status' => RentReviewStatus::Applied,
                 'new_rent_schedule_id' => $schedule->id,
                 'applied_at' => now(),
                 'applied_by' => $actor->id,
             ])->save();
 
-            $this->transactions->record($this->accountForReview($review), FinancialTransactionType::RentReviewApplied, 0, $review, $actor, 'Revisão de renda aplicada.');
-            $this->auditLogger->record(AuditEvents::UPDATE, $review, 'finance', 'rent_review_apply', 'Revisão de renda aplicada ao contrato.');
-            $this->notifications->rentReviewApplied($review->refresh(), $actor);
+            $this->transactions->record($this->accountForReview($lockedReview), FinancialTransactionType::RentReviewApplied, 0, $lockedReview, $actor, 'Revisão de renda aplicada.');
+            $this->auditLogger->record(AuditEvents::UPDATE, $lockedReview, 'finance', 'rent_review_apply', 'Revisão de renda aplicada ao contrato.');
+            $this->notifications->rentReviewApplied($lockedReview->refresh(), $actor);
 
-            return $review->refresh();
+            return $lockedReview->refresh();
         });
     }
 
@@ -220,14 +275,18 @@ class RentReviewService
 
     private function isApprovedStatus(RentReview $review): bool
     {
+        return $this->reviewHasStatus($review, RentReviewStatus::Approved);
+    }
+
+    private function reviewHasStatus(RentReview $review, RentReviewStatus $expected): bool
+    {
         $status = $review->getAttribute('status');
 
-        return $status === RentReviewStatus::Approved
-            || $status === RentReviewStatus::Approved->value;
+        return $status === $expected || $status === $expected->value;
     }
 
     /**
-     * @param  array<string, bool|float|int|string|null>  $data
+     * @param  array<string, bool|int|string|null>  $data
      */
     private function reviewTypeFromData(array $data): RentReviewType
     {

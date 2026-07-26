@@ -11,7 +11,10 @@ class UpdateManualScoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manualReview', $this->route('applicationScore')) ?? false;
+        return $this->user()?->can(
+            'reviewBackoffice',
+            $this->route('applicationScore'),
+        ) ?? false;
     }
 
     /**

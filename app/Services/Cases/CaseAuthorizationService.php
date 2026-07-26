@@ -3,6 +3,7 @@
 namespace App\Services\Cases;
 
 use App\Models\Application;
+use App\Models\DocumentSubmission;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
@@ -34,7 +35,9 @@ class CaseAuthorizationService
             return false;
         }
 
-        return Gate::forUser($user)->allows('view', $case);
+        $ability = $case instanceof DocumentSubmission ? 'viewBackoffice' : 'view';
+
+        return Gate::forUser($user)->allows($ability, $case);
     }
 
     public function hasPermission(User $user, string $permission): bool

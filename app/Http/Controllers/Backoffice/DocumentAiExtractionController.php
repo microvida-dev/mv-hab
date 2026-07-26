@@ -12,9 +12,11 @@ use App\Models\DocumentAiFlag;
 use App\Models\DocumentAiProcessingLog;
 use App\Services\Audit\AuditLogger;
 use App\Services\DocumentIntelligence\DocumentExtractedFieldPresenter;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class DocumentAiExtractionController extends Controller
@@ -22,17 +24,20 @@ class DocumentAiExtractionController extends Controller
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly DocumentExtractedFieldPresenter $fieldPresenter,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
     public function index(FilterDocumentAiExtractionsRequest $request): View
     {
-        Gate::authorize('viewAny', DocumentAiAnalysis::class);
+        Gate::authorize('auditAnyBackoffice', DocumentAiAnalysis::class);
+        $actor = $this->authenticatedUser($request);
         $filters = array_filter(
             $request->validated(),
             static fn (mixed $value): bool => $value !== null && $value !== ''
         );
 
-        $analyses = DocumentAiAnalysis::query()
+        $analyses = $this->municipalScope
+            ->documentAiAnalyses(DocumentAiAnalysis::query(), $actor)
             ->with([
                 'documentSubmission.documentType',
                 'documentSubmission.requiredDocument',
@@ -64,9 +69,9 @@ class DocumentAiExtractionController extends Controller
         ]);
     }
 
-    public function show(DocumentAiAnalysis $analysis): View
+    public function show(Request $request, DocumentAiAnalysis $analysis): View
     {
-        Gate::authorize('viewExtractedFields', $analysis);
+        Gate::authorize('auditBackoffice', $analysis);
 
         $analysis->load([
             'documentSubmission.documentType',
@@ -109,7 +114,7 @@ class DocumentAiExtractionController extends Controller
 
     public function markFieldForReview(MarkDocumentAiFieldReviewRequest $request, DocumentAiField $field): RedirectResponse
     {
-        Gate::authorize('markForReview', $field);
+        Gate::authorize('reviewBackoffice', $field);
         $field->loadMissing('analysis');
         $reason = $request->validated('reason') ?: 'Revisão manual solicitada no painel de extração IA.';
         $metadata = is_array($field->metadata) ? $field->metadata : [];

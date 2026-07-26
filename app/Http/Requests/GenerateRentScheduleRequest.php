@@ -2,13 +2,18 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Contract;
+use App\Models\RentSchedule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class GenerateRentScheduleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $contract = $this->route('leaseContract');
+
+        return $contract instanceof Contract
+            && $this->user()?->can('generateBackoffice', [RentSchedule::class, $contract]) === true;
     }
 
     /**

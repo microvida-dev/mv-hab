@@ -19,6 +19,7 @@ class Municipality extends Model
         'contact_email',
         'settings',
         'active',
+        'official_logo_path',
     ];
 
     protected function casts(): array
@@ -43,5 +44,13 @@ class Municipality extends Model
     public function programs(): HasMany
     {
         return $this->hasMany(Program::class);
+    }
+
+    /**
+     * @return HasMany<MunicipalityFeatureEntitlement, $this>
+     */
+    public function featureEntitlements(): HasMany
+    {
+        return $this->hasMany(MunicipalityFeatureEntitlement::class);
     }
 }

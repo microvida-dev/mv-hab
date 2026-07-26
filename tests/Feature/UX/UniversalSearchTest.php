@@ -2,32 +2,43 @@
 
 namespace Tests\Feature\UX;
 
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\Contest;
+use App\Models\Municipality;
+use App\Models\Program;
 use App\Models\User;
 use App\Models\WorkTask;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class UniversalSearchTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
+
+    private Municipality $municipality;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
+        $this->municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
     }
 
     public function test_backoffice_user_searches_authorized_application_contest_workspace_and_task(): void
     {
         $administrator = $this->userWithRole('administrator');
+        $program = Program::factory()->create(['municipality_id' => $this->municipality->id]);
         $application = Application::factory()->submitted()->create([
+            'program_id' => $program->id,
             'application_number' => 'CAND-2026-UX05-001',
         ]);
         $contest = Contest::factory()->create([
+            'program_id' => $program->id,
             'code' => 'CONC-UX05',
             'title' => 'Concurso UX Cinco',
         ]);
@@ -57,14 +68,18 @@ class UniversalSearchTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Pesquisar')
-            ->assertSee('Centro de Comandos')
+            ->assertSee('for="dashboard-sidebar-search"', false)
+            ->assertSee('aria-label="Pesquisar"', false)
             ->assertSee(route('backoffice.search.index'), false)
             ->assertDontSee('Preparado');
     }
 
     private function userWithRole(string $role): User
     {
-        $user = User::factory()->create(['status' => 'active']);
+        $user = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
+            'status' => 'active',
+        ]);
         $user->assignRole($role);
 
         return $user;

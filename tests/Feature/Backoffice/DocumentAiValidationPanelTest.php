@@ -5,6 +5,7 @@ namespace Tests\Feature\Backoffice;
 use App\Enums\DocumentAiValidationGroup;
 use App\Enums\DocumentAiValidationSeverity;
 use App\Enums\DocumentAiValidationStatus;
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\DocumentAiValidation;
 use App\Models\DocumentAiValidationRun;
@@ -12,10 +13,12 @@ use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class DocumentAiValidationPanelTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -27,6 +30,12 @@ class DocumentAiValidationPanelTest extends TestCase
     public function test_validation_panel_is_protected_and_visible_to_backoffice_only(): void
     {
         $run = DocumentAiValidationRun::factory()->create();
+        $administrator = $this->userWithRole('administrator');
+        $this->assignApplicationMunicipality(
+            $administrator,
+            $run->application,
+            FeatureKey::ApplicationReview,
+        );
 
         $this->get(route('backoffice.document-ai.validations.index'))
             ->assertRedirect(route('login'));
@@ -35,7 +44,8 @@ class DocumentAiValidationPanelTest extends TestCase
             ->get(route('backoffice.document-ai.validations.index'))
             ->assertForbidden();
 
-        $this->actingAs($this->userWithRole('administrator'))
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.document-ai.validations.index'))
             ->assertOk()
             ->assertSee('Validação IA documental')
@@ -45,8 +55,15 @@ class DocumentAiValidationPanelTest extends TestCase
     public function test_detail_masks_sensitive_values_for_regular_technicians_and_records_access(): void
     {
         [$application, $validation] = $this->validationRecord();
+        $technician = $this->userWithRole('municipal_technician');
+        $this->assignApplicationMunicipality(
+            $technician,
+            $application,
+            FeatureKey::ApplicationReview,
+        );
 
-        $this->actingAs($this->userWithRole('municipal_technician'))
+        $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.document-ai.validations.show', $application))
             ->assertOk()
             ->assertSee('Validação IA da candidatura')
@@ -54,7 +71,7 @@ class DocumentAiValidationPanelTest extends TestCase
             ->assertSee('M***a');
 
         $this->assertDatabaseHas('audit_logs', [
-            'auditable_type' => $validation->run->getMorphClass(),
+            'auditable_type' => $validation->run()->firstOrFail()->getMorphClass(),
             'auditable_id' => $validation->document_ai_validation_run_id,
             'action' => 'document_ai_candidate_validation_viewed',
         ]);
@@ -63,8 +80,15 @@ class DocumentAiValidationPanelTest extends TestCase
     public function test_authorized_user_can_mark_validation_for_manual_review(): void
     {
         [, $validation] = $this->validationRecord();
+        $administrator = $this->userWithRole('administrator');
+        $this->assignApplicationMunicipality(
+            $administrator,
+            $validation->application()->firstOrFail(),
+            FeatureKey::ApplicationReview,
+        );
 
-        $this->actingAs($this->userWithRole('administrator'))
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.document-ai.validations.manual-review', $validation), [
                 'review_notes' => 'Confirmacao manual necessaria para teste.',
             ])
@@ -87,8 +111,15 @@ class DocumentAiValidationPanelTest extends TestCase
             'severity' => null,
             'requires_manual_review' => false,
         ]);
+        $administrator = $this->userWithRole('administrator');
+        $this->assignApplicationMunicipality(
+            $administrator,
+            $application,
+            FeatureKey::ApplicationReview,
+        );
 
-        $this->actingAs($this->userWithRole('administrator'))
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.document-ai.validations.show', $application))
             ->assertOk()
             ->assertSee('Validação IA da candidatura');

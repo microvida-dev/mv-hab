@@ -1,0 +1,2131 @@
+{
+  "schema_version": "1.0",
+  "sprint": "47C",
+  "source_inventory": "docs/access/backoffice-route-inventory.json",
+  "source_commit": "be591d9d42dc21987a761f93c5695fe92b2ee697",
+  "generated_at": "2026-07-23T00:00:00+01:00",
+  "immutable_input": true,
+  "route_count": 78,
+  "reconciliation": {
+    "expected_route_count": 78,
+    "actual_route_count": 78,
+    "unique_route_names": 78,
+    "missing_route_names": [],
+    "candidate_route_names": []
+  },
+  "routes": [
+    {
+      "route_name": "backoffice.administrative-decisions.approve",
+      "uri": "backoffice/administrative-decisions/{administrativeDecision}/approve",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\AdministrativeDecisionController",
+      "action": "approve",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "administrative_processes.approve",
+      "permission_final": "administrative_decisions.approve",
+      "policy": "App\\Policies\\AdministrativeDecisionPolicy",
+      "ability": "approveBackoffice",
+      "form_request": "App\\Http\\Requests\\ApproveAdministrativeDecisionRequest",
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "critical",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.administrative-decisions.cancel",
+      "uri": "backoffice/administrative-decisions/{administrativeDecision}/cancel",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\AdministrativeDecisionController",
+      "action": "cancel",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "administrative_decisions.cancel",
+      "policy": "App\\Policies\\AdministrativeDecisionPolicy",
+      "ability": "cancelBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "critical",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.administrative-decisions.create-admission",
+      "uri": "backoffice/administrative-processes/{administrativeProcess}/decisions/create-admission",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\AdministrativeDecisionController",
+      "action": "createAdmission",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "administrative_processes.create",
+      "permission_final": "administrative_decisions.create",
+      "policy": "App\\Policies\\AdministrativeProcessPolicy",
+      "ability": "createBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": true,
+      "risk": "critical",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.administrative-decisions.create-non-admission",
+      "uri": "backoffice/administrative-processes/{administrativeProcess}/decisions/create-non-admission",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\AdministrativeDecisionController",
+      "action": "createNonAdmission",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "administrative_processes.create",
+      "permission_final": "administrative_decisions.create",
+      "policy": "App\\Policies\\AdministrativeProcessPolicy",
+      "ability": "createBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": true,
+      "risk": "critical",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.administrative-decisions.show",
+      "uri": "backoffice/administrative-decisions/{administrativeDecision}",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\AdministrativeDecisionController",
+      "action": "show",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "administrative_processes.view",
+      "permission_final": "administrative_decisions.view",
+      "policy": "App\\Policies\\AdministrativeDecisionPolicy",
+      "ability": "viewBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": true,
+      "risk": "critical",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.administrative-decisions.store-admission",
+      "uri": "backoffice/administrative-processes/{administrativeProcess}/decisions/admission",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\AdministrativeDecisionController",
+      "action": "storeAdmission",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "administrative_processes.create",
+      "permission_final": "administrative_decisions.create",
+      "policy": "App\\Policies\\AdministrativeProcessPolicy",
+      "ability": "createBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreAdministrativeDecisionRequest",
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "critical",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.administrative-decisions.store-non-admission",
+      "uri": "backoffice/administrative-processes/{administrativeProcess}/decisions/non-admission",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\AdministrativeDecisionController",
+      "action": "storeNonAdmission",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "administrative_processes.create",
+      "permission_final": "administrative_decisions.create",
+      "policy": "App\\Policies\\AdministrativeProcessPolicy",
+      "ability": "createBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreAdministrativeDecisionRequest",
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "critical",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.complaint-decisions.approve",
+      "uri": "backoffice/complaint-decisions/{complaintDecision}/approve",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ComplaintDecisionController",
+      "action": "approve",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "administrative_processes.approve",
+      "permission_final": "complaints.approve",
+      "policy": "App\\Policies\\ComplaintDecisionPolicy",
+      "ability": "approveBackoffice",
+      "form_request": "App\\Http\\Requests\\ApproveComplaintDecisionRequest",
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "critical",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.complaint-decisions.cancel",
+      "uri": "backoffice/complaint-decisions/{complaintDecision}/cancel",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ComplaintDecisionController",
+      "action": "cancel",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "complaints.cancel",
+      "policy": "App\\Policies\\ComplaintDecisionPolicy",
+      "ability": "cancelBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "critical",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.complaint-decisions.create",
+      "uri": "backoffice/complaints/{complaint}/decisions/create",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ComplaintDecisionController",
+      "action": "create",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "administrative_processes.create",
+      "permission_final": "complaints.decide",
+      "policy": "App\\Policies\\ComplaintPolicy",
+      "ability": "decideBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": true,
+      "risk": "critical",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.complaint-decisions.show",
+      "uri": "backoffice/complaint-decisions/{complaintDecision}",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ComplaintDecisionController",
+      "action": "show",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "administrative_processes.view",
+      "permission_final": "complaints.view",
+      "policy": "App\\Policies\\ComplaintDecisionPolicy",
+      "ability": "viewBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": true,
+      "risk": "critical",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.complaint-decisions.store",
+      "uri": "backoffice/complaints/{complaint}/decisions",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ComplaintDecisionController",
+      "action": "store",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "administrative_processes.create",
+      "permission_final": "complaints.decide",
+      "policy": "App\\Policies\\ComplaintPolicy",
+      "ability": "decideBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreComplaintDecisionRequest",
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "critical",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.document-ai.assistant.score",
+      "uri": "backoffice/documentos/ia/assistente/scores/{score}",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\DocumentAiAssistantController",
+      "action": "score",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "documents.view",
+      "policy": "App\\Policies\\DocumentAiScorePolicy",
+      "ability": "viewBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.document-ai.classifications.index",
+      "uri": "backoffice/documentos/ia/classificacoes",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\DocumentAiClassificationController",
+      "action": "index",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "documents.view",
+      "policy": null,
+      "ability": "viewAnyBackoffice",
+      "form_request": "App\\Http\\Requests\\Backoffice\\FilterDocumentAiClassificationsRequest",
+      "feature": "applications.review",
+      "municipality": "authenticated_user",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.document-ai.classifications.manual-review",
+      "uri": "backoffice/documentos/ia/classificacoes/{analysis}/revisao-manual",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\DocumentAiClassificationController",
+      "action": "markManualReview",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.update",
+      "permission_final": "documents.review_ai",
+      "policy": "App\\Policies\\DocumentAiAnalysisPolicy",
+      "ability": "reviewBackoffice",
+      "form_request": "App\\Http\\Requests\\Backoffice\\MarkDocumentAiManualReviewRequest",
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.document-ai.classifications.show",
+      "uri": "backoffice/documentos/ia/classificacoes/{analysis}",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\DocumentAiClassificationController",
+      "action": "show",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "documents.view",
+      "policy": "App\\Policies\\DocumentAiAnalysisPolicy",
+      "ability": "viewBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.criteria.activate",
+      "uri": "backoffice/eligibility/criteria/{eligibilityCriterion}/activate",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityCriterionController",
+      "action": "activate",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "eligibility.activate",
+      "policy": "App\\Policies\\EligibilityCriterionPolicy",
+      "ability": "activateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.criteria.create",
+      "uri": "backoffice/eligibility/rule-sets/{eligibilityRuleSet}/criteria/create",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityCriterionController",
+      "action": "create",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "eligibility.create",
+      "permission_final": "eligibility.create",
+      "policy": "App\\Policies\\EligibilityRuleSetPolicy",
+      "ability": "createBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.criteria.edit",
+      "uri": "backoffice/eligibility/criteria/{eligibilityCriterion}/edit",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityCriterionController",
+      "action": "edit",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "eligibility.update",
+      "permission_final": "eligibility.update",
+      "policy": "App\\Policies\\EligibilityCriterionPolicy",
+      "ability": "updateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.criteria.inactivate",
+      "uri": "backoffice/eligibility/criteria/{eligibilityCriterion}/inactivate",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityCriterionController",
+      "action": "inactivate",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "eligibility.deactivate",
+      "policy": "App\\Policies\\EligibilityCriterionPolicy",
+      "ability": "deactivateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.criteria.index",
+      "uri": "backoffice/eligibility/rule-sets/{eligibilityRuleSet}/criteria",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityCriterionController",
+      "action": "index",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "eligibility.view",
+      "permission_final": "eligibility.view",
+      "policy": "App\\Policies\\EligibilityRuleSetPolicy",
+      "ability": "viewBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.criteria.store",
+      "uri": "backoffice/eligibility/rule-sets/{eligibilityRuleSet}/criteria",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityCriterionController",
+      "action": "store",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "eligibility.create",
+      "permission_final": "eligibility.create",
+      "policy": "App\\Policies\\EligibilityRuleSetPolicy",
+      "ability": "createBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreEligibilityCriterionRequest",
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.criteria.update",
+      "uri": "backoffice/eligibility/criteria/{eligibilityCriterion}",
+      "methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityCriterionController",
+      "action": "update",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "eligibility.update",
+      "permission_final": "eligibility.update",
+      "policy": "App\\Policies\\EligibilityCriterionPolicy",
+      "ability": "updateBackoffice",
+      "form_request": "App\\Http\\Requests\\UpdateEligibilityCriterionRequest",
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.rule-sets.activate",
+      "uri": "backoffice/eligibility/rule-sets/{eligibilityRuleSet}/activate",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityRuleSetController",
+      "action": "activate",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "eligibility.activate",
+      "policy": "App\\Policies\\EligibilityRuleSetPolicy",
+      "ability": "activateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.rule-sets.archive",
+      "uri": "backoffice/eligibility/rule-sets/{eligibilityRuleSet}/archive",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityRuleSetController",
+      "action": "archive",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "eligibility.update",
+      "permission_final": "eligibility.archive",
+      "policy": "App\\Policies\\EligibilityRuleSetPolicy",
+      "ability": "archiveBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.rule-sets.create",
+      "uri": "backoffice/eligibility/rule-sets/create",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityRuleSetController",
+      "action": "create",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "eligibility.create",
+      "permission_final": "eligibility.create",
+      "policy": "App\\Policies\\EligibilityRuleSetPolicy",
+      "ability": "createBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.rule-sets.duplicate",
+      "uri": "backoffice/eligibility/rule-sets/{eligibilityRuleSet}/duplicate",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityRuleSetController",
+      "action": "duplicate",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "eligibility.create",
+      "permission_final": "eligibility.duplicate",
+      "policy": "App\\Policies\\EligibilityRuleSetPolicy",
+      "ability": "duplicateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.rule-sets.edit",
+      "uri": "backoffice/eligibility/rule-sets/{eligibilityRuleSet}/edit",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityRuleSetController",
+      "action": "edit",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "eligibility.update",
+      "permission_final": "eligibility.update",
+      "policy": "App\\Policies\\EligibilityRuleSetPolicy",
+      "ability": "updateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.rule-sets.index",
+      "uri": "backoffice/eligibility/rule-sets",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityRuleSetController",
+      "action": "index",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "eligibility.view",
+      "permission_final": "eligibility.view",
+      "policy": "App\\Policies\\EligibilityRuleSetPolicy",
+      "ability": "viewAnyBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.rule-sets.show",
+      "uri": "backoffice/eligibility/rule-sets/{eligibilityRuleSet}",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityRuleSetController",
+      "action": "show",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "eligibility.view",
+      "permission_final": "eligibility.view",
+      "policy": "App\\Policies\\EligibilityRuleSetPolicy",
+      "ability": "viewBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.rule-sets.store",
+      "uri": "backoffice/eligibility/rule-sets",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityRuleSetController",
+      "action": "store",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "eligibility.create",
+      "permission_final": "eligibility.create",
+      "policy": "App\\Policies\\EligibilityRuleSetPolicy",
+      "ability": "createBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreEligibilityRuleSetRequest",
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.eligibility.rule-sets.update",
+      "uri": "backoffice/eligibility/rule-sets/{eligibilityRuleSet}",
+      "methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\EligibilityRuleSetController",
+      "action": "update",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "eligibility.update",
+      "permission_final": "eligibility.update",
+      "policy": "App\\Policies\\EligibilityRuleSetPolicy",
+      "ability": "updateBackoffice",
+      "form_request": "App\\Http\\Requests\\UpdateEligibilityRuleSetRequest",
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": true,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.lottery-draws.ranking.update",
+      "uri": "backoffice/sorteios/{lotteryDraw}/ranking/atualizar",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\RankingUpdateRunController",
+      "action": "apply",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "scoring.run",
+      "policy": "App\\Policies\\LotteryDrawPolicy",
+      "ability": "createBackoffice",
+      "form_request": "App\\Http\\Requests\\ApplyRankingUpdateRequest",
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.application-scores.index",
+      "uri": "backoffice/scoring/application-scores",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ApplicationScoreController",
+      "action": "index",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "scoring.view",
+      "policy": "App\\Policies\\ApplicationScorePolicy",
+      "ability": "viewAnyBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.application-scores.lock",
+      "uri": "backoffice/scoring/application-scores/{applicationScore}/lock",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ApplicationScoreController",
+      "action": "lock",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "scoring.lock",
+      "policy": "App\\Policies\\ApplicationScorePolicy",
+      "ability": "lockBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.application-scores.manual-review",
+      "uri": "backoffice/scoring/application-scores/{applicationScore}/manual-review",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ApplicationScoreController",
+      "action": "manualReview",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.update",
+      "permission_final": "scoring.review",
+      "policy": "App\\Policies\\ApplicationScorePolicy",
+      "ability": "reviewBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.application-scores.manual-review.update",
+      "uri": "backoffice/scoring/application-scores/{applicationScore}/manual-review",
+      "methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ApplicationScoreController",
+      "action": "updateManualScore",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.update",
+      "permission_final": "scoring.review",
+      "policy": "App\\Policies\\ApplicationScorePolicy",
+      "ability": "reviewBackoffice",
+      "form_request": "App\\Http\\Requests\\UpdateManualScoreRequest",
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.application-scores.show",
+      "uri": "backoffice/scoring/application-scores/{applicationScore}",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ApplicationScoreController",
+      "action": "show",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "scoring.view",
+      "policy": "App\\Policies\\ApplicationScorePolicy",
+      "ability": "viewBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.criteria.activate",
+      "uri": "backoffice/scoring/criteria/{scoringCriterion}/activate",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringCriterionController",
+      "action": "activate",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "scoring.activate",
+      "policy": "App\\Policies\\ScoringCriterionPolicy",
+      "ability": "activateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.criteria.create",
+      "uri": "backoffice/scoring/rule-sets/{scoringRuleSet}/criteria/create",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringCriterionController",
+      "action": "create",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.create",
+      "permission_final": "scoring.create",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "createBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.criteria.edit",
+      "uri": "backoffice/scoring/criteria/{scoringCriterion}/edit",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringCriterionController",
+      "action": "edit",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.update",
+      "permission_final": "scoring.update",
+      "policy": "App\\Policies\\ScoringCriterionPolicy",
+      "ability": "updateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.criteria.inactivate",
+      "uri": "backoffice/scoring/criteria/{scoringCriterion}/inactivate",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringCriterionController",
+      "action": "inactivate",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "scoring.deactivate",
+      "policy": "App\\Policies\\ScoringCriterionPolicy",
+      "ability": "deactivateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.criteria.index",
+      "uri": "backoffice/scoring/rule-sets/{scoringRuleSet}/criteria",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringCriterionController",
+      "action": "index",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "scoring.view",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "viewBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.criteria.store",
+      "uri": "backoffice/scoring/rule-sets/{scoringRuleSet}/criteria",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringCriterionController",
+      "action": "store",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.create",
+      "permission_final": "scoring.create",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "createBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreScoringCriterionRequest",
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.criteria.update",
+      "uri": "backoffice/scoring/criteria/{scoringCriterion}",
+      "methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringCriterionController",
+      "action": "update",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.update",
+      "permission_final": "scoring.update",
+      "policy": "App\\Policies\\ScoringCriterionPolicy",
+      "ability": "updateBackoffice",
+      "form_request": "App\\Http\\Requests\\UpdateScoringCriterionRequest",
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.ranking-snapshots.archive",
+      "uri": "backoffice/scoring/ranking-snapshots/{rankingSnapshot}/archive",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\RankingSnapshotController",
+      "action": "archive",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.update",
+      "permission_final": "scoring.archive",
+      "policy": "App\\Policies\\RankingSnapshotPolicy",
+      "ability": "archiveBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.ranking-snapshots.index",
+      "uri": "backoffice/scoring/ranking-snapshots",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\RankingSnapshotController",
+      "action": "index",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "scoring.view",
+      "policy": "App\\Policies\\RankingSnapshotPolicy",
+      "ability": "viewAnyBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.ranking-snapshots.lock",
+      "uri": "backoffice/scoring/ranking-snapshots/{rankingSnapshot}/lock",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\RankingSnapshotController",
+      "action": "lock",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "scoring.lock",
+      "policy": "App\\Policies\\RankingSnapshotPolicy",
+      "ability": "lockBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.ranking-snapshots.show",
+      "uri": "backoffice/scoring/ranking-snapshots/{rankingSnapshot}",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\RankingSnapshotController",
+      "action": "show",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "scoring.view",
+      "policy": "App\\Policies\\RankingSnapshotPolicy",
+      "ability": "viewBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rule-sets.activate",
+      "uri": "backoffice/scoring/rule-sets/{scoringRuleSet}/activate",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleSetController",
+      "action": "activate",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "scoring.activate",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "activateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rule-sets.archive",
+      "uri": "backoffice/scoring/rule-sets/{scoringRuleSet}/archive",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleSetController",
+      "action": "archive",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.update",
+      "permission_final": "scoring.archive",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "archiveBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rule-sets.create",
+      "uri": "backoffice/scoring/rule-sets/create",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleSetController",
+      "action": "create",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.create",
+      "permission_final": "scoring.create",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "createBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rule-sets.duplicate",
+      "uri": "backoffice/scoring/rule-sets/{scoringRuleSet}/duplicate",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleSetController",
+      "action": "duplicate",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.create",
+      "permission_final": "scoring.duplicate",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "duplicateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rule-sets.edit",
+      "uri": "backoffice/scoring/rule-sets/{scoringRuleSet}/edit",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleSetController",
+      "action": "edit",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.update",
+      "permission_final": "scoring.update",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "updateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rule-sets.index",
+      "uri": "backoffice/scoring/rule-sets",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleSetController",
+      "action": "index",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "scoring.view",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "viewAnyBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rule-sets.show",
+      "uri": "backoffice/scoring/rule-sets/{scoringRuleSet}",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleSetController",
+      "action": "show",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "scoring.view",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "viewBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rule-sets.store",
+      "uri": "backoffice/scoring/rule-sets",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleSetController",
+      "action": "store",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.create",
+      "permission_final": "scoring.create",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "createBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreScoringRuleSetRequest",
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rule-sets.update",
+      "uri": "backoffice/scoring/rule-sets/{scoringRuleSet}",
+      "methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleSetController",
+      "action": "update",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.update",
+      "permission_final": "scoring.update",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "updateBackoffice",
+      "form_request": "App\\Http\\Requests\\UpdateScoringRuleSetRequest",
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rules.create",
+      "uri": "backoffice/scoring/criteria/{scoringCriterion}/rules/create",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleController",
+      "action": "create",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.create",
+      "permission_final": "scoring.create",
+      "policy": "App\\Policies\\ScoringCriterionPolicy",
+      "ability": "createBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rules.destroy",
+      "uri": "backoffice/scoring/rules/{scoringRule}",
+      "methods": [
+        "DELETE"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleController",
+      "action": "destroy",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "scoring.delete",
+      "policy": "App\\Policies\\ScoringRulePolicy",
+      "ability": "deleteBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rules.edit",
+      "uri": "backoffice/scoring/rules/{scoringRule}/edit",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleController",
+      "action": "edit",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.update",
+      "permission_final": "scoring.update",
+      "policy": "App\\Policies\\ScoringRulePolicy",
+      "ability": "updateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rules.index",
+      "uri": "backoffice/scoring/criteria/{scoringCriterion}/rules",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleController",
+      "action": "index",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "scoring.view",
+      "policy": "App\\Policies\\ScoringCriterionPolicy",
+      "ability": "viewBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rules.store",
+      "uri": "backoffice/scoring/criteria/{scoringCriterion}/rules",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleController",
+      "action": "store",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.create",
+      "permission_final": "scoring.create",
+      "policy": "App\\Policies\\ScoringCriterionPolicy",
+      "ability": "createBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreScoringRuleRequest",
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.rules.update",
+      "uri": "backoffice/scoring/rules/{scoringRule}",
+      "methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRuleController",
+      "action": "update",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.update",
+      "permission_final": "scoring.update",
+      "policy": "App\\Policies\\ScoringRulePolicy",
+      "ability": "updateBackoffice",
+      "form_request": "App\\Http\\Requests\\UpdateScoringRuleRequest",
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.runs.cancel",
+      "uri": "backoffice/scoring/runs/{scoringRun}/cancel",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRunController",
+      "action": "cancel",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "scoring.cancel",
+      "policy": "App\\Policies\\ScoringRunPolicy",
+      "ability": "cancelBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.runs.create",
+      "uri": "backoffice/scoring/runs/create",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRunController",
+      "action": "create",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.create",
+      "permission_final": "scoring.run",
+      "policy": "App\\Policies\\ScoringRunPolicy",
+      "ability": "runAnyBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.runs.index",
+      "uri": "backoffice/scoring/runs",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRunController",
+      "action": "index",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "scoring.view",
+      "policy": "App\\Policies\\ScoringRunPolicy",
+      "ability": "viewAnyBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.runs.lock",
+      "uri": "backoffice/scoring/runs/{scoringRun}/lock",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRunController",
+      "action": "lock",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "scoring.lock",
+      "policy": "App\\Policies\\ScoringRunPolicy",
+      "ability": "lockBackoffice",
+      "form_request": "App\\Http\\Requests\\LockScoringRunRequest",
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.runs.run",
+      "uri": "backoffice/scoring/runs/{scoringRun}/run",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRunController",
+      "action": "run",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "scoring.run",
+      "policy": "App\\Policies\\ScoringRunPolicy",
+      "ability": "runBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.runs.show",
+      "uri": "backoffice/scoring/runs/{scoringRun}",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRunController",
+      "action": "show",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "scoring.view",
+      "policy": "App\\Policies\\ScoringRunPolicy",
+      "ability": "viewBackoffice",
+      "form_request": null,
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.runs.store",
+      "uri": "backoffice/scoring/runs",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\ScoringRunController",
+      "action": "store",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.create",
+      "permission_final": "scoring.run",
+      "policy": "App\\Policies\\ScoringRunPolicy",
+      "ability": "runAnyBackoffice",
+      "form_request": "App\\Http\\Requests\\RunScoringRequest",
+      "feature": "applications.review",
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.tie-breakers.activate",
+      "uri": "backoffice/scoring/tie-breakers/{tieBreakerRule}/activate",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\TieBreakerRuleController",
+      "action": "activate",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "scoring.activate",
+      "policy": "App\\Policies\\TieBreakerRulePolicy",
+      "ability": "activateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.tie-breakers.create",
+      "uri": "backoffice/scoring/rule-sets/{scoringRuleSet}/tie-breakers/create",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\TieBreakerRuleController",
+      "action": "create",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.create",
+      "permission_final": "scoring.create",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "createBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.tie-breakers.edit",
+      "uri": "backoffice/scoring/tie-breakers/{tieBreakerRule}/edit",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\TieBreakerRuleController",
+      "action": "edit",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.update",
+      "permission_final": "scoring.update",
+      "policy": "App\\Policies\\TieBreakerRulePolicy",
+      "ability": "updateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.tie-breakers.inactivate",
+      "uri": "backoffice/scoring/tie-breakers/{tieBreakerRule}/inactivate",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\TieBreakerRuleController",
+      "action": "inactivate",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": null,
+      "permission_final": "scoring.deactivate",
+      "policy": "App\\Policies\\TieBreakerRulePolicy",
+      "ability": "deactivateBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.tie-breakers.index",
+      "uri": "backoffice/scoring/rule-sets/{scoringRuleSet}/tie-breakers",
+      "methods": [
+        "GET"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\TieBreakerRuleController",
+      "action": "index",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.view",
+      "permission_final": "scoring.view",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "viewBackoffice",
+      "form_request": null,
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "recommended",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.tie-breakers.store",
+      "uri": "backoffice/scoring/rule-sets/{scoringRuleSet}/tie-breakers",
+      "methods": [
+        "POST"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\TieBreakerRuleController",
+      "action": "store",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.create",
+      "permission_final": "scoring.create",
+      "policy": "App\\Policies\\ScoringRuleSetPolicy",
+      "ability": "createBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreTieBreakerRuleRequest",
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    },
+    {
+      "route_name": "backoffice.scoring.tie-breakers.update",
+      "uri": "backoffice/scoring/tie-breakers/{tieBreakerRule}",
+      "methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "controller": "App\\Http\\Controllers\\Backoffice\\TieBreakerRuleController",
+      "action": "update",
+      "role_middleware_current": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "permission_proposed": "scoring.update",
+      "permission_final": "scoring.update",
+      "policy": "App\\Policies\\TieBreakerRulePolicy",
+      "ability": "updateBackoffice",
+      "form_request": "App\\Http\\Requests\\UpdateTieBreakerRuleRequest",
+      "feature": null,
+      "municipality": "authenticated_user_and_route_bound_record",
+      "record_scope": "required_fail_closed",
+      "mfa": true,
+      "audit": "required",
+      "private_data": false,
+      "risk": "high",
+      "decision": "migrate_permission_first_and_enforce_municipal_scope",
+      "tests_associated": [
+        "tests/Feature/Security/EligibilityScoringPermissionRoutesTest.php",
+        "tests/Feature/Security/EligibilityScoringMunicipalBoundaryTest.php"
+      ]
+    }
+  ]
+}

@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\KeyHandoverAppointment;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreKeyHandoverAppointmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can(
+            'scheduleBackoffice',
+            KeyHandoverAppointment::class,
+        ) ?? false;
     }
 
     /**

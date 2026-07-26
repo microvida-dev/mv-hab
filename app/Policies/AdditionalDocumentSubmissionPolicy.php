@@ -27,4 +27,31 @@ class AdditionalDocumentSubmissionPolicy
     {
         return $user->hasPermissionTo('documents', 'approve') || $user->hasPermissionTo('documents', 'reject');
     }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && (
+                $user->hasPermissionTo('documents', 'view')
+                || $user->hasPermissionTo('applications', 'view')
+            );
+    }
+
+    public function viewBackoffice(
+        User $user,
+        AdditionalDocumentSubmission $submission,
+    ): bool {
+        return $this->viewAnyBackoffice($user);
+    }
+
+    public function decideBackoffice(
+        User $user,
+        AdditionalDocumentSubmission $submission,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && (
+                $user->hasPermissionTo('documents', 'approve')
+                || $user->hasPermissionTo('documents', 'reject')
+            );
+    }
 }

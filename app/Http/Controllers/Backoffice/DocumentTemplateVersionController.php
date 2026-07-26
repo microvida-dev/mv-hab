@@ -17,7 +17,7 @@ class DocumentTemplateVersionController extends Controller
 
     public function store(StoreDocumentTemplateVersionRequest $request, DocumentTemplate $documentTemplate): RedirectResponse
     {
-        Gate::authorize('update', $documentTemplate);
+        Gate::authorize('createVersionBackoffice', $documentTemplate);
         $version = $this->service->create($documentTemplate, $request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.document-template-versions.show', $version);
@@ -25,14 +25,14 @@ class DocumentTemplateVersionController extends Controller
 
     public function show(DocumentTemplateVersion $documentTemplateVersion): View
     {
-        Gate::authorize('view', $documentTemplateVersion);
+        Gate::authorize('viewBackoffice', $documentTemplateVersion);
 
         return view('backoffice.document-templates.version', compact('documentTemplateVersion'));
     }
 
     public function approve(DocumentTemplateVersion $documentTemplateVersion): RedirectResponse
     {
-        Gate::authorize('approve', $documentTemplateVersion);
+        Gate::authorize('approveBackoffice', $documentTemplateVersion);
         $this->service->approve($documentTemplateVersion, $this->currentUser());
 
         return back()->with('success', 'Versão aprovada.');
@@ -40,7 +40,7 @@ class DocumentTemplateVersionController extends Controller
 
     public function activate(DocumentTemplateVersion $documentTemplateVersion): RedirectResponse
     {
-        Gate::authorize('approve', $documentTemplateVersion);
+        Gate::authorize('activateBackoffice', $documentTemplateVersion);
         $this->service->activate($documentTemplateVersion, $this->currentUser());
 
         return back()->with('success', 'Versão ativada.');

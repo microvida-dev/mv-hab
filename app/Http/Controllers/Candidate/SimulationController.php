@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Candidate;
 
+use App\Enums\HousingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Simulator\ConvertSimulationToPrefillRequest;
 use App\Http\Requests\Simulator\SaveSimulationRequest;
 use App\Http\Requests\Simulator\StoreCandidateSimulationRequest;
+use App\Models\AdhesionRegistration;
 use App\Models\Application;
 use App\Models\Contest;
+use App\Models\Household;
 use App\Models\SimulationSession;
 use App\Services\Simulator\AdvancedEligibilitySimulatorService;
 use App\Services\Simulator\ApplicationPrefillService;
@@ -17,8 +20,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use App\Enums\HousingStatus;
-use App\Models\AdhesionRegistration;
 
 class SimulationController extends Controller
 {
@@ -54,10 +55,17 @@ class SimulationController extends Controller
             ->latest()
             ->first();
 
-        $household = $registration?->household;
+        $householdRelation = $registration?->getRelations()['household'] ?? null;
+        $household = $householdRelation instanceof Household ? $householdRelation : null;
         $housingSituation = $registration?->currentHousingSituation;
 
-        $members = $household?->members ?? collect();
+        if ($household instanceof Household) {
+            $members = $household->members;
+            $monthlyIncome = $household->monthly_income;
+        } else {
+            $members = collect();
+            $monthlyIncome = null;
+        }
 
         $prefill = [
             'housing_status' => $housingSituation?->housing_status?->value,
@@ -65,7 +73,7 @@ class SimulationController extends Controller
             'household_members_count' => $members->count() ?: null,
             'adults_count' => $members->filter(fn ($member) => ($member->age() ?? 0) >= 18)->count() ?: null,
             'dependents_count' => $members->where('is_dependent', true)->count(),
-            'monthly_income' => $household?->monthly_income,
+            'monthly_income' => $monthlyIncome,
         ];
 
         $prefillAvailable = filled($prefill['housing_status'])

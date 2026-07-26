@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Backoffice;
 
 use App\Models\DocumentAiAnalysis;
-use App\Policies\DocumentAiAssistantPolicy;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RecalculateDocumentAiScoreRequest extends FormRequest
@@ -13,8 +12,7 @@ class RecalculateDocumentAiScoreRequest extends FormRequest
         $analysis = $this->route('analysis');
 
         return $analysis instanceof DocumentAiAnalysis
-            && $this->user() !== null
-            && app(DocumentAiAssistantPolicy::class)->recalculate($this->user(), $analysis);
+            && ($this->user()?->can('analyzeBackoffice', $analysis) ?? false);
     }
 
     /**

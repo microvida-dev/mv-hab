@@ -4,34 +4,47 @@ namespace App\Policies;
 
 use App\Models\HousingVisit;
 use App\Models\User;
-use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class HousingVisitPolicy
 {
-    use ChecksPermissions;
+    public function __construct(
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
     public function viewAny(User $user): bool
     {
-        return $this->canAccess($user, 'visits', 'view');
+        return $user->hasPermission('visits.view');
     }
 
     public function view(User $user, HousingVisit $visit): bool
     {
-        return $user->hasRole('candidate')
-            ? $visit->belongsToCandidate($user) && $this->canAccess($user, 'visits', 'view')
-            : $this->canAccess($user, 'visits', 'view');
+        if ($visit->belongsToCandidate($user)) {
+            return $user->hasPermission('visits.view')
+                && $this->municipalScope
+                    ->isStructurallyValidHousingVisit($visit);
+        }
+
+        return $user->hasPermission('visits.view')
+            && $this->municipalScope->ownsHousingVisit($user, $visit);
     }
 
     public function create(User $user): bool
     {
-        return $user->hasRole('candidate') && $this->canAccess($user, 'visits', 'create');
+        return $user->hasPermission('visits.create');
     }
 
     public function update(User $user, HousingVisit $visit): bool
     {
-        return $user->hasRole('candidate')
-            ? $visit->belongsToCandidate($user) && $visit->isActive() && $this->canAccess($user, 'visits', 'update')
-            : $this->canAccess($user, 'visits', 'update');
+        if ($visit->belongsToCandidate($user)) {
+            return $visit->isActive()
+                && $user->hasPermission('visits.update')
+                && $this->municipalScope
+                    ->isStructurallyValidHousingVisit($visit);
+        }
+
+        return $user->hasPermission('visits.update')
+            && $this->municipalScope->ownsHousingVisit($user, $visit);
     }
 
     public function cancel(User $user, HousingVisit $visit): bool
@@ -41,11 +54,68 @@ class HousingVisitPolicy
 
     public function approve(User $user, HousingVisit $visit): bool
     {
-        return ! $user->hasRole('candidate') && $this->canAccess($user, 'visits', 'approve');
+        return $user->hasPermission('visits.approve')
+            && $this->municipalScope->ownsHousingVisit($user, $visit);
     }
 
     public function reject(User $user, HousingVisit $visit): bool
     {
-        return ! $user->hasRole('candidate') && $this->canAccess($user, 'visits', 'reject');
+        return $user->hasPermission('visits.reject')
+            && $this->municipalScope->ownsHousingVisit($user, $visit);
+    }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return $user->hasPermission('visits.view')
+            && $this->municipalScope
+                ->hasMunicipalOrGlobalScope($user);
+    }
+
+    public function viewBackoffice(
+        User $user,
+        HousingVisit $visit,
+    ): bool {
+        return $this->viewAnyBackoffice($user)
+            && $this->municipalScope->ownsHousingVisit($user, $visit);
+    }
+
+    public function confirmBackoffice(
+        User $user,
+        HousingVisit $visit,
+    ): bool {
+        return $user->hasPermission('visits.confirm')
+            && $this->municipalScope->ownsHousingVisit($user, $visit);
+    }
+
+    public function completeBackoffice(
+        User $user,
+        HousingVisit $visit,
+    ): bool {
+        return $user->hasPermission('visits.complete')
+            && $this->municipalScope->ownsHousingVisit($user, $visit);
+    }
+
+    public function markNoShowBackoffice(
+        User $user,
+        HousingVisit $visit,
+    ): bool {
+        return $user->hasPermission('visits.mark_no_show')
+            && $this->municipalScope->ownsHousingVisit($user, $visit);
+    }
+
+    public function cancelBackoffice(
+        User $user,
+        HousingVisit $visit,
+    ): bool {
+        return $user->hasPermission('visits.cancel')
+            && $this->municipalScope->ownsHousingVisit($user, $visit);
+    }
+
+    public function rejectBackoffice(
+        User $user,
+        HousingVisit $visit,
+    ): bool {
+        return $user->hasPermission('visits.reject')
+            && $this->municipalScope->ownsHousingVisit($user, $visit);
     }
 }

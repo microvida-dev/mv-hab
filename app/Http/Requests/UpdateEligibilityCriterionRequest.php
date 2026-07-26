@@ -9,7 +9,10 @@ class UpdateEligibilityCriterionRequest extends StoreEligibilityCriterionRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('update', $this->route('eligibilityCriterion')) ?? false;
+        return $this->user()?->can(
+            'updateBackoffice',
+            $this->route('eligibilityCriterion'),
+        ) ?? false;
     }
 
     /**

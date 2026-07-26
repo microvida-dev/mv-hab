@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\DocumentTemplate;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +10,12 @@ class StoreDocumentTemplateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $template = $this->route('documentTemplate');
+        if ($template instanceof DocumentTemplate) {
+            return $this->user()?->can('updateBackoffice', $template) === true;
+        }
+
+        return $this->user()?->can('createBackoffice', DocumentTemplate::class) === true;
     }
 
     /**
@@ -20,6 +26,7 @@ class StoreDocumentTemplateRequest extends FormRequest
         $template = $this->route('documentTemplate');
         $codeRule = Rule::unique('document_templates', 'code')
             ->where(fn ($query) => $query
+                ->where('municipality_id', $this->user()?->municipality_id)
                 ->where('program_id', $this->input('program_id'))
                 ->where('contest_id', $this->input('contest_id'))
                 ->whereNull('deleted_at'))

@@ -2,15 +2,18 @@
 
 namespace Tests\Feature\DocumentIntelligence;
 
+use App\Enums\FeatureKey;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\Support\CreatesDocumentAiAssistantFixtures;
 use Tests\TestCase;
 
 class DocumentAiSecurityRgpdTest extends TestCase
 {
     use CreatesDocumentAiAssistantFixtures;
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -31,7 +34,15 @@ class DocumentAiSecurityRgpdTest extends TestCase
             ->get(route('backoffice.document-ai.assistant.show', $analysis))
             ->assertForbidden();
 
-        $this->actingAs($this->userWithRole('administrator'))
+        $administrator = $this->userWithRole('administrator');
+        $this->assignDocumentMunicipality(
+            $administrator,
+            $analysis->documentSubmission()->firstOrFail(),
+            FeatureKey::ApplicationReview,
+        );
+
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.document-ai.assistant.show', $analysis))
             ->assertOk()
             ->assertDontSee('private/documents/internal-only.pdf')

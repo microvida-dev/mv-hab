@@ -2,4 +2,15 @@
 
 namespace App\Http\Requests;
 
-class UpdateRentRuleSetRequest extends StoreRentRuleSetRequest {}
+use App\Models\RentRuleSet;
+
+class UpdateRentRuleSetRequest extends StoreRentRuleSetRequest
+{
+    public function authorize(): bool
+    {
+        $ruleSet = $this->route('rentRuleSet');
+
+        return $ruleSet instanceof RentRuleSet
+            && $this->user()?->can('updateBackoffice', $ruleSet) === true;
+    }
+}

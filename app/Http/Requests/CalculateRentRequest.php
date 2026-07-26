@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\AllocationStatus;
 use App\Models\Allocation;
+use App\Models\RentCalculation;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -11,7 +12,7 @@ class CalculateRentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('calculateBackoffice', RentCalculation::class) ?? false;
     }
 
     /**

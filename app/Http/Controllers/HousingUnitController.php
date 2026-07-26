@@ -8,11 +8,13 @@ use App\Http\Requests\UpdateHousingUnitRequest;
 use App\Models\HousingUnit;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 
 class HousingUnitController extends Controller
 {
     public function index(): View
     {
+        Gate::authorize('viewAnyBackoffice', HousingUnit::class);
         $housingUnits = HousingUnit::query()
             ->withCount(['contracts', 'maintenanceRequests'])
             ->latest()
@@ -23,6 +25,7 @@ class HousingUnitController extends Controller
 
     public function create(): View
     {
+        Gate::authorize('createBackoffice', HousingUnit::class);
         $statuses = HousingUnitStatus::options();
 
         return view('housing-units.create', compact('statuses'));
@@ -38,6 +41,7 @@ class HousingUnitController extends Controller
 
     public function show(HousingUnit $housingUnit): View
     {
+        Gate::authorize('viewBackoffice', $housingUnit);
         $housingUnit->load(['contracts.citizen', 'maintenanceRequests.citizen']);
 
         return view('housing-units.show', compact('housingUnit'));
@@ -45,6 +49,7 @@ class HousingUnitController extends Controller
 
     public function edit(HousingUnit $housingUnit): View
     {
+        Gate::authorize('updateBackoffice', $housingUnit);
         $statuses = HousingUnitStatus::options();
 
         return view('housing-units.edit', compact('housingUnit', 'statuses'));
@@ -60,6 +65,7 @@ class HousingUnitController extends Controller
 
     public function destroy(HousingUnit $housingUnit): RedirectResponse
     {
+        Gate::authorize('deleteBackoffice', $housingUnit);
         $housingUnit->delete();
 
         return to_route('housing-units.index')

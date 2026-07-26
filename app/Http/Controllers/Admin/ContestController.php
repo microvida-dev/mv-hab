@@ -21,7 +21,7 @@ class ContestController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('viewAny', Contest::class);
+        Gate::authorize('viewAnyBackoffice', Contest::class);
 
         $contests = Contest::query()
             ->with('program')
@@ -33,7 +33,7 @@ class ContestController extends Controller
 
     public function create(): View
     {
-        Gate::authorize('create', Contest::class);
+        Gate::authorize('createBackoffice', Contest::class);
 
         return view('admin.contests.create', $this->formData());
     }
@@ -48,7 +48,7 @@ class ContestController extends Controller
 
     public function show(Contest $contest): View
     {
-        Gate::authorize('view', $contest);
+        Gate::authorize('viewBackoffice', $contest);
 
         $contest->load(['program.municipality', 'deadlines', 'juryMembers.user']);
 
@@ -57,7 +57,7 @@ class ContestController extends Controller
 
     public function edit(Contest $contest): View
     {
-        Gate::authorize('update', $contest);
+        Gate::authorize('updateBackoffice', $contest);
 
         $contest->load(['deadlines', 'juryMembers']);
 
@@ -77,7 +77,7 @@ class ContestController extends Controller
 
     public function publish(Request $request, Contest $contest): RedirectResponse
     {
-        Gate::authorize('publish', $contest);
+        Gate::authorize('publishBackoffice', $contest);
 
         $this->contestService->publish($contest, $this->authenticatedUser($request));
 
@@ -86,7 +86,7 @@ class ContestController extends Controller
 
     public function destroy(Contest $contest): RedirectResponse
     {
-        Gate::authorize('delete', $contest);
+        Gate::authorize('deleteBackoffice', $contest);
 
         $this->contestService->delete($contest);
 

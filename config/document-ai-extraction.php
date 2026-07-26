@@ -40,6 +40,7 @@ return [
                 'document_number' => ['type' => DocumentAiExtractedFieldType::Identifier, 'label' => 'Número', 'sensitive' => true, 'health_data' => false, 'required' => true],
                 'expiry_date' => ['type' => DocumentAiExtractedFieldType::Date, 'label' => 'Validade', 'sensitive' => true, 'health_data' => false, 'required' => true],
                 'nationality' => ['type' => DocumentAiExtractedFieldType::String, 'label' => 'Nacionalidade', 'sensitive' => true, 'health_data' => false, 'required' => false],
+                'nif' => ['type' => DocumentAiExtractedFieldType::Identifier, 'label' => 'NIF', 'sensitive' => true, 'health_data' => false, 'required' => false],
             ],
         ],
         DocumentAiDocumentType::Irs->value => [
@@ -48,8 +49,8 @@ return [
                 'fiscal_year' => ['type' => DocumentAiExtractedFieldType::Integer, 'label' => 'Ano fiscal', 'sensitive' => false, 'health_data' => false, 'required' => true],
                 'taxpayer_name' => ['type' => DocumentAiExtractedFieldType::String, 'label' => 'Sujeito passivo', 'sensitive' => true, 'health_data' => false, 'required' => true],
                 'nif' => ['type' => DocumentAiExtractedFieldType::Identifier, 'label' => 'NIF', 'sensitive' => true, 'health_data' => false, 'required' => true],
-                'gross_income' => ['type' => DocumentAiExtractedFieldType::Money, 'label' => 'Rendimento global', 'sensitive' => true, 'health_data' => false, 'required' => true],
-                'taxable_income' => ['type' => DocumentAiExtractedFieldType::Money, 'label' => 'Rendimento coletável', 'sensitive' => true, 'health_data' => false, 'required' => true],
+                'gross_income' => ['type' => DocumentAiExtractedFieldType::Money, 'label' => 'Rendimento global', 'sensitive' => true, 'health_data' => false, 'required' => false],
+                'taxable_income' => ['type' => DocumentAiExtractedFieldType::Money, 'label' => 'Rendimento coletável', 'sensitive' => true, 'health_data' => false, 'required' => false],
             ],
         ],
         DocumentAiDocumentType::NotaLiquidacao->value => [

@@ -16,7 +16,7 @@ class ApplicationPublicStatusController extends Controller
 
     public function show(Application $application): View
     {
-        Gate::authorize('view', $application);
+        Gate::authorize('viewBackoffice', $application);
 
         return view('backoffice.processes.public-status', [
             'application' => $application,
@@ -26,7 +26,7 @@ class ApplicationPublicStatusController extends Controller
 
     public function update(Request $request, Application $application): RedirectResponse
     {
-        Gate::authorize('update', $application);
+        Gate::authorize('updateBackoffice', $application);
         $this->statuses->refresh($application);
 
         return back()->with('success', 'Estado público recalculado.');

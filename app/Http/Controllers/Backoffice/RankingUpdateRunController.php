@@ -16,7 +16,7 @@ class RankingUpdateRunController extends Controller
 
     public function apply(ApplyRankingUpdateRequest $request, LotteryDraw $lotteryDraw): RedirectResponse
     {
-        Gate::authorize('create', RankingUpdateRun::class);
+        Gate::authorize('createBackoffice', [RankingUpdateRun::class, $lotteryDraw]);
 
         $this->rankings->apply($lotteryDraw, $this->authenticatedUser($request));
 

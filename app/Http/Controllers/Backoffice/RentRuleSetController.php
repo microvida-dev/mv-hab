@@ -10,7 +10,9 @@ use App\Http\Requests\UpdateRentRuleSetRequest;
 use App\Models\Contest;
 use App\Models\Program;
 use App\Models\RentRuleSet;
+use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -19,36 +21,49 @@ use Illuminate\Support\Facades\Gate;
 
 class RentRuleSetController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        Gate::authorize('viewAny', RentRuleSet::class);
+        Gate::authorize('viewAnyBackoffice', RentRuleSet::class);
 
         return view('backoffice.contracts.rent-rule-sets.index', [
-            'ruleSets' => RentRuleSet::query()->with(['program', 'contest'])->withCount(['rules', 'calculations'])->latest()->paginate(20),
+            'ruleSets' => $this->municipalScope
+                ->rentRuleSets(RentRuleSet::query(), $this->authenticatedUser($request))
+                ->with(['program', 'contest'])
+                ->withCount(['rules', 'calculations'])
+                ->latest()
+                ->paginate(20),
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        Gate::authorize('create', RentRuleSet::class);
+        Gate::authorize('createBackoffice', RentRuleSet::class);
 
-        return view('backoffice.contracts.rent-rule-sets.create', $this->formData());
+        return view(
+            'backoffice.contracts.rent-rule-sets.create',
+            $this->formData($this->authenticatedUser($request)),
+        );
     }
 
     public function store(StoreRentRuleSetRequest $request): RedirectResponse
     {
-        Gate::authorize('create', RentRuleSet::class);
+        Gate::authorize('createBackoffice', RentRuleSet::class);
         $data = $this->normalized($request->validated());
+        $actor = $this->authenticatedUser($request);
+        $this->assertRelatedScope($data, $actor);
         $status = $data['status'];
         unset($data['status']);
 
         $ruleSet = RentRuleSet::query()->create($data);
         $ruleSet->forceFill([
             'status' => $status,
-            'created_by' => $this->authenticatedUser($request)->id,
-            'updated_by' => $this->authenticatedUser($request)->id,
+            'created_by' => $actor->id,
+            'updated_by' => $actor->id,
         ])->save();
 
         $this->auditLogger->record(AuditEvents::CREATE, $ruleSet, 'contracts', 'rent_rule_set_create', 'Regra de renda criada.');
@@ -58,27 +73,32 @@ class RentRuleSetController extends Controller
 
     public function show(RentRuleSet $rentRuleSet): View
     {
-        Gate::authorize('view', $rentRuleSet);
+        Gate::authorize('viewBackoffice', $rentRuleSet);
         $rentRuleSet->load(['program', 'contest', 'rules', 'createdBy', 'updatedBy'])->loadCount('calculations');
 
         return view('backoffice.contracts.rent-rule-sets.show', ['ruleSet' => $rentRuleSet]);
     }
 
-    public function edit(RentRuleSet $rentRuleSet): View
+    public function edit(Request $request, RentRuleSet $rentRuleSet): View
     {
-        Gate::authorize('update', $rentRuleSet);
+        Gate::authorize('updateBackoffice', $rentRuleSet);
 
-        return view('backoffice.contracts.rent-rule-sets.edit', ['ruleSet' => $rentRuleSet, ...$this->formData()]);
+        return view('backoffice.contracts.rent-rule-sets.edit', [
+            'ruleSet' => $rentRuleSet,
+            ...$this->formData($this->authenticatedUser($request)),
+        ]);
     }
 
     public function update(UpdateRentRuleSetRequest $request, RentRuleSet $rentRuleSet): RedirectResponse
     {
-        Gate::authorize('update', $rentRuleSet);
+        Gate::authorize('updateBackoffice', $rentRuleSet);
         $data = $this->normalized($request->validated());
+        $actor = $this->authenticatedUser($request);
+        $this->assertRelatedScope($data, $actor);
         $status = $data['status'];
         unset($data['status']);
         $rentRuleSet->update($data);
-        $rentRuleSet->forceFill(['status' => $status, 'updated_by' => $this->authenticatedUser($request)->id])->save();
+        $rentRuleSet->forceFill(['status' => $status, 'updated_by' => $actor->id])->save();
         $this->auditLogger->record(AuditEvents::UPDATE, $rentRuleSet, 'contracts', 'rent_rule_set_update', 'Regra de renda atualizada.');
 
         return to_route('backoffice.contracts.rent-rule-sets.show', $rentRuleSet)->with('success', 'Regra de renda atualizada.');
@@ -86,7 +106,7 @@ class RentRuleSetController extends Controller
 
     public function activate(Request $request, RentRuleSet $rentRuleSet): RedirectResponse
     {
-        Gate::authorize('activate', $rentRuleSet);
+        Gate::authorize('activateBackoffice', $rentRuleSet);
         $rentRuleSet->forceFill(['status' => RentRuleSetStatus::Active->value, 'updated_by' => $this->authenticatedUser($request)->id])->save();
         $this->auditLogger->record(AuditEvents::APPROVE, $rentRuleSet, 'contracts', 'rent_rule_set_activate', 'Regra de renda ativada.');
 
@@ -95,7 +115,7 @@ class RentRuleSetController extends Controller
 
     public function archive(Request $request, RentRuleSet $rentRuleSet): RedirectResponse
     {
-        Gate::authorize('archive', $rentRuleSet);
+        Gate::authorize('archiveBackoffice', $rentRuleSet);
         $rentRuleSet->forceFill(['status' => RentRuleSetStatus::Archived->value, 'updated_by' => $this->authenticatedUser($request)->id])->save();
         $this->auditLogger->record(AuditEvents::UPDATE, $rentRuleSet, 'contracts', 'rent_rule_set_archive', 'Regra de renda arquivada.');
 
@@ -104,7 +124,7 @@ class RentRuleSetController extends Controller
 
     public function duplicate(Request $request, RentRuleSet $rentRuleSet): RedirectResponse
     {
-        Gate::authorize('duplicate', $rentRuleSet);
+        Gate::authorize('duplicateBackoffice', $rentRuleSet);
         $copy = $rentRuleSet->replicate();
         $copy->name = $rentRuleSet->name.' - cópia';
         $copy->forceFill([
@@ -128,11 +148,17 @@ class RentRuleSetController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formData(): array
+    private function formData(User $actor): array
     {
         return [
-            'programs' => Program::query()->orderBy('name')->get(['id', 'name']),
-            'contests' => Contest::query()->orderBy('title')->get(['id', 'title']),
+            'programs' => $this->municipalScope
+                ->programs(Program::query(), $actor)
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'contests' => $this->municipalScope
+                ->contests(Contest::query(), $actor)
+                ->orderBy('title')
+                ->get(['id', 'title']),
             'statuses' => RentRuleSetStatus::options(),
             'methods' => RentCalculationMethod::options(),
         ];
@@ -150,5 +176,23 @@ class RentRuleSetController extends Controller
         $data['allow_manual_override'] = (bool) ($data['allow_manual_override'] ?? false);
 
         return $data;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function assertRelatedScope(array $data, User $actor): void
+    {
+        if (filled($data['program_id'] ?? null)) {
+            $this->municipalScope
+                ->programs(Program::query(), $actor)
+                ->findOrFail((int) $data['program_id']);
+        }
+
+        if (filled($data['contest_id'] ?? null)) {
+            $this->municipalScope
+                ->contests(Contest::query(), $actor)
+                ->findOrFail((int) $data['contest_id']);
+        }
     }
 }

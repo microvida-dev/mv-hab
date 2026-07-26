@@ -149,46 +149,82 @@ class ComplaintService
 
     public function markReceived(Complaint $complaint, User $actor): Complaint
     {
-        if ($this->complaintStatus($complaint) !== ComplaintStatus::Submitted) {
-            throw ValidationException::withMessages(['complaint' => 'Apenas reclamações submetidas podem ser marcadas como recebidas.']);
-        }
+        return DB::transaction(function () use ($complaint): Complaint {
+            $complaint = Complaint::query()->lockForUpdate()->findOrFail($complaint->id);
 
-        $complaint->forceFill(['status' => ComplaintStatus::Received, 'received_at' => now()])->save();
-        $this->auditLogger->record(AuditEvents::UPDATE, $complaint, 'complaints', 'complaint_received', 'Reclamação marcada como recebida.');
+            if ($this->complaintStatus($complaint) === ComplaintStatus::Received) {
+                return $complaint;
+            }
 
-        return $complaint->refresh();
+            if ($this->complaintStatus($complaint) !== ComplaintStatus::Submitted) {
+                throw ValidationException::withMessages(['complaint' => 'Apenas reclamações submetidas podem ser marcadas como recebidas.']);
+            }
+
+            $complaint->forceFill(['status' => ComplaintStatus::Received, 'received_at' => now()])->save();
+            $this->auditLogger->record(AuditEvents::UPDATE, $complaint, 'complaints', 'complaint_received', 'Reclamação marcada como recebida.');
+
+            return $complaint->refresh();
+        });
     }
 
     public function assign(Complaint $complaint, User $assignee, User $actor): Complaint
     {
-        $complaint->forceFill(['assigned_to' => $assignee->id, 'assigned_at' => now()])->save();
-        $this->auditLogger->record(AuditEvents::UPDATE, $complaint, 'complaints', 'complaint_assign', 'Reclamação atribuída a técnico.', metadata: ['assignee_id' => $assignee->id]);
+        return DB::transaction(function () use ($complaint, $assignee): Complaint {
+            $complaint = Complaint::query()->lockForUpdate()->findOrFail($complaint->id);
 
-        return $complaint->refresh();
+            if ($complaint->assigned_to === $assignee->id) {
+                return $complaint;
+            }
+
+            if ($this->complaintStatus($complaint)?->isFinal() === true) {
+                throw ValidationException::withMessages(['complaint' => 'Reclamações com decisão final não podem ser reatribuídas.']);
+            }
+
+            $complaint->forceFill(['assigned_to' => $assignee->id, 'assigned_at' => now()])->save();
+            $this->auditLogger->record(AuditEvents::UPDATE, $complaint, 'complaints', 'complaint_assign', 'Reclamação atribuída a técnico.', metadata: ['assignee_id' => $assignee->id]);
+
+            return $complaint->refresh();
+        });
     }
 
     public function startReview(Complaint $complaint, User $actor): Complaint
     {
-        if (! $this->complaintStatusIsIn($complaint, [ComplaintStatus::Submitted, ComplaintStatus::Received, ComplaintStatus::AdditionalInformationSubmitted])) {
-            throw ValidationException::withMessages(['complaint' => 'A reclamação não está pronta para análise.']);
-        }
+        return DB::transaction(function () use ($complaint): Complaint {
+            $complaint = Complaint::query()->lockForUpdate()->findOrFail($complaint->id);
 
-        $complaint->forceFill(['status' => ComplaintStatus::UnderReview, 'review_started_at' => now()])->save();
-        $this->auditLogger->record(AuditEvents::UPDATE, $complaint, 'complaints', 'complaint_start_review', 'Análise de reclamação iniciada.');
+            if ($this->complaintStatus($complaint) === ComplaintStatus::UnderReview) {
+                return $complaint;
+            }
 
-        return $complaint->refresh();
+            if (! $this->complaintStatusIsIn($complaint, [ComplaintStatus::Submitted, ComplaintStatus::Received, ComplaintStatus::AdditionalInformationSubmitted])) {
+                throw ValidationException::withMessages(['complaint' => 'A reclamação não está pronta para análise.']);
+            }
+
+            $complaint->forceFill(['status' => ComplaintStatus::UnderReview, 'review_started_at' => now()])->save();
+            $this->auditLogger->record(AuditEvents::UPDATE, $complaint, 'complaints', 'complaint_start_review', 'Análise de reclamação iniciada.');
+
+            return $complaint->refresh();
+        });
     }
 
     public function close(Complaint $complaint, User $actor): Complaint
     {
-        if (! $this->complaintStatus($complaint)?->isFinal()) {
-            throw ValidationException::withMessages(['complaint' => 'A reclamação precisa de decisão final antes de fechar.']);
-        }
+        return DB::transaction(function () use ($complaint): Complaint {
+            $complaint = Complaint::query()->lockForUpdate()->findOrFail($complaint->id);
 
-        $complaint->forceFill(['status' => ComplaintStatus::Closed, 'closed_at' => now()])->save();
-        $this->auditLogger->record(AuditEvents::UPDATE, $complaint, 'complaints', 'complaint_close', 'Reclamação fechada.');
+            if ($this->complaintStatus($complaint) === ComplaintStatus::Closed) {
+                return $complaint;
+            }
 
-        return $complaint->refresh();
+            if (! $this->complaintStatus($complaint)?->isFinal()) {
+                throw ValidationException::withMessages(['complaint' => 'A reclamação precisa de decisão final antes de fechar.']);
+            }
+
+            $complaint->forceFill(['status' => ComplaintStatus::Closed, 'closed_at' => now()])->save();
+            $this->auditLogger->record(AuditEvents::UPDATE, $complaint, 'complaints', 'complaint_close', 'Reclamação fechada.');
+
+            return $complaint->refresh();
+        });
     }
 
     private function resolveEntry(ProvisionalList $list, Application $application, User $candidate, ?int $entryId): ProvisionalListEntry

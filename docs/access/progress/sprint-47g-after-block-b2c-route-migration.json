@@ -1,0 +1,2219 @@
+{
+  "summary": {
+    "manifest_routes": 96,
+    "block_b2c_routes": 12,
+    "permission_exact": 63,
+    "permission_pending": 33,
+    "role_middleware_remaining": 33,
+    "active_backoffice_missing": 33,
+    "mfa_backoffice_missing": 33,
+    "log_backoffice_missing": 33
+  },
+  "routes": [
+    {
+      "name": "backoffice.agenda.index",
+      "domain": "agenda",
+      "expected_permission": "agenda.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/agenda",
+      "action": "App\\Http\\Controllers\\Backoffice\\AgendaController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:agenda.view"
+      ],
+      "permission_middleware": [
+        "permission:agenda.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.cases.inspections.show",
+      "domain": "inspections",
+      "expected_permission": "inspections.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/cases/inspections/{propertyInspection}",
+      "action": "App\\Http\\Controllers\\Backoffice\\CaseWorkspaceController@inspection",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.attachments.download",
+      "domain": "inspections",
+      "expected_permission": "inspections.attachments.download",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/inspections/attachments/{propertyInspectionAttachment}/download",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionAttachmentController@download",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.attachments.store",
+      "domain": "inspections",
+      "expected_permission": "inspections.attachments.create",
+      "methods": "POST",
+      "uri": "backoffice/inspections/{propertyInspection}/attachments",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionAttachmentController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.cancel",
+      "domain": "inspections",
+      "expected_permission": "inspections.cancel",
+      "methods": "POST",
+      "uri": "backoffice/inspections/{propertyInspection}/cancel",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionController@cancel",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.close",
+      "domain": "inspections",
+      "expected_permission": "inspections.close",
+      "methods": "POST",
+      "uri": "backoffice/inspections/{propertyInspection}/close",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionController@close",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.complete",
+      "domain": "inspections",
+      "expected_permission": "inspections.complete",
+      "methods": "POST",
+      "uri": "backoffice/inspections/{propertyInspection}/complete",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionController@complete",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.create",
+      "domain": "inspections",
+      "expected_permission": "inspections.create",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/inspections/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.edit",
+      "domain": "inspections",
+      "expected_permission": "inspections.update",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/inspections/{propertyInspection}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.index",
+      "domain": "inspections",
+      "expected_permission": "inspections.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/inspections",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.items.store",
+      "domain": "inspections",
+      "expected_permission": "inspections.items.create",
+      "methods": "POST",
+      "uri": "backoffice/inspections/{propertyInspection}/items",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionItemController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.items.update",
+      "domain": "inspections",
+      "expected_permission": "inspections.items.update",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/inspections/items/{propertyInspectionItem}",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionItemController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.reports.cancel",
+      "domain": "inspections",
+      "expected_permission": "inspections.reports.cancel",
+      "methods": "POST",
+      "uri": "backoffice/inspections/reports/{propertyInspectionReport}/cancel",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionReportController@cancel",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.reports.download",
+      "domain": "inspections",
+      "expected_permission": "inspections.reports.download",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/inspections/reports/{propertyInspectionReport}/download",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionReportController@download",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.reports.generate",
+      "domain": "inspections",
+      "expected_permission": "inspections.reports.generate",
+      "methods": "POST",
+      "uri": "backoffice/inspections/{propertyInspection}/reports/generate",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionReportController@generate",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.reports.show",
+      "domain": "inspections",
+      "expected_permission": "inspections.reports.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/inspections/reports/{propertyInspectionReport}",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionReportController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.reports.validate",
+      "domain": "inspections",
+      "expected_permission": "inspections.reports.validate",
+      "methods": "POST",
+      "uri": "backoffice/inspections/reports/{propertyInspectionReport}/validate",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionReportController@validateReport",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.show",
+      "domain": "inspections",
+      "expected_permission": "inspections.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/inspections/{propertyInspection}",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.start",
+      "domain": "inspections",
+      "expected_permission": "inspections.start",
+      "methods": "POST",
+      "uri": "backoffice/inspections/{propertyInspection}/start",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionController@start",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.store",
+      "domain": "inspections",
+      "expected_permission": "inspections.create",
+      "methods": "POST",
+      "uri": "backoffice/inspections",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.templates.create",
+      "domain": "inspections",
+      "expected_permission": "inspections.templates.create",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/inspections/templates/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\InspectionChecklistTemplateController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.templates.edit",
+      "domain": "inspections",
+      "expected_permission": "inspections.templates.update",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/inspections/templates/{inspectionChecklistTemplate}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\InspectionChecklistTemplateController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.templates.index",
+      "domain": "inspections",
+      "expected_permission": "inspections.templates.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/inspections/templates",
+      "action": "App\\Http\\Controllers\\Backoffice\\InspectionChecklistTemplateController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.templates.store",
+      "domain": "inspections",
+      "expected_permission": "inspections.templates.create",
+      "methods": "POST",
+      "uri": "backoffice/inspections/templates",
+      "action": "App\\Http\\Controllers\\Backoffice\\InspectionChecklistTemplateController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.templates.update",
+      "domain": "inspections",
+      "expected_permission": "inspections.templates.update",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/inspections/templates/{inspectionChecklistTemplate}",
+      "action": "App\\Http\\Controllers\\Backoffice\\InspectionChecklistTemplateController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.update",
+      "domain": "inspections",
+      "expected_permission": "inspections.update",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/inspections/{propertyInspection}",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.inspections.validate",
+      "domain": "inspections",
+      "expected_permission": "inspections.validate",
+      "methods": "POST",
+      "uri": "backoffice/inspections/{propertyInspection}/validate",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyInspectionController@validateInspection",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.cases.housing-units.show",
+      "domain": "maintenance",
+      "expected_permission": "housing_units.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/cases/housing-units/{housingUnit}",
+      "action": "App\\Http\\Controllers\\Backoffice\\CaseWorkspaceController@housingUnit",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:housing_units.view"
+      ],
+      "permission_middleware": [
+        "permission:housing_units.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.cases.maintenance.show",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/cases/maintenance/{maintenanceRequest}",
+      "action": "App\\Http\\Controllers\\Backoffice\\CaseWorkspaceController@maintenance",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.view"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.assignments.cancel",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.assignments.cancel",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/assignments/{maintenanceAssignment}/cancel",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceAssignmentController@cancel",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.assignments.cancel"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.assignments.cancel"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.assignments.store",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.assignments.create",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/requests/{maintenanceRequest}/assignments",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceAssignmentController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.assignments.create"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.assignments.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.attachments.download",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.attachments.download",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/attachments/{maintenanceAttachment}/download",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceAttachmentController@download",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.attachments.download"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.attachments.download"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.attachments.store",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.attachments.create",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/requests/{maintenanceRequest}/attachments",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceAttachmentController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.attachments.create"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.attachments.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.categories.create",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.categories.create",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/categories/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceCategoryController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.categories.create"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.categories.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.categories.destroy",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.categories.delete",
+      "methods": "DELETE",
+      "uri": "backoffice/maintenance/categories/{maintenanceCategory}",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceCategoryController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.categories.delete"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.categories.delete"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.categories.edit",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.categories.update",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/categories/{maintenanceCategory}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceCategoryController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.categories.update"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.categories.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.categories.index",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.categories.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/categories",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceCategoryController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.categories.view"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.categories.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.categories.store",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.categories.create",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/categories",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceCategoryController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.categories.create"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.categories.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.categories.update",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.categories.update",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/maintenance/categories/{maintenanceCategory}",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceCategoryController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.categories.update"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.categories.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.cost-reports.index",
+      "domain": "maintenance",
+      "expected_permission": "reports.view_maintenance",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/cost-reports",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceCostReportController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:reports.view_maintenance"
+      ],
+      "permission_middleware": [
+        "permission:reports.view_maintenance"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.costs.approve",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.costs.approve",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/costs/{maintenanceCost}/approve",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceCostController@approve",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.costs.approve"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.costs.approve"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.costs.index",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.costs.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/costs",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceCostController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.costs.view"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.costs.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.costs.reject",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.costs.reject",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/costs/{maintenanceCost}/reject",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceCostController@reject",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.costs.reject"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.costs.reject"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.costs.store",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.costs.create",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/requests/{maintenanceRequest}/costs",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceCostController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.costs.create"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.costs.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.dashboard",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/dashboard",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceDashboardController",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.view"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.index",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceDashboardController",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.view"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.interventions.cancel",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.interventions.cancel",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/interventions/{maintenanceIntervention}/cancel",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceInterventionController@cancel",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.interventions.cancel"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.interventions.cancel"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.interventions.complete",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.interventions.complete",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/interventions/{maintenanceIntervention}/complete",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceInterventionController@complete",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.interventions.complete"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.interventions.complete"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.interventions.show",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.interventions.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/interventions/{maintenanceIntervention}",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceInterventionController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.interventions.view"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.interventions.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.interventions.start",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.interventions.start",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/interventions/{maintenanceIntervention}/start",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceInterventionController@start",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.interventions.start"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.interventions.start"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.interventions.store",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.interventions.create",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/requests/{maintenanceRequest}/interventions",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceInterventionController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.interventions.create"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.interventions.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.requests.cancel",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.cancel",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/requests/{maintenanceRequest}/cancel",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceRequestController@cancel",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.cancel"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.cancel"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.requests.close",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.close",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/requests/{maintenanceRequest}/close",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceRequestController@close",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.close"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.close"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.requests.create",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.create",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/requests/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceRequestController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.create"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.requests.edit",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.update",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/requests/{maintenanceRequest}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceRequestController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.update"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.requests.index",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/requests",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceRequestController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.view"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.requests.reject",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.reject",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/requests/{maintenanceRequest}/reject",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceRequestController@reject",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.reject"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.reject"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.requests.resolve",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.resolve",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/requests/{maintenanceRequest}/resolve",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceRequestController@resolve",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.resolve"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.resolve"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.requests.review",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.review",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/requests/{maintenanceRequest}/review",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceRequestController@review",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.review"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.review"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.requests.schedule",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.schedule",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/requests/{maintenanceRequest}/schedule",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceRequestController@schedule",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.schedule"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.schedule"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.requests.show",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/requests/{maintenanceRequest}",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceRequestController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.view"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.requests.start",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.start",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/requests/{maintenanceRequest}/start",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceRequestController@start",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.start"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.start"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.requests.store",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.create",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/requests",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceRequestController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.create"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.requests.update",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.update",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/maintenance/requests/{maintenanceRequest}",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceRequestController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance_requests.update"
+      ],
+      "permission_middleware": [
+        "permission:maintenance_requests.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.suppliers.create",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.suppliers.create",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/suppliers/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceSupplierController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.suppliers.create"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.suppliers.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.suppliers.edit",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.suppliers.update",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/suppliers/{maintenanceSupplier}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceSupplierController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.suppliers.update"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.suppliers.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.suppliers.index",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.suppliers.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/suppliers",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceSupplierController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.suppliers.view"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.suppliers.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.suppliers.show",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.suppliers.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/maintenance/suppliers/{maintenanceSupplier}",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceSupplierController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.suppliers.view"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.suppliers.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.suppliers.store",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.suppliers.create",
+      "methods": "POST",
+      "uri": "backoffice/maintenance/suppliers",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceSupplierController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.suppliers.create"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.suppliers.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.maintenance.suppliers.update",
+      "domain": "maintenance",
+      "expected_permission": "maintenance.suppliers.update",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/maintenance/suppliers/{maintenanceSupplier}",
+      "action": "App\\Http\\Controllers\\Backoffice\\MaintenanceSupplierController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:maintenance.suppliers.update"
+      ],
+      "permission_middleware": [
+        "permission:maintenance.suppliers.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.properties.technical-history",
+      "domain": "maintenance",
+      "expected_permission": "housing_units.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/properties/{housingUnit}/technical-history",
+      "action": "App\\Http\\Controllers\\Backoffice\\PropertyTechnicalHistoryController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:housing_units.view"
+      ],
+      "permission_middleware": [
+        "permission:housing_units.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "maintenance-requests.create",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.create",
+      "methods": "GET|HEAD",
+      "uri": "maintenance-requests/create",
+      "action": "App\\Http\\Controllers\\MaintenanceRequestController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "maintenance-requests.destroy",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.delete",
+      "methods": "DELETE",
+      "uri": "maintenance-requests/{maintenance_request}",
+      "action": "App\\Http\\Controllers\\MaintenanceRequestController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "maintenance-requests.edit",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.update",
+      "methods": "GET|HEAD",
+      "uri": "maintenance-requests/{maintenance_request}/edit",
+      "action": "App\\Http\\Controllers\\MaintenanceRequestController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "maintenance-requests.index",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.view",
+      "methods": "GET|HEAD",
+      "uri": "maintenance-requests",
+      "action": "App\\Http\\Controllers\\MaintenanceRequestController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "maintenance-requests.show",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.view",
+      "methods": "GET|HEAD",
+      "uri": "maintenance-requests/{maintenance_request}",
+      "action": "App\\Http\\Controllers\\MaintenanceRequestController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "maintenance-requests.store",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.create",
+      "methods": "POST",
+      "uri": "maintenance-requests",
+      "action": "App\\Http\\Controllers\\MaintenanceRequestController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "maintenance-requests.update",
+      "domain": "maintenance",
+      "expected_permission": "maintenance_requests.update",
+      "methods": "PUT|PATCH",
+      "uri": "maintenance-requests/{maintenance_request}",
+      "action": "App\\Http\\Controllers\\MaintenanceRequestController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.housing-visits.cancel",
+      "domain": "visits",
+      "expected_permission": "visits.cancel",
+      "methods": "POST",
+      "uri": "backoffice/housing-visits/{housingVisit}/cancel",
+      "action": "App\\Http\\Controllers\\Backoffice\\HousingVisitController@cancel",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.cancel"
+      ],
+      "permission_middleware": [
+        "permission:visits.cancel"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.housing-visits.complete",
+      "domain": "visits",
+      "expected_permission": "visits.complete",
+      "methods": "POST",
+      "uri": "backoffice/housing-visits/{housingVisit}/complete",
+      "action": "App\\Http\\Controllers\\Backoffice\\HousingVisitController@complete",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.complete"
+      ],
+      "permission_middleware": [
+        "permission:visits.complete"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.housing-visits.confirm",
+      "domain": "visits",
+      "expected_permission": "visits.confirm",
+      "methods": "POST",
+      "uri": "backoffice/housing-visits/{housingVisit}/confirm",
+      "action": "App\\Http\\Controllers\\Backoffice\\HousingVisitController@confirm",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.confirm"
+      ],
+      "permission_middleware": [
+        "permission:visits.confirm"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.housing-visits.index",
+      "domain": "visits",
+      "expected_permission": "visits.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/housing-visits",
+      "action": "App\\Http\\Controllers\\Backoffice\\HousingVisitController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.view"
+      ],
+      "permission_middleware": [
+        "permission:visits.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.housing-visits.no-show",
+      "domain": "visits",
+      "expected_permission": "visits.mark_no_show",
+      "methods": "POST",
+      "uri": "backoffice/housing-visits/{housingVisit}/no-show",
+      "action": "App\\Http\\Controllers\\Backoffice\\HousingVisitController@noShow",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.mark_no_show"
+      ],
+      "permission_middleware": [
+        "permission:visits.mark_no_show"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.housing-visits.reject",
+      "domain": "visits",
+      "expected_permission": "visits.reject",
+      "methods": "POST",
+      "uri": "backoffice/housing-visits/{housingVisit}/reject",
+      "action": "App\\Http\\Controllers\\Backoffice\\HousingVisitController@reject",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.reject"
+      ],
+      "permission_middleware": [
+        "permission:visits.reject"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.housing-visits.show",
+      "domain": "visits",
+      "expected_permission": "visits.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/housing-visits/{housingVisit}",
+      "action": "App\\Http\\Controllers\\Backoffice\\HousingVisitController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.view"
+      ],
+      "permission_middleware": [
+        "permission:visits.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.visit-availabilities.create",
+      "domain": "visits",
+      "expected_permission": "visits.availabilities.create",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/visit-availabilities/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\VisitAvailabilityController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.availabilities.create"
+      ],
+      "permission_middleware": [
+        "permission:visits.availabilities.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.visit-availabilities.destroy",
+      "domain": "visits",
+      "expected_permission": "visits.availabilities.delete",
+      "methods": "DELETE",
+      "uri": "backoffice/visit-availabilities/{visitAvailability}",
+      "action": "App\\Http\\Controllers\\Backoffice\\VisitAvailabilityController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.availabilities.delete"
+      ],
+      "permission_middleware": [
+        "permission:visits.availabilities.delete"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.visit-availabilities.edit",
+      "domain": "visits",
+      "expected_permission": "visits.availabilities.update",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/visit-availabilities/{visitAvailability}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\VisitAvailabilityController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.availabilities.update"
+      ],
+      "permission_middleware": [
+        "permission:visits.availabilities.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.visit-availabilities.index",
+      "domain": "visits",
+      "expected_permission": "visits.availabilities.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/visit-availabilities",
+      "action": "App\\Http\\Controllers\\Backoffice\\VisitAvailabilityController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.availabilities.view"
+      ],
+      "permission_middleware": [
+        "permission:visits.availabilities.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.visit-availabilities.show",
+      "domain": "visits",
+      "expected_permission": "visits.availabilities.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/visit-availabilities/{visitAvailability}",
+      "action": "App\\Http\\Controllers\\Backoffice\\VisitAvailabilityController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.availabilities.view"
+      ],
+      "permission_middleware": [
+        "permission:visits.availabilities.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.visit-availabilities.slots.generate",
+      "domain": "visits",
+      "expected_permission": "visits.availabilities.generate_slots",
+      "methods": "POST",
+      "uri": "backoffice/visit-availabilities/{visitAvailability}/slots",
+      "action": "App\\Http\\Controllers\\Backoffice\\VisitAvailabilityController@generateSlots",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.availabilities.generate_slots"
+      ],
+      "permission_middleware": [
+        "permission:visits.availabilities.generate_slots"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.visit-availabilities.store",
+      "domain": "visits",
+      "expected_permission": "visits.availabilities.create",
+      "methods": "POST",
+      "uri": "backoffice/visit-availabilities",
+      "action": "App\\Http\\Controllers\\Backoffice\\VisitAvailabilityController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.availabilities.create"
+      ],
+      "permission_middleware": [
+        "permission:visits.availabilities.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.visit-availabilities.update",
+      "domain": "visits",
+      "expected_permission": "visits.availabilities.update",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/visit-availabilities/{visitAvailability}",
+      "action": "App\\Http\\Controllers\\Backoffice\\VisitAvailabilityController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.availabilities.update"
+      ],
+      "permission_middleware": [
+        "permission:visits.availabilities.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.visit-slots.block",
+      "domain": "visits",
+      "expected_permission": "visits.slots.block",
+      "methods": "POST",
+      "uri": "backoffice/visit-slots/{visitSlot}/block",
+      "action": "App\\Http\\Controllers\\Backoffice\\VisitSlotController@block",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.slots.block"
+      ],
+      "permission_middleware": [
+        "permission:visits.slots.block"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.visit-slots.index",
+      "domain": "visits",
+      "expected_permission": "visits.slots.view",
+      "methods": "GET|HEAD",
+      "uri": "backoffice/visit-slots",
+      "action": "App\\Http\\Controllers\\Backoffice\\VisitSlotController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.slots.view"
+      ],
+      "permission_middleware": [
+        "permission:visits.slots.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.visit-slots.unblock",
+      "domain": "visits",
+      "expected_permission": "visits.slots.unblock",
+      "methods": "POST",
+      "uri": "backoffice/visit-slots/{visitSlot}/unblock",
+      "action": "App\\Http\\Controllers\\Backoffice\\VisitSlotController@unblock",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:visits.slots.unblock"
+      ],
+      "permission_middleware": [
+        "permission:visits.slots.unblock"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    }
+  ]
+}

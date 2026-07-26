@@ -29,10 +29,10 @@ class MainDashboardVisualStructureTest extends TestCase
             ->assertSee('mv-card-interactive', false)
             ->assertSee('Pesquisa')
             ->assertSee('Espaços de Trabalho')
-            ->assertSee('Ações rápidas')
+            ->assertSee('Acesso rápido')
             ->assertSee('Favoritos')
             ->assertSee('Recentes')
-            ->assertSee('Centro de Trabalho');
+            ->assertSee('Centro de produtividade');
     }
 
     private function userWithRole(string $role): User

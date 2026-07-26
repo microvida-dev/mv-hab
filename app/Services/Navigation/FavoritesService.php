@@ -15,7 +15,8 @@ class FavoritesService
     {
         return NavigationFavorite::query()
             ->where('user_id', $user->id)
-            ->latest()
+            ->orderBy('sort_order')
+            ->orderBy('created_at')
             ->get()
             ->filter(fn (NavigationFavorite $favorite): bool => $this->isVisible($user, $favorite))
             ->take($limit)
@@ -32,21 +33,59 @@ class FavoritesService
         }
 
         /** @var NavigationFavorite $favorite */
-        $favorite = NavigationFavorite::query()->updateOrCreate(
-            [
-                'user_id' => $user->id,
-                'item_type' => 'workspace',
-                'workspace_key' => $workspaceKey,
-            ],
-            [
-                'label' => (string) $workspace['title'],
-                'route_name' => 'workspaces.show',
-                'route_parameters' => ['workspace' => $workspaceKey],
-                'metadata' => ['source' => 'workspace_dashboard'],
-            ],
-        );
+        $favorite = NavigationFavorite::query()->firstOrNew([
+            'user_id' => $user->id,
+            'item_type' => 'workspace',
+            'workspace_key' => $workspaceKey,
+        ]);
+
+        if (! $favorite->exists) {
+            $maxSortOrder = NavigationFavorite::query()
+                ->where('user_id', $user->id)
+                ->max('sort_order');
+
+            $favorite->sort_order = max(
+                0,
+                is_numeric($maxSortOrder) ? (int) $maxSortOrder : 0,
+            ) + 1;
+        }
+
+        $favorite->fill([
+            'label' => (string) $workspace['title'],
+            'route_name' => 'workspaces.show',
+            'route_parameters' => ['workspace' => $workspaceKey],
+            'metadata' => ['source' => 'workspace_dashboard'],
+        ]);
+
+        $favorite->save();
 
         return $favorite;
+    }
+
+    /**
+     * @param  list<int>  $favoriteIds
+     */
+    public function reorder(User $user, array $favoriteIds): void
+    {
+        $favorites = NavigationFavorite::query()
+            ->where('user_id', $user->id)
+            ->whereIn('id', $favoriteIds)
+            ->get()
+            ->keyBy('id');
+
+        if ($favorites->count() !== count($favoriteIds)) {
+            throw new AuthorizationException('Favoritos não autorizados.');
+        }
+
+        foreach ($favoriteIds as $index => $favoriteId) {
+            $favorite = $favorites->get($favoriteId);
+
+            if ($favorite instanceof NavigationFavorite) {
+                $favorite->forceFill([
+                    'sort_order' => $index + 1,
+                ])->save();
+            }
+        }
     }
 
     public function remove(User $user, NavigationFavorite $favorite): void

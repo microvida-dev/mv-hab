@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Reporting\RunReportRequest;
 use App\Models\ReportDefinition;
 use App\Models\ReportRun;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Reporting\ReportRunService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +20,7 @@ class ReportRunController extends Controller
 {
     public function __construct(
         private readonly ReportRunService $runs,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
     public function index(): View
@@ -33,7 +35,8 @@ class ReportRunController extends Controller
             ->pluck('id');
 
         return view('backoffice.reports.runs.index', [
-            'runs' => ReportRun::query()
+            'runs' => $this->municipalScope
+                ->reportRuns(ReportRun::query(), $this->currentUser())
                 ->whereIn('report_definition_id', $allowedReportIds)
                 ->with([
                     'definition',

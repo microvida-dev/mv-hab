@@ -9,32 +9,61 @@ use App\Enums\VisitStatus;
 use App\Models\ApplicationSimulationInconsistency;
 use App\Models\HousingVisit;
 use App\Models\SupportTicket;
+use App\Models\User;
 use App\Models\VisitSlot;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class CandidateSupportDashboardService
 {
+    public function __construct(
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
+
     /**
      * @return array<string, int|float|array<string, int>>
      */
-    public function indicators(): array
+    public function indicators(User $actor): array
     {
-        $scheduled = HousingVisit::query()->whereIn('status', [
+        $visits = $this->municipalScope->housingVisits(
+            HousingVisit::query(),
+            $actor,
+        );
+        $slots = $this->municipalScope->visitSlots(
+            VisitSlot::query(),
+            $actor,
+        );
+        $scheduled = (clone $visits)->whereIn('status', [
             VisitStatus::Requested->value,
             VisitStatus::PendingConfirmation->value,
             VisitStatus::Confirmed->value,
             VisitStatus::Rescheduled->value,
         ])->count();
-        $completed = HousingVisit::query()->where('status', VisitStatus::Completed->value)->count();
-        $missed = HousingVisit::query()->where('status', VisitStatus::Missed->value)->count();
+        $completed = (clone $visits)
+            ->where('status', VisitStatus::Completed->value)
+            ->count();
+        $missed = (clone $visits)
+            ->where('status', VisitStatus::Missed->value)
+            ->count();
 
         return [
             'visits_scheduled' => $scheduled,
-            'visits_confirmed' => HousingVisit::query()->where('status', VisitStatus::Confirmed->value)->count(),
-            'visits_cancelled' => HousingVisit::query()->whereIn('status', [VisitStatus::CancelledByCandidate->value, VisitStatus::CancelledByStaff->value])->count(),
+            'visits_confirmed' => (clone $visits)
+                ->where('status', VisitStatus::Confirmed->value)
+                ->count(),
+            'visits_cancelled' => (clone $visits)
+                ->whereIn('status', [
+                    VisitStatus::CancelledByCandidate->value,
+                    VisitStatus::CancelledByStaff->value,
+                ])
+                ->count(),
             'visits_completed' => $completed,
             'miss_rate' => ($completed + $missed) > 0 ? round(($missed / ($completed + $missed)) * 100, 2) : 0.0,
-            'slots_available' => VisitSlot::query()->where('status', VisitSlotStatus::Available->value)->count(),
-            'slots_full' => VisitSlot::query()->where('status', VisitSlotStatus::Full->value)->count(),
+            'slots_available' => (clone $slots)
+                ->where('status', VisitSlotStatus::Available->value)
+                ->count(),
+            'slots_full' => (clone $slots)
+                ->where('status', VisitSlotStatus::Full->value)
+                ->count(),
             'tickets_open' => SupportTicket::query()->whereIn('status', [TicketStatus::Open->value, TicketStatus::InProgress->value, TicketStatus::Reopened->value])->count(),
             'tickets_pending_candidate' => SupportTicket::query()->where('status', TicketStatus::PendingCandidate->value)->count(),
             'tickets_pending_staff' => SupportTicket::query()->where('status', TicketStatus::PendingStaff->value)->count(),

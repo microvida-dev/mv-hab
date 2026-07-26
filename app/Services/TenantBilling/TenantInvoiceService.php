@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\Finance\TenantFinancialAccountService;
 use App\Support\AuditEvents;
+use App\Support\DecimalMoney;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,18 +26,27 @@ class TenantInvoiceService
     ) {}
 
     /**
-     * @param  array<string, bool|float|int|string|null>  $data
+     * @param  array<string, bool|int|string|null>  $data
      */
     public function issueForContract(Contract $contract, User $actor, array $data): TenantInvoice
     {
         return DB::transaction(function () use ($contract, $actor, $data) {
-            $amount = (float) ($data['amount'] ?? $contract->monthly_rent);
+            $lockedContract = Contract::query()
+                ->whereKey($contract->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $rawAmount = $data['amount']
+                ?? (string) $lockedContract->monthly_rent;
+            if (is_bool($rawAmount)) {
+                throw ValidationException::withMessages(['amount' => 'O valor da fatura é inválido.']);
+            }
+            $amount = DecimalMoney::normalize($rawAmount);
 
-            if ($amount <= 0) {
+            if (! DecimalMoney::isPositive($amount)) {
                 throw ValidationException::withMessages(['amount' => 'O valor da fatura tem de ser superior a zero.']);
             }
 
-            $account = $contract->financialAccount ?: $this->accounts->ensureForContract($contract, $actor);
+            $account = $lockedContract->financialAccount ?: $this->accounts->ensureForContract($lockedContract, $actor);
             $periodYear = (int) ($data['period_year'] ?? now()->year);
             $periodMonth = (int) ($data['period_month'] ?? now()->month);
             $chargeType = $this->chargeTypeFromData($data);
@@ -47,23 +57,37 @@ class TenantInvoiceService
                 'period_month' => $periodMonth,
                 'charge_type' => $chargeType->value,
             ]);
+            if ($invoice->exists) {
+                $invoice = TenantInvoice::query()
+                    ->whereKey($invoice->getKey())
+                    ->lockForUpdate()
+                    ->firstOrFail();
+            }
 
             if ($invoice->exists && ! $this->invoiceHasStatus($invoice, [TenantInvoiceStatus::Draft, TenantInvoiceStatus::UnderReview])) {
                 return $invoice;
             }
 
             $invoice->forceFill([
-                'lease_contract_id' => $contract->id,
-                'user_id' => $contract->user_id,
-                'housing_unit_id' => $contract->housing_unit_id,
+                'lease_contract_id' => $lockedContract->id,
+                'user_id' => $lockedContract->user_id,
+                'housing_unit_id' => $lockedContract->housing_unit_id,
                 'invoice_number' => $invoice->invoice_number ?: $this->invoiceNumber(),
                 'status' => TenantInvoiceStatus::Issued,
                 'issue_date' => $data['issue_date'] ?? now()->toDateString(),
-                'due_date' => $data['due_date'] ?? now()->startOfMonth()->addDays((int) ($contract->payment_day ?? 8))->toDateString(),
+                'due_date' => $data['due_date'] ?? now()->startOfMonth()->addDays((int) ($lockedContract->payment_day ?? 8))->toDateString(),
                 'original_amount' => $amount,
                 'amount_due' => $amount,
-                'amount_paid' => (float) ($invoice->amount_paid ?? 0),
-                'amount_outstanding' => max(0, $amount - (float) ($invoice->amount_paid ?? 0)),
+                'amount_paid' => DecimalMoney::normalize(
+                    (string) ($invoice->getAttribute('amount_paid') ?? '0'),
+                ),
+                'amount_outstanding' => DecimalMoney::max(
+                    0,
+                    DecimalMoney::subtract(
+                        $amount,
+                        (string) ($invoice->getAttribute('amount_paid') ?? '0'),
+                    ),
+                ),
                 'currency' => $data['currency'] ?? 'EUR',
                 'issued_at' => now(),
                 'notes' => $data['notes'] ?? $invoice->notes,
@@ -83,7 +107,7 @@ class TenantInvoiceService
         $contract = $this->contractForInstallment($installment);
 
         $invoice = $this->issueForContract($contract, $actor, [
-            'amount' => $installment->amount_due,
+            'amount' => DecimalMoney::normalize((string) $installment->amount_due),
             'period_year' => $installment->period_year,
             'period_month' => $installment->period_month,
             'issue_date' => $this->dateString($installment, 'issue_date') ?? now()->toDateString(),
@@ -99,26 +123,37 @@ class TenantInvoiceService
 
     public function markPaymentImpact(TenantInvoice $invoice): TenantInvoice
     {
-        $paid = (float) $invoice->payments()
-            ->whereIn('status', ['confirmed', 'reconciled'])
-            ->sum('allocated_amount');
+        return DB::transaction(function () use ($invoice): TenantInvoice {
+            $lockedInvoice = TenantInvoice::query()
+                ->whereKey($invoice->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $paid = DecimalMoney::normalize(
+                (string) $lockedInvoice->payments()
+                    ->whereIn('status', ['confirmed', 'reconciled'])
+                    ->sum('allocated_amount'),
+            );
 
-        $outstanding = max(0, (float) $invoice->amount_due - $paid);
-        $status = match (true) {
-            $outstanding <= 0 => TenantInvoiceStatus::Paid,
-            $paid > 0 => TenantInvoiceStatus::PartiallyPaid,
-            $this->isPastDate($invoice, 'due_date') => TenantInvoiceStatus::Overdue,
-            default => $invoice->status,
-        };
+            $outstanding = DecimalMoney::max(
+                0,
+                DecimalMoney::subtract((string) $lockedInvoice->amount_due, $paid),
+            );
+            $status = match (true) {
+                ! DecimalMoney::isPositive($outstanding) => TenantInvoiceStatus::Paid,
+                DecimalMoney::isPositive($paid) => TenantInvoiceStatus::PartiallyPaid,
+                $this->isPastDate($lockedInvoice, 'due_date') => TenantInvoiceStatus::Overdue,
+                default => $lockedInvoice->status,
+            };
 
-        $invoice->forceFill([
-            'amount_paid' => $paid,
-            'amount_outstanding' => $outstanding,
-            'status' => $status,
-            'paid_at' => $outstanding <= 0 ? now() : null,
-        ])->save();
+            $lockedInvoice->forceFill([
+                'amount_paid' => $paid,
+                'amount_outstanding' => $outstanding,
+                'status' => $status,
+                'paid_at' => DecimalMoney::isPositive($outstanding) ? null : now(),
+            ])->save();
 
-        return $invoice->refresh();
+            return $lockedInvoice->refresh();
+        });
     }
 
     /**
@@ -135,7 +170,7 @@ class TenantInvoiceService
     }
 
     /**
-     * @param  array<string, bool|float|int|string|null>  $data
+     * @param  array<string, bool|int|string|null>  $data
      */
     private function chargeTypeFromData(array $data): ChargeType
     {

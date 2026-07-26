@@ -4,13 +4,31 @@ namespace App\Services\Reporting;
 
 use App\Enums\DashboardType;
 use App\Enums\ExportScope;
+use App\Enums\FeatureKey;
 use App\Enums\ReportSensitivityLevel;
 use App\Models\DashboardDefinition;
 use App\Models\ReportDefinition;
 use App\Models\User;
+use App\Services\Entitlements\MunicipalityEntitlementService;
 
 class ReportPermissionService
 {
+    /** @var list<string> */
+    private const APPLICATION_REPORT_CODES = [
+        'applications_by_contest',
+        'application_status_summary',
+    ];
+
+    /** @var array<string, string> */
+    private const DOMAIN_EXPORT_PERMISSIONS = [
+        'applications_by_contest' => 'applications.export',
+        'application_status_summary' => 'applications.export',
+        'complaints_summary' => 'complaints.export',
+        'housing_occupancy_report' => 'housing_units.export',
+    ];
+
+    public function __construct(private readonly MunicipalityEntitlementService $entitlements) {}
+
     public function canViewDashboard(User $user, DashboardDefinition $dashboard): bool
     {
         if ($user->hasRole('candidate') || ! $user->hasPermission('reports.view')) {
@@ -35,6 +53,10 @@ class ReportPermissionService
             return false;
         }
 
+        if ($this->isApplicationReport($report) && $user->municipality_id === null) {
+            return false;
+        }
+
         if ($report->required_permission && ! $user->hasPermission($report->required_permission)) {
             return false;
         }
@@ -50,7 +72,7 @@ class ReportPermissionService
 
     public function canExport(User $user, ReportDefinition $report, ExportScope $scope): bool
     {
-        if (! $this->canViewReport($user, $report) || ! $user->hasPermission('reports.export')) {
+        if (! $this->canExportDefinition($user, $report)) {
             return false;
         }
 
@@ -63,6 +85,32 @@ class ReportPermissionService
             ReportSensitivityLevel::Sensitive => $user->hasPermission('reports.export_sensitive'),
             default => true,
         };
+    }
+
+    public function canExportDefinition(User $user, ReportDefinition $report): bool
+    {
+        if (! $this->canViewReport($user, $report) || ! $user->hasPermission('reports.export')) {
+            return false;
+        }
+
+        $domainExportPermission = self::DOMAIN_EXPORT_PERMISSIONS[$report->code] ?? null;
+        if ($domainExportPermission !== null && ! $user->hasPermission($domainExportPermission)) {
+            return false;
+        }
+
+        if (
+            $this->isApplicationReport($report)
+            && ! $this->entitlements->enabledForUser($user, FeatureKey::ApplicationExport)
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function isApplicationReport(ReportDefinition $report): bool
+    {
+        return in_array($report->code, self::APPLICATION_REPORT_CODES, true);
     }
 
     public function canManage(User $user): bool

@@ -7,10 +7,13 @@ use App\Models\Complaint;
 use App\Models\ComplaintDecision;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class ComplaintDecisionPolicy
 {
     use ChecksPermissions;
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -36,6 +39,35 @@ class ComplaintDecisionPolicy
         return ! $user->hasRole(['candidate', 'auditor'])
             && $this->status($decision) !== ComplaintDecisionStatus::Approved
             && $this->canAccess($user, 'complaints', 'approve');
+    }
+
+    public function viewBackoffice(User $user, ComplaintDecision $decision): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, 'complaints', 'view')
+            && $this->municipalScope->ownsComplaintDecision($user, $decision);
+    }
+
+    public function decideBackoffice(User $user, Complaint $complaint): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'complaints', 'decide')
+            && $this->municipalScope->ownsComplaint($user, $complaint);
+    }
+
+    public function approveBackoffice(User $user, ComplaintDecision $decision): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->status($decision) !== ComplaintDecisionStatus::Approved
+            && $this->canAccess($user, 'complaints', 'approve')
+            && $this->municipalScope->ownsComplaintDecision($user, $decision);
+    }
+
+    public function cancelBackoffice(User $user, ComplaintDecision $decision): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'complaints', 'cancel')
+            && $this->municipalScope->ownsComplaintDecision($user, $decision);
     }
 
     private function status(ComplaintDecision $decision): ?ComplaintDecisionStatus

@@ -2,17 +2,20 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\DocumentAppliesTo;
-use App\Enums\RequiredDocumentConditionOperator;
+use App\Http\Requests\Concerns\ValidatesRequiredDocumentConfiguration;
 use App\Models\RequiredDocument;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreRequiredDocumentRequest extends FormRequest
 {
+    use ValidatesRequiredDocumentConfiguration;
+
     public function authorize(): bool
     {
-        return $this->user()?->can('create', RequiredDocument::class) ?? false;
+        return $this->user()?->can(
+            'createBackoffice',
+            RequiredDocument::class,
+        ) ?? false;
     }
 
     /**
@@ -20,18 +23,6 @@ class StoreRequiredDocumentRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'document_type_id' => ['required', 'integer', 'exists:document_types,id'],
-            'program_id' => ['nullable', 'integer', 'exists:programs,id'],
-            'contest_id' => ['nullable', 'integer', 'exists:contests,id'],
-            'required_for' => ['required', Rule::enum(DocumentAppliesTo::class)],
-            'condition_key' => ['required', 'string', 'max:150'],
-            'condition_operator' => ['required', Rule::enum(RequiredDocumentConditionOperator::class)],
-            'condition_value' => ['nullable', 'string', 'max:255'],
-            'is_required' => ['sometimes', 'boolean'],
-            'is_active' => ['sometimes', 'boolean'],
-            'instructions' => ['nullable', 'string', 'max:2000'],
-            'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
-        ];
+        return $this->requiredDocumentRules();
     }
 }

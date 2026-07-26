@@ -2,14 +2,12 @@
 
 namespace App\Services\Contracts;
 
+use App\Support\DecimalMoney;
+
 class RentEffortRateService
 {
-    public function calculate(float $rent, float $monthlyIncome): ?float
+    public function calculate(int|string $rent, int|string $monthlyIncome): ?string
     {
-        if ($monthlyIncome <= 0) {
-            return null;
-        }
-
-        return round(($rent / $monthlyIncome) * 100, 4);
+        return DecimalMoney::ratioPercentage($rent, $monthlyIncome);
     }
 }

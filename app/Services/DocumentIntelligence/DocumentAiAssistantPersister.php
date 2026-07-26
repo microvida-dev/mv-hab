@@ -5,6 +5,7 @@ namespace App\Services\DocumentIntelligence;
 use App\Data\DocumentIntelligence\DocumentAiRiskFlag;
 use App\Data\DocumentIntelligence\DocumentAiScoreResult;
 use App\Data\DocumentIntelligence\DocumentAiSuggestionDraft;
+use App\Enums\DocumentAiRiskFlagCode;
 use App\Enums\DocumentAiSuggestionStatus;
 use App\Models\Application;
 use App\Models\DocumentAiAnalysis;
@@ -49,6 +50,8 @@ class DocumentAiAssistantPersister
             ]);
             $score->save();
 
+            $this->deleteObsoleteFlags($analysis, $flags);
+
             foreach ($flags as $flag) {
                 $this->persistFlag($analysis, $flag);
             }
@@ -83,6 +86,34 @@ class DocumentAiAssistantPersister
 
             return $score;
         });
+    }
+
+    /**
+     * Remove flags geridos pelo assistente IA que deixaram de ser emitidos no reprocessamento.
+     *
+     * @param  list<DocumentAiRiskFlag>  $flags
+     */
+    private function deleteObsoleteFlags(DocumentAiAnalysis $analysis, array $flags): void
+    {
+        $currentCodes = array_map(
+            static fn (DocumentAiRiskFlag $flag): string => $flag->code->value,
+            $flags
+        );
+
+        $managedCodes = array_map(
+            static fn (DocumentAiRiskFlagCode $code): string => $code->value,
+            DocumentAiRiskFlagCode::cases()
+        );
+
+        $query = DocumentAiFlag::query()
+            ->where('document_ai_analysis_id', $analysis->id)
+            ->whereIn('code', $managedCodes);
+
+        if ($currentCodes !== []) {
+            $query->whereNotIn('code', $currentCodes);
+        }
+
+        $query->delete();
     }
 
     private function persistFlag(DocumentAiAnalysis $analysis, DocumentAiRiskFlag $flag): void

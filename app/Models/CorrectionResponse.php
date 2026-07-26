@@ -9,7 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property CorrectionResponseStatus $status
+ * @property Carbon|null $submitted_at
+ */
 class CorrectionResponse extends Model
 {
     /** @use HasFactory<CorrectionResponseFactory> */

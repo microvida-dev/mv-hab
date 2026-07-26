@@ -12,10 +12,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * @property AllocationMethod $allocation_method
  * @property AllocationStatus $status
+ * @property Carbon|null $allocated_at
+ * @property Carbon|null $offered_at
+ * @property Carbon|null $acceptance_deadline_at
+ * @property Carbon|null $accepted_at
+ * @property Carbon|null $refused_at
+ * @property Carbon|null $expired_at
+ * @property Carbon|null $withdrawn_at
+ * @property Carbon|null $cancelled_at
+ * @property Carbon|null $ready_for_contract_at
  */
 class Allocation extends Model
 {

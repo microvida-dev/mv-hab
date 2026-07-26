@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\ApplicationStatus;
 use App\Enums\ControlledWithdrawalStatus;
+use App\Enums\FeatureKey;
 use App\Enums\OfficialNotificationStatus;
 use App\Enums\PublicProcessStatus;
 use App\Enums\TimelineEventType;
@@ -18,10 +19,12 @@ use App\Models\User;
 use App\Services\ProcessTracking\ApplicationPublicStatusService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class Sprint23ProcessTrackingTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     public function test_candidate_sees_own_process_dashboard_and_not_another_candidate_process(): void
@@ -53,6 +56,7 @@ class Sprint23ProcessTrackingTest extends TestCase
         $candidate = $this->userWithRole('candidate');
         $staff = $this->userWithRole('municipal_technician');
         $application = Application::factory()->submitted()->create(['user_id' => $candidate->id]);
+        $this->assignApplicationMunicipality($staff, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         $process = AdministrativeProcess::factory()->create([
             'application_id' => $application->id,
             'user_id' => $candidate->id,
@@ -75,6 +79,7 @@ class Sprint23ProcessTrackingTest extends TestCase
             ->assertDontSee('Nota técnica interna');
 
         $this->actingAs($staff)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.applications.timeline', $application))
             ->assertOk()
             ->assertSee('Nota técnica interna');

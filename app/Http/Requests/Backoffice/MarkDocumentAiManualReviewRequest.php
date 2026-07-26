@@ -12,7 +12,7 @@ class MarkDocumentAiManualReviewRequest extends FormRequest
         $analysis = $this->route('analysis');
 
         return $analysis instanceof DocumentAiAnalysis
-            && ($this->user()?->can('markManualReview', $analysis) ?? false);
+            && ($this->user()?->can('reviewBackoffice', $analysis) ?? false);
     }
 
     /**

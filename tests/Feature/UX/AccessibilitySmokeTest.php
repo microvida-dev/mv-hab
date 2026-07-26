@@ -2,14 +2,17 @@
 
 namespace Tests\Feature\UX;
 
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class AccessibilitySmokeTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -26,8 +29,8 @@ class AccessibilitySmokeTest extends TestCase
         $this->actingAs($administrator)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('for="universal-search"', false)
-            ->assertSee('aria-describedby="universal-search-help"', false)
+            ->assertSee('for="dashboard-sidebar-search"', false)
+            ->assertSee('aria-label="Pesquisar"', false)
             ->assertSee('focus-visible:ring-2', false)
             ->assertSee('<h1', false)
             ->assertSee('<h2', false);
@@ -37,6 +40,7 @@ class AccessibilitySmokeTest extends TestCase
     {
         $technician = $this->userWithRole('municipal_technician');
         $application = Application::factory()->submitted()->create();
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->actingAs($technician)
             ->withSession(['mfa.verified_at' => now()])
@@ -50,7 +54,11 @@ class AccessibilitySmokeTest extends TestCase
 
     private function userWithRole(string $role): User
     {
-        $user = User::factory()->create(['status' => 'active']);
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
+        $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
+            'status' => 'active',
+        ]);
         $user->assignRole($role);
 
         return $user;

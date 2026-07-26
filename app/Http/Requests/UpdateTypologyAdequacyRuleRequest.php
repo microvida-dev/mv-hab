@@ -2,4 +2,15 @@
 
 namespace App\Http\Requests;
 
-class UpdateTypologyAdequacyRuleRequest extends StoreTypologyAdequacyRuleRequest {}
+use Illuminate\Support\Facades\Gate;
+
+class UpdateTypologyAdequacyRuleRequest extends StoreTypologyAdequacyRuleRequest
+{
+    public function authorize(): bool
+    {
+        return Gate::allows(
+            'updateBackoffice',
+            $this->route('typologyAdequacyRule'),
+        );
+    }
+}

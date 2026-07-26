@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\VisitSlot;
 use App\Models\WorkTask;
 use App\Services\CandidateExperience\CandidateInteractionService;
+use App\Services\Municipalities\VisitMunicipalContextService;
 use App\Services\Workflows\WorkTaskCreationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -22,12 +23,24 @@ class VisitReschedulingService
         private readonly VisitNotificationService $notifications,
         private readonly VisitAuditService $audit,
         private readonly WorkTaskCreationService $tasks,
+        private readonly VisitMunicipalContextService $municipalContext,
     ) {}
 
     public function reschedule(HousingVisit $visit, VisitSlot $newSlot, User $actor, ?string $reason = null): HousingVisit
     {
         return DB::transaction(function () use ($visit, $newSlot, $actor, $reason): HousingVisit {
             $visit = HousingVisit::query()->whereKey($visit->id)->lockForUpdate()->firstOrFail();
+            $oldSlot = $visit->slot()->lockForUpdate()->first();
+            $lockedNewSlot = VisitSlot::query()
+                ->whereKey($newSlot->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $municipalityId = $this->municipalContext
+                ->validateRescheduling(
+                    $visit,
+                    $lockedNewSlot,
+                    $actor,
+                );
 
             if (! $visit->isActive()) {
                 throw ValidationException::withMessages(['visit' => 'Apenas visitas ativas podem ser reagendadas.']);
@@ -38,18 +51,17 @@ class VisitReschedulingService
                 throw ValidationException::withMessages(['visit' => 'O prazo mínimo para reagendamento já terminou.']);
             }
 
-            $oldSlot = $visit->slot()->lockForUpdate()->first();
             if ($oldSlot instanceof VisitSlot) {
                 $this->booking->releaseSlot($oldSlot);
             }
 
-            $lockedNewSlot = VisitSlot::query()->whereKey($newSlot->id)->lockForUpdate()->firstOrFail();
             $this->booking->reserveSlot($lockedNewSlot);
 
             $from = VisitStatus::tryFrom((string) $visit->getRawOriginal('status'));
             $candidate = User::query()->findOrFail($visit->candidate_user_id);
 
             $visit->forceFill([
+                'municipality_id' => $municipalityId,
                 'visit_slot_id' => $lockedNewSlot->id,
                 'status' => VisitStatus::Rescheduled,
                 'starts_at' => $lockedNewSlot->starts_at,

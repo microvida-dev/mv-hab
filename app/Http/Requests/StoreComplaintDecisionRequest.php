@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\ComplaintDecisionResult;
+use App\Models\Complaint;
+use App\Models\ComplaintDecision;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +12,13 @@ class StoreComplaintDecisionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $complaint = $this->route('complaint');
+
+        return $complaint instanceof Complaint
+            && ($this->user()?->can(
+                'decideBackoffice',
+                [ComplaintDecision::class, $complaint],
+            ) ?? false);
     }
 
     /**

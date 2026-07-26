@@ -14,15 +14,15 @@ use App\Models\AdditionalDocumentRequest;
 use App\Models\AdditionalDocumentSubmission;
 use App\Models\DocumentDossier;
 use App\Models\DocumentSubmission;
+use App\Models\DocumentType;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
 
 class DocumentTimelineProvider extends BaseTimelineProvider
 {
-
     public function __construct(
-        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory,
     ) {}
 
     public function forUser(User $user, array $dashboard = []): array
@@ -170,7 +170,7 @@ class DocumentTimelineProvider extends BaseTimelineProvider
                 'dossier_number' => $dossier->dossier_number,
                 'application_id' => $dossier->application_id,
                 'user_id' => $dossier->user_id,
-                'status' => $dossier->status?->value ?? $dossier->status,
+                'status' => $dossier->status->value,
                 'missing_documents_count' => $dossier->missing_documents_count,
                 'rejected_documents_count' => $dossier->rejected_documents_count,
                 'expired_documents_count' => $dossier->expired_documents_count,
@@ -196,7 +196,7 @@ class DocumentTimelineProvider extends BaseTimelineProvider
                 'request_number' => $request->request_number,
                 'application_id' => $request->application_id,
                 'user_id' => $request->user_id,
-                'status' => $request->status?->value ?? $request->status,
+                'status' => $request->status->value,
                 'due_at' => $request->due_at?->toIso8601String(),
             ],
         );
@@ -220,7 +220,7 @@ class DocumentTimelineProvider extends BaseTimelineProvider
                 'additional_document_request_id' => $submission->additional_document_request_id,
                 'application_id' => $submission->application_id,
                 'user_id' => $submission->user_id,
-                'status' => $submission->status?->value ?? $submission->status,
+                'status' => $submission->status->value,
                 'submitted_at' => $submission->submitted_at?->toIso8601String(),
             ],
         );
@@ -228,8 +228,8 @@ class DocumentTimelineProvider extends BaseTimelineProvider
 
     private function documentDescription(DocumentSubmission $document): string
     {
-        $type = $document->documentType?->name ?? $document->title ?? 'Documento';
-        $user = $document->user?->name ?? 'Candidato';
+        $type = $this->documentTypeName($document) ?? $document->title ?? 'Documento';
+        $user = $document->user instanceof User ? $document->user->name : 'Candidato';
 
         return trim("{$type} · {$user}");
     }
@@ -244,9 +244,16 @@ class DocumentTimelineProvider extends BaseTimelineProvider
             'application_id' => $document->application_id,
             'user_id' => $document->user_id,
             'document_type_id' => $document->document_type_id,
-            'document_type_name' => $document->documentType?->name,
-            'status' => $document->status?->value ?? $document->status,
+            'document_type_name' => $this->documentTypeName($document),
+            'status' => $document->status->value,
             'submitted_at' => $document->submitted_at?->toIso8601String(),
         ];
+    }
+
+    private function documentTypeName(DocumentSubmission $document): ?string
+    {
+        return $document->documentType instanceof DocumentType
+            ? $document->documentType->name
+            : null;
     }
 }

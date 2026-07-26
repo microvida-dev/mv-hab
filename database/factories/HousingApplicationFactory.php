@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Enums\HousingApplicationStatus;
 use App\Models\Citizen;
 use App\Models\HousingApplication;
+use App\Models\Municipality;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +18,10 @@ class HousingApplicationFactory extends Factory
         $status = fake()->randomElement(HousingApplicationStatus::values());
 
         return [
-            'citizen_id' => Citizen::factory(),
+            'municipality_id' => Municipality::factory(),
+            'citizen_id' => fn (array $attributes) => Citizen::factory()->create([
+                'municipality_id' => $attributes['municipality_id'],
+            ]),
             'household_id' => null,
             'status' => $status,
             'priority_score' => fake()->numberBetween(0, 100),

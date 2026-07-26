@@ -35,7 +35,7 @@ class SupportTicketController extends Controller
                 ->with(['user', 'application.contest', 'assignee'])
                 ->latest('last_message_at')
                 ->paginate(20),
-            'indicators' => $this->dashboard->indicators(),
+            'indicators' => $this->dashboard->indicators($user),
         ]);
     }
 

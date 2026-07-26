@@ -2,4 +2,23 @@
 
 namespace App\Http\Requests;
 
-class UpdatePropertyInspectionRequest extends StorePropertyInspectionRequest {}
+use App\Models\PropertyInspection;
+use App\Models\User;
+
+class UpdatePropertyInspectionRequest extends StorePropertyInspectionRequest
+{
+    public function authorize(): bool
+    {
+        $actor = $this->user();
+        $propertyInspection = $this->route(
+            'propertyInspection',
+        );
+
+        return $actor instanceof User
+            && $propertyInspection instanceof PropertyInspection
+            && $actor->can(
+                'updateBackoffice',
+                $propertyInspection,
+            );
+    }
+}

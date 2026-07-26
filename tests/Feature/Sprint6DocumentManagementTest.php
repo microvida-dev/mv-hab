@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\DocumentAppliesTo;
 use App\Enums\DocumentStatus;
+use App\Enums\FeatureKey;
 use App\Enums\HousingStatus;
 use App\Enums\IncomeSourceType;
 use App\Models\AdhesionRegistration;
@@ -25,10 +26,12 @@ use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class Sprint6DocumentManagementTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     public function test_document_pages_require_authentication_candidate_role_and_registration(): void
@@ -166,8 +169,10 @@ class Sprint6DocumentManagementTest extends TestCase
         [$candidate, , $household] = $this->candidateWithDocumentContext();
         $technician = $this->userWithRole('municipal_technician');
         $submission = $this->uploadIdentification($candidate, $household->members()->firstOrFail());
+        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-reviews.reject', $submission), [
                 'rejection_reason' => 'Documento ilegível.',
                 'internal_notes' => 'Nota reservada.',
@@ -197,14 +202,17 @@ class Sprint6DocumentManagementTest extends TestCase
         [$candidate, , $household] = $this->candidateWithDocumentContext();
         $technician = $this->userWithRole('municipal_technician');
         $submission = $this->uploadIdentification($candidate, $household->members()->firstOrFail());
+        $this->assignDocumentMunicipality($technician, $submission, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-reviews.under-review', $submission))
             ->assertRedirect(route('admin.document-reviews.show', $submission));
 
         $this->assertSame(DocumentStatus::UnderReview, $submission->fresh()->status);
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-reviews.validate', $submission), [
                 'internal_notes' => 'Documento verificado.',
             ])
@@ -224,12 +232,14 @@ class Sprint6DocumentManagementTest extends TestCase
         );
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-reviews.reject', $secondSubmission), [
                 'internal_notes' => 'Sem motivo visível.',
             ])
             ->assertSessionHasErrors('rejection_reason');
 
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-reviews.reject', $secondSubmission), [
                 'rejection_reason' => 'Documento não corresponde ao tipo solicitado.',
                 'internal_notes' => 'Nota reservada ao backoffice.',
@@ -259,6 +269,7 @@ class Sprint6DocumentManagementTest extends TestCase
         ];
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-types.store'), $payload)
             ->assertRedirect(route('admin.document-types.index'));
 
@@ -268,6 +279,7 @@ class Sprint6DocumentManagementTest extends TestCase
         ]);
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.document-types.store'), $payload)
             ->assertSessionHasErrors('code');
     }
@@ -285,6 +297,7 @@ class Sprint6DocumentManagementTest extends TestCase
         ]);
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.required-documents.store'), [
                 'document_type_id' => $documentType->id,
                 'program_id' => $program->id,
@@ -292,6 +305,7 @@ class Sprint6DocumentManagementTest extends TestCase
                 'required_for' => DocumentAppliesTo::AdhesionRegistration->value,
                 'condition_key' => 'always',
                 'condition_operator' => 'always',
+                'required_submissions' => 1,
                 'is_required' => true,
                 'is_active' => true,
             ])

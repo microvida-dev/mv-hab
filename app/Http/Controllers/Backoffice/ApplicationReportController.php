@@ -20,6 +20,7 @@ class ApplicationReportController extends Controller
 
     public function show(Application $application): View
     {
+        Gate::authorize('viewBackoffice', $application);
         Gate::authorize('viewAny', ApplicationReport::class);
         $reports = $application->applicationReports()->latest()->paginate(10);
 
@@ -28,7 +29,7 @@ class ApplicationReportController extends Controller
 
     public function generate(GenerateApplicationReportRequest $request, Application $application): RedirectResponse
     {
-        Gate::authorize('create', ApplicationReport::class);
+        Gate::authorize('createForApplication', [ApplicationReport::class, $application]);
         $report = $this->reports->generate($application, $this->authenticatedUser($request), $request->validated());
 
         return to_route('backoffice.applications.report.show', $application)->with('success', 'Relatório gerado: '.$report->report_number);

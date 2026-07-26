@@ -1,0 +1,3207 @@
+{
+  "schema_version": "3.0",
+  "sprint": "47E",
+  "source_snapshot": "docs/access/progress/sprint-47d-after.json",
+  "source_commit": "9c9439a3a1dc9e532cb968eeb97c8bce8c6a91e6",
+  "generated_at": "2026-07-24T00:00:00+01:00",
+  "immutable_input": true,
+  "summary": {
+    "expected_total": 58,
+    "found_total": 58,
+    "reconciled_total": 58,
+    "read_total": 27,
+    "mutation_total": 31,
+    "mixed_context_total": 2,
+    "initial_semantic_permission_gaps": 9,
+    "initial_scope_gaps": 35,
+    "initial_scope_candidates": 5,
+    "initial_form_requests_always_true": 22,
+    "feature_decision": "ADR obrigatório; nenhuma FeatureKey final definida no manifesto inicial"
+  },
+  "reconciliation": {
+    "unique_initial_route_names": 58,
+    "missing_route_names": [],
+    "renamed_route_names": [],
+    "removed_route_names": [],
+    "new_route_names": [],
+    "excluded_route_names": [],
+    "mixed_context_route_names": [
+      "backoffice.cases.contracts.show",
+      "backoffice.tenant-operations.dashboard"
+    ]
+  },
+  "routes": [
+    {
+      "initial_route_name": "backoffice.cases.contracts.show",
+      "resolved_route_name": "backoffice.cases.contracts.show",
+      "initial_uri": "backoffice/cases/contracts/{contract}",
+      "resolved_uri": "backoffice/cases/contracts/{contract}",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\CaseWorkspaceController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\CaseWorkspaceController",
+      "initial_action": "contract",
+      "resolved_action": "contract",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.view",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "viewBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "unknown",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [
+        "tests/Feature/UX/CaseWorkspaceRelationsTest.php",
+        "tests/Feature/UX/ContractCaseWorkspaceTest.php",
+        "tests/Feature/UX/EnterpriseCaseWorkspaceTest.php",
+        "tests/Feature/UX/LegacyScreenNormalizationTest.php"
+      ],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.clauses.activate",
+      "resolved_route_name": "backoffice.contracts.clauses.activate",
+      "initial_uri": "backoffice/contracts/clauses/{contractClause}/activate",
+      "resolved_uri": "backoffice/contracts/clauses/{contractClause}/activate",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "initial_action": "activate",
+      "resolved_action": "activate",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": null,
+      "resolved_permission": "contracts.clauses.activate",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractClausePolicy",
+      "resolved_ability": "activateBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\ContractClause",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "cláusula -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.clauses.archive",
+      "resolved_route_name": "backoffice.contracts.clauses.archive",
+      "initial_uri": "backoffice/contracts/clauses/{contractClause}/archive",
+      "resolved_uri": "backoffice/contracts/clauses/{contractClause}/archive",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "initial_action": "archive",
+      "resolved_action": "archive",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.update",
+      "resolved_permission": "contracts.clauses.archive",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractClausePolicy",
+      "resolved_ability": "archiveBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\ContractClause",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "cláusula -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.clauses.create",
+      "resolved_route_name": "backoffice.contracts.clauses.create",
+      "initial_uri": "backoffice/contracts/clauses/create",
+      "resolved_uri": "backoffice/contracts/clauses/create",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "initial_action": "create",
+      "resolved_action": "create",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.create",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractClausePolicy",
+      "resolved_ability": "createBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\ContractClause",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "cláusula -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.clauses.edit",
+      "resolved_route_name": "backoffice.contracts.clauses.edit",
+      "initial_uri": "backoffice/contracts/clauses/{contractClause}/edit",
+      "resolved_uri": "backoffice/contracts/clauses/{contractClause}/edit",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "initial_action": "edit",
+      "resolved_action": "edit",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.update",
+      "resolved_permission": "contracts.update",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractClausePolicy",
+      "resolved_ability": "updateBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\ContractClause",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "cláusula -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.clauses.index",
+      "resolved_route_name": "backoffice.contracts.clauses.index",
+      "initial_uri": "backoffice/contracts/clauses",
+      "resolved_uri": "backoffice/contracts/clauses",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "initial_action": "index",
+      "resolved_action": "index",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.view",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractClausePolicy",
+      "resolved_ability": "viewAnyBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\ContractClause",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "cláusula -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.clauses.show",
+      "resolved_route_name": "backoffice.contracts.clauses.show",
+      "initial_uri": "backoffice/contracts/clauses/{contractClause}",
+      "resolved_uri": "backoffice/contracts/clauses/{contractClause}",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "initial_action": "show",
+      "resolved_action": "show",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.view",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractClausePolicy",
+      "resolved_ability": "viewBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\ContractClause",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "cláusula -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.clauses.store",
+      "resolved_route_name": "backoffice.contracts.clauses.store",
+      "initial_uri": "backoffice/contracts/clauses",
+      "resolved_uri": "backoffice/contracts/clauses",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "initial_action": "store",
+      "resolved_action": "store",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.create",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractClausePolicy",
+      "resolved_ability": "createBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreContractClauseRequest",
+      "principal_model": "App\\Models\\ContractClause",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "cláusula -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.clauses.update",
+      "resolved_route_name": "backoffice.contracts.clauses.update",
+      "initial_uri": "backoffice/contracts/clauses/{contractClause}",
+      "resolved_uri": "backoffice/contracts/clauses/{contractClause}",
+      "initial_http_methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "resolved_http_methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractClauseController",
+      "initial_action": "update",
+      "resolved_action": "update",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.update",
+      "resolved_permission": "contracts.update",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractClausePolicy",
+      "resolved_ability": "updateBackoffice",
+      "form_request": "App\\Http\\Requests\\UpdateContractClauseRequest",
+      "principal_model": "App\\Models\\ContractClause",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "cláusula -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.leases.activate",
+      "resolved_route_name": "backoffice.contracts.leases.activate",
+      "initial_uri": "backoffice/contracts/leases/{leaseContract}/activate",
+      "resolved_uri": "backoffice/contracts/leases/{leaseContract}/activate",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "initial_action": "activate",
+      "resolved_action": "activate",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": null,
+      "resolved_permission": "contracts.activate",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "activateBackoffice",
+      "form_request": "App\\Http\\Requests\\ActivateLeaseContractRequest",
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [
+        "tests/Feature/Sprint13ContractsRentDepositTest.php"
+      ],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.leases.cancel",
+      "resolved_route_name": "backoffice.contracts.leases.cancel",
+      "initial_uri": "backoffice/contracts/leases/{leaseContract}/cancel",
+      "resolved_uri": "backoffice/contracts/leases/{leaseContract}/cancel",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "initial_action": "cancel",
+      "resolved_action": "cancel",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": null,
+      "resolved_permission": "contracts.cancel",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "cancelBackoffice",
+      "form_request": "App\\Http\\Requests\\CancelLeaseContractRequest",
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.leases.create",
+      "resolved_route_name": "backoffice.contracts.leases.create",
+      "initial_uri": "backoffice/contracts/leases/create",
+      "resolved_uri": "backoffice/contracts/leases/create",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "initial_action": "create",
+      "resolved_action": "create",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.create",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "createBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.leases.edit",
+      "resolved_route_name": "backoffice.contracts.leases.edit",
+      "initial_uri": "backoffice/contracts/leases/{leaseContract}/edit",
+      "resolved_uri": "backoffice/contracts/leases/{leaseContract}/edit",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "initial_action": "edit",
+      "resolved_action": "edit",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.update",
+      "resolved_permission": "contracts.update",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "updateBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.leases.index",
+      "resolved_route_name": "backoffice.contracts.leases.index",
+      "initial_uri": "backoffice/contracts/leases",
+      "resolved_uri": "backoffice/contracts/leases",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "initial_action": "index",
+      "resolved_action": "index",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.view",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "viewAnyBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [
+        "tests/Feature/Security/InitialMunicipalRoleProfilesTest.php",
+        "tests/Feature/Sprint13ContractsRentDepositTest.php"
+      ],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.leases.issue",
+      "resolved_route_name": "backoffice.contracts.leases.issue",
+      "initial_uri": "backoffice/contracts/leases/{leaseContract}/issue",
+      "resolved_uri": "backoffice/contracts/leases/{leaseContract}/issue",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "initial_action": "issue",
+      "resolved_action": "issue",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.issue",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "issueBackoffice",
+      "form_request": "App\\Http\\Requests\\IssueLeaseContractRequest",
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [
+        "tests/Feature/Sprint13ContractsRentDepositTest.php"
+      ],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.leases.show",
+      "resolved_route_name": "backoffice.contracts.leases.show",
+      "initial_uri": "backoffice/contracts/leases/{leaseContract}",
+      "resolved_uri": "backoffice/contracts/leases/{leaseContract}",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "initial_action": "show",
+      "resolved_action": "show",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.view",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "viewBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.leases.store",
+      "resolved_route_name": "backoffice.contracts.leases.store",
+      "initial_uri": "backoffice/contracts/leases",
+      "resolved_uri": "backoffice/contracts/leases",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "initial_action": "store",
+      "resolved_action": "store",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.create",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "createBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreLeaseContractRequest",
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [
+        "tests/Feature/Sprint13ContractsRentDepositTest.php"
+      ],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.leases.suspend",
+      "resolved_route_name": "backoffice.contracts.leases.suspend",
+      "initial_uri": "backoffice/contracts/leases/{leaseContract}/suspend",
+      "resolved_uri": "backoffice/contracts/leases/{leaseContract}/suspend",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "initial_action": "suspend",
+      "resolved_action": "suspend",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": null,
+      "resolved_permission": "contracts.suspend",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "suspendBackoffice",
+      "form_request": "App\\Http\\Requests\\SuspendLeaseContractRequest",
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.leases.terminate",
+      "resolved_route_name": "backoffice.contracts.leases.terminate",
+      "initial_uri": "backoffice/contracts/leases/{leaseContract}/terminate",
+      "resolved_uri": "backoffice/contracts/leases/{leaseContract}/terminate",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "initial_action": "terminate",
+      "resolved_action": "terminate",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": null,
+      "resolved_permission": "contracts.terminate",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "terminateBackoffice",
+      "form_request": "App\\Http\\Requests\\TerminateLeaseContractRequest",
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.leases.update",
+      "resolved_route_name": "backoffice.contracts.leases.update",
+      "initial_uri": "backoffice/contracts/leases/{leaseContract}",
+      "resolved_uri": "backoffice/contracts/leases/{leaseContract}",
+      "initial_http_methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "resolved_http_methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractController",
+      "initial_action": "update",
+      "resolved_action": "update",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.update",
+      "resolved_permission": "contracts.update",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "updateBackoffice",
+      "form_request": "App\\Http\\Requests\\UpdateLeaseContractRequest",
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.signatures.store",
+      "resolved_route_name": "backoffice.contracts.signatures.store",
+      "initial_uri": "backoffice/contracts/leases/{leaseContract}/signatures",
+      "resolved_uri": "backoffice/contracts/leases/{leaseContract}/signatures",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractSignatureController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractSignatureController",
+      "initial_action": "store",
+      "resolved_action": "store",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.sign",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "signBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreLeaseContractSignatureRequest",
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [
+        "tests/Feature/Sprint13ContractsRentDepositTest.php"
+      ],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.templates.activate",
+      "resolved_route_name": "backoffice.contracts.templates.activate",
+      "initial_uri": "backoffice/contracts/templates/{contractTemplate}/activate",
+      "resolved_uri": "backoffice/contracts/templates/{contractTemplate}/activate",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "initial_action": "activate",
+      "resolved_action": "activate",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": null,
+      "resolved_permission": "contracts.templates.activate",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractTemplatePolicy",
+      "resolved_ability": "activateBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\ContractTemplate",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "template -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.templates.archive",
+      "resolved_route_name": "backoffice.contracts.templates.archive",
+      "initial_uri": "backoffice/contracts/templates/{contractTemplate}/archive",
+      "resolved_uri": "backoffice/contracts/templates/{contractTemplate}/archive",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "initial_action": "archive",
+      "resolved_action": "archive",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.update",
+      "resolved_permission": "contracts.templates.archive",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractTemplatePolicy",
+      "resolved_ability": "archiveBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\ContractTemplate",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "template -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.templates.create",
+      "resolved_route_name": "backoffice.contracts.templates.create",
+      "initial_uri": "backoffice/contracts/templates/create",
+      "resolved_uri": "backoffice/contracts/templates/create",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "initial_action": "create",
+      "resolved_action": "create",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.create",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractTemplatePolicy",
+      "resolved_ability": "createBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\ContractTemplate",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "template -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.templates.duplicate",
+      "resolved_route_name": "backoffice.contracts.templates.duplicate",
+      "initial_uri": "backoffice/contracts/templates/{contractTemplate}/duplicate",
+      "resolved_uri": "backoffice/contracts/templates/{contractTemplate}/duplicate",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "initial_action": "duplicate",
+      "resolved_action": "duplicate",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.templates.duplicate",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractTemplatePolicy",
+      "resolved_ability": "duplicateBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\ContractTemplate",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "template -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.templates.edit",
+      "resolved_route_name": "backoffice.contracts.templates.edit",
+      "initial_uri": "backoffice/contracts/templates/{contractTemplate}/edit",
+      "resolved_uri": "backoffice/contracts/templates/{contractTemplate}/edit",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "initial_action": "edit",
+      "resolved_action": "edit",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.update",
+      "resolved_permission": "contracts.update",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractTemplatePolicy",
+      "resolved_ability": "updateBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\ContractTemplate",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "template -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.templates.index",
+      "resolved_route_name": "backoffice.contracts.templates.index",
+      "initial_uri": "backoffice/contracts/templates",
+      "resolved_uri": "backoffice/contracts/templates",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "initial_action": "index",
+      "resolved_action": "index",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.view",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractTemplatePolicy",
+      "resolved_ability": "viewAnyBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\ContractTemplate",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "template -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.templates.show",
+      "resolved_route_name": "backoffice.contracts.templates.show",
+      "initial_uri": "backoffice/contracts/templates/{contractTemplate}",
+      "resolved_uri": "backoffice/contracts/templates/{contractTemplate}",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "initial_action": "show",
+      "resolved_action": "show",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.view",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractTemplatePolicy",
+      "resolved_ability": "viewBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\ContractTemplate",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "template -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.templates.store",
+      "resolved_route_name": "backoffice.contracts.templates.store",
+      "initial_uri": "backoffice/contracts/templates",
+      "resolved_uri": "backoffice/contracts/templates",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "initial_action": "store",
+      "resolved_action": "store",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.create",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractTemplatePolicy",
+      "resolved_ability": "createBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreContractTemplateRequest",
+      "principal_model": "App\\Models\\ContractTemplate",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "template -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.templates.update",
+      "resolved_route_name": "backoffice.contracts.templates.update",
+      "initial_uri": "backoffice/contracts/templates/{contractTemplate}",
+      "resolved_uri": "backoffice/contracts/templates/{contractTemplate}",
+      "initial_http_methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "resolved_http_methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\ContractTemplateController",
+      "initial_action": "update",
+      "resolved_action": "update",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.update",
+      "resolved_permission": "contracts.update",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractTemplatePolicy",
+      "resolved_ability": "updateBackoffice",
+      "form_request": "App\\Http\\Requests\\UpdateContractTemplateRequest",
+      "principal_model": "App\\Models\\ContractTemplate",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "template -> programa ou concurso -> Município; catálogo sem vínculo falha fechado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.validations.approve",
+      "resolved_route_name": "backoffice.contracts.validations.approve",
+      "initial_uri": "backoffice/contracts/validations/{leaseContractValidation}/approve",
+      "resolved_uri": "backoffice/contracts/validations/{leaseContractValidation}/approve",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractValidationController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractValidationController",
+      "initial_action": "approve",
+      "resolved_action": "approve",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.approve",
+      "resolved_permission": "contracts.validations.approve",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\LeaseContractValidationPolicy",
+      "resolved_ability": "approveBackoffice",
+      "form_request": "App\\Http\\Requests\\ValidateLeaseContractRequest",
+      "principal_model": "App\\Models\\LeaseContractValidation",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "validação -> contrato -> programa/candidatura/inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.validations.reject",
+      "resolved_route_name": "backoffice.contracts.validations.reject",
+      "initial_uri": "backoffice/contracts/validations/{leaseContractValidation}/reject",
+      "resolved_uri": "backoffice/contracts/validations/{leaseContractValidation}/reject",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractValidationController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractValidationController",
+      "initial_action": "reject",
+      "resolved_action": "reject",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.reject",
+      "resolved_permission": "contracts.validations.reject",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\LeaseContractValidationPolicy",
+      "resolved_ability": "rejectBackoffice",
+      "form_request": "App\\Http\\Requests\\RejectLeaseContractValidationRequest",
+      "principal_model": "App\\Models\\LeaseContractValidation",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "validação -> contrato -> programa/candidatura/inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.contracts.validations.store",
+      "resolved_route_name": "backoffice.contracts.validations.store",
+      "initial_uri": "backoffice/contracts/leases/{leaseContract}/validations",
+      "resolved_uri": "backoffice/contracts/leases/{leaseContract}/validations",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractValidationController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LeaseContractValidationController",
+      "initial_action": "store",
+      "resolved_action": "store",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.validations.create",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "validateBackoffice",
+      "form_request": "App\\Http\\Requests\\ValidateLeaseContractRequest",
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "validação -> contrato -> programa/candidatura/inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [
+        "tests/Feature/Sprint13ContractsRentDepositTest.php"
+      ],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.key-handovers.cancel",
+      "resolved_route_name": "backoffice.key-handovers.cancel",
+      "initial_uri": "backoffice/entrega-chaves/{keyHandoverAppointment}/cancelar",
+      "resolved_uri": "backoffice/entrega-chaves/{keyHandoverAppointment}/cancelar",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\KeyHandoverAppointmentController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\KeyHandoverAppointmentController",
+      "initial_action": "cancel",
+      "resolved_action": "cancel",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": null,
+      "resolved_permission": "contracts.key_handovers.cancel",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\KeyHandoverAppointmentPolicy",
+      "resolved_ability": "cancelBackoffice",
+      "form_request": "App\\Http\\Requests\\CancelKeyHandoverAppointmentRequest",
+      "principal_model": "App\\Models\\KeyHandoverAppointment",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "entrega -> candidatura ou concurso -> programa -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.key-handovers.complete",
+      "resolved_route_name": "backoffice.key-handovers.complete",
+      "initial_uri": "backoffice/entrega-chaves/{keyHandoverAppointment}/concluir",
+      "resolved_uri": "backoffice/entrega-chaves/{keyHandoverAppointment}/concluir",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\KeyHandoverAppointmentController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\KeyHandoverAppointmentController",
+      "initial_action": "complete",
+      "resolved_action": "complete",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": null,
+      "resolved_permission": "contracts.key_handovers.complete",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\KeyHandoverAppointmentPolicy",
+      "resolved_ability": "completeBackoffice",
+      "form_request": "App\\Http\\Requests\\CompleteKeyHandoverAppointmentRequest",
+      "principal_model": "App\\Models\\KeyHandoverAppointment",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "entrega -> candidatura ou concurso -> programa -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [
+        "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+      ],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.key-handovers.create",
+      "resolved_route_name": "backoffice.key-handovers.create",
+      "initial_uri": "backoffice/entrega-chaves/criar",
+      "resolved_uri": "backoffice/entrega-chaves/criar",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\KeyHandoverAppointmentController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\KeyHandoverAppointmentController",
+      "initial_action": "create",
+      "resolved_action": "create",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.key_handovers.schedule",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\KeyHandoverAppointmentPolicy",
+      "resolved_ability": "createBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\KeyHandoverAppointment",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "entrega -> candidatura ou concurso -> programa -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.key-handovers.index",
+      "resolved_route_name": "backoffice.key-handovers.index",
+      "initial_uri": "backoffice/entrega-chaves",
+      "resolved_uri": "backoffice/entrega-chaves",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\KeyHandoverAppointmentController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\KeyHandoverAppointmentController",
+      "initial_action": "index",
+      "resolved_action": "index",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.key_handovers.view",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\KeyHandoverAppointmentPolicy",
+      "resolved_ability": "viewAnyBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\KeyHandoverAppointment",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "entrega -> candidatura ou concurso -> programa -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.key-handovers.show",
+      "resolved_route_name": "backoffice.key-handovers.show",
+      "initial_uri": "backoffice/entrega-chaves/{keyHandoverAppointment}",
+      "resolved_uri": "backoffice/entrega-chaves/{keyHandoverAppointment}",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\KeyHandoverAppointmentController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\KeyHandoverAppointmentController",
+      "initial_action": "show",
+      "resolved_action": "show",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.key_handovers.view",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\KeyHandoverAppointmentPolicy",
+      "resolved_ability": "viewBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\KeyHandoverAppointment",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "entrega -> candidatura ou concurso -> programa -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.key-handovers.store",
+      "resolved_route_name": "backoffice.key-handovers.store",
+      "initial_uri": "backoffice/entrega-chaves",
+      "resolved_uri": "backoffice/entrega-chaves",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\KeyHandoverAppointmentController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\KeyHandoverAppointmentController",
+      "initial_action": "store",
+      "resolved_action": "store",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.key_handovers.schedule",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\KeyHandoverAppointmentPolicy",
+      "resolved_ability": "scheduleBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreKeyHandoverAppointmentRequest",
+      "principal_model": "App\\Models\\KeyHandoverAppointment",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "entrega -> candidatura ou concurso -> programa -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [
+        "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+      ],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.key-handovers.update",
+      "resolved_route_name": "backoffice.key-handovers.update",
+      "initial_uri": "backoffice/entrega-chaves/{keyHandoverAppointment}",
+      "resolved_uri": "backoffice/entrega-chaves/{keyHandoverAppointment}",
+      "initial_http_methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "resolved_http_methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\KeyHandoverAppointmentController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\KeyHandoverAppointmentController",
+      "initial_action": "update",
+      "resolved_action": "update",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.update",
+      "resolved_permission": "contracts.key_handovers.update",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\KeyHandoverAppointmentPolicy",
+      "resolved_ability": "updateBackoffice",
+      "form_request": "App\\Http\\Requests\\UpdateKeyHandoverAppointmentRequest",
+      "principal_model": "App\\Models\\KeyHandoverAppointment",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "entrega -> candidatura ou concurso -> programa -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.tenant-operations.charge-runs.index",
+      "resolved_route_name": "backoffice.tenant-operations.charge-runs.index",
+      "initial_uri": "backoffice/tenant-operations/charge-runs",
+      "resolved_uri": "backoffice/tenant-operations/charge-runs",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\TenantChargeRunController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\TenantChargeRunController",
+      "initial_action": "index",
+      "resolved_action": "index",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.charge_runs.view",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\TenantChargeRunPolicy",
+      "resolved_ability": "viewAnyBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\TenantChargeRun",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "execução -> itens -> contratos scoped; execução vazia -> criador municipal",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.tenant-operations.charge-runs.show",
+      "resolved_route_name": "backoffice.tenant-operations.charge-runs.show",
+      "initial_uri": "backoffice/tenant-operations/charge-runs/{tenantChargeRun}",
+      "resolved_uri": "backoffice/tenant-operations/charge-runs/{tenantChargeRun}",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\TenantChargeRunController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\TenantChargeRunController",
+      "initial_action": "show",
+      "resolved_action": "show",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.charge_runs.view",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\TenantChargeRunPolicy",
+      "resolved_ability": "viewBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\TenantChargeRun",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "execução -> itens -> contratos scoped; execução vazia -> criador municipal",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.tenant-operations.charge-runs.store",
+      "resolved_route_name": "backoffice.tenant-operations.charge-runs.store",
+      "initial_uri": "backoffice/tenant-operations/charge-runs",
+      "resolved_uri": "backoffice/tenant-operations/charge-runs",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\TenantChargeRunController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\TenantChargeRunController",
+      "initial_action": "store",
+      "resolved_action": "store",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.charge_runs.run",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\TenantChargeRunPolicy",
+      "resolved_ability": "runBackoffice",
+      "form_request": "App\\Http\\Requests\\RunTenantChargeRunRequest",
+      "principal_model": "App\\Models\\TenantChargeRun",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "execução -> itens -> contratos scoped; execução vazia -> criador municipal",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [
+        "tests/Feature/Sprint26TenantPostAwardTest.php"
+      ],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.tenant-operations.communications.index",
+      "resolved_route_name": "backoffice.tenant-operations.communications.index",
+      "initial_uri": "backoffice/tenant-operations/communications",
+      "resolved_uri": "backoffice/tenant-operations/communications",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\TenantCommunicationController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\TenantCommunicationController",
+      "initial_action": "index",
+      "resolved_action": "index",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.communications.view",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\TenantCommunicationPolicy",
+      "resolved_ability": "viewAnyBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\TenantCommunication",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "comunicação -> contrato ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.tenant-operations.communications.messages.store",
+      "resolved_route_name": "backoffice.tenant-operations.communications.messages.store",
+      "initial_uri": "backoffice/tenant-operations/communications/{tenantCommunication}/messages",
+      "resolved_uri": "backoffice/tenant-operations/communications/{tenantCommunication}/messages",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\TenantCommunicationController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\TenantCommunicationController",
+      "initial_action": "message",
+      "resolved_action": "message",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.communications.message",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\TenantCommunicationPolicy",
+      "resolved_ability": "messageBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreTenantCommunicationMessageRequest",
+      "principal_model": "App\\Models\\TenantCommunication",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "comunicação -> contrato ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [
+        "tests/Feature/Sprint26TenantPostAwardTest.php"
+      ],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.tenant-operations.communications.show",
+      "resolved_route_name": "backoffice.tenant-operations.communications.show",
+      "initial_uri": "backoffice/tenant-operations/communications/{tenantCommunication}",
+      "resolved_uri": "backoffice/tenant-operations/communications/{tenantCommunication}",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\TenantCommunicationController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\TenantCommunicationController",
+      "initial_action": "show",
+      "resolved_action": "show",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.communications.view",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\TenantCommunicationPolicy",
+      "resolved_ability": "viewBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\TenantCommunication",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "comunicação -> contrato ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.tenant-operations.communications.store",
+      "resolved_route_name": "backoffice.tenant-operations.communications.store",
+      "initial_uri": "backoffice/tenant-operations/communications",
+      "resolved_uri": "backoffice/tenant-operations/communications",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\TenantCommunicationController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\TenantCommunicationController",
+      "initial_action": "store",
+      "resolved_action": "store",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.communications.create",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\TenantCommunicationPolicy",
+      "resolved_ability": "createBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreTenantCommunicationRequest",
+      "principal_model": "App\\Models\\TenantCommunication",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "comunicação -> contrato ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.tenant-operations.dashboard",
+      "resolved_route_name": "backoffice.tenant-operations.dashboard",
+      "initial_uri": "backoffice/tenant-operations/dashboard",
+      "resolved_uri": "backoffice/tenant-operations/dashboard",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\LandlordDashboardController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\LandlordDashboardController",
+      "initial_action": "__invoke",
+      "resolved_action": "__invoke",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.dashboard",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\LandlordDashboardSnapshotPolicy",
+      "resolved_ability": "viewAnyBackoffice",
+      "form_request": "App\\Http\\Requests\\FilterLandlordDashboardRequest",
+      "principal_model": "App\\Models\\LandlordDashboardSnapshot",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "unknown",
+      "risk": "critical",
+      "municipality_origin": "agregados calculados exclusivamente sobre contratos do Município autenticado",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [
+        "tests/Feature/Sprint26TenantPostAwardTest.php"
+      ],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.tenant-operations.maintenance-reports.index",
+      "resolved_route_name": "backoffice.tenant-operations.maintenance-reports.index",
+      "initial_uri": "backoffice/tenant-operations/maintenance-reports",
+      "resolved_uri": "backoffice/tenant-operations/maintenance-reports",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\TenantMaintenanceReportController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\TenantMaintenanceReportController",
+      "initial_action": "index",
+      "resolved_action": "index",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.maintenance_reports.view",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "viewAnyBackoffice",
+      "form_request": "App\\Http\\Requests\\GenerateMaintenanceReportRequest",
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "unknown",
+      "risk": "critical",
+      "municipality_origin": "pedido de manutenção -> contrato ou imóvel -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.tenant-transitions.index",
+      "resolved_route_name": "backoffice.tenant-transitions.index",
+      "initial_uri": "backoffice/transicoes-inquilino",
+      "resolved_uri": "backoffice/transicoes-inquilino",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\TenantTransitionController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\TenantTransitionController",
+      "initial_action": "index",
+      "resolved_action": "index",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.tenant_transitions.view",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\TenantTransitionPolicy",
+      "resolved_ability": "viewAnyBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\TenantTransition",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "transição -> contrato ou candidatura -> programa/inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "backoffice.tenant-transitions.run",
+      "resolved_route_name": "backoffice.tenant-transitions.run",
+      "initial_uri": "backoffice/transicoes-inquilino",
+      "resolved_uri": "backoffice/transicoes-inquilino",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\Backoffice\\TenantTransitionController",
+      "resolved_controller": "App\\Http\\Controllers\\Backoffice\\TenantTransitionController",
+      "initial_action": "run",
+      "resolved_action": "run",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": null,
+      "resolved_permission": "contracts.tenant_transitions.run",
+      "permission_origin": "new",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\TenantTransitionPolicy",
+      "resolved_ability": "runBackoffice",
+      "form_request": "App\\Http\\Requests\\RunTenantTransitionRequest",
+      "principal_model": "App\\Models\\TenantTransition",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "confirmed",
+      "risk": "critical",
+      "municipality_origin": "transição -> contrato ou candidatura -> programa/inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [
+        "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+      ],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "contracts.create",
+      "resolved_route_name": "contracts.create",
+      "initial_uri": "contracts/create",
+      "resolved_uri": "contracts/create",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\ContractController",
+      "resolved_controller": "App\\Http\\Controllers\\ContractController",
+      "initial_action": "create",
+      "resolved_action": "create",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.create",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "createBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "unknown",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "contracts.destroy",
+      "resolved_route_name": "contracts.destroy",
+      "initial_uri": "contracts/{contract}",
+      "resolved_uri": "contracts/{contract}",
+      "initial_http_methods": [
+        "DELETE"
+      ],
+      "resolved_http_methods": [
+        "DELETE"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\ContractController",
+      "resolved_controller": "App\\Http\\Controllers\\ContractController",
+      "initial_action": "destroy",
+      "resolved_action": "destroy",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.delete",
+      "resolved_permission": "contracts.delete",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "deleteBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "missing",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "contracts.edit",
+      "resolved_route_name": "contracts.edit",
+      "initial_uri": "contracts/{contract}/edit",
+      "resolved_uri": "contracts/{contract}/edit",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\ContractController",
+      "resolved_controller": "App\\Http\\Controllers\\ContractController",
+      "initial_action": "edit",
+      "resolved_action": "edit",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.update",
+      "resolved_permission": "contracts.update",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "updateBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "unknown",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "contracts.index",
+      "resolved_route_name": "contracts.index",
+      "initial_uri": "contracts",
+      "resolved_uri": "contracts",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\ContractController",
+      "resolved_controller": "App\\Http\\Controllers\\ContractController",
+      "initial_action": "index",
+      "resolved_action": "index",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.view",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "viewAnyBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "unknown",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "contracts.show",
+      "resolved_route_name": "contracts.show",
+      "initial_uri": "contracts/{contract}",
+      "resolved_uri": "contracts/{contract}",
+      "initial_http_methods": [
+        "GET"
+      ],
+      "resolved_http_methods": [
+        "GET"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\ContractController",
+      "resolved_controller": "App\\Http\\Controllers\\ContractController",
+      "initial_action": "show",
+      "resolved_action": "show",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.view",
+      "resolved_permission": "contracts.view",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "viewBackoffice",
+      "form_request": null,
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "read",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "recommended",
+      "initial_audit_implementation": "unknown",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "contracts.store",
+      "resolved_route_name": "contracts.store",
+      "initial_uri": "contracts",
+      "resolved_uri": "contracts",
+      "initial_http_methods": [
+        "POST"
+      ],
+      "resolved_http_methods": [
+        "POST"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\ContractController",
+      "resolved_controller": "App\\Http\\Controllers\\ContractController",
+      "initial_action": "store",
+      "resolved_action": "store",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.create",
+      "resolved_permission": "contracts.create",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "createBackoffice",
+      "form_request": "App\\Http\\Requests\\StoreContractRequest",
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "missing",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    },
+    {
+      "initial_route_name": "contracts.update",
+      "resolved_route_name": "contracts.update",
+      "initial_uri": "contracts/{contract}",
+      "resolved_uri": "contracts/{contract}",
+      "initial_http_methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "resolved_http_methods": [
+        "PUT",
+        "PATCH"
+      ],
+      "initial_controller": "App\\Http\\Controllers\\ContractController",
+      "resolved_controller": "App\\Http\\Controllers\\ContractController",
+      "initial_action": "update",
+      "resolved_action": "update",
+      "initial_middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "resolved_middleware_before_implementation": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "initial_role_middleware": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+      "initial_permission_suggestion": "contracts.update",
+      "resolved_permission": "contracts.update",
+      "permission_origin": "reused",
+      "initial_feature_candidate": null,
+      "resolved_feature": null,
+      "resolved_policy": "App\\Policies\\ContractPolicy",
+      "resolved_ability": "updateBackoffice",
+      "form_request": "App\\Http\\Requests\\UpdateContractRequest",
+      "principal_model": "App\\Models\\Contract",
+      "bounded_context": "contracts",
+      "operation_type": "mutation",
+      "private_data": true,
+      "mfa_required": true,
+      "audit_requirement": "required",
+      "initial_audit_implementation": "missing",
+      "risk": "critical",
+      "municipality_origin": "contrato -> programa, candidatura ou inquilino -> Município",
+      "fail_closed_strategy": "Policy e query scoped recusam Município nulo, recurso estrangeiro e catálogo sem vínculo municipal; operador global exige assignment estrutural",
+      "existing_tests": [],
+      "required_tests": [
+        "tests/Feature/Security/ContractsPermissionRoutesTest.php",
+        "tests/Feature/Security/ContractsMunicipalBoundaryTest.php",
+        "tests/Feature/Security/ContractLifecycleSecurityTest.php"
+      ],
+      "reconciliation_status": "reconciled_current_route_collection",
+      "exclusion_reason": null,
+      "reconciliation_amendments": []
+    }
+  ]
+}

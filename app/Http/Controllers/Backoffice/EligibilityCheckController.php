@@ -12,6 +12,7 @@ use App\Models\EligibilityCheck;
 use App\Services\Audit\AuditLogger;
 use App\Services\Eligibility\EligibilityCheckPresentationService;
 use App\Services\Eligibility\EligibilityCheckService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -25,12 +26,14 @@ class EligibilityCheckController extends Controller
         private readonly EligibilityCheckService $checkService,
         private readonly EligibilityCheckPresentationService $presentationService,
         private readonly AuditLogger $auditLogger,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
     public function index(Request $request): View
     {
         Gate::authorize('viewAny', EligibilityCheck::class);
-        $checks = EligibilityCheck::query()
+        $checks = $this->municipalScope
+            ->eligibilityChecks(EligibilityCheck::query(), $this->authenticatedUser($request))
             ->with(['program', 'contest', 'user', 'application'])
             ->when($request->filled('result'), fn ($query) => $query->where('result', $request->query('result')))
             ->when($request->filled('check_type'), fn ($query) => $query->where('check_type', $request->query('check_type')))

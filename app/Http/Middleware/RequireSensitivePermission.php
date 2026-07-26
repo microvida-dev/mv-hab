@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\AccessDenialReason;
+use App\Exceptions\AccessDeniedException;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -13,7 +15,9 @@ class RequireSensitivePermission
     {
         $user = $request->user();
 
-        abort_unless($user instanceof User && $user->hasPermission($permission), 403);
+        if (! $user instanceof User || ! $user->hasPermission($permission)) {
+            throw new AccessDeniedException(AccessDenialReason::MissingPermission);
+        }
 
         return $next($request);
     }

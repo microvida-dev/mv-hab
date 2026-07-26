@@ -2,6 +2,7 @@
 
 namespace App\Services\Search\Sources;
 
+use App\Enums\FeatureKey;
 use App\Models\User;
 use App\Services\Navigation\WorkspaceService;
 use App\Services\Search\Contracts\SearchSource;
@@ -71,6 +72,7 @@ class CommandSearchSource implements SearchSource
                 'subtitle' => 'Consultar candidaturas autorizadas.',
                 'route_name' => 'backoffice.applications.index',
                 'permission' => 'applications.view',
+                'feature' => FeatureKey::ApplicationReview,
                 'keywords' => 'candidaturas processos candidatos',
             ],
             [
@@ -117,9 +119,10 @@ class CommandSearchSource implements SearchSource
         foreach ($commands as $command) {
             $routeName = (string) $command['route_name'];
             $permission = isset($command['permission']) ? (string) $command['permission'] : null;
+            $feature = ($command['feature'] ?? null) instanceof FeatureKey ? $command['feature'] : null;
             $searchable = (string) $command['label'].' '.(string) $command['subtitle'].' '.(string) $command['keywords'];
 
-            if (! $this->containsTerm($searchable, $term) || ! $this->authorization->canAccess($user, $routeName, $permission)) {
+            if (! $this->containsTerm($searchable, $term) || ! $this->authorization->canAccess($user, $routeName, $permission, feature: $feature)) {
                 continue;
             }
 

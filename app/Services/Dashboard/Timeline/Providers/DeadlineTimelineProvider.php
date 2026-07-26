@@ -7,18 +7,24 @@ use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\User;
-use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\BaseTimelineProvider;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 
 class DeadlineTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
-        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory,
     ) {}
 
     public function forUser(User $user, array $dashboard = []): array
     {
-        return collect($dashboard['deadlines'] ?? [])
+        $deadlines = $dashboard['deadlines'] ?? null;
+
+        if (! is_array($deadlines)) {
+            return [];
+        }
+
+        return collect(array_values(array_filter($deadlines, 'is_array')))
             ->map(fn (array $deadline, int $index): TimelineEvent => $this->factory->make(
                 id: 'deadline-'.$index.'-'.md5((string) ($deadline['label'] ?? $deadline['title'] ?? 'Prazo')),
                 type: TimelineType::Deadline,

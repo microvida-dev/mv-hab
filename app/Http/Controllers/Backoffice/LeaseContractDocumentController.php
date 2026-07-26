@@ -17,7 +17,7 @@ class LeaseContractDocumentController extends Controller
 
     public function generate(GenerateLeaseContractDocumentRequest $request, Contract $leaseContract): RedirectResponse
     {
-        Gate::authorize('generateDocument', $leaseContract);
+        Gate::authorize('generateBackoffice', $leaseContract);
         $this->service->generate($leaseContract, $this->authenticatedUser($request));
 
         return back()->with('success', 'Documento contratual HTML gerado.');
@@ -25,7 +25,7 @@ class LeaseContractDocumentController extends Controller
 
     public function download(LeaseContractDocument $leaseContractDocument): StreamedResponse
     {
-        Gate::authorize('download', $leaseContractDocument);
+        Gate::authorize('downloadBackoffice', $leaseContractDocument);
 
         return $this->service->download($leaseContractDocument, $this->currentUser());
     }

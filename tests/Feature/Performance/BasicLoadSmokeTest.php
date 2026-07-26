@@ -32,6 +32,7 @@ class BasicLoadSmokeTest extends TestCase
         $this->assertQueryBudget(route('candidate.documents.checklist'), 180);
 
         $this->actingAs($auditor);
+        $this->withSession(['mfa.verified_at' => now()]);
         $this->assertQueryBudget(route('backoffice.reports.index'), 220);
     }
 

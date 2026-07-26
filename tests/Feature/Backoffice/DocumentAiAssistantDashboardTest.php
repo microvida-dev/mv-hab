@@ -5,18 +5,21 @@ namespace Tests\Feature\Backoffice;
 use App\Enums\DocumentAiRiskSeverity;
 use App\Enums\DocumentAiScoreLabel;
 use App\Enums\DocumentAiSuggestionStatus;
+use App\Enums\FeatureKey;
 use App\Models\DocumentAiScore;
 use App\Models\DocumentAiSuggestion;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\Support\CreatesDocumentAiAssistantFixtures;
 use Tests\TestCase;
 
 class DocumentAiAssistantDashboardTest extends TestCase
 {
     use CreatesDocumentAiAssistantFixtures;
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -36,7 +39,15 @@ class DocumentAiAssistantDashboardTest extends TestCase
             ->get(route('backoffice.document-ai.assistant.index'))
             ->assertForbidden();
 
-        $this->actingAs($this->userWithRole('administrator'))
+        $administrator = $this->userWithRole('administrator');
+        $this->assignDocumentMunicipality(
+            $administrator,
+            $score->analysis->documentSubmission()->firstOrFail(),
+            FeatureKey::ApplicationReview,
+        );
+
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.document-ai.assistant.index'))
             ->assertOk()
             ->assertSee('Assistente IA documental')
@@ -47,8 +58,15 @@ class DocumentAiAssistantDashboardTest extends TestCase
     public function test_detail_shows_assistant_signals_without_raw_ai_payloads(): void
     {
         $score = $this->scoreRecord();
+        $administrator = $this->userWithRole('administrator');
+        $this->assignDocumentMunicipality(
+            $administrator,
+            $score->analysis->documentSubmission()->firstOrFail(),
+            FeatureKey::ApplicationReview,
+        );
 
-        $this->actingAs($this->userWithRole('administrator'))
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.document-ai.assistant.show', $score->analysis))
             ->assertOk()
             ->assertSee('Score IA')
@@ -71,8 +89,14 @@ class DocumentAiAssistantDashboardTest extends TestCase
         $score = $this->scoreRecord();
         $suggestion = $score->suggestions()->firstOrFail();
         $admin = $this->userWithRole('administrator');
+        $this->assignDocumentMunicipality(
+            $admin,
+            $score->analysis->documentSubmission()->firstOrFail(),
+            FeatureKey::ApplicationReview,
+        );
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->put(route('backoffice.document-ai.assistant.suggestions.update', $suggestion), [
                 'suggestion' => 'Solicita-se análise técnica complementar antes de decidir sobre o documento.',
             ])
@@ -84,6 +108,7 @@ class DocumentAiAssistantDashboardTest extends TestCase
         ]);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.document-ai.assistant.suggestions.accept', $suggestion), [
                 'confirm_accept' => '1',
                 'accept_reason' => 'Justificação técnica suficiente para aceitar a sugestão.',
@@ -97,6 +122,7 @@ class DocumentAiAssistantDashboardTest extends TestCase
         ]);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.document-ai.assistant.suggestions.dismiss', $suggestion), [
                 'dismiss_reason' => 'Resolvido por revisão técnica.',
             ])

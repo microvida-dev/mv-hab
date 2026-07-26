@@ -2,6 +2,7 @@
 
 namespace App\Services\Navigation;
 
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\AuditEvent;
 use App\Models\Contest;
@@ -15,6 +16,7 @@ use App\Models\HousingApplication;
 use App\Models\HousingUnit;
 use App\Models\HousingVisit;
 use App\Models\MaintenanceRequest;
+use App\Models\PlatformOperatorAssignment;
 use App\Models\Program;
 use App\Models\PropertyInspection;
 use App\Models\ReportDefinition;
@@ -27,6 +29,7 @@ use App\Models\User;
 use App\Models\VisitAvailability;
 use App\Models\VisitSlot;
 use App\Models\WorkTask;
+use App\Services\Entitlements\MunicipalityEntitlementService;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
@@ -37,6 +40,8 @@ class WorkspaceService
 
     /** @var array<int, array<int, string>> */
     private array $permissionNamesByUser = [];
+
+    public function __construct(private readonly MunicipalityEntitlementService $entitlements) {}
 
     /**
      * @return list<array<string, mixed>>
@@ -101,8 +106,8 @@ class WorkspaceService
     public function quickActions(User $user): array
     {
         $actions = [
-            $this->item('Nova candidatura', 'backoffice.applications.index', 'backoffice.applications.*', 'applications.view'),
-            $this->item('Rever documentos', 'admin.document-reviews.index', 'admin.document-reviews.*', 'documents.view'),
+            $this->item('Nova candidatura', 'backoffice.application-intake.index', 'backoffice.application-intake.*', 'administrative_processes.create', feature: FeatureKey::ApplicationIntake),
+            $this->item('Rever documentos', 'admin.document-reviews.index', 'admin.document-reviews.*', 'documents.view', feature: FeatureKey::ApplicationReview),
             $this->item('Tarefas da minha equipa', 'backoffice.work-tasks.team', 'backoffice.work-tasks.team', 'work_tasks.view_team'),
             $this->item('Relatórios municipais', 'backoffice.reports.index', 'backoffice.reports.*', 'reports.view'),
             $this->item('Segurança e RGPD', 'backoffice.security.dashboard', 'backoffice.security.*', null, ['administrator', 'auditor']),
@@ -120,8 +125,8 @@ class WorkspaceService
             ['permission' => 'citizens.view', 'label' => 'Munícipe', 'examples' => ['nome', 'processo']],
             ['permission' => 'contests.view', 'label' => 'Concurso', 'examples' => ['programa', 'estado']],
             ['permission' => 'contracts.view', 'label' => 'Contrato', 'examples' => ['referência', 'inquilino']],
-            ['permission' => 'applications.view', 'label' => 'Candidatura', 'examples' => ['número', 'estado']],
-            ['permission' => 'documents.view', 'label' => 'Documento', 'examples' => ['tipo', 'estado']],
+            ['permission' => 'applications.view', 'feature' => FeatureKey::ApplicationReview, 'label' => 'Candidatura', 'examples' => ['número', 'estado']],
+            ['permission' => 'documents.view', 'feature' => FeatureKey::ApplicationReview, 'label' => 'Documento', 'examples' => ['tipo', 'estado']],
             ['permission' => 'reports.view', 'label' => 'Relatório', 'examples' => ['KPI', 'exportação']],
             ['permission' => 'housing_units.view', 'label' => 'Fogo', 'examples' => ['tipologia', 'freguesia']],
             ['permission' => 'work_tasks.view', 'label' => 'Tarefa', 'examples' => ['SLA', 'equipa']],
@@ -132,7 +137,9 @@ class WorkspaceService
                 'label' => (string) $group['label'],
                 'examples' => $group['examples'],
             ],
-            array_filter($groups, fn (array $group): bool => $this->hasPermission($user, (string) $group['permission'])),
+            array_filter($groups, fn (array $group): bool => $this->hasPermission($user, (string) $group['permission'])
+                && (! ($group['feature'] ?? null) instanceof FeatureKey
+                    || $this->entitlements->enabledForUser($user, $group['feature']))),
         ));
     }
 
@@ -153,6 +160,11 @@ class WorkspaceService
 
         $permission = $item['permission'] ?? null;
         if (is_string($permission) && ! $this->hasPermission($user, $permission)) {
+            return false;
+        }
+
+        $feature = $item['feature'] ?? null;
+        if ($feature instanceof FeatureKey && ! $this->entitlements->enabledForUser($user, $feature)) {
             return false;
         }
 
@@ -201,12 +213,12 @@ class WorkspaceService
                         $this->item('Munícipes', 'citizens.index', 'citizens.*', 'citizens.view'),
                         $this->item('Agregados', 'households.index', 'households.*', 'households.view'),
                         $this->item('Simulador', 'backoffice.simulator.insights.index', 'backoffice.simulator.*', 'simulator.view'),
-                        $this->item('Candidaturas', 'backoffice.applications.index', 'backoffice.applications.*', 'applications.view', null, Application::class),
-                        $this->item('Receção administrativa', 'backoffice.application-intake.index', 'backoffice.application-intake.*', 'administrative_processes.view'),
-                        $this->item('Processos administrativos', 'backoffice.administrative-processes.index', 'backoffice.administrative-processes.*', 'administrative_processes.view'),
+                        $this->item('Candidaturas', 'backoffice.applications.index', 'backoffice.applications.*', 'applications.view', null, Application::class, FeatureKey::ApplicationReview),
+                        $this->item('Receção administrativa', 'backoffice.application-intake.index', 'backoffice.application-intake.*', 'administrative_processes.create', feature: FeatureKey::ApplicationIntake),
+                        $this->item('Processos administrativos', 'backoffice.administrative-processes.index', 'backoffice.administrative-processes.*', 'administrative_processes.view', feature: FeatureKey::ApplicationReview),
                     ]),
                     $this->group('Contacto e suporte', [
-                        $this->item('Revisão documental', 'admin.document-reviews.index', 'admin.document-reviews.*', 'documents.view', null, DocumentSubmission::class),
+                        $this->item('Revisão documental', 'admin.document-reviews.index', 'admin.document-reviews.*', 'documents.view', null, DocumentSubmission::class, FeatureKey::ApplicationReview),
                         $this->item('Visitas abertas', 'backoffice.visit-availabilities.index', 'backoffice.visit-availabilities.*', 'visits.view', null, VisitAvailability::class),
                         $this->item('Horários de visita', 'backoffice.visit-slots.index', 'backoffice.visit-slots.*', 'visits.view', null, VisitSlot::class),
                         $this->item('Visitas agendadas', 'backoffice.housing-visits.index', 'backoffice.housing-visits.*', 'visits.view', null, HousingVisit::class),
@@ -233,7 +245,7 @@ class WorkspaceService
                     $this->group('Decisão administrativa', [
                         $this->item('Elegibilidade', 'backoffice.eligibility.rule-sets.index', 'backoffice.eligibility.*', 'eligibility.view', null, EligibilityRuleSet::class),
                         $this->item('Pontuação', 'backoffice.scoring.rule-sets.index', 'backoffice.scoring.*', 'scoring.view', null, ScoringRuleSet::class),
-                        $this->item('Candidaturas', 'backoffice.applications.index', 'backoffice.applications.*', 'applications.view', null, HousingApplication::class),
+                        $this->item('Candidaturas', 'backoffice.applications.index', 'backoffice.applications.*', 'applications.view', null, HousingApplication::class, FeatureKey::ApplicationReview),
                         $this->item('Listas e alocações', 'backoffice.allocation.runs.index', 'backoffice.allocation.*', 'allocations.view'),
                         $this->item('Sorteios', 'backoffice.lottery-draws.index', 'backoffice.lottery-draws.*', 'allocations.view'),
                         $this->item('Publicações', 'backoffice.allocation.reports.index', 'backoffice.allocation.reports.*', 'public_lists.view'),
@@ -286,6 +298,7 @@ class WorkspaceService
                         $this->item('Auditoria', 'backoffice.security.audit.events.index', 'backoffice.security.audit.*', 'audit_logs.view', null, AuditEvent::class),
                         $this->item('Acessos sensíveis', 'backoffice.security.audit.access-logs.index', 'backoffice.security.audit.access-logs.*', 'audit_logs.view', null, SensitiveDataAccessLog::class),
                         $this->item('RGPD', 'backoffice.security.privacy.requests.index', 'backoffice.security.privacy.*', 'privacy.view', null, DataSubjectRequest::class),
+                        $this->item('Minutas e Atas', 'backoffice.procedure-minutes.index', 'backoffice.procedure-minutes.*', 'documents.view'),
                         $this->item('IA documental', 'backoffice.document-ai.assistant.index', 'backoffice.document-ai.*', 'documents.view'),
                         $this->item('Comunicações', 'backoffice.communications.index', 'backoffice.communications.*', 'notifications.view'),
                     ]),
@@ -305,6 +318,7 @@ class WorkspaceService
                         $this->item('Perfis e roles', 'backoffice.roles.index', 'backoffice.roles.*', 'roles.view'),
                         $this->item('Equipas', 'backoffice.teams.index', 'backoffice.teams.*', 'teams.view'),
                         $this->item('Auditoria de acessos', 'backoffice.access-audit.index', 'backoffice.access-audit.*', 'access_audit.view'),
+                        $this->item('Operadores de plataforma', 'backoffice.platform.operators.index', 'backoffice.platform.operators.*', model: PlatformOperatorAssignment::class),
                     ]),
                     $this->group('Segurança operacional', [
                         $this->item('Segurança', 'backoffice.security.dashboard', 'backoffice.security.dashboard', null, ['administrator', 'auditor']),
@@ -346,8 +360,15 @@ class WorkspaceService
      * @param  class-string|null  $model
      * @return array<string, mixed>
      */
-    private function item(string $label, string $route, string $active, ?string $permission = null, ?array $roles = null, ?string $model = null): array
-    {
+    private function item(
+        string $label,
+        string $route,
+        string $active,
+        ?string $permission = null,
+        ?array $roles = null,
+        ?string $model = null,
+        ?FeatureKey $feature = null,
+    ): array {
         return array_filter([
             'label' => $label,
             'route' => $route,
@@ -356,6 +377,7 @@ class WorkspaceService
             'permission' => $permission,
             'roles' => $roles,
             'model' => $model,
+            'feature' => $feature,
         ], fn (mixed $value): bool => $value !== null);
     }
 
@@ -366,12 +388,12 @@ class WorkspaceService
             'households.index' => 'household',
             'backoffice.simulator.insights.index' => 'simulator',
             'backoffice.applications.index' => 'application',
-            'backoffice.application-intake.index' => 'folder',
+            'backoffice.application-intake.index' => 'application-intake',
             'backoffice.administrative-processes.index' => 'process',
             'admin.document-reviews.index' => 'candidate-document',
             'backoffice.visit-availabilities.index' => 'calendar',
             'backoffice.visit-slots.index' => 'schedule',
-            'backoffice.housing-visits.index' => 'inspection',
+            'backoffice.housing-visits.index' => 'user-inspection',
             'backoffice.support-tickets.index' => 'ticket',
             'backoffice.contextual-faqs.index' => 'faq',
 
@@ -380,39 +402,41 @@ class WorkspaceService
             'admin.document-types.index' => 'document',
             'admin.required-documents.index' => 'candidate-document',
             'backoffice.eligibility.rule-sets.index' => 'check',
-            'backoffice.scoring.rule-sets.index' => 'balance',
+            'backoffice.scoring.rule-sets.index' => 'scoring-rule',
             'backoffice.allocation.runs.index' => 'allocation',
-            'backoffice.lottery-draws.index' => 'contest',
+            'backoffice.lottery-draws.index' => 'lottery',
             'backoffice.allocation.reports.index' => 'report',
 
             'housing-units.index' => 'housing',
             'backoffice.public-portal.settings.edit' => 'settings',
             'backoffice.public-portal.links.index' => 'external',
             'backoffice.contracts.leases.index' => 'contract',
-            'backoffice.contracts.templates.index' => 'document',
-            'backoffice.finance.accounts.index' => 'payment',
+            'backoffice.contracts.templates.index' => 'template',
+            'backoffice.finance.accounts.index' => 'finance',
             'backoffice.finance.payments.index' => 'payment',
             'backoffice.maintenance.index' => 'maintenance',
-            'backoffice.inspections.index' => 'inspection',
+            'backoffice.inspections.index' => 'inspections',
 
             'backoffice.agenda.index' => 'calendar',
-            'backoffice.productivity.index' => 'check',
-            'backoffice.work-tasks.my' => 'check',
+            'backoffice.productivity.index' => 'productivity',
+            'backoffice.work-tasks.my' => 'tasks',
             'backoffice.work-tasks.dashboard' => 'dashboard',
-            'backoffice.analytics.index' => 'dashboard',
-            'backoffice.reports.index' => 'report',
-            'backoffice.reports.operational' => 'report',
-            'backoffice.reports.executive' => 'report',
+            'backoffice.analytics.index' => 'analytics',
+            'backoffice.reports.index' => 'reports',
+            'backoffice.reports.operational' => 'reports-operational',
+            'backoffice.reports.executive' => 'reports-executive',
             'backoffice.security.audit.events.index' => 'audit',
             'backoffice.security.audit.access-logs.index' => 'lock',
             'backoffice.security.privacy.requests.index' => 'shield',
-            'backoffice.document-ai.assistant.index' => 'document',
+            'backoffice.document-ai.assistant.index' => 'ai',
+            'backoffice.procedure-minutes.index' => 'template',
             'backoffice.communications.index' => 'communication',
 
             'backoffice.users.index' => 'users',
             'backoffice.roles.index' => 'security',
             'backoffice.teams.index' => 'users',
             'backoffice.access-audit.index' => 'audit',
+            'backoffice.platform.operators.index' => 'security',
             'backoffice.security.dashboard' => 'security',
             'backoffice.security.mfa.index' => 'lock',
             'backoffice.security.permission-reviews.index' => 'shield',
@@ -533,6 +557,7 @@ class WorkspaceService
         if (! array_key_exists((int) $user->id, $this->roleNamesByUser)) {
             $user->loadMissing('roles.permissions');
             $this->roleNamesByUser[(int) $user->id] = $user->roles
+                ->where('is_active', true)
                 ->pluck('name')
                 ->filter(fn (mixed $name): bool => is_string($name))
                 ->values()
@@ -548,6 +573,7 @@ class WorkspaceService
         if (! array_key_exists((int) $user->id, $this->permissionNamesByUser)) {
             $user->loadMissing('roles.permissions');
             $this->permissionNamesByUser[(int) $user->id] = $user->roles
+                ->where('is_active', true)
                 ->flatMap(fn ($role) => $role->permissions->pluck('name'))
                 ->filter(fn (mixed $name): bool => is_string($name))
                 ->unique()

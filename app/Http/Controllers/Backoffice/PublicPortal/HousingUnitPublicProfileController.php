@@ -21,7 +21,7 @@ class HousingUnitPublicProfileController extends Controller
 {
     public function edit(HousingUnit $housingUnit): View
     {
-        Gate::authorize('updatePublicProfile', $housingUnit);
+        Gate::authorize('updatePublicProfileBackoffice', $housingUnit);
 
         $housingUnit->load(['images', 'publicDocumentRecords', 'contestHousingUnits.contest']);
 
@@ -41,7 +41,7 @@ class HousingUnitPublicProfileController extends Controller
         HousingUnit $housingUnit,
         PublicHousingPublicationService $publicationService,
     ): RedirectResponse {
-        Gate::authorize('updatePublicProfile', $housingUnit);
+        Gate::authorize('updatePublicProfileBackoffice', $housingUnit);
 
         $publicationService->updateProfile($housingUnit, $request->profileData(), $this->authenticatedUser($request));
 
@@ -51,7 +51,7 @@ class HousingUnitPublicProfileController extends Controller
 
     public function publish(Request $request, HousingUnit $housingUnit, PublicHousingPublicationService $publicationService): RedirectResponse
     {
-        Gate::authorize('publishPublicProfile', $housingUnit);
+        Gate::authorize('publishPublicProfileBackoffice', $housingUnit);
 
         $publicationService->publish($housingUnit, $this->authenticatedUser($request));
 
@@ -60,7 +60,7 @@ class HousingUnitPublicProfileController extends Controller
 
     public function unpublish(Request $request, HousingUnit $housingUnit, PublicHousingPublicationService $publicationService): RedirectResponse
     {
-        Gate::authorize('publishPublicProfile', $housingUnit);
+        Gate::authorize('publishPublicProfileBackoffice', $housingUnit);
 
         $publicationService->unpublish($housingUnit, $this->authenticatedUser($request));
 
@@ -69,7 +69,7 @@ class HousingUnitPublicProfileController extends Controller
 
     public function preview(HousingUnit $housingUnit): View
     {
-        Gate::authorize('previewPublicProfile', $housingUnit);
+        Gate::authorize('previewPublicProfileBackoffice', $housingUnit);
 
         $housingUnit->load(['publicFeatures', 'publicImages', 'publicDocuments', 'contestHousingUnits.contest']);
 

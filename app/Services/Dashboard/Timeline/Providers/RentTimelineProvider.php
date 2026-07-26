@@ -17,7 +17,7 @@ use App\Services\Dashboard\Timeline\TimelineEventFactory;
 class RentTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
-        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory,
     ) {}
 
     public function forUser(User $user, array $dashboard = []): array
@@ -132,7 +132,7 @@ class RentTimelineProvider extends BaseTimelineProvider
 
     private function installmentDescription(RentInstallment $installment): string
     {
-        $tenant = $installment->tenant?->name ?? 'Inquilino';
+        $tenant = $this->tenantName($installment->tenant);
         $reference = $installment->reference ?? 'Prestação';
 
         return trim("{$reference} · {$tenant} · {$installment->amount_due} €");
@@ -140,7 +140,7 @@ class RentTimelineProvider extends BaseTimelineProvider
 
     private function paymentDescription(LeasePayment $payment): string
     {
-        $tenant = $payment->tenant?->name ?? 'Inquilino';
+        $tenant = $this->tenantName($payment->tenant);
         $reference = $payment->payment_number ?? 'Pagamento';
 
         return trim("{$reference} · {$tenant} · {$payment->amount} €");
@@ -155,9 +155,9 @@ class RentTimelineProvider extends BaseTimelineProvider
             'rent_installment_id' => $installment->getKey(),
             'reference' => $installment->reference,
             'tenant_id' => $installment->user_id,
-            'tenant_name' => $installment->tenant?->name,
+            'tenant_name' => $this->tenantName($installment->tenant),
             'lease_contract_id' => $installment->lease_contract_id,
-            'status' => $installment->status?->value ?? $installment->status,
+            'status' => $installment->status->value,
             'amount_due' => $installment->amount_due,
             'amount_paid' => $installment->amount_paid,
             'amount_outstanding' => $installment->amount_outstanding,
@@ -174,11 +174,20 @@ class RentTimelineProvider extends BaseTimelineProvider
             'lease_payment_id' => $payment->getKey(),
             'payment_number' => $payment->payment_number,
             'tenant_id' => $payment->user_id,
-            'tenant_name' => $payment->tenant?->name,
+            'tenant_name' => $this->tenantName($payment->tenant),
             'lease_contract_id' => $payment->lease_contract_id,
-            'status' => $payment->status?->value ?? $payment->status,
+            'status' => $payment->status->value,
             'amount' => $payment->amount,
             'received_at' => $payment->received_at?->toIso8601String(),
         ];
+    }
+
+    private function tenantName(?User $tenant): string
+    {
+        if ($tenant === null) {
+            return 'Inquilino';
+        }
+
+        return $tenant->name;
     }
 }

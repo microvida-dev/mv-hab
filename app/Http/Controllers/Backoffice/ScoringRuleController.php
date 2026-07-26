@@ -21,7 +21,7 @@ class ScoringRuleController extends Controller
 
     public function index(ScoringCriterion $scoringCriterion): View
     {
-        Gate::authorize('view', $scoringCriterion);
+        Gate::authorize('viewBackoffice', $scoringCriterion);
         $rules = $scoringCriterion->rules()->paginate(30);
 
         return view('backoffice.scoring.rules.index', [
@@ -32,7 +32,7 @@ class ScoringRuleController extends Controller
 
     public function create(ScoringCriterion $scoringCriterion): View
     {
-        Gate::authorize('create', [ScoringRule::class, $scoringCriterion]);
+        Gate::authorize('createBackoffice', [ScoringRule::class, $scoringCriterion]);
 
         return view('backoffice.scoring.rules.create', [
             'criterion' => $scoringCriterion->load('ruleSet'),
@@ -52,7 +52,7 @@ class ScoringRuleController extends Controller
 
     public function edit(ScoringRule $scoringRule): View
     {
-        Gate::authorize('update', $scoringRule);
+        Gate::authorize('updateBackoffice', $scoringRule);
         $scoringRule->load('criterion.ruleSet');
 
         return view('backoffice.scoring.rules.edit', [
@@ -73,7 +73,7 @@ class ScoringRuleController extends Controller
 
     public function destroy(Request $request, ScoringRule $scoringRule): RedirectResponse
     {
-        Gate::authorize('delete', $scoringRule);
+        Gate::authorize('deleteBackoffice', $scoringRule);
         $criterion = $scoringRule->criterion;
         abort_unless($criterion instanceof ScoringCriterion, 500);
 

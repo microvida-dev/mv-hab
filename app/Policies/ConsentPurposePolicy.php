@@ -4,29 +4,37 @@ namespace App\Policies;
 
 use App\Models\ConsentPurpose;
 use App\Models\User;
-use App\Policies\Concerns\HandlesSecurityAccess;
+use App\Services\Rgpd\PrivacyMunicipalScopeService;
 
 class ConsentPurposePolicy
 {
-    use HandlesSecurityAccess;
+    public function __construct(
+        private readonly PrivacyMunicipalScopeService $scope,
+    ) {}
 
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->municipality_id !== null
+            && $user->hasPermission('privacy.view');
     }
 
     public function view(User $user, ConsentPurpose $purpose): bool
     {
-        return true;
+        return $this->viewAny($user)
+            && $this->scope
+                ->purposes(ConsentPurpose::query()->whereKey($purpose), $user)
+                ->exists();
     }
 
     public function create(User $user): bool
     {
-        return $this->privacy($user, 'create');
+        return $user->municipality_id !== null
+            && $user->hasPermission('privacy.create');
     }
 
     public function update(User $user, ConsentPurpose $purpose): bool
     {
-        return $this->privacy($user, 'update');
+        return $user->hasPermission('privacy.update')
+            && $this->scope->ownsMutablePurpose($user, $purpose);
     }
 }

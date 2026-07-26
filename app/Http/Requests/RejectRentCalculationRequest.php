@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\RentCalculation;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RejectRentCalculationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $calculation = $this->route('rentCalculation');
+
+        return $calculation instanceof RentCalculation
+            && $this->user()?->can('rejectBackoffice', $calculation) === true;
     }
 
     /**

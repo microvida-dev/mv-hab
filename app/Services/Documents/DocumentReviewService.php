@@ -110,7 +110,7 @@ class DocumentReviewService
                 description: 'Estado documental alterado por utilizador autorizado.',
                 metadata: [
                     'actor_id' => $actor->id,
-                    'from_status' => $fromStatus?->value,
+                    'from_status' => $fromStatus->value,
                     'to_status' => $toStatus->value,
                     'review_id' => $review->id,
                 ],

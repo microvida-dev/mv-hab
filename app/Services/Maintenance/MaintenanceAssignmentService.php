@@ -5,11 +5,11 @@ namespace App\Services\Maintenance;
 use App\Enums\MaintenanceAssignmentStatus;
 use App\Enums\MaintenanceAssignmentType;
 use App\Enums\TechnicalHistoryEventType;
-use App\Models\HousingUnit;
 use App\Models\MaintenanceAssignment;
 use App\Models\MaintenanceRequest;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\OperationalMunicipalContextService;
 use App\Services\Properties\PropertyTechnicalHistoryService;
 use App\Support\AuditEvents;
 use Illuminate\Validation\ValidationException;
@@ -19,6 +19,7 @@ class MaintenanceAssignmentService
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly PropertyTechnicalHistoryService $history,
+        private readonly OperationalMunicipalContextService $municipalContext,
     ) {}
 
     /**
@@ -26,35 +27,78 @@ class MaintenanceAssignmentService
      */
     public function assign(MaintenanceRequest $request, User $actor, array $data): MaintenanceAssignment
     {
+        $housingUnit = $this->municipalContext
+            ->maintenanceRequestHousingUnit(
+                $actor,
+                $request,
+            );
+
         $type = $this->assignmentTypeFromData($data);
 
-        if ($type === MaintenanceAssignmentType::InternalTechnician && empty($data['assigned_user_id'])) {
-            throw ValidationException::withMessages(['assigned_user_id' => 'Indique o técnico interno.']);
+        $assignedUserId = null;
+        $supplierId = null;
+
+        if ($type === MaintenanceAssignmentType::InternalTechnician) {
+            if (empty($data['assigned_user_id'])) {
+                throw ValidationException::withMessages([
+                    'assigned_user_id' => 'Indique o técnico interno.',
+                ]);
+            }
+
+            $assignedUser = $this->municipalContext
+                ->municipalUserForHousingUnit(
+                    $data['assigned_user_id'],
+                    $housingUnit,
+                    'assigned_user_id',
+                );
+
+            $assignedUserId = $assignedUser?->id;
         }
 
-        if ($type === MaintenanceAssignmentType::ExternalSupplier && empty($data['maintenance_supplier_id'])) {
-            throw ValidationException::withMessages(['maintenance_supplier_id' => 'Indique o fornecedor externo.']);
+        if ($type === MaintenanceAssignmentType::ExternalSupplier) {
+            if (empty($data['maintenance_supplier_id'])) {
+                throw ValidationException::withMessages([
+                    'maintenance_supplier_id' => 'Indique o fornecedor externo.',
+                ]);
+            }
+
+            $supplier = $this->municipalContext
+                ->supplierForHousingUnit(
+                    $data['maintenance_supplier_id'],
+                    $housingUnit,
+                );
+
+            $supplierId = $supplier?->id;
         }
 
         $request->assignments()
             ->whereNull('completed_at')
             ->whereNull('cancelled_at')
-            ->update(['status' => MaintenanceAssignmentStatus::Cancelled, 'cancelled_at' => now()]);
+            ->update([
+                'status' => MaintenanceAssignmentStatus::Cancelled,
+                'cancelled_at' => now(),
+            ]);
 
         $assignment = $request->assignments()->create([
             'assignment_type' => $type,
             'status' => MaintenanceAssignmentStatus::Assigned,
-            'assigned_user_id' => $data['assigned_user_id'] ?? null,
-            'maintenance_supplier_id' => $data['maintenance_supplier_id'] ?? null,
+            'assigned_user_id' => $assignedUserId,
+            'maintenance_supplier_id' => $supplierId,
             'assigned_by' => $actor->id,
             'assigned_at' => now(),
             'assignment_notes' => $data['assignment_notes'] ?? null,
         ]);
 
-        $this->auditLogger->record(AuditEvents::UPDATE, $request, 'maintenance_requests', 'maintenance_assigned', 'Pedido de manutenção atribuído.');
+        $this->auditLogger->record(
+            AuditEvents::UPDATE,
+            $request,
+            'maintenance_requests',
+            'maintenance_assigned',
+            'Pedido de manutenção atribuído.',
+        );
 
         $this->history->record(
-            $this->housingUnitForRequest($request),
+            $housingUnit,
             TechnicalHistoryEventType::MaintenanceAssigned,
             'Pedido de manutenção atribuído',
             $assignment->assignment_notes,
@@ -68,6 +112,12 @@ class MaintenanceAssignmentService
 
     public function cancel(MaintenanceAssignment $assignment, User $actor, ?string $reason = null): MaintenanceAssignment
     {
+        $this->municipalContext
+            ->maintenanceAssignmentHousingUnit(
+                $actor,
+                $assignment,
+            );
+
         $assignment->forceFill([
             'status' => MaintenanceAssignmentStatus::Cancelled,
             'cancelled_at' => now(),
@@ -93,18 +143,5 @@ class MaintenanceAssignmentService
         }
 
         return MaintenanceAssignmentType::from($value);
-    }
-
-    private function housingUnitForRequest(MaintenanceRequest $request): HousingUnit
-    {
-        $housingUnit = $request->housingUnit;
-
-        if (! $housingUnit instanceof HousingUnit) {
-            throw ValidationException::withMessages([
-                'housing_unit' => 'O pedido de manutenção não tem fogo associado.',
-            ]);
-        }
-
-        return $housingUnit;
     }
 }

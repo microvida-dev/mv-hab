@@ -15,7 +15,7 @@ class UpdateScoringCriterionRequest extends FormRequest
         $criterion = $this->route('scoringCriterion');
 
         return $criterion instanceof ScoringCriterion
-            && ($this->user()?->can('update', $criterion) ?? false);
+            && ($this->user()?->can('updateBackoffice', $criterion) ?? false);
     }
 
     /**

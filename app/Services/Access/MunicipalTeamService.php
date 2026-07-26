@@ -15,6 +15,7 @@ class MunicipalTeamService
     public function __construct(
         private readonly AccessChangeLogger $logger,
         private readonly TeamManagementPolicy $policy,
+        private readonly AccessMunicipalScopeService $municipalScope,
     ) {}
 
     /**
@@ -26,14 +27,17 @@ class MunicipalTeamService
             throw new AuthorizationException('Sem permissão para criar equipas.');
         }
 
-        return DB::transaction(function () use ($actor, $data): MunicipalTeam {
+        $manager = $this->managerFromData($actor, $data);
+
+        return DB::transaction(function () use ($actor, $data, $manager): MunicipalTeam {
             $team = MunicipalTeam::query()->create([
+                'municipality_id' => $actor->municipality_id,
                 'name' => (string) $data['name'],
                 'slug' => Str::slug((string) $data['name']),
                 'description' => $data['description'] ?? null,
                 'status' => (string) ($data['status'] ?? 'active'),
                 'functional_scopes' => $this->normalizeScopes($data['functional_scopes'] ?? []),
-                'manager_user_id' => $data['manager_user_id'] ?? null,
+                'manager_user_id' => $manager?->id,
                 'created_by' => $actor->id,
                 'updated_by' => $actor->id,
             ]);
@@ -63,7 +67,9 @@ class MunicipalTeamService
             throw new AuthorizationException('Sem permissão para atualizar equipas.');
         }
 
-        return DB::transaction(function () use ($actor, $team, $data): MunicipalTeam {
+        $manager = $this->managerFromData($actor, $data);
+
+        return DB::transaction(function () use ($actor, $team, $data, $manager): MunicipalTeam {
             $team->refresh();
             $oldValues = [
                 'status' => $team->status,
@@ -77,7 +83,7 @@ class MunicipalTeamService
                 'description' => $data['description'] ?? null,
                 'status' => (string) ($data['status'] ?? 'active'),
                 'functional_scopes' => $this->normalizeScopes($data['functional_scopes'] ?? []),
-                'manager_user_id' => $data['manager_user_id'] ?? null,
+                'manager_user_id' => $manager?->id,
                 'updated_by' => $actor->id,
             ])->save();
 
@@ -108,6 +114,10 @@ class MunicipalTeamService
             throw new DomainException('Equipas inativas não podem receber novas atribuições.');
         }
 
+        if (! $this->municipalScope->ownsUser($actor, $member)) {
+            throw new AuthorizationException('O utilizador não pertence ao Município da equipa.');
+        }
+
         DB::transaction(function () use ($actor, $team, $member, $justification, $roleInTeam): void {
             $team->members()->syncWithoutDetaching([
                 $member->id => [
@@ -136,6 +146,10 @@ class MunicipalTeamService
     {
         if (! $this->policy->manageMembers($actor, $team)) {
             throw new AuthorizationException('Sem permissão para gerir membros de equipas.');
+        }
+
+        if (! $this->municipalScope->ownsUser($actor, $member)) {
+            throw new AuthorizationException('O utilizador não pertence ao Município da equipa.');
         }
 
         DB::transaction(function () use ($actor, $team, $member, $justification): void {
@@ -174,5 +188,18 @@ class MunicipalTeamService
             ->unique()
             ->values()
             ->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function managerFromData(User $actor, array $data): ?User
+    {
+        if (empty($data['manager_user_id'])) {
+            return null;
+        }
+
+        return $this->municipalScope->users(User::query(), $actor)
+            ->findOrFail((int) $data['manager_user_id']);
     }
 }

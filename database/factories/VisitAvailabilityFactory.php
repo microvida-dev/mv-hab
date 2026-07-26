@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
+use App\Models\Contest;
 use App\Models\VisitAvailability;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -16,7 +16,9 @@ class VisitAvailabilityFactory extends Factory
         $startsAt = fake()->dateTimeBetween('+2 days', '+20 days');
 
         return [
-            'staff_user_id' => User::factory(),
+            'contest_id' => Contest::factory(),
+            'housing_unit_id' => null,
+            'staff_user_id' => null,
             'title' => 'Disponibilidade de visita '.fake()->numerify('###'),
             'description' => fake()->optional()->sentence(),
             'starts_at' => $startsAt,
@@ -27,5 +29,28 @@ class VisitAvailabilityFactory extends Factory
             'timezone' => config('app.timezone', 'UTC'),
             'is_active' => true,
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(
+            function (VisitAvailability $availability): void {
+                $availability->loadMissing([
+                    'contest.program',
+                    'housingUnit',
+                ]);
+
+                $municipalityIds = collect([
+                    $availability->contest?->program?->municipality_id,
+                    $availability->housingUnit?->municipality_id,
+                ])->filter()->unique()->values();
+
+                if ($municipalityIds->count() === 1) {
+                    $availability->forceFill([
+                        'municipality_id' => (int) $municipalityIds->first(),
+                    ])->saveQuietly();
+                }
+            },
+        );
     }
 }

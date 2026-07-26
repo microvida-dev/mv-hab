@@ -2,13 +2,21 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Contest;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Exists;
 
 class RunProvisionalListAutomationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasPermissionTo('public_lists', 'create') || $this->user()?->hasPermissionTo('scoring', 'view');
+        $contest = $this->route('contest');
+
+        return $contest instanceof Contest
+            && ($this->user()?->can('generateBackoffice', $contest) ?? false);
     }
 
     /**
@@ -17,8 +25,21 @@ class RunProvisionalListAutomationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'contest_id' => ['nullable', 'exists:contests,id'],
+            'contest_id' => ['nullable', $this->municipalContestExistsRule()],
             'confirm_snapshot_generation' => ['accepted'],
         ];
+    }
+
+    protected function municipalContestExistsRule(): Exists
+    {
+        $municipalityId = $this->user()->municipality_id ?? 0;
+
+        return Rule::exists('contests', 'id')
+            ->where(fn (Builder $query): Builder => $query->whereIn(
+                'program_id',
+                DB::table('programs')
+                    ->select('id')
+                    ->where('municipality_id', $municipalityId),
+            ));
     }
 }

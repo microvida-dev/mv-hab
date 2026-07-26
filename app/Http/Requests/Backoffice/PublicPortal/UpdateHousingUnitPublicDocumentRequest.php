@@ -4,13 +4,17 @@ namespace App\Http\Requests\Backoffice\PublicPortal;
 
 use App\Enums\HousingUnitPublicDocumentType;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class UpdateHousingUnitPublicDocumentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows(
+            'updateBackoffice',
+            $this->route('document'),
+        );
     }
 
     /**

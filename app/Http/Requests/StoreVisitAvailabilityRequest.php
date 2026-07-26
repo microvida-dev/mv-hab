@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use App\Models\VisitAvailability;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -9,7 +10,13 @@ class StoreVisitAvailabilityRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', VisitAvailability::class) ?? false;
+        $actor = $this->user();
+
+        return $actor instanceof User
+            && $actor->can(
+                'createBackoffice',
+                VisitAvailability::class,
+            );
     }
 
     /**

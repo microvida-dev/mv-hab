@@ -11,7 +11,7 @@ class AccountStatementController extends Controller
 {
     public function show(TenantFinancialAccount $tenantFinancialAccount): View
     {
-        Gate::authorize('view', $tenantFinancialAccount);
+        Gate::authorize('viewBackoffice', $tenantFinancialAccount);
         $tenantFinancialAccount->load(['tenant', 'leaseContract', 'financialTransactions' => fn ($query) => $query->latest('occurred_at')->limit(100)]);
 
         return view('backoffice.finance.statements.show', compact('tenantFinancialAccount'));

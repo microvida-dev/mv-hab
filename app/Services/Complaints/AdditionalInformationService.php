@@ -116,18 +116,45 @@ class AdditionalInformationService
 
     public function close(AdditionalInformationRequest $request, User $actor): AdditionalInformationRequest
     {
-        $request->forceFill(['status' => AdditionalInformationRequestStatus::Closed, 'closed_at' => now()])->save();
-        $this->auditLogger->record(AuditEvents::UPDATE, $request, 'complaints', 'additional_information_request_close', 'Pedido complementar fechado.');
+        return DB::transaction(function () use ($request): AdditionalInformationRequest {
+            $request = AdditionalInformationRequest::query()
+                ->lockForUpdate()
+                ->findOrFail($request->id);
 
-        return $request->refresh();
+            if ($this->requestStatus($request) === AdditionalInformationRequestStatus::Closed) {
+                return $request;
+            }
+
+            $request->forceFill(['status' => AdditionalInformationRequestStatus::Closed, 'closed_at' => now()])->save();
+            $this->auditLogger->record(AuditEvents::UPDATE, $request, 'complaints', 'additional_information_request_close', 'Pedido complementar fechado.');
+
+            return $request->refresh();
+        });
     }
 
     public function markOverdue(AdditionalInformationRequest $request, User $actor): AdditionalInformationRequest
     {
-        $request->forceFill(['status' => AdditionalInformationRequestStatus::Overdue])->save();
-        $this->auditLogger->record(AuditEvents::UPDATE, $request, 'complaints', 'additional_information_request_overdue', 'Pedido complementar marcado como vencido.');
+        return DB::transaction(function () use ($request): AdditionalInformationRequest {
+            $request = AdditionalInformationRequest::query()
+                ->lockForUpdate()
+                ->findOrFail($request->id);
 
-        return $request->refresh();
+            if ($this->requestStatus($request) === AdditionalInformationRequestStatus::Overdue) {
+                return $request;
+            }
+
+            if (! $this->requestStatusIsIn($request, [
+                AdditionalInformationRequestStatus::Open,
+                AdditionalInformationRequestStatus::Issued,
+            ])) {
+                throw ValidationException::withMessages(['additional_information_request' => 'O pedido complementar já não pode ser marcado como vencido.']);
+            }
+
+            $request->forceFill(['status' => AdditionalInformationRequestStatus::Overdue])->save();
+            $this->auditLogger->record(AuditEvents::UPDATE, $request, 'complaints', 'additional_information_request_overdue', 'Pedido complementar marcado como vencido.');
+
+            return $request->refresh();
+        });
     }
 
     /**

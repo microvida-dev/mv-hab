@@ -3,14 +3,20 @@
 use App\Http\Middleware\BlockInactiveBackofficeUsers;
 use App\Http\Middleware\EnforcePasswordPolicyOnChange;
 use App\Http\Middleware\EnsureBackofficeMfaVerified;
+use App\Http\Middleware\EnsureMunicipalityFeatureIsEnabled;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\LogBackofficeAccess;
 use App\Http\Middleware\LogSensitiveResourceAccess;
+use App\Http\Middleware\RequestCorrelationId;
+use App\Http\Middleware\RequirePermission;
 use App\Http\Middleware\RequireSensitivePermission;
+use App\Services\Security\AuthorizationFailureResponder;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -19,11 +25,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend(RequestCorrelationId::class);
+
         $middleware->alias([
             'active.backoffice' => BlockInactiveBackofficeUsers::class,
             'mfa.backoffice' => EnsureBackofficeMfaVerified::class,
+            'municipality.feature' => EnsureMunicipalityFeatureIsEnabled::class,
             'password.policy' => EnforcePasswordPolicyOnChange::class,
             'role' => EnsureUserHasRole::class,
+            'permission' => RequirePermission::class,
             'log.backoffice' => LogBackofficeAccess::class,
             'log.sensitive' => LogSensitiveResourceAccess::class,
             'sensitive.permission' => RequireSensitivePermission::class,
@@ -31,6 +41,32 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request): bool => $request->is('api/*') || $request->expectsJson(),
         );
+
+        $exceptions->render(function (
+            HttpExceptionInterface $exception,
+            Request $request,
+        ): ?Response {
+            if ($exception->getStatusCode() !== 403) {
+                return null;
+            }
+
+            return app(AuthorizationFailureResponder::class)
+                ->respond($request, $exception);
+        });
+
+        $exceptions->respond(function (
+            Response $response,
+            Throwable $exception,
+            Request $request,
+        ): Response {
+            $requestId = $request->attributes->get(RequestCorrelationId::ATTRIBUTE);
+
+            if (is_string($requestId) && $requestId !== '') {
+                $response->headers->set(RequestCorrelationId::HEADER, $requestId);
+            }
+
+            return $response;
+        });
     })->create();

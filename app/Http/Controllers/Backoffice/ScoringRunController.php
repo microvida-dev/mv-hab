@@ -10,7 +10,9 @@ use App\Models\Contest;
 use App\Models\Program;
 use App\Models\ScoringRuleSet;
 use App\Models\ScoringRun;
+use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Scoring\ScoringEngine;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
@@ -23,12 +25,14 @@ class ScoringRunController extends Controller
     public function __construct(
         private readonly ScoringEngine $engine,
         private readonly AuditLogger $auditLogger,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        Gate::authorize('viewAny', ScoringRun::class);
-        $runs = ScoringRun::query()
+        Gate::authorize('viewAnyBackoffice', ScoringRun::class);
+        $runs = $this->municipalScope
+            ->scoringRuns(ScoringRun::query(), $this->authenticatedUser($request))
             ->with(['ruleSet', 'program', 'contest', 'startedBy'])
             ->withCount(['applicationScores', 'rankingSnapshots'])
             ->latest()
@@ -37,24 +41,35 @@ class ScoringRunController extends Controller
         return view('backoffice.scoring.runs.index', compact('runs'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        Gate::authorize('create', ScoringRun::class);
+        Gate::authorize('runAnyBackoffice', ScoringRun::class);
 
-        return view('backoffice.scoring.runs.create', $this->formData());
+        return view(
+            'backoffice.scoring.runs.create',
+            $this->formData($this->authenticatedUser($request)),
+        );
     }
 
     public function store(RunScoringRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $program = $request->filled('program_id') ? Program::query()->findOrFail($request->integer('program_id')) : null;
-        $contest = $request->filled('contest_id') ? Contest::query()->findOrFail($request->integer('contest_id')) : null;
+        $actor = $this->authenticatedUser($request);
+        $program = $request->filled('program_id')
+            ? $this->municipalScope->programs(Program::query(), $actor)
+                ->findOrFail($request->integer('program_id'))
+            : null;
+        $contest = $request->filled('contest_id')
+            ? $this->municipalScope->contests(Contest::query(), $actor)
+                ->findOrFail($request->integer('contest_id'))
+            : null;
         $ruleSet = $request->filled('scoring_rule_set_id')
-            ? ScoringRuleSet::query()->findOrFail($request->integer('scoring_rule_set_id'))
+            ? $this->municipalScope->scoringRuleSets(ScoringRuleSet::query(), $actor)
+                ->findOrFail($request->integer('scoring_rule_set_id'))
             : null;
 
         $run = $this->engine->run(
-            $this->authenticatedUser($request),
+            $actor,
             program: $program,
             contest: $contest,
             ruleSet: $ruleSet,
@@ -67,7 +82,7 @@ class ScoringRunController extends Controller
 
     public function show(ScoringRun $scoringRun): View
     {
-        Gate::authorize('view', $scoringRun);
+        Gate::authorize('viewBackoffice', $scoringRun);
         $scoringRun->load([
             'ruleSet',
             'program',
@@ -82,7 +97,7 @@ class ScoringRunController extends Controller
 
     public function run(Request $request, ScoringRun $scoringRun): RedirectResponse
     {
-        Gate::authorize('run', $scoringRun);
+        Gate::authorize('runBackoffice', $scoringRun);
         $run = $this->engine->execute($scoringRun, $this->authenticatedUser($request));
 
         return to_route('backoffice.scoring.runs.show', $run)
@@ -106,7 +121,7 @@ class ScoringRunController extends Controller
 
     public function cancel(Request $request, ScoringRun $scoringRun): RedirectResponse
     {
-        Gate::authorize('cancel', $scoringRun);
+        Gate::authorize('cancelBackoffice', $scoringRun);
         $scoringRun->forceFill(['status' => ScoringRunStatus::Cancelled])->save();
         $this->auditLogger->record(
             event: AuditEvents::UPDATE,
@@ -123,12 +138,22 @@ class ScoringRunController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formData(): array
+    private function formData(User $actor): array
     {
         return [
-            'programs' => Program::query()->orderBy('name')->get(['id', 'name']),
-            'contests' => Contest::query()->orderBy('title')->get(['id', 'program_id', 'title']),
-            'ruleSets' => ScoringRuleSet::query()->active()->orderBy('name')->get(['id', 'program_id', 'contest_id', 'name']),
+            'programs' => $this->municipalScope
+                ->programs(Program::query(), $actor)
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'contests' => $this->municipalScope
+                ->contests(Contest::query(), $actor)
+                ->orderBy('title')
+                ->get(['id', 'program_id', 'title']),
+            'ruleSets' => $this->municipalScope
+                ->scoringRuleSets(ScoringRuleSet::query(), $actor)
+                ->active()
+                ->orderBy('name')
+                ->get(['id', 'program_id', 'contest_id', 'name']),
         ];
     }
 }

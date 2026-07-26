@@ -24,7 +24,7 @@ class ScoringCriterionController extends Controller
 
     public function index(ScoringRuleSet $scoringRuleSet): View
     {
-        Gate::authorize('view', $scoringRuleSet);
+        Gate::authorize('viewBackoffice', $scoringRuleSet);
 
         return view('backoffice.scoring.criteria.index', [
             'ruleSet' => $scoringRuleSet,
@@ -37,7 +37,7 @@ class ScoringCriterionController extends Controller
 
     public function create(ScoringRuleSet $scoringRuleSet): View
     {
-        Gate::authorize('create', [ScoringCriterion::class, $scoringRuleSet]);
+        Gate::authorize('createBackoffice', [ScoringCriterion::class, $scoringRuleSet]);
 
         return view('backoffice.scoring.criteria.create', [
             'ruleSet' => $scoringRuleSet,
@@ -68,7 +68,7 @@ class ScoringCriterionController extends Controller
 
     public function edit(ScoringCriterion $scoringCriterion): View
     {
-        Gate::authorize('update', $scoringCriterion);
+        Gate::authorize('updateBackoffice', $scoringCriterion);
 
         $scoringCriterion->load('ruleSet');
 
@@ -104,7 +104,7 @@ class ScoringCriterionController extends Controller
         Request $request,
         ScoringCriterion $scoringCriterion
     ): RedirectResponse {
-        Gate::authorize('activate', $scoringCriterion);
+        Gate::authorize('activateBackoffice', $scoringCriterion);
 
         $scoringCriterion->update([
             'is_active' => true,
@@ -124,7 +124,7 @@ class ScoringCriterionController extends Controller
         Request $request,
         ScoringCriterion $scoringCriterion
     ): RedirectResponse {
-        Gate::authorize('activate', $scoringCriterion);
+        Gate::authorize('deactivateBackoffice', $scoringCriterion);
 
         $scoringCriterion->update([
             'is_active' => false,

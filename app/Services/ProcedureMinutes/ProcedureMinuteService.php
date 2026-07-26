@@ -3,12 +3,11 @@
 namespace App\Services\ProcedureMinutes;
 
 use App\Enums\ProcedureMinuteStatus;
-use App\Models\Application;
-use App\Models\Contest;
 use App\Models\ProcedureMinute;
 use App\Models\ProcedureTemplate;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\ProcedureMinutes\Renderers\AlcanenaAta01Renderer;
 use App\Services\ProcedureTemplates\TemplateRenderingService;
 use App\Services\ProcedureTemplates\TemplateVariableResolver;
 use App\Support\AuditEvents;
@@ -21,6 +20,7 @@ class ProcedureMinuteService
         private readonly ProcedureMinuteExportService $exporter,
         private readonly TemplateVariableResolver $variables,
         private readonly TemplateRenderingService $renderer,
+        private readonly AlcanenaAta01Renderer $alcanenaAta01Renderer,
         private readonly AuditLogger $auditLogger,
     ) {}
 
@@ -31,13 +31,14 @@ class ProcedureMinuteService
     {
         return DB::transaction(function () use ($data, $actor): ProcedureMinute {
             $template = ProcedureTemplate::query()->findOrFail((int) $data['procedure_template_id']);
-            $application = isset($data['application_id']) ? Application::query()->find($data['application_id']) : null;
-            $contest = isset($data['contest_id']) ? Contest::query()->find($data['contest_id']) : $application?->contest;
-            $variables = $application instanceof Application
-                ? $this->variables->forApplication($application, $actor)
-                : ($contest instanceof Contest ? $this->variables->forContest($contest) : ['generated_at' => now()->format('d/m/Y H:i')]);
-            $content = $this->renderer->render($template, $variables);
-            $payload = $this->payloadBuilder->build($data);
+            $payload = $this->payloadBuilder->build($data, $actor);
+
+            $content = $template->template_number === 'ALC-ATA-01-SERIACAO-INICIAL'
+                ? $this->alcanenaAta01Renderer->render($payload)
+                : $this->renderer->render(
+                    $template,
+                    $this->variables->forProcedureMinutePayload($payload, $actor)
+                );
 
             $minute = new ProcedureMinute([
                 'title' => $data['title'] ?? 'Ata do procedimento',
@@ -47,9 +48,9 @@ class ProcedureMinuteService
             ]);
             $minute->forceFill([
                 'minute_number' => $this->number(),
-                'contest_id' => $contest?->id,
-                'program_id' => data_get($contest, 'program_id') ?? $application?->program_id,
-                'application_id' => $application?->id,
+                'contest_id' => data_get($payload, 'contest.id'),
+                'program_id' => data_get($payload, 'program.id'),
+                'application_id' => data_get($payload, 'application.id'),
                 'procedure_template_id' => $template->id,
                 'status' => ProcedureMinuteStatus::Generated,
                 'content_snapshot' => $content,
@@ -88,5 +89,18 @@ class ProcedureMinuteService
         } while (ProcedureMinute::withTrashed()->where('minute_number', $number)->exists());
 
         return $number;
+    }
+
+    public function delete(ProcedureMinute $minute, User $actor): void
+    {
+        $minute->delete();
+
+        $this->auditLogger->record(
+            AuditEvents::DELETE,
+            $minute,
+            'documents',
+            'procedure_minute_delete',
+            'Ata do procedimento eliminada.'
+        );
     }
 }

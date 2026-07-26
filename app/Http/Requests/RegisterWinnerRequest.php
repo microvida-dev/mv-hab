@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\LotteryResult;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RegisterWinnerRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $result = $this->route('lotteryResult');
+
+        return $result instanceof LotteryResult
+            && ($this->user()?->can('registerWinnerBackoffice', $result) ?? false);
     }
 
     /**

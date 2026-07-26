@@ -21,7 +21,7 @@ class TieBreakerRuleController extends Controller
 
     public function index(ScoringRuleSet $scoringRuleSet): View
     {
-        Gate::authorize('view', $scoringRuleSet);
+        Gate::authorize('viewBackoffice', $scoringRuleSet);
         $rules = $scoringRuleSet->tieBreakerRules()->paginate(30);
 
         return view('backoffice.scoring.tie-breakers.index', [
@@ -32,7 +32,7 @@ class TieBreakerRuleController extends Controller
 
     public function create(ScoringRuleSet $scoringRuleSet): View
     {
-        Gate::authorize('create', [TieBreakerRule::class, $scoringRuleSet]);
+        Gate::authorize('createBackoffice', [TieBreakerRule::class, $scoringRuleSet]);
 
         return view('backoffice.scoring.tie-breakers.create', [
             'ruleSet' => $scoringRuleSet,
@@ -53,7 +53,7 @@ class TieBreakerRuleController extends Controller
 
     public function edit(TieBreakerRule $tieBreakerRule): View
     {
-        Gate::authorize('update', $tieBreakerRule);
+        Gate::authorize('updateBackoffice', $tieBreakerRule);
         $tieBreakerRule->load('ruleSet');
 
         return view('backoffice.scoring.tie-breakers.edit', [
@@ -75,7 +75,7 @@ class TieBreakerRuleController extends Controller
 
     public function activate(Request $request, TieBreakerRule $tieBreakerRule): RedirectResponse
     {
-        Gate::authorize('activate', $tieBreakerRule);
+        Gate::authorize('activateBackoffice', $tieBreakerRule);
         $tieBreakerRule->update(['is_active' => true]);
         $this->audit('tie_breaker_activate', AuditEvents::UPDATE, $tieBreakerRule, $request);
 
@@ -84,7 +84,7 @@ class TieBreakerRuleController extends Controller
 
     public function inactivate(Request $request, TieBreakerRule $tieBreakerRule): RedirectResponse
     {
-        Gate::authorize('activate', $tieBreakerRule);
+        Gate::authorize('deactivateBackoffice', $tieBreakerRule);
         $tieBreakerRule->update(['is_active' => false]);
         $this->audit('tie_breaker_inactivate', AuditEvents::UPDATE, $tieBreakerRule, $request);
 

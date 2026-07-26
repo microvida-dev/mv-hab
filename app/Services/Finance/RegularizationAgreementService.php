@@ -13,6 +13,7 @@ use App\Models\TenantFinancialAccount;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use App\Support\DecimalMoney;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -31,22 +32,31 @@ class RegularizationAgreementService
     public function store(TenantFinancialAccount $account, User $actor, array $data): RegularizationAgreement
     {
         return DB::transaction(function () use ($account, $actor, $data) {
-            $arrearIds = $data['arrear_ids'] ?? $account->arrears()->whereIn('status', [ArrearStatus::Open->value, ArrearStatus::Notified->value])->pluck('id')->all();
-            $arrears = Arrear::query()->whereIn('id', $arrearIds)->where('tenant_financial_account_id', $account->id)->get();
+            $lockedAccount = TenantFinancialAccount::query()
+                ->whereKey($account->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $arrearIds = $data['arrear_ids'] ?? $lockedAccount->arrears()->whereIn('status', [ArrearStatus::Open->value, ArrearStatus::Notified->value])->pluck('id')->all();
+            $arrears = Arrear::query()
+                ->whereIn('id', $arrearIds)
+                ->where('tenant_financial_account_id', $lockedAccount->id)
+                ->whereIn('status', [ArrearStatus::Open->value, ArrearStatus::Notified->value])
+                ->lockForUpdate()
+                ->get();
 
             if ($arrears->isEmpty()) {
                 throw ValidationException::withMessages(['arrear_ids' => 'Selecione pelo menos um incumprimento da conta.']);
             }
 
-            $totalAmount = (float) ($data['total_amount'] ?? $arrears->sum('outstanding_amount'));
+            $totalAmount = DecimalMoney::sum($arrears->pluck('outstanding_amount'));
             $installmentCount = max(1, (int) ($data['installment_count'] ?? 1));
             $start = CarbonImmutable::parse($data['starts_on'] ?? today()->addMonth()->startOfMonth());
 
             $agreement = new RegularizationAgreement;
             $agreement->forceFill([
-                'tenant_financial_account_id' => $account->id,
-                'lease_contract_id' => $account->lease_contract_id,
-                'user_id' => $account->user_id,
+                'tenant_financial_account_id' => $lockedAccount->id,
+                'lease_contract_id' => $lockedAccount->lease_contract_id,
+                'user_id' => $lockedAccount->user_id,
                 'agreement_number' => $this->numbers->agreementNumber(),
                 'status' => RegularizationAgreementStatus::Proposed,
                 'total_amount' => $totalAmount,
@@ -64,14 +74,16 @@ class RegularizationAgreementService
                 'updated_by' => $actor->id,
             ])->save();
 
-            $portion = round($totalAmount / $installmentCount, 2);
+            $portion = DecimalMoney::divide($totalAmount, $installmentCount);
             for ($i = 1; $i <= $installmentCount; $i++) {
-                $amount = $i === $installmentCount ? round($totalAmount - ($portion * ($installmentCount - 1)), 2) : $portion;
+                $amount = $i === $installmentCount
+                    ? DecimalMoney::subtract($totalAmount, DecimalMoney::multiply($portion, $installmentCount - 1))
+                    : $portion;
                 RegularizationInstallment::query()->create([
                     'regularization_agreement_id' => $agreement->id,
-                    'tenant_financial_account_id' => $account->id,
-                    'lease_contract_id' => $account->lease_contract_id,
-                    'user_id' => $account->user_id,
+                    'tenant_financial_account_id' => $lockedAccount->id,
+                    'lease_contract_id' => $lockedAccount->lease_contract_id,
+                    'user_id' => $lockedAccount->user_id,
                     'status' => RegularizationInstallmentStatus::Scheduled,
                     'installment_number' => $i,
                     'due_date' => $start->addMonths($i - 1),
@@ -98,30 +110,58 @@ class RegularizationAgreementService
 
     public function approve(RegularizationAgreement $agreement, User $actor): RegularizationAgreement
     {
-        $agreement->forceFill([
-            'status' => RegularizationAgreementStatus::Active,
-            'approved_at' => now(),
-            'activated_at' => now(),
-            'approved_by' => $actor->id,
-            'updated_by' => $actor->id,
-        ])->save();
+        return DB::transaction(function () use ($agreement, $actor): RegularizationAgreement {
+            $lockedAgreement = RegularizationAgreement::query()
+                ->whereKey($agreement->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $this->auditLogger->record(AuditEvents::APPROVE, $agreement, 'finance', 'regularization_agreement_approve', 'Acordo de regularização aprovado e ativado.');
+            if ($this->agreementHasStatus($lockedAgreement, RegularizationAgreementStatus::Active)) {
+                return $lockedAgreement;
+            }
 
-        return $agreement->refresh();
+            $lockedAgreement->forceFill([
+                'status' => RegularizationAgreementStatus::Active,
+                'approved_at' => now(),
+                'activated_at' => now(),
+                'approved_by' => $actor->id,
+                'updated_by' => $actor->id,
+            ])->save();
+
+            $this->auditLogger->record(AuditEvents::APPROVE, $lockedAgreement, 'finance', 'regularization_agreement_approve', 'Acordo de regularização aprovado e ativado.');
+
+            return $lockedAgreement->refresh();
+        });
     }
 
     public function cancel(RegularizationAgreement $agreement, User $actor, string $reason): RegularizationAgreement
     {
-        $agreement->forceFill([
-            'status' => RegularizationAgreementStatus::Cancelled,
-            'cancelled_at' => now(),
-            'internal_notes' => trim(($agreement->internal_notes ? $agreement->internal_notes."\n" : '').'Cancelamento: '.$reason),
-            'updated_by' => $actor->id,
-        ])->save();
+        return DB::transaction(function () use ($agreement, $actor, $reason): RegularizationAgreement {
+            $lockedAgreement = RegularizationAgreement::query()
+                ->whereKey($agreement->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            if ($this->agreementHasStatus($lockedAgreement, RegularizationAgreementStatus::Cancelled)) {
+                return $lockedAgreement;
+            }
 
-        $this->auditLogger->record(AuditEvents::UPDATE, $agreement, 'finance', 'regularization_agreement_cancel', 'Acordo de regularização cancelado.');
+            $lockedAgreement->forceFill([
+                'status' => RegularizationAgreementStatus::Cancelled,
+                'cancelled_at' => now(),
+                'internal_notes' => trim(($lockedAgreement->internal_notes ? $lockedAgreement->internal_notes."\n" : '').'Cancelamento: '.$reason),
+                'updated_by' => $actor->id,
+            ])->save();
 
-        return $agreement->refresh();
+            $this->auditLogger->record(AuditEvents::UPDATE, $lockedAgreement, 'finance', 'regularization_agreement_cancel', 'Acordo de regularização cancelado.');
+
+            return $lockedAgreement->refresh();
+        });
+    }
+
+    private function agreementHasStatus(RegularizationAgreement $agreement, RegularizationAgreementStatus $expected): bool
+    {
+        $status = $agreement->getAttribute('status');
+
+        return $status === $expected || $status === $expected->value;
     }
 }

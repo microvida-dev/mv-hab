@@ -25,10 +25,10 @@ class UnifiedPlatformAccessibilityTest extends TestCase
         $this->actingAs($administrator)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('for="universal-search"', false)
-            ->assertSee('aria-describedby="universal-search-help"', false)
+            ->assertSee('for="dashboard-sidebar-search"', false)
+            ->assertSee('aria-label="Pesquisar"', false)
             ->assertSee('focus-visible:ring-2', false)
-            ->assertSee('aria-label="Fixar Atendimento"', false);
+            ->assertSee('aria-label="Abrir navegação"', false);
     }
 
     private function userWithRole(string $role): User

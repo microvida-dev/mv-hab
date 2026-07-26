@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property SecurityAlertSeverity $severity
+ * @property int|null $municipality_id
  */
 class SecurityAlert extends Model
 {
@@ -38,6 +39,12 @@ class SecurityAlert extends Model
     public function rule(): BelongsTo
     {
         return $this->belongsTo(SecurityAlertRule::class, 'security_alert_rule_id');
+    }
+
+    /** @return BelongsTo<Municipality, $this> */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 
     /**

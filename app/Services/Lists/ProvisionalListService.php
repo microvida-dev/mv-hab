@@ -10,6 +10,7 @@ use App\Models\RankingSnapshot;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use Closure;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -82,36 +83,44 @@ class ProvisionalListService
 
     public function sendToReview(ProvisionalList $list, User $actor): ProvisionalList
     {
-        if ($this->provisionalStatus($list) !== ProvisionalListStatus::Draft) {
-            throw ValidationException::withMessages(['provisional_list' => 'Apenas listas em rascunho podem seguir para revisão.']);
-        }
+        return $this->withLockedList($list, function (ProvisionalList $list) use ($actor): ProvisionalList {
+            if ($this->provisionalStatus($list) !== ProvisionalListStatus::Draft) {
+                throw ValidationException::withMessages(['provisional_list' => 'Apenas listas em rascunho podem seguir para revisão.']);
+            }
 
-        $list->forceFill([
-            'status' => ProvisionalListStatus::UnderReview,
-            'reviewed_by' => $actor->id,
-            'reviewed_at' => now(),
-        ])->save();
+            $list->forceFill([
+                'status' => ProvisionalListStatus::UnderReview,
+                'reviewed_by' => $actor->id,
+                'reviewed_at' => now(),
+            ])->save();
 
-        $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'provisional_list_review', 'Lista provisória enviada para revisão.');
+            $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'provisional_list_review', 'Lista provisória enviada para revisão.');
 
-        return $list->refresh();
+            return $list->refresh();
+        });
     }
 
     public function approve(ProvisionalList $list, User $actor): ProvisionalList
     {
-        if (! $this->provisionalStatusIsIn($list, [ProvisionalListStatus::Draft, ProvisionalListStatus::UnderReview])) {
-            throw ValidationException::withMessages(['provisional_list' => 'A lista provisória não está num estado aprovável.']);
-        }
+        return $this->withLockedList($list, function (ProvisionalList $list) use ($actor): ProvisionalList {
+            if ($this->provisionalStatus($list) === ProvisionalListStatus::Approved) {
+                return $list;
+            }
 
-        $list->forceFill([
-            'status' => ProvisionalListStatus::Approved,
-            'approved_by' => $actor->id,
-            'approved_at' => now(),
-        ])->save();
+            if (! $this->provisionalStatusIsIn($list, [ProvisionalListStatus::Draft, ProvisionalListStatus::UnderReview])) {
+                throw ValidationException::withMessages(['provisional_list' => 'A lista provisória não está num estado aprovável.']);
+            }
 
-        $this->auditLogger->record(AuditEvents::APPROVE, $list, 'public_lists', 'provisional_list_approve', 'Lista provisória aprovada.');
+            $list->forceFill([
+                'status' => ProvisionalListStatus::Approved,
+                'approved_by' => $actor->id,
+                'approved_at' => now(),
+            ])->save();
 
-        return $list->refresh();
+            $this->auditLogger->record(AuditEvents::APPROVE, $list, 'public_lists', 'provisional_list_approve', 'Lista provisória aprovada.');
+
+            return $list->refresh();
+        });
     }
 
     /**
@@ -136,55 +145,79 @@ class ProvisionalListService
      */
     public function openComplaintPeriod(ProvisionalList $list, User $actor, array $data = []): ProvisionalList
     {
-        if (! $this->provisionalStatusIsIn($list, [ProvisionalListStatus::Published, ProvisionalListStatus::ComplaintPeriodClosed])) {
-            throw ValidationException::withMessages(['provisional_list' => 'A lista deve estar publicada antes de abrir reclamações.']);
-        }
+        return $this->withLockedList($list, function (ProvisionalList $list) use ($data): ProvisionalList {
+            if ($this->provisionalStatus($list) === ProvisionalListStatus::ComplaintPeriodOpen) {
+                return $list;
+            }
 
-        $list->forceFill([
-            'status' => ProvisionalListStatus::ComplaintPeriodOpen,
-            'complaint_period_starts_at' => $data['complaint_period_starts_at'] ?? $list->complaint_period_starts_at ?? now(),
-            'complaint_period_ends_at' => $data['complaint_period_ends_at'] ?? $list->complaint_period_ends_at,
-        ])->save();
+            if (! $this->provisionalStatusIsIn($list, [ProvisionalListStatus::Published, ProvisionalListStatus::ComplaintPeriodClosed])) {
+                throw ValidationException::withMessages(['provisional_list' => 'A lista deve estar publicada antes de abrir reclamações.']);
+            }
 
-        $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'provisional_list_open_complaints', 'Prazo de reclamação aberto.');
+            $list->forceFill([
+                'status' => ProvisionalListStatus::ComplaintPeriodOpen,
+                'complaint_period_starts_at' => $data['complaint_period_starts_at'] ?? $list->complaint_period_starts_at ?? now(),
+                'complaint_period_ends_at' => $data['complaint_period_ends_at'] ?? $list->complaint_period_ends_at,
+            ])->save();
 
-        return $list->refresh();
+            $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'provisional_list_open_complaints', 'Prazo de reclamação aberto.');
+
+            return $list->refresh();
+        });
     }
 
     public function closeComplaintPeriod(ProvisionalList $list, User $actor): ProvisionalList
     {
-        if ($this->provisionalStatus($list) !== ProvisionalListStatus::ComplaintPeriodOpen) {
-            throw ValidationException::withMessages(['provisional_list' => 'A lista não tem prazo de reclamação aberto.']);
-        }
+        return $this->withLockedList($list, function (ProvisionalList $list): ProvisionalList {
+            if ($this->provisionalStatus($list) === ProvisionalListStatus::ComplaintPeriodClosed) {
+                return $list;
+            }
 
-        $list->forceFill([
-            'status' => ProvisionalListStatus::ComplaintPeriodClosed,
-            'complaint_period_ends_at' => $list->complaint_period_ends_at ?? now(),
-        ])->save();
+            if ($this->provisionalStatus($list) !== ProvisionalListStatus::ComplaintPeriodOpen) {
+                throw ValidationException::withMessages(['provisional_list' => 'A lista não tem prazo de reclamação aberto.']);
+            }
 
-        $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'provisional_list_close_complaints', 'Prazo de reclamação fechado.');
+            $list->forceFill([
+                'status' => ProvisionalListStatus::ComplaintPeriodClosed,
+                'complaint_period_ends_at' => $list->complaint_period_ends_at ?? now(),
+            ])->save();
 
-        return $list->refresh();
+            $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'provisional_list_close_complaints', 'Prazo de reclamação fechado.');
+
+            return $list->refresh();
+        });
     }
 
     public function cancel(ProvisionalList $list, User $actor): ProvisionalList
     {
-        if ($this->provisionalStatusIsIn($list, [ProvisionalListStatus::Published, ProvisionalListStatus::ComplaintPeriodOpen, ProvisionalListStatus::ComplaintPeriodClosed])) {
-            throw ValidationException::withMessages(['provisional_list' => 'Listas publicadas não devem ser canceladas sem procedimento formal de substituição.']);
-        }
+        return $this->withLockedList($list, function (ProvisionalList $list): ProvisionalList {
+            if ($this->provisionalStatus($list) === ProvisionalListStatus::Cancelled) {
+                return $list;
+            }
 
-        $list->forceFill(['status' => ProvisionalListStatus::Cancelled])->save();
-        $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'provisional_list_cancel', 'Lista provisória cancelada.');
+            if ($this->provisionalStatusIsIn($list, [ProvisionalListStatus::Published, ProvisionalListStatus::ComplaintPeriodOpen, ProvisionalListStatus::ComplaintPeriodClosed])) {
+                throw ValidationException::withMessages(['provisional_list' => 'Listas publicadas não devem ser canceladas sem procedimento formal de substituição.']);
+            }
 
-        return $list->refresh();
+            $list->forceFill(['status' => ProvisionalListStatus::Cancelled])->save();
+            $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'provisional_list_cancel', 'Lista provisória cancelada.');
+
+            return $list->refresh();
+        });
     }
 
     public function archive(ProvisionalList $list, User $actor): ProvisionalList
     {
-        $list->forceFill(['status' => ProvisionalListStatus::Archived])->save();
-        $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'provisional_list_archive', 'Lista provisória arquivada.');
+        return $this->withLockedList($list, function (ProvisionalList $list): ProvisionalList {
+            if ($this->provisionalStatus($list) === ProvisionalListStatus::Archived) {
+                return $list;
+            }
 
-        return $list->refresh();
+            $list->forceFill(['status' => ProvisionalListStatus::Archived])->save();
+            $this->auditLogger->record(AuditEvents::UPDATE, $list, 'public_lists', 'provisional_list_archive', 'Lista provisória arquivada.');
+
+            return $list->refresh();
+        });
     }
 
     private function generateListNumber(): string
@@ -218,5 +251,19 @@ class ProvisionalListService
         }
 
         return is_string($status) ? ProvisionalListStatus::tryFrom($status) : null;
+    }
+
+    /**
+     * @param  Closure(ProvisionalList): ProvisionalList  $transition
+     */
+    private function withLockedList(ProvisionalList $list, Closure $transition): ProvisionalList
+    {
+        return DB::transaction(function () use ($list, $transition): ProvisionalList {
+            $lockedList = ProvisionalList::query()
+                ->lockForUpdate()
+                ->findOrFail($list->id);
+
+            return $transition($lockedList);
+        });
     }
 }

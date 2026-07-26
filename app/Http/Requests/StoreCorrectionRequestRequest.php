@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\CorrectionIssueType;
 use App\Enums\CorrectionRequiredAction;
+use App\Models\AdministrativeProcess;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,7 +12,10 @@ class StoreCorrectionRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $process = $this->route('administrativeProcess');
+
+        return $process instanceof AdministrativeProcess
+            && $this->user()?->can('createBackoffice', $process) === true;
     }
 
     /**

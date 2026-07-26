@@ -8,15 +8,17 @@ use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\Allocation;
+use App\Models\Application;
+use App\Models\HousingUnit;
 use App\Models\User;
-use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\BaseTimelineProvider;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use Illuminate\Support\Collection;
 
 class AllocationTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
-        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory,
     ) {}
 
     public function forUser(User $user, array $dashboard = []): array
@@ -109,28 +111,82 @@ class AllocationTimelineProvider extends BaseTimelineProvider
 
     private function description(Allocation $allocation): string
     {
-        $application = $allocation->application?->application_number ?? 'Candidatura';
-        $candidate = $allocation->candidate?->name ?? 'Candidato';
-        $housing = $allocation->housingUnit?->reference ?? $allocation->housingUnit?->code ?? 'Habitação';
-
-        return trim("{$application} · {$candidate} · {$housing}");
+        return trim(sprintf(
+            '%s · %s · %s',
+            $this->applicationNumber($allocation),
+            $this->candidateName($allocation),
+            $this->housingCode($allocation),
+        ));
     }
 
     /** @return array<string, mixed> */
     private function metadata(Allocation $allocation): array
     {
+        $application = $this->application($allocation);
+        $candidate = $this->candidate($allocation);
+
         return [
             'allocation_id' => $allocation->getKey(),
             'application_id' => $allocation->application_id,
-            'application_number' => $allocation->application?->application_number,
+            'application_number' => $application?->application_number,
             'candidate_id' => $allocation->user_id,
-            'candidate_name' => $allocation->candidate?->name,
+            'candidate_name' => $candidate?->name,
             'housing_unit_id' => $allocation->housing_unit_id,
             'contest_id' => $allocation->contest_id,
             'contest_title' => $allocation->contest?->title,
-            'status' => $allocation->status?->value ?? $allocation->status,
+            'status' => $allocation->status->value,
             'rank_position' => $allocation->rank_position,
-            'acceptance_deadline_at' => $allocation->acceptance_deadline_at?->toIso8601String(),
+            'acceptance_deadline_at' => $this->iso($allocation->acceptance_deadline_at),
         ];
+    }
+
+    private function application(Allocation $allocation): ?Application
+    {
+        $relation = $allocation->relationLoaded('application')
+            ? $allocation->getRelation('application')
+            : null;
+
+        return $relation instanceof Application ? $relation : null;
+    }
+
+    private function applicationNumber(Allocation $allocation): string
+    {
+        $application = $this->application($allocation);
+
+        return $application === null
+            ? 'Candidatura'
+            : ($application->application_number ?? 'Candidatura');
+    }
+
+    private function candidate(Allocation $allocation): ?User
+    {
+        $relation = $allocation->relationLoaded('candidate')
+            ? $allocation->getRelation('candidate')
+            : null;
+
+        return $relation instanceof User ? $relation : null;
+    }
+
+    private function candidateName(Allocation $allocation): string
+    {
+        $candidate = $this->candidate($allocation);
+
+        return $candidate === null ? 'Candidato' : $candidate->name;
+    }
+
+    private function housingUnit(Allocation $allocation): ?HousingUnit
+    {
+        $relation = $allocation->relationLoaded('housingUnit')
+            ? $allocation->getRelation('housingUnit')
+            : null;
+
+        return $relation instanceof HousingUnit ? $relation : null;
+    }
+
+    private function housingCode(Allocation $allocation): string
+    {
+        $housingUnit = $this->housingUnit($allocation);
+
+        return $housingUnit === null ? 'Habitação' : $housingUnit->code;
     }
 }

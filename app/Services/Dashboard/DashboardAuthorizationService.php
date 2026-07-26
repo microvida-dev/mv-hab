@@ -2,7 +2,9 @@
 
 namespace App\Services\Dashboard;
 
+use App\Enums\FeatureKey;
 use App\Models\User;
+use App\Services\Entitlements\MunicipalityEntitlementService;
 use Illuminate\Support\Facades\Route;
 
 class DashboardAuthorizationService
@@ -12,6 +14,8 @@ class DashboardAuthorizationService
 
     /** @var array<int, array<int, string>> */
     private array $permissionNamesByUser = [];
+
+    public function __construct(private readonly MunicipalityEntitlementService $entitlements) {}
 
     public function isActive(User $user): bool
     {
@@ -57,6 +61,11 @@ class DashboardAuthorizationService
 
         $permission = $item['permission'] ?? null;
         if (is_string($permission) && ! $this->hasPermission($user, $permission)) {
+            return false;
+        }
+
+        $feature = $item['feature'] ?? null;
+        if ($feature instanceof FeatureKey && ! $this->entitlements->enabledForUser($user, $feature)) {
             return false;
         }
 
@@ -121,6 +130,7 @@ class DashboardAuthorizationService
         if (! array_key_exists((int) $user->id, $this->roleNamesByUser)) {
             $user->loadMissing('roles.permissions');
             $this->roleNamesByUser[(int) $user->id] = $user->roles
+                ->where('is_active', true)
                 ->pluck('name')
                 ->filter(fn (mixed $name): bool => is_string($name))
                 ->values()
@@ -138,6 +148,7 @@ class DashboardAuthorizationService
         if (! array_key_exists((int) $user->id, $this->permissionNamesByUser)) {
             $user->loadMissing('roles.permissions');
             $this->permissionNamesByUser[(int) $user->id] = $user->roles
+                ->where('is_active', true)
                 ->flatMap(fn ($role) => $role->permissions->pluck('name'))
                 ->filter(fn (mixed $name): bool => is_string($name))
                 ->unique()

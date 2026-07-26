@@ -105,4 +105,23 @@ class ControlledWithdrawalService
 
         return $withdrawal->refresh();
     }
+
+    public function markReviewed(ControlledWithdrawal $withdrawal, User $actor): ControlledWithdrawal
+    {
+        return DB::transaction(function () use ($withdrawal, $actor): ControlledWithdrawal {
+            $withdrawal->forceFill([
+                'processed_by' => $actor->id,
+            ])->save();
+
+            $this->auditLogger->record(
+                AuditEvents::UPDATE,
+                $withdrawal,
+                'allocations',
+                'controlled_withdrawal_review',
+                'Desistência revista no backoffice.',
+            );
+
+            return $withdrawal->refresh();
+        });
+    }
 }

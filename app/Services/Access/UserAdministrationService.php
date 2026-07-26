@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Policies\RoleAssignmentPolicy;
 use App\Policies\UserAdministrationPolicy;
+use App\Services\Security\MfaEnforcementService;
 use App\Services\Security\SessionRevocationService;
 use DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -17,22 +18,13 @@ use Illuminate\Support\Str;
 
 class UserAdministrationService
 {
-    private const MFA_REQUIRED_ROLES = [
-        'administrator',
-        'municipal_technician',
-        'jury',
-        'legal_manager',
-        'financial_manager',
-        'housing_manager',
-        'inspection_manager',
-        'auditor',
-    ];
-
     public function __construct(
         private readonly AccessChangeLogger $logger,
         private readonly UserAdministrationPolicy $userPolicy,
         private readonly RoleAssignmentPolicy $rolePolicy,
+        private readonly MfaEnforcementService $mfa,
         private readonly SessionRevocationService $sessions,
+        private readonly AccessMunicipalScopeService $municipalScope,
     ) {}
 
     /**
@@ -44,19 +36,24 @@ class UserAdministrationService
             throw new AuthorizationException('Sem permissão para criar utilizadores.');
         }
 
-        $role = Role::query()->where('name', (string) $data['role'])->firstOrFail();
+        $role = $this->municipalScope->roles(Role::query(), $actor)
+            ->active()
+            ->where('name', (string) $data['role'])
+            ->firstOrFail();
         $this->authorizeInitialRole($actor, $role);
-        $team = $this->teamFromData($data);
+        $team = $this->teamFromData($data, $actor);
         $this->ensureTeamAcceptsMembers($team);
 
         return DB::transaction(function () use ($actor, $data, $role, $team): User {
             $user = new User;
+            $user->municipality_id = $actor->municipality_id;
             $user->name = (string) $data['name'];
             $user->email = (string) $data['email'];
             $user->email_verified_at = now();
             $user->password = Str::password(40);
             $user->status = (string) ($data['status'] ?? 'active');
-            $user->mfa_required = (bool) ($data['mfa_required'] ?? false) || $this->roleRequiresMfa($role->name);
+            $user->mfa_required = (bool) ($data['mfa_required'] ?? false)
+                || $this->mfa->isLegacySensitiveRole($role->name);
             $user->internal_notes = $data['internal_notes'] ?? null;
             $user->save();
 
@@ -300,13 +297,14 @@ class UserAdministrationService
     /**
      * @param  array<string, mixed>  $data
      */
-    private function teamFromData(array $data): ?MunicipalTeam
+    private function teamFromData(array $data, User $actor): ?MunicipalTeam
     {
         if (empty($data['team_id'])) {
             return null;
         }
 
-        return MunicipalTeam::query()->findOrFail((int) $data['team_id']);
+        return $this->municipalScope->teams(MunicipalTeam::query(), $actor)
+            ->findOrFail((int) $data['team_id']);
     }
 
     private function ensureTeamAcceptsMembers(?MunicipalTeam $team): void
@@ -314,11 +312,6 @@ class UserAdministrationService
         if ($team instanceof MunicipalTeam && ! $team->isActive()) {
             throw new DomainException('Equipas inativas não podem receber novas atribuições.');
         }
-    }
-
-    private function roleRequiresMfa(string $roleName): bool
-    {
-        return in_array($roleName, self::MFA_REQUIRED_ROLES, true);
     }
 
     private function roleIsWithinActorPermissions(User $actor, Role $role): bool
@@ -340,6 +333,7 @@ class UserAdministrationService
 
         return ! User::query()
             ->whereKeyNot($target->id)
+            ->where('municipality_id', $target->municipality_id)
             ->where('status', 'active')
             ->whereHas('roles', fn ($query) => $query->where('name', 'administrator'))
             ->exists();

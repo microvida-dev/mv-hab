@@ -2,13 +2,21 @@
 
 namespace App\Http\Requests;
 
+use App\Models\AdministrativeDecision;
+use App\Models\AdministrativeProcess;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreAdministrativeDecisionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $process = $this->route('administrativeProcess');
+
+        return $process instanceof AdministrativeProcess
+            && ($this->user()?->can(
+                'createBackoffice',
+                [AdministrativeDecision::class, $process],
+            ) ?? false);
     }
 
     /**

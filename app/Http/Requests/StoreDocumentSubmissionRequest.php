@@ -20,6 +20,16 @@ class StoreDocumentSubmissionRequest extends FormRequest
         return [
             'document_type_id' => ['required', 'integer', 'exists:document_types,id'],
             'required_document_id' => ['required', 'integer', 'exists:required_documents,id'],
+            'requirement_instance' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:255',
+            ],
+            'reference_period' => [
+                'nullable',
+                'date_format:Y-m',
+            ],
             'household_member_id' => ['nullable', 'integer', 'exists:household_members,id'],
             'income_record_id' => ['nullable', 'integer', 'exists:income_records,id'],
             'current_housing_situation_id' => ['nullable', 'integer', 'exists:current_housing_situations,id'],

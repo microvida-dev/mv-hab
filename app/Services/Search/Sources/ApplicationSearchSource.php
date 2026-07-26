@@ -2,8 +2,10 @@
 
 namespace App\Services\Search\Sources;
 
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\User;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Search\Contracts\SearchSource;
 use App\Services\Search\SearchResultAuthorizationService;
 use App\Services\Search\Sources\Concerns\BuildsSearchResults;
@@ -14,7 +16,10 @@ class ApplicationSearchSource implements SearchSource
 {
     use BuildsSearchResults;
 
-    public function __construct(private readonly SearchResultAuthorizationService $authorization) {}
+    public function __construct(
+        private readonly SearchResultAuthorizationService $authorization,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
     public function key(): string
     {
@@ -40,11 +45,17 @@ class ApplicationSearchSource implements SearchSource
             ? 'backoffice.cases.applications.show'
             : 'backoffice.applications.show';
 
-        if (! $this->authorization->canAccess($user, $routeName, 'applications.view')) {
+        if (! $this->authorization->canAccess(
+            $user,
+            $routeName,
+            'applications.view',
+            feature: FeatureKey::ApplicationReview,
+        )) {
             return [];
         }
 
-        return array_values(Application::query()
+        return array_values($this->municipalScope
+            ->applications(Application::query(), $user)
             ->select(['id', 'public_id', 'application_number', 'status', 'contest_id', 'program_id', 'submitted_at', 'created_at'])
             ->with(['contest:id,title', 'program:id,name'])
             ->where(function (Builder $query) use ($term): void {

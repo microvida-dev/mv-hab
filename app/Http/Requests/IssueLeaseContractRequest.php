@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Contract;
 use Illuminate\Foundation\Http\FormRequest;
 
 class IssueLeaseContractRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $contract = $this->route('leaseContract');
+
+        return $contract instanceof Contract
+            && ($this->user()?->can('issueBackoffice', $contract) ?? false);
     }
 
     /**

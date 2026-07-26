@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\AccessDenialReason;
+use App\Exceptions\AccessDeniedException;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -13,7 +15,13 @@ class BlockInactiveBackofficeUsers
     {
         $user = $request->user();
 
-        abort_if($user instanceof User && ! $user->hasRole('candidate') && ($user->status ?? 'active') !== 'active', 403);
+        if ($user instanceof User && $user->hasRole('candidate')) {
+            throw new AccessDeniedException(AccessDenialReason::CandidateBackofficeBoundary);
+        }
+
+        if ($user instanceof User && ($user->status ?? 'active') !== 'active') {
+            throw new AccessDeniedException(AccessDenialReason::InactiveAccount);
+        }
 
         return $next($request);
     }

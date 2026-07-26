@@ -4,19 +4,29 @@ namespace App\Policies;
 
 use App\Models\RetentionExecution;
 use App\Models\User;
-use App\Policies\Concerns\HandlesSecurityAccess;
+use App\Services\Rgpd\PrivacyMunicipalScopeService;
 
 class RetentionExecutionPolicy
 {
-    use HandlesSecurityAccess;
+    public function __construct(
+        private readonly PrivacyMunicipalScopeService $scope,
+    ) {}
 
     public function view(User $user, RetentionExecution $execution): bool
     {
-        return $this->privacy($user);
+        return $user->hasPermission('rgpd.retention.view')
+            && $this->scope->ownsRetentionExecution($user, $execution);
     }
 
-    public function run(User $user, RetentionExecution $execution): bool
+    public function approve(User $user, RetentionExecution $execution): bool
     {
-        return $this->privacy($user, 'approve');
+        return $user->hasPermission('rgpd.retention.approve')
+            && $this->scope->ownsRetentionExecution($user, $execution);
+    }
+
+    public function execute(User $user, RetentionExecution $execution): bool
+    {
+        return $user->hasPermission('rgpd.retention.execute')
+            && $this->scope->ownsRetentionExecution($user, $execution);
     }
 }

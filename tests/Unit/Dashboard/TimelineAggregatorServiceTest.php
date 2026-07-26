@@ -5,7 +5,6 @@ namespace Tests\Unit\Dashboard;
 use App\Data\Dashboard\TimelineEvent;
 use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
-use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineAggregatorService;
 use App\Services\Dashboard\Timeline\TimelineProviderInterface;
@@ -18,7 +17,8 @@ class TimelineAggregatorServiceTest extends TestCase
     {
         Carbon::setTestNow('2026-07-02 08:00:00');
 
-        $provider = new class implements TimelineProviderInterface {
+        $provider = new class implements TimelineProviderInterface
+        {
             public function forUser(User $user, array $dashboard = []): array
             {
                 return [
@@ -47,7 +47,7 @@ class TimelineAggregatorServiceTest extends TestCase
             }
         };
 
-        $timeline = (new TimelineAggregatorService([$provider]))->forUser(new User());
+        $timeline = (new TimelineAggregatorService([$provider]))->forUser(new User);
 
         $this->assertSame('critical-later', $timeline['items'][0]['id']);
         $this->assertSame('high-earlier', $timeline['items'][1]['id']);
@@ -61,7 +61,8 @@ class TimelineAggregatorServiceTest extends TestCase
     {
         Carbon::setTestNow('2026-07-02 08:00:00');
 
-        $provider = new class implements TimelineProviderInterface {
+        $provider = new class implements TimelineProviderInterface
+        {
             public function forUser(User $user, array $dashboard = []): array
             {
                 return [
@@ -90,14 +91,15 @@ class TimelineAggregatorServiceTest extends TestCase
             }
         };
 
-        $timeline = (new TimelineAggregatorService([$provider]))->forUser(new User());
+        $timeline = (new TimelineAggregatorService([$provider]))->forUser(new User);
 
         $this->assertSame(['Hoje', 'Amanhã', 'Sem data'], array_column($timeline['groups'], 'label'));
     }
 
     public function test_it_removes_duplicate_events_by_id(): void
     {
-        $provider = new class implements TimelineProviderInterface {
+        $provider = new class implements TimelineProviderInterface
+        {
             public function forUser(User $user, array $dashboard = []): array
             {
                 return [
@@ -107,7 +109,7 @@ class TimelineAggregatorServiceTest extends TestCase
             }
         };
 
-        $timeline = (new TimelineAggregatorService([$provider]))->forUser(new User());
+        $timeline = (new TimelineAggregatorService([$provider]))->forUser(new User);
 
         $this->assertCount(1, $timeline['items']);
         $this->assertSame('Primeiro', $timeline['items'][0]['title']);

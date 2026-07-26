@@ -94,7 +94,7 @@ class ProcedureTemplateController extends Controller
 
     public function generateDocument(RenderProcedureTemplateRequest $request, ProcedureTemplate $procedureTemplate): RedirectResponse
     {
-        Gate::authorize('view', $procedureTemplate);
+        Gate::authorize('generateBackoffice', $procedureTemplate);
         $document = $this->documents->generate($procedureTemplate, $request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.generated-documents.show', $document)->with('success', 'Documento gerado.');

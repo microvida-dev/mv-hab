@@ -16,6 +16,7 @@ use App\Models\Contract;
 use App\Models\LeaseContractDocument;
 use App\Models\MaintenanceCategory;
 use App\Models\MaintenanceRequest;
+use App\Models\Municipality;
 use App\Models\PropertyInspection;
 use App\Models\TenantFinancialAccount;
 use App\Models\TenantInvoice;
@@ -68,10 +69,14 @@ class QA26ContractsRentTenantPortalTest extends TestCase
             'tenant_visible' => true,
         ]);
 
+        $contractNumber = $context['contract']->contract_number;
+
+        $this->assertIsString($contractNumber);
+
         $this->actingAs($context['tenant'])
             ->get(route('tenant.contracts.show', $context['contract']))
             ->assertOk()
-            ->assertSee($context['contract']->contract_number);
+            ->assertSee($contractNumber);
         $this->actingAs($context['tenant'])->get(route('tenant.invoices.show', $invoice))->assertOk();
         $this->actingAs($context['tenant'])->get(route('tenant.payments.show', $payment))->assertOk();
         $this->actingAs($context['tenant'])->get(route('tenant.maintenance.show', $maintenanceRequest))->assertOk();
@@ -97,7 +102,16 @@ class QA26ContractsRentTenantPortalTest extends TestCase
             'storage_path' => 'contracts/qa26/contract.html',
             'html_content' => '<html><body>Contrato QA26 privado</body></html>',
         ]);
-        Storage::disk('local')->put($document->storage_path, $document->html_content);
+        $storagePath = $document->storage_path;
+        $htmlContent = $document->html_content;
+
+        $this->assertIsString($storagePath);
+        $this->assertIsString($htmlContent);
+
+        Storage::disk('local')->put(
+            $storagePath,
+            $htmlContent,
+        );
 
         $otherTenant = $this->tenantContext(['contract_number' => 'CTR-QA26-DOC-OTHER'])['tenant'];
 
@@ -232,7 +246,15 @@ class QA26ContractsRentTenantPortalTest extends TestCase
     public function test_qa26_maintenance_workflow_rejects_premature_close_and_preserves_history(): void
     {
         $context = $this->tenantContext();
-        $category = MaintenanceCategory::factory()->create(['default_urgency' => MaintenanceUrgency::Normal]);
+        $municipalityId = $context['manager']->municipality_id;
+
+        $this->assertIsInt($municipalityId);
+
+        $category = MaintenanceCategory::factory()->create([
+            'municipality_id' => $municipalityId,
+            'is_system' => false,
+            'default_urgency' => MaintenanceUrgency::Normal,
+        ]);
 
         $this->actingAs($context['tenant'])
             ->post(route('tenant.maintenance.store'), [
@@ -334,11 +356,13 @@ class QA26ContractsRentTenantPortalTest extends TestCase
     private function tenantContext(array $contractOverrides = []): array
     {
         $this->seed(SystemAccessSeeder::class);
+        session(['mfa.verified_at' => now()]);
 
-        $tenant = User::factory()->create();
+        $municipality = Municipality::factory()->create();
+        $tenant = User::factory()->create(['municipality_id' => $municipality->id]);
         $tenant->assignRole('candidate');
 
-        $manager = User::factory()->create();
+        $manager = User::factory()->create(['municipality_id' => $municipality->id]);
         $manager->assignRole('financial_manager');
         $manager->assignRole('maintenance_manager');
 
@@ -355,6 +379,7 @@ class QA26ContractsRentTenantPortalTest extends TestCase
             'activated_at' => now(),
             'activated_by' => $manager->id,
         ], $contractOverrides));
+        $contract->housingUnit()->update(['municipality_id' => $municipality->id]);
 
         app(TenantPortalAccessService::class)->ensureForUser($tenant, $manager);
         $account = app(TenantFinancialAccountService::class)->ensureForContract($contract, $manager);

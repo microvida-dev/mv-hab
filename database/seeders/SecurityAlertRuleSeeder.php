@@ -18,6 +18,7 @@ class SecurityAlertRuleSeeder extends Seeder
                 ['code' => $rule['code']],
                 [
                     ...$rule,
+                    'municipality_id' => null,
                     'created_by' => $admin?->id,
                     'updated_by' => $admin?->id,
                 ],

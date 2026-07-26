@@ -17,7 +17,7 @@ class AdministrativeProcessNoteController extends Controller
 
     public function store(StoreAdministrativeProcessNoteRequest $request, AdministrativeProcess $administrativeProcess): RedirectResponse
     {
-        Gate::authorize('create', AdministrativeProcessNote::class);
+        Gate::authorize('createBackoffice', $administrativeProcess);
         $this->noteService->create($administrativeProcess, $request->validated(), $this->authenticatedUser($request));
 
         return back()->with('success', 'Nota criada.');
@@ -25,7 +25,7 @@ class AdministrativeProcessNoteController extends Controller
 
     public function update(StoreAdministrativeProcessNoteRequest $request, AdministrativeProcessNote $administrativeProcessNote): RedirectResponse
     {
-        Gate::authorize('update', $administrativeProcessNote);
+        Gate::authorize('updateBackoffice', $administrativeProcessNote);
         $this->noteService->update($administrativeProcessNote, $request->validated(), $this->authenticatedUser($request));
 
         return back()->with('success', 'Nota atualizada.');
@@ -33,7 +33,7 @@ class AdministrativeProcessNoteController extends Controller
 
     public function destroy(Request $request, AdministrativeProcessNote $administrativeProcessNote): RedirectResponse
     {
-        Gate::authorize('delete', $administrativeProcessNote);
+        Gate::authorize('deleteBackoffice', $administrativeProcessNote);
         $this->noteService->delete($administrativeProcessNote, $this->authenticatedUser($request));
 
         return back()->with('success', 'Nota removida.');

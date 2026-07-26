@@ -52,6 +52,14 @@ class AdministrativeTaskService
     public function complete(AdministrativeTask $task, User $actor): AdministrativeTask
     {
         $task->forceFill(['status' => AdministrativeTaskStatus::Completed, 'completed_at' => now()])->save();
+        $this->auditLogger->record(
+            AuditEvents::UPDATE,
+            $task,
+            'administrative_processes',
+            'task_complete',
+            'Tarefa administrativa concluída.',
+            metadata: ['actor_id' => $actor->id],
+        );
 
         return $task->refresh();
     }
@@ -59,6 +67,14 @@ class AdministrativeTaskService
     public function cancel(AdministrativeTask $task, User $actor): AdministrativeTask
     {
         $task->forceFill(['status' => AdministrativeTaskStatus::Cancelled])->save();
+        $this->auditLogger->record(
+            AuditEvents::UPDATE,
+            $task,
+            'administrative_processes',
+            'task_cancel',
+            'Tarefa administrativa cancelada.',
+            metadata: ['actor_id' => $actor->id],
+        );
 
         return $task->refresh();
     }

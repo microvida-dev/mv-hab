@@ -18,7 +18,7 @@ class AgendaBuildersTest extends TestCase
     {
         Carbon::setTestNow('2026-07-02 08:00:00');
 
-        $day = (new AgendaDayBuilder())->build(Carbon::parse('2026-07-02'), new Collection([
+        $day = (new AgendaDayBuilder)->build(Carbon::parse('2026-07-02'), new Collection([
             new TimelineEvent(
                 id: 'today',
                 type: TimelineType::Task,
@@ -42,7 +42,7 @@ class AgendaBuildersTest extends TestCase
 
     public function test_week_builder_builds_seven_days(): void
     {
-        $week = (new AgendaWeekBuilder())->build(Carbon::parse('2026-07-02'), new Collection([
+        $week = (new AgendaWeekBuilder)->build(Carbon::parse('2026-07-02'), new Collection([
             new TimelineEvent(
                 id: 'event',
                 type: TimelineType::Task,
@@ -57,7 +57,7 @@ class AgendaBuildersTest extends TestCase
 
     public function test_month_builder_builds_weeks_and_summary(): void
     {
-        $month = (new AgendaMonthBuilder())->build(Carbon::parse('2026-07-02'), new Collection([
+        $month = (new AgendaMonthBuilder)->build(Carbon::parse('2026-07-02'), new Collection([
             new TimelineEvent(
                 id: 'event',
                 type: TimelineType::Task,

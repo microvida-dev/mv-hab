@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Models\RentRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRentRuleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('createBackoffice', RentRule::class) ?? false;
     }
 
     /**

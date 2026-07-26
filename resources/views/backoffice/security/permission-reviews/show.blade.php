@@ -7,7 +7,7 @@
             <section class="mv-surface p-5">
                 <p class="text-sm text-ink-500">Estado: {{ $review->status }} · Âmbito: {{ $review->scope }} · Itens: {{ $review->items->count() }}</p>
                 <p class="mt-2 text-sm text-ink-700">{{ $review->summary }}</p>
-                @if (! $review->completed_at)
+                @if (! $review->completed_at && auth()->user()?->can('complete', $review))
                     <form method="POST" action="{{ route('backoffice.security.permission-reviews.complete', $review) }}" class="mt-4 grid gap-3">
                         @csrf
                         <textarea name="summary" class="mv-input" rows="3">{{ $review->summary }}</textarea>

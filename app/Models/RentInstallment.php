@@ -10,7 +10,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property RentInstallmentStatus $status
+ * @property Carbon|null $due_date
+ * @property Carbon|null $overdue_at
+ * @property-read User|null $tenant
+ */
 class RentInstallment extends Model
 {
     /** @use HasFactory<RentInstallmentFactory> */

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\VisitCancellationReason;
 use App\Models\HousingVisit;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -12,8 +13,16 @@ class CancelVisitRequest extends FormRequest
     public function authorize(): bool
     {
         $visit = $this->route('housingVisit');
+        $actor = $this->user();
 
-        return $visit instanceof HousingVisit && ($this->user()?->can('cancel', $visit) ?? false);
+        return $actor instanceof User
+            && $visit instanceof HousingVisit
+            && $actor->can(
+                $this->routeIs('backoffice.*')
+                    ? 'cancelBackoffice'
+                    : 'cancel',
+                $visit,
+            );
     }
 
     /**

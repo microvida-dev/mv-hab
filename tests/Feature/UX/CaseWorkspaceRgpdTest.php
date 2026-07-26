@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\UX;
 
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\DocumentSubmission;
 use App\Models\ProcessTimelineEvent;
@@ -27,8 +28,14 @@ class CaseWorkspaceRgpdTest extends TestCase
             'title' => 'Comprovativo fictício',
             'storage_path' => 'storage/app/private/123456789.pdf',
         ]);
+        $technician = $this->userWithRole();
+        $this->assignDocumentMunicipality(
+            $technician,
+            $document,
+            FeatureKey::ApplicationReview,
+        );
 
-        $this->actingAs($this->userWithRole())
+        $this->actingAs($technician)
             ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.cases.documents.show', $document))
             ->assertOk()
@@ -41,6 +48,7 @@ class CaseWorkspaceRgpdTest extends TestCase
     {
         $technician = $this->userWithRole('municipal_technician');
         $application = Application::factory()->submitted()->create();
+        $this->assignApplicationMunicipality($technician, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
 
         ProcessTimelineEvent::factory()->create([
             'application_id' => $application->id,

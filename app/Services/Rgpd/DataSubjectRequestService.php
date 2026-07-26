@@ -13,7 +13,10 @@ use Illuminate\Support\Str;
 
 class DataSubjectRequestService
 {
-    public function __construct(private readonly AuditTrailService $audit) {}
+    public function __construct(
+        private readonly AuditTrailService $audit,
+        private readonly PrivacyMunicipalScopeService $scope,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -21,8 +24,17 @@ class DataSubjectRequestService
     public function create(array $data, ?User $subject, ?User $actor = null): DataSubjectRequest
     {
         $performer = $actor ?? $subject;
+        abort_unless(
+            $performer instanceof User && $performer->municipality_id !== null,
+            403,
+        );
+
+        if ($subject instanceof User) {
+            abort_unless($this->scope->ownsUser($performer, $subject), 403);
+        }
 
         $request = DataSubjectRequest::query()->create([
+            'municipality_id' => $performer->municipality_id,
             'request_number' => 'RGPD-'.now()->format('YmdHis').'-'.Str::upper(Str::random(5)),
             'user_id' => $subject?->id,
             'requester_name' => $data['requester_name'] ?? $subject?->name,
@@ -33,14 +45,14 @@ class DataSubjectRequestService
             'description' => $data['description'],
             'received_at' => now(),
             'due_at' => now()->addDays(30),
-            'created_by' => $performer?->id,
+            'created_by' => $performer->id,
         ]);
 
         $request->actions()->create([
             'action_type' => DataSubjectRequestActionType::DataSearch,
             'status' => 'pending',
             'description' => 'Pedido RGPD recebido para análise municipal.',
-            'performed_by' => $performer?->id,
+            'performed_by' => $performer->id,
             'performed_at' => now(),
         ]);
 
@@ -51,6 +63,12 @@ class DataSubjectRequestService
 
     public function assign(DataSubjectRequest $request, User $assignee, User $actor): DataSubjectRequest
     {
+        abort_unless(
+            $this->scope->ownsRequest($actor, $request)
+            && $this->scope->ownsUser($actor, $assignee),
+            403,
+        );
+
         $request->forceFill(['assigned_to' => $assignee->id, 'status' => DataSubjectRequestStatus::UnderReview])->save();
         $this->action($request, 'identity_verification', 'Pedido atribuído para análise.', $actor);
 
@@ -59,6 +77,8 @@ class DataSubjectRequestService
 
     public function complete(DataSubjectRequest $request, User $actor, string $summary): DataSubjectRequest
     {
+        abort_unless($this->scope->ownsRequest($actor, $request), 403);
+
         $request->forceFill(['status' => DataSubjectRequestStatus::Completed, 'completed_at' => now(), 'closed_by' => $actor->id, 'internal_notes' => $summary])->save();
         $this->action($request, 'closure', $summary, $actor);
 
@@ -70,6 +90,8 @@ class DataSubjectRequestService
 
     public function reject(DataSubjectRequest $request, User $actor, string $reason): DataSubjectRequest
     {
+        abort_unless($this->scope->ownsRequest($actor, $request), 403);
+
         $request->forceFill(['status' => DataSubjectRequestStatus::Rejected, 'rejected_at' => now(), 'rejection_reason' => $reason, 'closed_by' => $actor->id])->save();
         $this->action($request, 'closure', $reason, $actor);
 
@@ -78,6 +100,8 @@ class DataSubjectRequestService
 
     public function action(DataSubjectRequest $request, string $type, string $description, User $actor): void
     {
+        abort_unless($this->scope->ownsRequest($actor, $request), 403);
+
         $request->actions()->create([
             'action_type' => $type,
             'status' => 'completed',

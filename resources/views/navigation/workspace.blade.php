@@ -19,14 +19,34 @@
                 </div>
             </div>
 
-            <form method="POST" action="{{ route('navigation.favorites.store') }}">
-                @csrf
-                <input type="hidden" name="workspace_key" value="{{ $workspace['key'] }}">
-                <x-ui.action-button type="submit">
-                    <x-mv-icon name="check" size="sm" />
-                    <span>Fixar espaço</span>
-                </x-ui.action-button>
-            </form>
+            <div class="flex flex-wrap gap-2">
+                <form method="POST" action="{{ route('navigation.favorites.store') }}">
+                    @csrf
+
+                    <input type="hidden" name="workspace_key" value="{{ $workspace['key'] }}">
+
+                    <x-ui.action-button type="submit">
+                        <x-mv-icon name="check" size="sm" />
+                        <span>Fixar espaço</span>
+                    </x-ui.action-button>
+                </form>
+
+                <form method="POST" action="{{ route('navigation.workspace-preferences.update') }}">
+                    @csrf
+                    @method('PUT')
+
+                    <input type="hidden" name="preferred_workspace" value="{{ $workspace['key'] }}">
+
+                    <x-ui.action-button type="submit">
+                        <x-mv-icon name="dashboard" size="sm" />
+                        <span>
+                            {{ ($workspacePreferences['preferred_workspace'] ?? null) === $workspace['key']
+                                ? 'Espaço inicial'
+                                : 'Definir inicial' }}
+                        </span>
+                    </x-ui.action-button>
+                </form>
+            </div>
         </div>
     </x-slot>
 
@@ -45,7 +65,7 @@
                                 @foreach ($group['items'] as $item)
                                     <a href="{{ route($item['route'], $item['parameters'] ?? []) }}" class="flex min-h-24 items-start gap-3 px-5 py-4 transition hover:bg-ink-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mvhab-primary focus-visible:ring-inset">
                                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface text-mvhab-primary">
-                                            <x-ui-icon :name="$item['icon'] ?? 'dashboard'" class="h-4 w-4" />
+                                            <x-mv-icon :name="$item['icon'] ?? 'dashboard'" size="xs" />
                                         </span>
                                         <span>
                                             <span class="block text-sm font-semibold text-ink-900">{{ $item['label'] }}</span>
@@ -69,7 +89,7 @@
                         <div class="divide-y divide-ink-100">
                             @forelse ($quickActions as $action)
                                 <a href="{{ route($action['route'], $action['parameters'] ?? []) }}" class="flex items-center gap-3 px-5 py-4 text-sm font-medium text-ink-700 transition hover:bg-ink-50 hover:text-ink-950">
-                                    <x-ui-icon name="arrow" class="h-4 w-4 text-ink-500" />
+                                    <x-mv-icon name="arrow-right" size="xs" class="text-ink-500" />
                                     <span>{{ $action['label'] }}</span>
                                 </a>
                             @empty

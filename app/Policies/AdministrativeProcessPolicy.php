@@ -3,14 +3,18 @@
 namespace App\Policies;
 
 use App\Models\AdministrativeProcess;
+use App\Models\Application;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class AdministrativeProcessPolicy
 {
     use ChecksPermissions;
 
     private const MODULE = 'administrative_processes';
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -33,6 +37,12 @@ class AdministrativeProcessPolicy
             && $this->canAccess($user, self::MODULE, 'create');
     }
 
+    public function createForApplication(User $user, Application $application): bool
+    {
+        return $this->create($user)
+            && $this->municipalScope->ownsApplication($user, $application);
+    }
+
     public function update(User $user, AdministrativeProcess $administrativeProcess): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
@@ -43,5 +53,46 @@ class AdministrativeProcessPolicy
     public function audit(User $user, AdministrativeProcess $administrativeProcess): bool
     {
         return $this->canAccess($user, self::MODULE, 'audit') || $this->view($user, $administrativeProcess);
+    }
+
+    public function viewBackoffice(
+        User $user,
+        AdministrativeProcess $administrativeProcess,
+    ): bool {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view')
+            && $this->municipalScope->ownsAdministrativeProcess($user, $administrativeProcess);
+    }
+
+    public function createBackoffice(
+        User $user,
+        AdministrativeProcess $administrativeProcess,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'create')
+            && ! $administrativeProcess->isClosed()
+            && $this->municipalScope->ownsAdministrativeProcess($user, $administrativeProcess);
+    }
+
+    public function assignBackoffice(
+        User $user,
+        AdministrativeProcess $administrativeProcess,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'assign')
+            && ! $administrativeProcess->isClosed()
+            && $this->municipalScope->ownsAdministrativeProcess($user, $administrativeProcess);
+    }
+
+    public function auditBackoffice(
+        User $user,
+        AdministrativeProcess $administrativeProcess,
+    ): bool {
+        return ! $user->hasRole('candidate')
+            && (
+                $this->canAccess($user, self::MODULE, 'audit')
+                || $this->canAccess($user, self::MODULE, 'view')
+            )
+            && $this->municipalScope->ownsAdministrativeProcess($user, $administrativeProcess);
     }
 }

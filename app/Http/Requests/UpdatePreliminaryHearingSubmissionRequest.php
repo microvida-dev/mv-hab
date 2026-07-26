@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\HearingSubmission;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdatePreliminaryHearingSubmissionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        $submission = $this->route('preliminaryHearingSubmission');
+
+        return $submission instanceof HearingSubmission
+            && ($this->user()?->can('reviewBackoffice', $submission) ?? false);
     }
 
     /**

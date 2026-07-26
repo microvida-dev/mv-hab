@@ -68,6 +68,14 @@ class GeneratedOfficialDocument extends Model
     }
 
     /**
+     * @return BelongsTo<User, $this>
+     */
+    public function generatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'generated_by');
+    }
+
+    /**
      * @return MorphTo<Model, $this>
      */
     public function related(): MorphTo

@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\RentManualReview;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ApproveRentManualReviewRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $review = $this->route('rentManualReview');
+
+        return $review instanceof RentManualReview
+            && $this->user()?->can('approveBackoffice', $review) === true;
     }
 
     /**

@@ -50,6 +50,7 @@ class WorkTaskAuthorizationTest extends TestCase
         ]);
 
         $this->actingAs($support)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.work-tasks.status', $task), [
                 'status' => WorkTask::STATUS_COMPLETED,
                 'outcome_note' => 'Conclusão indevida.',

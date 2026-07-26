@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\UX\Concerns;
 
+use App\Enums\FeatureKey;
 use App\Models\AuditEvent;
 use App\Models\Complaint;
 use App\Models\Contest;
@@ -14,9 +15,12 @@ use App\Models\PropertyInspection;
 use App\Models\SupportTicket;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 
 trait CreatesEnterpriseCaseFixtures
 {
+    use InteractsWithMunicipalFeatures;
+
     protected function seedAccess(): void
     {
         $this->seed(SystemAccessSeeder::class);
@@ -24,7 +28,11 @@ trait CreatesEnterpriseCaseFixtures
 
     protected function userWithRole(string $role = 'administrator'): User
     {
-        $user = User::factory()->create(['status' => 'active']);
+        $municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
+        $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
+            'status' => 'active',
+        ]);
         $user->assignRole($role);
 
         return $user;
@@ -49,9 +57,19 @@ trait CreatesEnterpriseCaseFixtures
         ];
     }
 
-    protected function assertEnterpriseWorkspace(string $routeName, object $case, string $expectedLabel): void
-    {
-        $this->actingAs($this->userWithRole())
+    protected function assertEnterpriseWorkspace(
+        string $routeName,
+        object $case,
+        string $expectedLabel,
+        ?User $user = null,
+    ): void {
+        $actor = $user ?? $this->userWithRole();
+
+        if ($case instanceof Contract) {
+            $this->scopeContractToUser($case, $actor);
+        }
+
+        $this->actingAs($actor)
             ->withSession(['mfa.verified_at' => now()])
             ->get(route($routeName, $case))
             ->assertOk()
@@ -61,5 +79,12 @@ trait CreatesEnterpriseCaseFixtures
             ->assertSee('Cronologia')
             ->assertSee('Checklist')
             ->assertSee('Painel do caso');
+    }
+
+    protected function scopeContractToUser(Contract $contract, User $user): void
+    {
+        $contract->housingUnit()->update([
+            'municipality_id' => $user->municipality_id,
+        ]);
     }
 }

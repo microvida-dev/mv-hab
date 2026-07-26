@@ -28,7 +28,7 @@ class StoreTieBreakerRuleRequest extends FormRequest
         $scoringRuleSet = $this->route('scoringRuleSet');
 
         return $this->user()?->can(
-            'create',
+            'createBackoffice',
             [TieBreakerRule::class, $scoringRuleSet]
         ) ?? false;
     }

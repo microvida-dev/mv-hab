@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Backoffice;
 
 use App\Http\Controllers\Controller;
 use App\Models\Complaint;
-use App\Models\ComplaintReview;
 use App\Services\Complaints\ComplaintReviewService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,7 +15,7 @@ class ComplaintReviewController extends Controller
 
     public function store(Request $request, Complaint $complaint): RedirectResponse
     {
-        Gate::authorize('create', ComplaintReview::class);
+        Gate::authorize('createBackoffice', $complaint);
         $this->service->record($complaint, $this->authenticatedUser($request), $request->validate([
             'result' => ['nullable', 'string', 'max:100'],
             'summary' => ['nullable', 'string', 'max:3000'],

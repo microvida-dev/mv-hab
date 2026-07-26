@@ -42,7 +42,7 @@ final class RentTimelineProviderTest extends TestCase
             ->once()
             ->andReturnFalse();
 
-        $events = (new RentTimelineProvider())->forUser($user);
+        $events = (new RentTimelineProvider)->forUser($user);
 
         $this->assertSame([], $events);
     }
@@ -64,13 +64,14 @@ final class RentTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new RentTimelineProvider())->forUser($user);
+        $events = (new RentTimelineProvider)->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::RentDue, $events[0]->type);
         $this->assertSame(TimelinePriority::Medium, $events[0]->priority);
         $this->assertSame(TimelineWorkspace::Finance, $events[0]->workspace);
         $this->assertSame('Prestação de renda a vencer', $events[0]->title);
+        $this->assertSame(RentInstallmentStatus::Issued->value, $events[0]->metadata['status']);
         $this->assertSame($dueDate->toIso8601String(), $events[0]->datetime->toIso8601String());
     }
 
@@ -92,7 +93,7 @@ final class RentTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new RentTimelineProvider())->forUser($user);
+        $events = (new RentTimelineProvider)->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::RentOverdue, $events[0]->type);
@@ -118,7 +119,7 @@ final class RentTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new RentTimelineProvider())->forUser($user);
+        $events = (new RentTimelineProvider)->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::LeasePaymentReceived, $events[0]->type);

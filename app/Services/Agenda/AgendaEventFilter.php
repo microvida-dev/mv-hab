@@ -14,7 +14,7 @@ final class AgendaEventFilter
      */
     public function apply(Collection $events, AgendaFilters $filters): Collection
     {
-        return $events
+        $filtered = $events
             ->when(
                 $filters->workspace,
                 fn (Collection $items) => $items->filter(
@@ -40,23 +40,26 @@ final class AgendaEventFilter
                 )
             )
             ->when(
-                $filters->from,
-                fn (Collection $items) => $items->filter(
-                    fn (TimelineEvent $event) => $event->datetime?->gte($filters->from) ?? false
-                )
-            )
-            ->when(
-                $filters->to,
-                fn (Collection $items) => $items->filter(
-                    fn (TimelineEvent $event) => $event->datetime?->lte($filters->to) ?? false
-                )
-            )
-            ->when(
                 $filters->technicianId,
                 fn (Collection $items) => $items->filter(
                     fn (TimelineEvent $event) => (int) ($event->metadata['assigned_to'] ?? $event->metadata['technician_id'] ?? 0) === $filters->technicianId
                 )
-            )
-            ->values();
+            );
+
+        if ($filters->from !== null) {
+            $from = $filters->from;
+            $filtered = $filtered->filter(
+                fn (TimelineEvent $event): bool => $event->datetime?->gte($from) ?? false
+            );
+        }
+
+        if ($filters->to !== null) {
+            $to = $filters->to;
+            $filtered = $filtered->filter(
+                fn (TimelineEvent $event): bool => $event->datetime?->lte($to) ?? false
+            );
+        }
+
+        return $filtered->values();
     }
 }

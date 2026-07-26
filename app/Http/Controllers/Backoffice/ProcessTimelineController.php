@@ -18,7 +18,7 @@ class ProcessTimelineController extends Controller
 
     public function show(Application $application): View
     {
-        Gate::authorize('view', $application);
+        Gate::authorize('auditBackoffice', $application);
         $timeline = $this->builder->forBackoffice($application);
 
         return view('backoffice.processes.timeline', [

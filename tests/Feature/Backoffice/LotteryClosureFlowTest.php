@@ -5,6 +5,7 @@ namespace Tests\Feature\Backoffice;
 use App\Enums\AllocationMethod;
 use App\Enums\AllocationStatus;
 use App\Enums\DefinitiveListStatus;
+use App\Enums\FeatureKey;
 use App\Enums\ListEntryStatus;
 use App\Enums\ListEntryType;
 use App\Enums\LotteryDrawStatus;
@@ -23,24 +24,35 @@ use App\Models\HousingUnit;
 use App\Models\KeyHandoverAppointment;
 use App\Models\LotteryDraw;
 use App\Models\LotteryResult;
+use App\Models\Municipality;
 use App\Models\PostDrawReport;
 use App\Models\Program;
 use App\Models\RankingUpdateRun;
 use App\Models\TenantTransition;
 use App\Models\User;
 use App\Models\WinnerRegistration;
+use App\Services\Entitlements\MunicipalityEntitlementService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class LotteryClosureFlowTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
+
+    private Municipality $municipality;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed(SystemAccessSeeder::class);
+        $this->municipality = $this->municipalityWithFeatures(
+            FeatureKey::ApplicationIntake,
+            FeatureKey::ApplicationReview,
+        );
     }
 
     public function test_backoffice_executes_lottery_closure_flow_and_candidate_only_sees_own_convocation(): void
@@ -48,13 +60,15 @@ class LotteryClosureFlowTest extends TestCase
         [$administrator, $contest, $allocationRun, $candidate, $otherCandidate] = $this->context();
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.lottery-draws.store'), [
                 'allocation_run_id' => $allocationRun->id,
                 'scheduled_at' => now()->addDay()->format('Y-m-d H:i:s'),
                 'location' => 'Sala de testes municipal',
                 'seed' => 'SPRINT-25-SEED',
             ])
-            ->assertRedirect();
+            ->assertSessionHas('success')
+            ->assertSessionHasNoErrors();
 
         $draw = LotteryDraw::query()->firstOrFail();
 
@@ -113,10 +127,36 @@ class LotteryClosureFlowTest extends TestCase
             ->assertRedirect();
         $this->assertDatabaseCount('draw_attendances', 1);
 
-        $this->actingAs($administrator)
-            ->post(route('backoffice.lottery-draws.ranking.update', $draw))
-            ->assertRedirect();
+        $this->assertNotNull($administrator->municipality_id);
+        $this->assertTrue($administrator->hasPermission('scoring.run'));
+        $this->assertTrue(
+            app(MunicipalityEntitlementService::class)->enabledFor(
+                $this->municipality,
+                FeatureKey::ApplicationReview,
+            ),
+        );
+        $this->assertTrue(
+            app(MunicipalRecordScopeService::class)->ownsLotteryDraw(
+                $administrator,
+                $draw,
+            ),
+        );
+
+        $response = $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
+            ->post(route('backoffice.lottery-draws.ranking.update', $draw));
+
+        $response
+            ->assertRedirect(route('backoffice.lottery-draws.show', $draw))
+            ->assertSessionHas('success')
+            ->assertSessionHasNoErrors();
         $this->assertSame(1, RankingUpdateRun::query()->count(), 'ranking update runs');
+        $this->assertTrue(
+            app(MunicipalRecordScopeService::class)
+                ->rankingUpdateRuns(RankingUpdateRun::query(), $administrator)
+                ->whereKey(RankingUpdateRun::query()->firstOrFail())
+                ->exists(),
+        );
 
         $this->actingAs($administrator)
             ->post(route('backoffice.lottery-draws.post-draw-report.generate', $draw))
@@ -170,7 +210,9 @@ class LotteryClosureFlowTest extends TestCase
         $administrator = $this->userWithRole('administrator');
         $candidate = $this->userWithRole('candidate');
         $otherCandidate = $this->userWithRole('candidate');
-        $program = Program::factory()->published()->create();
+        $program = Program::factory()->published()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         $contest = Contest::factory()->for($program)->open()->create();
         $list = DefinitiveList::factory()->create([
             'program_id' => $program->id,
@@ -239,7 +281,9 @@ class LotteryClosureFlowTest extends TestCase
 
     private function userWithRole(string $role): User
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         $user->assignRole($role);
 
         return $user;

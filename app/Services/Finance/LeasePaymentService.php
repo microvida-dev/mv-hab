@@ -10,6 +10,7 @@ use App\Models\TenantFinancialAccount;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use App\Support\DecimalMoney;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -23,25 +24,30 @@ class LeasePaymentService
     ) {}
 
     /**
-     * @param  array<string, bool|float|int|string|null>  $data
+     * @param  array<string, bool|int|string|null>  $data
      */
     public function store(TenantFinancialAccount $account, User $actor, array $data): LeasePayment
     {
         return DB::transaction(function () use ($account, $actor, $data) {
-            $amount = (float) $data['amount'];
-            if ($amount <= 0) {
+            $lockedAccount = TenantFinancialAccount::query()
+                ->whereKey($account->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $amount = DecimalMoney::normalize((string) $data['amount']);
+
+            if (! DecimalMoney::isPositive($amount)) {
                 throw ValidationException::withMessages(['amount' => 'O valor do pagamento tem de ser superior a zero.']);
             }
 
             $payment = new LeasePayment;
             $payment->forceFill([
-                'tenant_financial_account_id' => $account->id,
-                'lease_contract_id' => $account->lease_contract_id,
-                'user_id' => $account->user_id,
+                'tenant_financial_account_id' => $lockedAccount->id,
+                'lease_contract_id' => $lockedAccount->lease_contract_id,
+                'user_id' => $lockedAccount->user_id,
                 'status' => LeasePaymentStatus::Pending,
                 'payment_number' => $this->numbers->paymentNumber(),
                 'amount' => $amount,
-                'allocated_amount' => 0,
+                'allocated_amount' => DecimalMoney::normalize(0),
                 'unallocated_amount' => $amount,
                 'payment_date' => $data['payment_date'],
                 'value_date' => $data['value_date'] ?? $data['payment_date'],
@@ -67,47 +73,87 @@ class LeasePaymentService
     public function confirm(LeasePayment $payment, User $actor): LeasePayment
     {
         return DB::transaction(function () use ($payment, $actor) {
-            if (! $this->paymentHasStatus($payment, [LeasePaymentStatus::Pending, LeasePaymentStatus::Draft])) {
+            $lockedPayment = LeasePayment::query()
+                ->whereKey($payment->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($this->paymentHasStatus($lockedPayment, [
+                LeasePaymentStatus::Confirmed,
+                LeasePaymentStatus::PartiallyAllocated,
+                LeasePaymentStatus::Allocated,
+            ])) {
+                return $lockedPayment;
+            }
+
+            if (! $this->paymentHasStatus($lockedPayment, [LeasePaymentStatus::Pending, LeasePaymentStatus::Draft])) {
                 throw ValidationException::withMessages(['payment' => 'Só pagamentos pendentes podem ser confirmados.']);
             }
 
-            $payment->forceFill([
+            $lockedPayment->forceFill([
                 'status' => LeasePaymentStatus::Confirmed,
                 'confirmed_at' => now(),
                 'confirmed_by' => $actor->id,
             ])->save();
 
-            $account = $this->accountForPayment($payment);
-            $this->transactions->record($account, FinancialTransactionType::PaymentReceived, (float) $payment->amount * -1, $payment, $actor, 'Pagamento confirmado.');
-            $this->auditLogger->record(AuditEvents::APPROVE, $payment, 'finance', 'lease_payment_confirm', 'Pagamento de renda confirmado manualmente.');
-            $this->notifications->leasePaymentRegistered($payment->refresh(), $actor);
+            $account = $this->accountForPayment($lockedPayment);
+            $this->transactions->record(
+                $account,
+                FinancialTransactionType::PaymentReceived,
+                DecimalMoney::negate((string) $lockedPayment->amount),
+                $lockedPayment,
+                $actor,
+                'Pagamento confirmado.',
+            );
+            $this->auditLogger->record(AuditEvents::APPROVE, $lockedPayment, 'finance', 'lease_payment_confirm', 'Pagamento de renda confirmado manualmente.');
+            $this->notifications->leasePaymentRegistered($lockedPayment->refresh(), $actor);
 
-            return $payment->refresh();
+            return $lockedPayment->refresh();
         });
     }
 
     public function reverse(LeasePayment $payment, User $actor, string $reason): LeasePayment
     {
         return DB::transaction(function () use ($payment, $actor, $reason) {
-            if ($this->paymentHasStatus($payment, [LeasePaymentStatus::Reversed])) {
+            $lockedPayment = LeasePayment::query()
+                ->whereKey($payment->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($this->paymentHasStatus($lockedPayment, [LeasePaymentStatus::Reversed])) {
                 throw ValidationException::withMessages(['payment' => 'O pagamento já está estornado.']);
             }
 
-            foreach ($payment->allocations()->where('status', PaymentAllocationStatus::Active)->get() as $allocation) {
+            if (! $this->paymentHasStatus($lockedPayment, [
+                LeasePaymentStatus::Confirmed,
+                LeasePaymentStatus::PartiallyAllocated,
+                LeasePaymentStatus::Allocated,
+            ])) {
+                throw ValidationException::withMessages(['payment' => 'Só pagamentos confirmados podem ser estornados.']);
+            }
+
+            foreach ($lockedPayment->allocations()->where('status', PaymentAllocationStatus::Active)->lockForUpdate()->get() as $allocation) {
                 app(PaymentAllocationService::class)->reverse($allocation, $actor, $reason);
             }
 
-            $payment->forceFill([
+            $lockedPayment->forceFill([
                 'status' => LeasePaymentStatus::Reversed,
                 'reversed_at' => now(),
                 'reversed_by' => $actor->id,
                 'reversal_reason' => $reason,
             ])->save();
 
-            $this->transactions->record($this->accountForPayment($payment), FinancialTransactionType::PaymentReversed, (float) $payment->amount, $payment, $actor, 'Pagamento estornado.');
-            $this->auditLogger->record(AuditEvents::UPDATE, $payment, 'finance', 'lease_payment_reverse', 'Pagamento de renda estornado.', metadata: ['reason' => $reason]);
+            $this->transactions->record(
+                $this->accountForPayment($lockedPayment),
+                FinancialTransactionType::PaymentReversed,
+                DecimalMoney::normalize((string) $lockedPayment->amount),
+                $lockedPayment,
+                $actor,
+                'Pagamento estornado.',
+            );
+            $this->auditLogger->record(AuditEvents::UPDATE, $lockedPayment, 'finance', 'lease_payment_reverse', 'Pagamento de renda estornado.');
 
-            return $payment->refresh();
+            return $lockedPayment->refresh();
         });
     }
 

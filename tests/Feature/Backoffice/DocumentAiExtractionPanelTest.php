@@ -9,16 +9,20 @@ use App\Enums\DocumentAiExtractionSource;
 use App\Enums\DocumentAiExtractionStatus;
 use App\Enums\DocumentAiOcrStatus;
 use App\Enums\DocumentAiStatus;
+use App\Enums\FeatureKey;
 use App\Models\DocumentAiAnalysis;
 use App\Models\DocumentAiField;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class DocumentAiExtractionPanelTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -38,18 +42,45 @@ class DocumentAiExtractionPanelTest extends TestCase
             ->get(route('backoffice.document-ai.extractions.index'))
             ->assertForbidden();
 
-        $this->actingAs($this->userWithRole('administrator'))
+        $administrator = $this->userWithRole('administrator');
+        $this->assignDocumentMunicipality(
+            $administrator,
+            $analysis->documentSubmission()->firstOrFail(),
+            FeatureKey::ApplicationReview,
+        );
+
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.document-ai.extractions.index'))
             ->assertOk()
             ->assertSee('Extração IA documental')
-            ->assertSee($analysis->detected_document_label);
+            ->assertSee(DocumentAiDocumentType::Irs->label());
     }
 
     public function test_detail_masks_sensitive_fields_for_regular_technicians_and_records_access(): void
     {
         $analysis = $this->extractedAnalysis();
+        $technician = $this->userWithRole('municipal_technician');
+        $this->assignDocumentMunicipality(
+            $technician,
+            $analysis->documentSubmission()->firstOrFail(),
+            FeatureKey::ApplicationReview,
+        );
+        $auditRole = Role::query()->create([
+            'municipality_id' => $technician->municipality_id,
+            'name' => 'document_extraction_auditor_'.$technician->id,
+            'label' => 'Auditoria de extração documental',
+            'scope' => 'municipal',
+            'is_system' => false,
+            'is_active' => true,
+        ]);
+        $auditRole->permissions()->sync(
+            Permission::query()->where('name', 'documents.audit')->pluck('id')->all(),
+        );
+        $technician->roles()->attach($auditRole);
 
-        $this->actingAs($this->userWithRole('municipal_technician'))
+        $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.document-ai.extractions.show', $analysis))
             ->assertOk()
             ->assertSee('Campos extraídos')
@@ -67,8 +98,15 @@ class DocumentAiExtractionPanelTest extends TestCase
     {
         $analysis = $this->extractedAnalysis();
         $field = $analysis->fields()->where('key', 'taxpayer_name')->firstOrFail();
+        $administrator = $this->userWithRole('administrator');
+        $this->assignDocumentMunicipality(
+            $administrator,
+            $analysis->documentSubmission()->firstOrFail(),
+            FeatureKey::ApplicationReview,
+        );
 
-        $this->actingAs($this->userWithRole('administrator'))
+        $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.document-ai.fields.review', $field), [
                 'reason' => 'Confirmacao manual necessaria para teste.',
             ])

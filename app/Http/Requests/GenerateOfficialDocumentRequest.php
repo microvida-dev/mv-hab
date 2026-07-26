@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\GeneratedOfficialDocument;
 use Illuminate\Foundation\Http\FormRequest;
 
 class GenerateOfficialDocumentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can(
+            'createBackoffice',
+            GeneratedOfficialDocument::class,
+        ) === true;
     }
 
     /**

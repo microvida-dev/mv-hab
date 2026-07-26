@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\DocumentAppliesTo;
+use App\Enums\DocumentReferencePeriodUnit;
 use App\Enums\RequiredDocumentConditionOperator;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRequiredDocumentRequest;
@@ -24,7 +25,7 @@ class RequiredDocumentController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('viewAny', RequiredDocument::class);
+        Gate::authorize('viewAnyBackoffice', RequiredDocument::class);
 
         $requiredDocuments = RequiredDocument::query()
             ->with(['documentType', 'program', 'contest'])
@@ -37,7 +38,7 @@ class RequiredDocumentController extends Controller
 
     public function create(): View
     {
-        Gate::authorize('create', RequiredDocument::class);
+        Gate::authorize('createBackoffice', RequiredDocument::class);
 
         return view('admin.required-documents.create', $this->formData());
     }
@@ -60,7 +61,7 @@ class RequiredDocumentController extends Controller
 
     public function edit(RequiredDocument $requiredDocument): View
     {
-        Gate::authorize('update', $requiredDocument);
+        Gate::authorize('updateBackoffice', $requiredDocument);
 
         return view('admin.required-documents.edit', [
             'requiredDocument' => $requiredDocument,
@@ -86,7 +87,7 @@ class RequiredDocumentController extends Controller
 
     public function destroy(Request $request, RequiredDocument $requiredDocument): RedirectResponse
     {
-        Gate::authorize('delete', $requiredDocument);
+        Gate::authorize('deleteBackoffice', $requiredDocument);
         $requiredDocument->delete();
         $this->auditLogger->record(
             event: AuditEvents::DELETE,
@@ -107,11 +108,34 @@ class RequiredDocumentController extends Controller
     private function formData(): array
     {
         return [
-            'documentTypes' => DocumentType::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
-            'programs' => Program::query()->orderBy('name')->get(['id', 'name']),
-            'contests' => Contest::query()->orderBy('title')->get(['id', 'title']),
+            'documentTypes' => DocumentType::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']),
+
+            'programs' => Program::query()
+                ->orderBy('name')
+                ->get(['id', 'name']),
+
+            'contests' => Contest::query()
+                ->with('program:id,name')
+                ->orderBy('title')
+                ->get([
+                    'id',
+                    'program_id',
+                    'title',
+                ]),
+
             'requiredFor' => DocumentAppliesTo::options(),
             'operators' => RequiredDocumentConditionOperator::options(),
+
+            'referencePeriodUnits' => collect(
+                DocumentReferencePeriodUnit::cases(),
+            )->mapWithKeys(
+                fn (DocumentReferencePeriodUnit $unit): array => [
+                    $unit->value => $unit->label(),
+                ],
+            )->all(),
         ];
     }
 
@@ -121,9 +145,54 @@ class RequiredDocumentController extends Controller
      */
     private function normalizedData(array $data): array
     {
-        $data['is_required'] = (bool) ($data['is_required'] ?? false);
-        $data['is_active'] = (bool) ($data['is_active'] ?? false);
-        $data['sort_order'] = $data['sort_order'] ?? 0;
+        $data['is_required'] = (bool) (
+            $data['is_required'] ?? false
+        );
+
+        $data['is_active'] = (bool) (
+            $data['is_active'] ?? false
+        );
+
+        $data['requires_distinct_reference_periods'] = (bool) (
+            $data['requires_distinct_reference_periods'] ?? false
+        );
+
+        $data['required_submissions'] = (int) (
+            $data['required_submissions'] ?? 1
+        );
+
+        $data['sort_order'] = (int) (
+            $data['sort_order'] ?? 0
+        );
+
+        $data['reference_period_unit'] = filled(
+            $data['reference_period_unit'] ?? null,
+        )
+            ? $data['reference_period_unit']
+            : null;
+
+        $data['reference_period_recency'] = filled(
+            $data['reference_period_recency'] ?? null,
+        )
+            ? (int) $data['reference_period_recency']
+            : null;
+
+        if ($data['reference_period_unit'] === null) {
+            $data['requires_distinct_reference_periods'] = false;
+            $data['reference_period_recency'] = null;
+        }
+
+        if (filled($data['contest_id'] ?? null)) {
+            $contest = Contest::query()
+                ->findOrFail((int) $data['contest_id']);
+
+            $data['program_id'] = $contest->program_id;
+        } else {
+            $data['contest_id'] = null;
+            $data['program_id'] = filled($data['program_id'] ?? null)
+                ? (int) $data['program_id']
+                : null;
+        }
 
         return $data;
     }

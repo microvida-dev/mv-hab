@@ -81,23 +81,47 @@ class HearingSubmissionService
      */
     public function review(HearingSubmission $submission, array $data, User $actor): HearingSubmission
     {
-        $submission->forceFill([
-            'status' => $data['accepted'] ? HearingSubmissionStatus::Accepted : HearingSubmissionStatus::Rejected,
-            'reviewed_by' => $actor->id,
-            'reviewed_at' => now(),
-            'review_result' => $data['review_result'] ?? ($data['accepted'] ? 'accepted' : 'rejected'),
-            'review_notes' => $data['review_notes'] ?? null,
-        ])->save();
-        $this->requiredHearing($submission)->forceFill([
-            'status' => HearingStatus::Completed,
-            'reviewed_by' => $actor->id,
-            'reviewed_at' => now(),
-            'closed_at' => now(),
-        ])->save();
+        return DB::transaction(function () use ($submission, $data, $actor): HearingSubmission {
+            $submission = HearingSubmission::query()
+                ->lockForUpdate()
+                ->findOrFail($submission->id);
+            $targetStatus = $data['accepted']
+                ? HearingSubmissionStatus::Accepted
+                : HearingSubmissionStatus::Rejected;
 
-        $this->auditLogger->record(AuditEvents::DECISION, $submission, 'complaints', 'hearing_submission_review', 'Pronúncia de audiência analisada.');
+            if ($submission->status === $targetStatus) {
+                return $submission;
+            }
 
-        return $submission->refresh();
+            if (! in_array($submission->status, [
+                HearingSubmissionStatus::Submitted,
+                HearingSubmissionStatus::UnderReview,
+            ], true)) {
+                throw ValidationException::withMessages(['hearing_submission' => 'A pronúncia já não se encontra disponível para decisão.']);
+            }
+
+            $submission->forceFill([
+                'status' => $targetStatus,
+                'reviewed_by' => $actor->id,
+                'reviewed_at' => now(),
+                'review_result' => $data['review_result'] ?? ($data['accepted'] ? 'accepted' : 'rejected'),
+                'review_notes' => $data['review_notes'] ?? null,
+            ])->save();
+
+            $hearing = Hearing::query()
+                ->lockForUpdate()
+                ->findOrFail($submission->hearing_id);
+            $hearing->forceFill([
+                'status' => HearingStatus::Completed,
+                'reviewed_by' => $actor->id,
+                'reviewed_at' => now(),
+                'closed_at' => now(),
+            ])->save();
+
+            $this->auditLogger->record(AuditEvents::DECISION, $submission, 'complaints', 'hearing_submission_review', 'Pronúncia de audiência analisada.');
+
+            return $submission->refresh();
+        });
     }
 
     private function assertDocumentBelongsToCandidate(int $documentId, User $candidate, Hearing $hearing): void
@@ -129,16 +153,5 @@ class HearingSubmissionService
         $application = $hearing->application;
 
         return $application instanceof Application ? $application : null;
-    }
-
-    private function requiredHearing(HearingSubmission $submission): Hearing
-    {
-        $hearing = $submission->hearing;
-
-        if (! $hearing instanceof Hearing) {
-            throw ValidationException::withMessages(['hearing' => 'A pronúncia não tem audiência associada.']);
-        }
-
-        return $hearing;
     }
 }

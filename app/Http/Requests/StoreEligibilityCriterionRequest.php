@@ -19,7 +19,7 @@ class StoreEligibilityCriterionRequest extends FormRequest
             return false;
         }
 
-        return $this->user()?->can('create', [
+        return $this->user()?->can('createBackoffice', [
             EligibilityCriterion::class,
             $ruleSet,
         ]) ?? false;

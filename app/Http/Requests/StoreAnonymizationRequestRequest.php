@@ -2,13 +2,19 @@
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreAnonymizationRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return ! $this->user()?->hasRole('candidate') && $this->user()?->hasPermission('privacy.create');
+        $user = $this->user();
+
+        return $user instanceof User
+            && $user->municipality_id !== null
+            && $user->hasPermission('rgpd.anonymization.request');
     }
 
     /**
@@ -16,9 +22,23 @@ class StoreAnonymizationRequestRequest extends FormRequest
      */
     public function rules(): array
     {
+        $municipalityId = $this->user()?->municipality_id;
+
         return [
-            'user_id' => ['nullable', 'integer', 'min:1', 'exists:users,id'],
-            'data_subject_request_id' => ['nullable', 'integer', 'min:1', 'exists:data_subject_requests,id'],
+            'user_id' => [
+                'nullable',
+                'integer',
+                'min:1',
+                Rule::exists('users', 'id')
+                    ->where('municipality_id', $municipalityId),
+            ],
+            'data_subject_request_id' => [
+                'nullable',
+                'integer',
+                'min:1',
+                Rule::exists('data_subject_requests', 'id')
+                    ->where('municipality_id', $municipalityId),
+            ],
             'anonymization_type' => ['required', 'string', 'max:100'],
             'reason' => ['required', 'string', 'min:10', 'max:5000'],
             'scope' => ['required', 'array', 'min:1'],

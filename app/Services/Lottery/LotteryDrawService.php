@@ -28,33 +28,38 @@ class LotteryDrawService
      */
     public function create(array $data, User $actor): LotteryDraw
     {
-        /** @var AllocationRun $allocationRun */
-        $allocationRun = AllocationRun::query()->with('definitiveList')->findOrFail((int) $data['allocation_run_id']);
+        return DB::transaction(function () use ($data, $actor): LotteryDraw {
+            /** @var AllocationRun $allocationRun */
+            $allocationRun = AllocationRun::query()
+                ->with('definitiveList')
+                ->lockForUpdate()
+                ->findOrFail((int) $data['allocation_run_id']);
 
-        $draw = new LotteryDraw([
-            'allocation_run_id' => $allocationRun->id,
-            'program_id' => $allocationRun->program_id,
-            'contest_id' => $allocationRun->contest_id,
-            'definitive_list_id' => $allocationRun->definitive_list_id,
-            'draw_type' => $data['draw_type'] ?? LotteryDrawType::General->value,
-            'lottery_method' => 'hash_seeded_order',
-            'seed' => $data['seed'] ?? bin2hex(random_bytes(16)),
-            'seed_source' => $data['seed_source'] ?? 'operator_or_system',
-            'algorithm' => $data['algorithm'] ?? 'sha256(seed:participant)',
-            'scheduled_at' => $data['scheduled_at'] ?? null,
-            'location' => $data['location'] ?? null,
-            'instructions' => $data['instructions'] ?? null,
-            'public_notice_text' => $data['public_notice_text'] ?? null,
-        ]);
+            $draw = new LotteryDraw([
+                'allocation_run_id' => $allocationRun->id,
+                'program_id' => $allocationRun->program_id,
+                'contest_id' => $allocationRun->contest_id,
+                'definitive_list_id' => $allocationRun->definitive_list_id,
+                'draw_type' => $data['draw_type'] ?? LotteryDrawType::General->value,
+                'lottery_method' => 'hash_seeded_order',
+                'seed' => $data['seed'] ?? bin2hex(random_bytes(16)),
+                'seed_source' => $data['seed_source'] ?? 'operator_or_system',
+                'algorithm' => $data['algorithm'] ?? 'sha256(seed:participant)',
+                'scheduled_at' => $data['scheduled_at'] ?? null,
+                'location' => $data['location'] ?? null,
+                'instructions' => $data['instructions'] ?? null,
+                'public_notice_text' => $data['public_notice_text'] ?? null,
+            ]);
 
-        $draw->forceFill([
-            'status' => LotteryDrawStatus::Draft,
-            'started_by' => $actor->id,
-        ])->save();
+            $draw->forceFill([
+                'status' => LotteryDrawStatus::Draft,
+                'started_by' => $actor->id,
+            ])->save();
 
-        $this->audit->record(AuditEvents::CREATE, $draw, 'allocations', 'lottery_draw_create', 'Sorteio auditável criado.');
+            $this->audit->record(AuditEvents::CREATE, $draw, 'allocations', 'lottery_draw_create', 'Sorteio auditável criado.');
 
-        return $draw->refresh();
+            return $draw->refresh();
+        });
     }
 
     /**
@@ -62,16 +67,20 @@ class LotteryDrawService
      */
     public function update(LotteryDraw $draw, array $data, User $actor): LotteryDraw
     {
-        if (in_array($draw->status, [LotteryDrawStatus::Completed, LotteryDrawStatus::Validated], true)) {
-            throw ValidationException::withMessages(['lottery_draw' => 'Sorteios concluídos ou validados não podem ser editados.']);
-        }
+        return DB::transaction(function () use ($draw, $data): LotteryDraw {
+            $draw = LotteryDraw::query()->lockForUpdate()->findOrFail($draw->id);
 
-        $draw->fill($data);
-        $draw->save();
+            if (! in_array($draw->status, [LotteryDrawStatus::Draft, LotteryDrawStatus::ParticipantsLoaded], true)) {
+                throw ValidationException::withMessages(['lottery_draw' => 'O sorteio já não se encontra num estado editável.']);
+            }
 
-        $this->audit->record(AuditEvents::UPDATE, $draw, 'allocations', 'lottery_draw_update', 'Sorteio auditável atualizado.');
+            $draw->fill($data);
+            $draw->save();
 
-        return $draw->refresh();
+            $this->audit->record(AuditEvents::UPDATE, $draw, 'allocations', 'lottery_draw_update', 'Sorteio auditável atualizado.');
+
+            return $draw->refresh();
+        });
     }
 
     public function run(LotteryDraw $draw, User $actor, ?string $seed = null): LotteryDraw
@@ -82,8 +91,12 @@ class LotteryDrawService
                 ->lockForUpdate()
                 ->findOrFail($draw->id);
 
-            if ($draw->status === LotteryDrawStatus::Validated) {
-                throw ValidationException::withMessages(['lottery_draw' => 'Sorteio validado não pode ser reexecutado.']);
+            if (! in_array($draw->status, [
+                LotteryDrawStatus::ParticipantsLocked,
+                LotteryDrawStatus::Ready,
+                LotteryDrawStatus::Locked,
+            ], true)) {
+                throw ValidationException::withMessages(['lottery_draw' => 'Apenas sorteios com participantes bloqueados podem ser executados.']);
             }
 
             if ($draw->participants_locked_at === null) {
@@ -197,17 +210,36 @@ class LotteryDrawService
             throw ValidationException::withMessages(['reason' => 'Indique o motivo de cancelamento.']);
         }
 
-        $draw->forceFill([
-            'status' => LotteryDrawStatus::Cancelled,
-            'cancelled_at' => now(),
-            'cancelled_by' => $actor->id,
-            'cancellation_reason' => $reason,
-        ])->save();
+        return DB::transaction(function () use ($draw, $actor, $reason): LotteryDraw {
+            $draw = LotteryDraw::query()->lockForUpdate()->findOrFail($draw->id);
 
-        $this->audit->record(AuditEvents::UPDATE, $draw, 'allocations', 'lottery_draw_cancel', 'Sorteio cancelado.', metadata: [
-            'reason' => $reason,
-        ]);
+            if ($draw->status === LotteryDrawStatus::Cancelled) {
+                return $draw;
+            }
 
-        return $draw->refresh();
+            if (! in_array($draw->status, [
+                LotteryDrawStatus::Draft,
+                LotteryDrawStatus::ParticipantsLoaded,
+                LotteryDrawStatus::ParticipantsLocked,
+                LotteryDrawStatus::Ready,
+                LotteryDrawStatus::Failed,
+                LotteryDrawStatus::Locked,
+            ], true)) {
+                throw ValidationException::withMessages(['lottery_draw' => 'O sorteio já não pode ser cancelado neste estado.']);
+            }
+
+            $draw->forceFill([
+                'status' => LotteryDrawStatus::Cancelled,
+                'cancelled_at' => now(),
+                'cancelled_by' => $actor->id,
+                'cancellation_reason' => $reason,
+            ])->save();
+
+            $this->audit->record(AuditEvents::UPDATE, $draw, 'allocations', 'lottery_draw_cancel', 'Sorteio cancelado.', metadata: [
+                'reason_provided' => true,
+            ]);
+
+            return $draw->refresh();
+        });
     }
 }

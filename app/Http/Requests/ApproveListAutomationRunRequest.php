@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ListAutomationRun;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ApproveListAutomationRunRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasPermissionTo('public_lists', 'approve') === true;
+        $run = $this->route('listAutomationRun');
+
+        return $run instanceof ListAutomationRun
+            && ($this->user()?->can('approveBackoffice', $run) ?? false);
     }
 
     /**

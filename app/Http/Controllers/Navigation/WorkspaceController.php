@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Navigation;
 use App\Http\Controllers\Controller;
 use App\Services\Navigation\FavoritesService;
 use App\Services\Navigation\RecentItemsService;
+use App\Services\Navigation\WorkspacePreferenceService;
 use App\Services\Navigation\WorkspaceService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class WorkspaceController extends Controller
         WorkspaceService $workspaces,
         FavoritesService $favorites,
         RecentItemsService $recentItems,
+        WorkspacePreferenceService $workspacePreferences,
     ): View {
         $user = $this->authenticatedUser($request);
         $currentWorkspace = $workspaces->authorizedWorkspace($user, $workspace);
@@ -31,6 +33,7 @@ class WorkspaceController extends Controller
             'favorites' => $favorites->forUser($user),
             'recentItems' => $recentItems->forUser($user),
             'quickActions' => $workspaces->quickActions($user),
+            'workspacePreferences' => $workspacePreferences->payloadFor($user),
         ]);
     }
 }

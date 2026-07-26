@@ -11,7 +11,7 @@ class StoreProgramRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return Gate::allows('create', Program::class);
+        return Gate::allows('createBackoffice', Program::class);
     }
 
     /**

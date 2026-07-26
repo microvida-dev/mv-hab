@@ -15,14 +15,27 @@ class MaintenanceCategory extends Model
     /** @use HasFactory<MaintenanceCategoryFactory> */
     use HasFactory, SoftDeletes;
 
-    protected $guarded = ['id'];
+    protected $guarded = [
+        'id',
+        'municipality_id',
+        'is_system',
+    ];
 
     protected function casts(): array
     {
         return [
             'default_urgency' => MaintenanceUrgency::class,
             'is_active' => 'boolean',
+            'is_system' => 'boolean',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Municipality, $this>
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 
     /**

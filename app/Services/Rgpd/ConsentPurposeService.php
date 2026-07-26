@@ -10,7 +10,10 @@ use App\Services\Audit\AuditTrailService;
 
 class ConsentPurposeService
 {
-    public function __construct(private readonly AuditTrailService $audit) {}
+    public function __construct(
+        private readonly AuditTrailService $audit,
+        private readonly PrivacyMunicipalScopeService $scope,
+    ) {}
 
     /**
      * @param array{
@@ -26,10 +29,13 @@ class ConsentPurposeService
      */
     public function create(array $data, ?User $actor = null): ConsentPurpose
     {
+        abort_unless($actor instanceof User && $actor->municipality_id !== null, 403);
+
         $purpose = ConsentPurpose::query()->create([
             ...$data,
-            'created_by' => $actor?->id,
-            'updated_by' => $actor?->id,
+            'municipality_id' => $actor->municipality_id,
+            'created_by' => $actor->id,
+            'updated_by' => $actor->id,
         ]);
 
         $this->audit->record('consent_purpose.created', $purpose, AuditEventCategory::Rgpd, AuditEventSeverity::Notice, 'Finalidade de tratamento criada.', actor: $actor);
@@ -51,8 +57,14 @@ class ConsentPurposeService
      */
     public function update(ConsentPurpose $purpose, array $data, ?User $actor = null): ConsentPurpose
     {
+        abort_unless(
+            $actor instanceof User
+            && $this->scope->ownsMutablePurpose($actor, $purpose),
+            403,
+        );
+
         $old = $purpose->toArray();
-        $purpose->forceFill([...$data, 'updated_by' => $actor?->id])->save();
+        $purpose->forceFill([...$data, 'updated_by' => $actor->id])->save();
         $this->audit->record('consent_purpose.updated', $purpose, AuditEventCategory::Rgpd, AuditEventSeverity::Notice, 'Finalidade de tratamento atualizada.', oldValues: $old, newValues: $purpose->toArray(), actor: $actor);
 
         return $purpose->refresh();

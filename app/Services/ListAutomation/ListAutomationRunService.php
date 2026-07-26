@@ -9,6 +9,8 @@ use App\Models\ListAutomationRun;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ListAutomationRunService
 {
@@ -46,15 +48,27 @@ class ListAutomationRunService
 
     public function approve(ListAutomationRun $run, User $actor): ListAutomationRun
     {
-        $run->forceFill([
-            'status' => ListAutomationStatus::Approved,
-            'approved_by' => $actor->id,
-            'approved_at' => now(),
-        ])->save();
+        return DB::transaction(function () use ($run, $actor): ListAutomationRun {
+            $run = ListAutomationRun::query()->lockForUpdate()->findOrFail($run->id);
 
-        $this->auditLogger->record(AuditEvents::APPROVE, $run, 'public_lists', 'list_automation_run_approve', 'Automação de lista aprovada.');
+            if ($this->status($run) === ListAutomationStatus::Approved) {
+                return $run;
+            }
 
-        return $run->refresh();
+            if (! $this->statusIsIn($run, [ListAutomationStatus::Generated, ListAutomationStatus::UnderReview])) {
+                throw ValidationException::withMessages(['list_automation_run' => 'A automação não se encontra num estado aprovável.']);
+            }
+
+            $run->forceFill([
+                'status' => ListAutomationStatus::Approved,
+                'approved_by' => $actor->id,
+                'approved_at' => now(),
+            ])->save();
+
+            $this->auditLogger->record(AuditEvents::APPROVE, $run, 'public_lists', 'list_automation_run_approve', 'Automação de lista aprovada.');
+
+            return $run->refresh();
+        });
     }
 
     private function number(): string
@@ -67,5 +81,26 @@ class ListAutomationRunService
         } while (ListAutomationRun::withTrashed()->where('run_number', $number)->exists());
 
         return $number;
+    }
+
+    /**
+     * @param  list<ListAutomationStatus>  $statuses
+     */
+    private function statusIsIn(ListAutomationRun $run, array $statuses): bool
+    {
+        $status = $this->status($run);
+
+        return $status !== null && in_array($status, $statuses, true);
+    }
+
+    private function status(ListAutomationRun $run): ?ListAutomationStatus
+    {
+        $status = $run->getAttribute('status');
+
+        if ($status instanceof ListAutomationStatus) {
+            return $status;
+        }
+
+        return is_string($status) ? ListAutomationStatus::tryFrom($status) : null;
     }
 }

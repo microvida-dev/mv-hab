@@ -154,6 +154,7 @@ class PublicHousingOfferSprint20Test extends TestCase
         $administrator->assignRole('administrator');
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->put(route('backoffice.public-portal.housing-units.update', $housingUnit), [
                 'public_reference' => 'PUB-20',
                 'public_title' => 'Ficha pública editada',
@@ -171,7 +172,9 @@ class PublicHousingOfferSprint20Test extends TestCase
                 'public_sort_order' => 1,
                 'is_public' => '1',
             ])
-            ->assertRedirect(route('backoffice.public-portal.housing-units.edit', $housingUnit));
+            ->assertRedirect(
+                route('backoffice.public-portal.housing-units.edit', $housingUnit)
+            );
 
         $this->assertDatabaseHas('housing_units', [
             'id' => $housingUnit->id,

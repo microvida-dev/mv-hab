@@ -14,11 +14,14 @@ use App\Services\Security\MfaEnforcementService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class MfaController extends Controller
 {
     public function index(Request $request): View
     {
+        Gate::authorize('viewAny', MfaDevice::class);
+
         return view('backoffice.security.mfa.index', [
             'devices' => $this->authenticatedUser($request)->mfaDevices()->latest()->get(),
             'requiresMfa' => app(MfaEnforcementService::class)->requiresMfa($this->authenticatedUser($request)),
@@ -42,7 +45,7 @@ class MfaController extends Controller
 
     public function confirm(ConfirmMfaRequest $request, MfaDevice $mfaDevice, MfaDeviceService $devices, MfaEnforcementService $mfa): RedirectResponse
     {
-        abort_unless($mfaDevice->user_id === $this->authenticatedUser($request)->id, 403);
+        Gate::authorize('update', $mfaDevice);
 
         if (! $devices->confirm($mfaDevice, $request->validated('code'), $this->authenticatedUser($request))) {
             return back()->withErrors(['code' => 'Código MFA inválido.']);
@@ -88,7 +91,7 @@ class MfaController extends Controller
 
     public function disable(DisableMfaRequest $request, MfaDevice $mfaDevice, MfaDeviceService $devices): RedirectResponse
     {
-        abort_unless($mfaDevice->user_id === $this->authenticatedUser($request)->id, 403);
+        Gate::authorize('update', $mfaDevice);
         $devices->disable($mfaDevice, $this->authenticatedUser($request));
 
         return back()->with('status', 'Dispositivo MFA desativado.');

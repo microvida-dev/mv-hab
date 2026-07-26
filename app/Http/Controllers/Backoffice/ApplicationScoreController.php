@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backoffice;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateManualScoreRequest;
 use App\Models\ApplicationScore;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Scoring\ApplicationScoreService;
 use App\Services\Scoring\ManualScoreService;
 use Illuminate\Contracts\View\View;
@@ -17,12 +18,14 @@ class ApplicationScoreController extends Controller
     public function __construct(
         private readonly ManualScoreService $manualScoreService,
         private readonly ApplicationScoreService $scoreService,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        Gate::authorize('viewAny', ApplicationScore::class);
-        $scores = ApplicationScore::query()
+        Gate::authorize('viewAnyBackoffice', ApplicationScore::class);
+        $scores = $this->municipalScope
+            ->applicationScores(ApplicationScore::query(), $this->authenticatedUser($request))
             ->with(['application.user', 'contest', 'scoringRun'])
             ->latest()
             ->paginate(20);
@@ -32,7 +35,7 @@ class ApplicationScoreController extends Controller
 
     public function show(ApplicationScore $applicationScore): View
     {
-        Gate::authorize('view', $applicationScore);
+        Gate::authorize('viewBackoffice', $applicationScore);
         $applicationScore->load([
             'application.user',
             'application.administrativeProcess',
@@ -49,7 +52,7 @@ class ApplicationScoreController extends Controller
 
     public function manualReview(ApplicationScore $applicationScore): View
     {
-        Gate::authorize('manualReview', $applicationScore);
+        Gate::authorize('reviewBackoffice', $applicationScore);
         $applicationScore->load(['application.user', 'details.criterion']);
 
         return view('backoffice.scoring.application-scores.manual-review', [
@@ -75,7 +78,7 @@ class ApplicationScoreController extends Controller
 
     public function lock(Request $request, ApplicationScore $applicationScore): RedirectResponse
     {
-        Gate::authorize('lock', $applicationScore);
+        Gate::authorize('lockBackoffice', $applicationScore);
         $this->scoreService->lock($applicationScore, $this->authenticatedUser($request));
 
         return back()->with('success', 'Pontuação bloqueada.');

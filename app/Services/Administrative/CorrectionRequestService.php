@@ -191,6 +191,14 @@ class CorrectionRequestService
         if ($this->processStatus($process) === AdministrativeProcessStatus::AwaitingCandidateResponse) {
             $this->transitionService->transition($process, AdministrativeProcessStatus::CorrectionOverdue, $actor);
         }
+        $this->auditLogger->record(
+            AuditEvents::UPDATE,
+            $request,
+            'administrative_processes',
+            'correction_request_mark_overdue',
+            'Pedido de aperfeiçoamento marcado como vencido.',
+            metadata: ['actor_id' => $actor->id],
+        );
 
         return $request->refresh();
     }

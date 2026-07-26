@@ -11,7 +11,7 @@ class UpdateDocumentTypeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('update', $this->route('documentType')) ?? false;
+        return $this->user()?->can('updateBackoffice', $this->route('documentType')) ?? false;
     }
 
     /**

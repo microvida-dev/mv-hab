@@ -16,7 +16,7 @@ class AdditionalDocumentSubmissionController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('viewAny', AdditionalDocumentSubmission::class);
+        Gate::authorize('viewAnyBackoffice', AdditionalDocumentSubmission::class);
 
         return view('backoffice.additional-document-submissions.index', [
             'submissions' => AdditionalDocumentSubmission::query()->with(['application', 'user'])->latest()->paginate(20),
@@ -25,14 +25,14 @@ class AdditionalDocumentSubmissionController extends Controller
 
     public function show(AdditionalDocumentSubmission $additionalDocumentSubmission): View
     {
-        Gate::authorize('view', $additionalDocumentSubmission);
+        Gate::authorize('viewBackoffice', $additionalDocumentSubmission);
 
         return view('backoffice.additional-document-submissions.show', ['submission' => $additionalDocumentSubmission]);
     }
 
     public function decide(Request $request, AdditionalDocumentSubmission $additionalDocumentSubmission): RedirectResponse
     {
-        Gate::authorize('update', $additionalDocumentSubmission);
+        Gate::authorize('decideBackoffice', $additionalDocumentSubmission);
         $data = $request->validate([
             'accepted' => ['required', 'boolean'],
             'rejection_reason' => ['nullable', 'required_if:accepted,0', 'string', 'max:2000'],

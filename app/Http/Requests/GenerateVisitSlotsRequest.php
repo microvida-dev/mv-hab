@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use App\Models\VisitAvailability;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -10,9 +11,14 @@ class GenerateVisitSlotsRequest extends FormRequest
     public function authorize(): bool
     {
         $availability = $this->route('visitAvailability');
+        $actor = $this->user();
 
-        return $availability instanceof VisitAvailability
-            && ($this->user()?->can('update', $availability) ?? false);
+        return $actor instanceof User
+            && $availability instanceof VisitAvailability
+            && $actor->can(
+                'generateSlotsBackoffice',
+                $availability,
+            );
     }
 
     /**

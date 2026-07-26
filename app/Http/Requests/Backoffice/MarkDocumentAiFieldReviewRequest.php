@@ -12,7 +12,7 @@ class MarkDocumentAiFieldReviewRequest extends FormRequest
         $field = $this->route('field');
 
         return $field instanceof DocumentAiField
-            && ($this->user()?->can('markForReview', $field) ?? false);
+            && ($this->user()?->can('reviewBackoffice', $field) ?? false);
     }
 
     /**

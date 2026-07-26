@@ -10,6 +10,7 @@ use App\Models\HousingVisitStatusHistory;
 use App\Models\User;
 use App\Models\VisitSlot;
 use App\Services\CandidateExperience\CandidateInteractionService;
+use App\Services\Municipalities\VisitMunicipalContextService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -20,18 +21,37 @@ class VisitCancellationService
         private readonly CandidateInteractionService $interactions,
         private readonly VisitNotificationService $notifications,
         private readonly VisitAuditService $audit,
+        private readonly VisitMunicipalContextService $municipalContext,
     ) {}
 
     public function cancel(HousingVisit $visit, User $actor, VisitCancellationReason $reason, ?string $notes = null): HousingVisit
     {
         return DB::transaction(function () use ($visit, $actor, $reason, $notes): HousingVisit {
             $visit = HousingVisit::query()->whereKey($visit->id)->lockForUpdate()->firstOrFail();
+            $candidateActor = $visit->belongsToCandidate($actor)
+                && $actor->hasPermission('visits.update');
+
+            if ($candidateActor) {
+                $this->municipalContext->validateCandidateVisit(
+                    $visit,
+                    $actor,
+                );
+            } elseif ($actor->hasPermission('visits.cancel')) {
+                $this->municipalContext->validateVisitForActor(
+                    $visit,
+                    $actor,
+                );
+            } else {
+                throw ValidationException::withMessages([
+                    'visit' => 'O utilizador não pode cancelar esta visita.',
+                ]);
+            }
 
             if (! $visit->isActive()) {
                 throw ValidationException::withMessages(['visit' => 'A visita não pode ser cancelada neste estado.']);
             }
 
-            if ($actor->hasRole('candidate')) {
+            if ($candidateActor) {
                 $minimumHours = (int) config('mvhab.candidate_support.minimum_cancel_hours', 24);
                 if ($visit->starts_at !== null && $visit->starts_at->lessThan(now()->addHours($minimumHours))) {
                     throw ValidationException::withMessages(['visit' => 'O prazo mínimo para cancelamento já terminou.']);
@@ -45,7 +65,9 @@ class VisitCancellationService
 
             $from = VisitStatus::tryFrom((string) $visit->getRawOriginal('status'));
             $candidate = User::query()->findOrFail($visit->candidate_user_id);
-            $to = $actor->hasRole('candidate') ? VisitStatus::CancelledByCandidate : VisitStatus::CancelledByStaff;
+            $to = $candidateActor
+                ? VisitStatus::CancelledByCandidate
+                : VisitStatus::CancelledByStaff;
             $visit->forceFill([
                 'status' => $to,
                 'cancelled_at' => now(),

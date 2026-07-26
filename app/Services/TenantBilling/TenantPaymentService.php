@@ -8,6 +8,7 @@ use App\Models\TenantPayment;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use App\Support\DecimalMoney;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -24,23 +25,30 @@ class TenantPaymentService
     public function registerForInvoice(TenantInvoice $invoice, User $actor, array $data): TenantPayment
     {
         return DB::transaction(function () use ($invoice, $actor, $data) {
-            $amount = (float) $data['amount'];
+            $lockedInvoice = TenantInvoice::query()
+                ->whereKey($invoice->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $amount = DecimalMoney::normalize((string) $data['amount']);
 
-            if ($amount <= 0) {
+            if (! DecimalMoney::isPositive($amount)) {
                 throw ValidationException::withMessages(['amount' => 'O valor do pagamento tem de ser superior a zero.']);
             }
 
             $payment = new TenantPayment;
             $payment->forceFill([
-                'tenant_invoice_id' => $invoice->id,
-                'tenant_financial_account_id' => $invoice->tenant_financial_account_id,
-                'lease_contract_id' => $invoice->lease_contract_id,
-                'user_id' => $invoice->user_id,
+                'tenant_invoice_id' => $lockedInvoice->id,
+                'tenant_financial_account_id' => $lockedInvoice->tenant_financial_account_id,
+                'lease_contract_id' => $lockedInvoice->lease_contract_id,
+                'user_id' => $lockedInvoice->user_id,
                 'payment_number' => $this->paymentNumber(),
                 'status' => ($data['confirm_now'] ?? false) ? TenantPaymentStatus::Confirmed : TenantPaymentStatus::Registered,
                 'amount' => $amount,
-                'allocated_amount' => min($amount, (float) $invoice->amount_outstanding),
-                'unallocated_amount' => max(0, $amount - (float) $invoice->amount_outstanding),
+                'allocated_amount' => DecimalMoney::min($amount, (string) $lockedInvoice->amount_outstanding),
+                'unallocated_amount' => DecimalMoney::max(
+                    0,
+                    DecimalMoney::subtract($amount, (string) $lockedInvoice->amount_outstanding),
+                ),
                 'currency' => $data['currency'] ?? 'EUR',
                 'payment_date' => $data['payment_date'],
                 'value_date' => $data['value_date'] ?? $data['payment_date'],
@@ -56,7 +64,7 @@ class TenantPaymentService
                 'confirmed_by' => ($data['confirm_now'] ?? false) ? $actor->id : null,
             ])->save();
 
-            $this->invoices->markPaymentImpact($invoice);
+            $this->invoices->markPaymentImpact($lockedInvoice);
             $this->auditLogger->record(AuditEvents::CREATE, $payment, 'payments', 'tenant_payment_registered', 'Pagamento operacional de inquilino registado.');
 
             return $payment->refresh();
@@ -65,25 +73,34 @@ class TenantPaymentService
 
     public function confirm(TenantPayment $payment, User $actor): TenantPayment
     {
-        DB::transaction(function () use ($payment, $actor): void {
-            if (! in_array($payment->status, [TenantPaymentStatus::Registered, TenantPaymentStatus::Pending], true)) {
+        return DB::transaction(function () use ($payment, $actor): TenantPayment {
+            $lockedPayment = TenantPayment::query()
+                ->whereKey($payment->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedPayment->status === TenantPaymentStatus::Confirmed) {
+                return $lockedPayment;
+            }
+
+            if (! in_array($lockedPayment->status, [TenantPaymentStatus::Registered, TenantPaymentStatus::Pending], true)) {
                 throw ValidationException::withMessages(['payment' => 'Só pagamentos registados ou pendentes podem ser confirmados.']);
             }
 
-            $payment->forceFill([
+            $lockedPayment->forceFill([
                 'status' => TenantPaymentStatus::Confirmed,
                 'confirmed_at' => now(),
                 'confirmed_by' => $actor->id,
             ])->save();
 
-            if ($payment->invoice) {
-                $this->invoices->markPaymentImpact($payment->invoice);
+            if ($lockedPayment->invoice) {
+                $this->invoices->markPaymentImpact($lockedPayment->invoice);
             }
 
-            $this->auditLogger->record(AuditEvents::APPROVE, $payment, 'payments', 'tenant_payment_confirmed', 'Pagamento operacional confirmado.');
-        });
+            $this->auditLogger->record(AuditEvents::APPROVE, $lockedPayment, 'payments', 'tenant_payment_confirmed', 'Pagamento operacional confirmado.');
 
-        return $payment->refresh();
+            return $lockedPayment->refresh();
+        });
     }
 
     private function paymentNumber(): string

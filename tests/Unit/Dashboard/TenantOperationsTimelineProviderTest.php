@@ -11,6 +11,7 @@ use App\Enums\TenantCommunicationStatus;
 use App\Enums\TenantInvoiceStatus;
 use App\Enums\TenantPaymentStatus;
 use App\Enums\TenantTransitionStatus;
+use App\Models\HousingUnit;
 use App\Models\TenantCommunication;
 use App\Models\TenantInvoice;
 use App\Models\TenantPayment;
@@ -43,24 +44,29 @@ final class TenantOperationsTimelineProviderTest extends TestCase
             ->once()
             ->andReturnFalse();
 
-        $events = (new TenantOperationsTimelineProvider())->forUser($user);
+        $events = (new TenantOperationsTimelineProvider)->forUser($user);
 
         $this->assertSame([], $events);
     }
 
     public function test_builds_transition_pending_event(): void
     {
+        $housingUnit = HousingUnit::factory()->create(['code' => 'FOGO-TIMELINE-01']);
+
         TenantTransition::factory()->create([
             'status' => TenantTransitionStatus::Pending,
+            'housing_unit_id' => $housingUnit,
         ]);
 
-        $events = (new TenantOperationsTimelineProvider())->forUser($this->authorizedUser());
+        $events = (new TenantOperationsTimelineProvider)->forUser($this->authorizedUser());
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::TenantTransitionPending, $events[0]->type);
         $this->assertSame(TimelinePriority::Medium, $events[0]->priority);
         $this->assertSame(TimelineWorkspace::Tenant, $events[0]->workspace);
         $this->assertSame('Transição para inquilino pendente', $events[0]->title);
+        $this->assertStringContainsString('FOGO-TIMELINE-01', $events[0]->description ?? '');
+        $this->assertSame(TenantTransitionStatus::Pending->value, $events[0]->metadata['status']);
     }
 
     public function test_builds_transition_completed_event(): void
@@ -70,7 +76,7 @@ final class TenantOperationsTimelineProviderTest extends TestCase
             'completed_at' => now()->startOfMinute(),
         ]);
 
-        $events = (new TenantOperationsTimelineProvider())->forUser($this->authorizedUser());
+        $events = (new TenantOperationsTimelineProvider)->forUser($this->authorizedUser());
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::TenantTransitionCompleted, $events[0]->type);
@@ -87,7 +93,7 @@ final class TenantOperationsTimelineProviderTest extends TestCase
             'due_date' => $dueDate->toDateString(),
         ]);
 
-        $events = (new TenantOperationsTimelineProvider())->forUser($this->authorizedUser());
+        $events = (new TenantOperationsTimelineProvider)->forUser($this->authorizedUser());
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::TenantInvoiceDue, $events[0]->type);
@@ -103,7 +109,7 @@ final class TenantOperationsTimelineProviderTest extends TestCase
             'due_date' => now()->subDays(5)->toDateString(),
         ]);
 
-        $events = (new TenantOperationsTimelineProvider())->forUser($this->authorizedUser());
+        $events = (new TenantOperationsTimelineProvider)->forUser($this->authorizedUser());
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::TenantInvoiceOverdue, $events[0]->type);
@@ -118,7 +124,7 @@ final class TenantOperationsTimelineProviderTest extends TestCase
             'registered_at' => now()->startOfMinute(),
         ]);
 
-        $events = (new TenantOperationsTimelineProvider())->forUser($this->authorizedUser());
+        $events = (new TenantOperationsTimelineProvider)->forUser($this->authorizedUser());
 
         $event = collect($events)->firstWhere('type', TimelineType::TenantPaymentRegistered);
 
@@ -134,7 +140,7 @@ final class TenantOperationsTimelineProviderTest extends TestCase
             'confirmed_at' => now()->startOfMinute(),
         ]);
 
-        $events = (new TenantOperationsTimelineProvider())->forUser($this->authorizedUser());
+        $events = (new TenantOperationsTimelineProvider)->forUser($this->authorizedUser());
 
         $event = collect($events)->firstWhere('type', TimelineType::TenantPaymentConfirmed);
 
@@ -150,7 +156,7 @@ final class TenantOperationsTimelineProviderTest extends TestCase
             'last_message_at' => now()->startOfMinute(),
         ]);
 
-        $events = (new TenantOperationsTimelineProvider())->forUser($this->authorizedUser());
+        $events = (new TenantOperationsTimelineProvider)->forUser($this->authorizedUser());
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::TenantCommunicationOpen, $events[0]->type);
@@ -165,7 +171,7 @@ final class TenantOperationsTimelineProviderTest extends TestCase
             'last_message_at' => now()->startOfMinute(),
         ]);
 
-        $events = (new TenantOperationsTimelineProvider())->forUser($this->authorizedUser());
+        $events = (new TenantOperationsTimelineProvider)->forUser($this->authorizedUser());
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::TenantCommunicationAwaitingMunicipality, $events[0]->type);

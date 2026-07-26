@@ -2,13 +2,18 @@
 
 namespace App\Http\Requests\Backoffice\PublicPortal;
 
+use App\Models\HousingUnitImage;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
 class StoreHousingUnitImageRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows(
+            'createBackoffice',
+            HousingUnitImage::class,
+        );
     }
 
     /**

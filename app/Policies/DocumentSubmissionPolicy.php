@@ -6,12 +6,15 @@ use App\Enums\DocumentStatus;
 use App\Models\DocumentSubmission;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class DocumentSubmissionPolicy
 {
     use ChecksPermissions;
 
     private const MODULE = 'documents';
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -24,7 +27,7 @@ class DocumentSubmissionPolicy
             return $this->owns($user, $documentSubmission);
         }
 
-        return $this->canAccess($user, self::MODULE, 'view');
+        return $this->viewBackoffice($user, $documentSubmission);
     }
 
     public function create(User $user): bool
@@ -59,18 +62,59 @@ class DocumentSubmissionPolicy
     public function review(User $user, DocumentSubmission $documentSubmission): bool
     {
         return ! $user->hasRole('candidate')
-            && $this->canAccess($user, self::MODULE, 'approve');
+            && $this->canAccess($user, self::MODULE, 'approve')
+            && $this->municipalScope->ownsDocumentSubmission($user, $documentSubmission);
     }
 
     public function reject(User $user, DocumentSubmission $documentSubmission): bool
     {
         return ! $user->hasRole('candidate')
-            && $this->canAccess($user, self::MODULE, 'reject');
+            && $this->canAccess($user, self::MODULE, 'reject')
+            && $this->municipalScope->ownsDocumentSubmission($user, $documentSubmission);
     }
 
     private function owns(User $user, DocumentSubmission $documentSubmission): bool
     {
         return $user->hasRole('candidate')
             && $documentSubmission->adhesionRegistration?->user_id === $user->id;
+    }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view');
+    }
+
+    public function viewBackoffice(
+        User $user,
+        DocumentSubmission $documentSubmission,
+    ): bool {
+        return $this->viewAnyBackoffice($user)
+            && $this->municipalScope->ownsDocumentSubmission($user, $documentSubmission);
+    }
+
+    public function downloadBackoffice(
+        User $user,
+        DocumentSubmission $documentSubmission,
+    ): bool {
+        return $this->viewBackoffice($user, $documentSubmission);
+    }
+
+    public function reviewBackoffice(
+        User $user,
+        DocumentSubmission $documentSubmission,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'approve')
+            && $this->municipalScope->ownsDocumentSubmission($user, $documentSubmission);
+    }
+
+    public function rejectBackoffice(
+        User $user,
+        DocumentSubmission $documentSubmission,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'reject')
+            && $this->municipalScope->ownsDocumentSubmission($user, $documentSubmission);
     }
 }

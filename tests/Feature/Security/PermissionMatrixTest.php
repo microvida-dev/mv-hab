@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Security;
 
+use App\Models\Municipality;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
@@ -21,7 +22,7 @@ class PermissionMatrixTest extends TestCase
 
     public function test_system_roles_resolve_expected_permission_boundaries(): void
     {
-        $administrator = $this->userWithRole('administrator');
+        $administrator = $this->userWithRole('administrator', mfaRequired: true);
         $technician = $this->userWithRole('municipal_technician');
         $jury = $this->userWithRole('jury');
         $financial = $this->userWithRole('financial_manager');
@@ -59,10 +60,16 @@ class PermissionMatrixTest extends TestCase
 
     public function test_route_matrix_blocks_guest_candidate_and_requires_mfa_for_sensitive_backoffice(): void
     {
-        $this->get(route('backoffice.reports.index'))->assertRedirect(route('login'));
+        $this->get(route('backoffice.reports.index'))
+            ->assertRedirect(route('login'));
 
         $candidate = $this->userWithRole('candidate');
-        $administrator = $this->userWithRole('administrator');
+
+        $administrator = $this->userWithRole(
+            'administrator',
+            mfaRequired: true,
+        );
+
         $financial = $this->userWithRole('financial_manager');
         $maintenance = $this->userWithRole('maintenance_manager');
 
@@ -71,12 +78,24 @@ class PermissionMatrixTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($financial)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.finance.installments.index'))
             ->assertOk();
 
+        // Evita que a verificação MFA do utilizador anterior contamine
+        // a próxima requisição do mesmo método de teste.
+        $this->app['session']->forget('mfa.verified_at');
+
+        $this->assertNull(
+            $this->app['session']->get('mfa.verified_at')
+        );
+
         $this->actingAs($maintenance)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.maintenance.requests.index'))
             ->assertOk();
+
+        $this->app['session']->forget('mfa.verified_at');
 
         $this->actingAs($administrator)
             ->get(route('backoffice.security.dashboard'))
@@ -88,10 +107,15 @@ class PermissionMatrixTest extends TestCase
             ->assertOk();
     }
 
-    private function userWithRole(string $role): User
+    private function userWithRole(string $role, bool $mfaRequired = false): User
     {
         $this->assertTrue(Role::query()->where('name', $role)->exists());
-        $user = User::factory()->create(['email' => 's19-'.$role.'-'.fake()->unique()->numerify('####').'@example.test']);
+        $municipality = Municipality::factory()->create();
+        $user = User::factory()->create([
+            'municipality_id' => $municipality->id,
+            'email' => 's19-'.$role.'-'.fake()->unique()->numerify('####').'@example.test',
+            'mfa_required' => $mfaRequired,
+        ]);
         $user->assignRole($role);
 
         return $user;

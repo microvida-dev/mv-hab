@@ -6,13 +6,17 @@ use App\Enums\VisitSlotStatus;
 use App\Models\User;
 use App\Models\VisitAvailability;
 use App\Models\VisitSlot;
+use App\Services\Municipalities\VisitMunicipalContextService;
 use App\Support\AuditEvents;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class VisitSlotGenerationService
 {
-    public function __construct(private readonly VisitAuditService $audit) {}
+    public function __construct(
+        private readonly VisitAuditService $audit,
+        private readonly VisitMunicipalContextService $municipalContext,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $options
@@ -21,6 +25,12 @@ class VisitSlotGenerationService
     public function generate(VisitAvailability $availability, User $actor, array $options = []): Collection
     {
         return DB::transaction(function () use ($availability, $actor, $options): Collection {
+            $availability = VisitAvailability::query()
+                ->whereKey($availability)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $municipalityId = $this->municipalContext
+                ->validateAvailabilityForActor($availability, $actor);
             $slots = collect();
             $cursor = $availability->starts_at?->copy();
             $end = $availability->ends_at;
@@ -50,9 +60,12 @@ class VisitSlotGenerationService
                         'notes' => $options['notes'] ?? null,
                     ]);
                     $slot->forceFill([
+                        'municipality_id' => $municipalityId,
                         'status' => VisitSlotStatus::Available,
                         'booked_count' => 0,
                     ])->save();
+                } else {
+                    $this->municipalContext->validateSlot($slot);
                 }
 
                 $slots->push($slot->refresh());

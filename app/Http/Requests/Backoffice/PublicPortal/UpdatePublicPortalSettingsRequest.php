@@ -2,13 +2,18 @@
 
 namespace App\Http\Requests\Backoffice\PublicPortal;
 
+use App\Models\PublicPortalSetting;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
 class UpdatePublicPortalSettingsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows(
+            'updateAnyBackoffice',
+            PublicPortalSetting::class,
+        );
     }
 
     /**

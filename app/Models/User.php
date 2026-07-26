@@ -471,12 +471,37 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ApplicationSimulationInconsistency::class);
     }
 
+    /** @return HasOne<UserWorkspacePreference, $this> */
+    public function workspacePreference(): HasOne
+    {
+        return $this->hasOne(UserWorkspacePreference::class);
+    }
+
+    /** @return HasOne<PlatformOperatorAssignment, $this> */
+    public function platformOperatorAssignment(): HasOne
+    {
+        return $this->hasOne(PlatformOperatorAssignment::class);
+    }
+
+    /** @return HasMany<PlatformOperatorAssignment, $this> */
+    public function platformOperatorAssignmentsGranted(): HasMany
+    {
+        return $this->hasMany(PlatformOperatorAssignment::class, 'granted_by');
+    }
+
+    /** @return HasMany<PlatformOperatorAssignment, $this> */
+    public function platformOperatorAssignmentsRevoked(): HasMany
+    {
+        return $this->hasMany(PlatformOperatorAssignment::class, 'revoked_by');
+    }
+
     /**
      * @param  string|array<int, string>  $roles
      */
     public function hasRole(string|array $roles): bool
     {
         return $this->roles()
+            ->where('roles.is_active', true)
             ->whereIn('name', Arr::wrap($roles))
             ->exists();
     }
@@ -488,6 +513,7 @@ class User extends Authenticatable implements MustVerifyEmail
             : [$permission, null];
 
         return $this->roles()
+            ->where('roles.is_active', true)
             ->whereHas('permissions', function ($query) use ($permission, $module, $action) {
                 $query->where('name', '*')
                     ->orWhere('name', $permission)

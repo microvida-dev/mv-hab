@@ -8,7 +8,10 @@ class LockScoringRunRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('lock', $this->route('scoringRun')) ?? false;
+        return $this->user()?->can(
+            'lockBackoffice',
+            $this->route('scoringRun'),
+        ) ?? false;
     }
 
     /**

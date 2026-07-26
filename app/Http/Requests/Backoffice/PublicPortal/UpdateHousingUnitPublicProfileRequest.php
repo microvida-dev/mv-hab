@@ -7,13 +7,17 @@ use App\Enums\HousingPublicStatus;
 use App\Enums\PublicVisibilityStatus;
 use App\Models\HousingUnit;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class UpdateHousingUnitPublicProfileRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows(
+            'updatePublicProfileBackoffice',
+            $this->route('housingUnit'),
+        );
     }
 
     /**
@@ -52,9 +56,6 @@ class UpdateHousingUnitPublicProfileRequest extends FormRequest
         ];
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     /**
      * @return array<string, mixed>
      */

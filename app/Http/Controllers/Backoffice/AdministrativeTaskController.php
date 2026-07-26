@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateAdministrativeTaskRequest;
 use App\Models\AdministrativeProcess;
 use App\Models\AdministrativeTask;
 use App\Services\Administrative\AdministrativeTaskService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,12 +16,19 @@ use Illuminate\Support\Facades\Gate;
 
 class AdministrativeTaskController extends Controller
 {
-    public function __construct(private readonly AdministrativeTaskService $taskService) {}
+    public function __construct(
+        private readonly AdministrativeTaskService $taskService,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
     public function index(Request $request): View
     {
-        Gate::authorize('viewAny', AdministrativeTask::class);
-        $tasks = AdministrativeTask::query()
+        Gate::authorize('viewAnyBackoffice', AdministrativeTask::class);
+        $tasks = $this->municipalScope
+            ->administrativeTasks(
+                AdministrativeTask::query(),
+                $this->authenticatedUser($request),
+            )
             ->with(['administrativeProcess', 'application', 'assignedTo'])
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->query('status')))
             ->latest()
@@ -31,7 +39,7 @@ class AdministrativeTaskController extends Controller
 
     public function store(StoreAdministrativeTaskRequest $request, AdministrativeProcess $administrativeProcess): RedirectResponse
     {
-        Gate::authorize('create', AdministrativeTask::class);
+        Gate::authorize('assignBackoffice', $administrativeProcess);
         $this->taskService->create($administrativeProcess, $request->validated(), $this->authenticatedUser($request));
 
         return back()->with('success', 'Tarefa criada.');
@@ -39,7 +47,7 @@ class AdministrativeTaskController extends Controller
 
     public function update(UpdateAdministrativeTaskRequest $request, AdministrativeTask $administrativeTask): RedirectResponse
     {
-        Gate::authorize('update', $administrativeTask);
+        Gate::authorize('updateBackoffice', $administrativeTask);
         $this->taskService->update($administrativeTask, $request->validated(), $this->authenticatedUser($request));
 
         return back()->with('success', 'Tarefa atualizada.');
@@ -47,7 +55,7 @@ class AdministrativeTaskController extends Controller
 
     public function complete(Request $request, AdministrativeTask $administrativeTask): RedirectResponse
     {
-        Gate::authorize('update', $administrativeTask);
+        Gate::authorize('completeBackoffice', $administrativeTask);
         $this->taskService->complete($administrativeTask, $this->authenticatedUser($request));
 
         return back()->with('success', 'Tarefa concluída.');
@@ -55,7 +63,7 @@ class AdministrativeTaskController extends Controller
 
     public function cancel(Request $request, AdministrativeTask $administrativeTask): RedirectResponse
     {
-        Gate::authorize('update', $administrativeTask);
+        Gate::authorize('cancelBackoffice', $administrativeTask);
         $this->taskService->cancel($administrativeTask, $this->authenticatedUser($request));
 
         return back()->with('success', 'Tarefa cancelada.');

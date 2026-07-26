@@ -15,11 +15,10 @@ class LandlordDashboardController extends Controller
 
     public function __invoke(FilterLandlordDashboardRequest $request): View
     {
-        Gate::authorize('viewAny', LandlordDashboardSnapshot::class);
+        Gate::authorize('viewAnyBackoffice', LandlordDashboardSnapshot::class);
 
         return view('backoffice.landlord.dashboard', [
-            'metrics' => $this->dashboard->metrics(),
-            'snapshot' => $this->dashboard->snapshot($this->authenticatedUser($request)),
+            'metrics' => $this->dashboard->metrics($this->authenticatedUser($request)),
         ]);
     }
 }

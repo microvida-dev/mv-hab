@@ -5,18 +5,21 @@ namespace Tests\Feature\DocumentIntelligence;
 use App\Enums\DocumentAiRiskSeverity;
 use App\Enums\DocumentAiScoreLabel;
 use App\Enums\DocumentAiSuggestionStatus;
+use App\Enums\FeatureKey;
 use App\Models\DocumentAiScore;
 use App\Models\DocumentAiSuggestion;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\Support\CreatesDocumentAiAssistantFixtures;
 use Tests\TestCase;
 
 class DocumentAiAssistantSuggestionTest extends TestCase
 {
     use CreatesDocumentAiAssistantFixtures;
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -30,14 +33,22 @@ class DocumentAiAssistantSuggestionTest extends TestCase
     {
         $suggestion = $this->suggestion();
         $admin = $this->userWithRole('administrator');
+        $analysis = $suggestion->analysis()->firstOrFail();
+        $this->assignDocumentMunicipality(
+            $admin,
+            $analysis->documentSubmission()->firstOrFail(),
+            FeatureKey::ApplicationReview,
+        );
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.document-ai.assistant.suggestions.accept', $suggestion), [
                 'confirm_accept' => '1',
             ])
             ->assertSessionHasErrors('accept_reason');
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.document-ai.assistant.suggestions.accept', $suggestion), [
                 'confirm_accept' => '1',
                 'accept_reason' => 'Validação técnica humana registada.',
@@ -51,10 +62,12 @@ class DocumentAiAssistantSuggestionTest extends TestCase
         ]);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.document-ai.assistant.suggestions.dismiss', $suggestion), [])
             ->assertSessionHasErrors('dismiss_reason');
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.document-ai.assistant.suggestions.dismiss', $suggestion), [
                 'dismiss_reason' => 'Sugestão verificada e sem impacto documental.',
             ])

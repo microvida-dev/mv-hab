@@ -23,8 +23,10 @@ class CaseWorkspaceRelationsTest extends TestCase
     {
         $application = Application::factory()->submitted()->create();
         $contract = Contract::factory()->create(['application_id' => $application->id]);
+        $actor = $this->userWithRole();
+        $this->scopeContractToUser($contract, $actor);
 
-        $this->actingAs($this->userWithRole())
+        $this->actingAs($actor)
             ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.cases.contracts.show', $contract))
             ->assertOk()

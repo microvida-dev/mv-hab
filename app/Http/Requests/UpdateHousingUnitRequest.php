@@ -4,13 +4,17 @@ namespace App\Http\Requests;
 
 use App\Enums\HousingUnitStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class UpdateHousingUnitRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows(
+            'updateBackoffice',
+            $this->route('housing_unit'),
+        );
     }
 
     /**

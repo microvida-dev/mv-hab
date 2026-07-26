@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\InspectionType;
+use App\Models\InspectionChecklistTemplate;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +12,14 @@ class UpdateInspectionChecklistTemplateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $actor = $this->user();
+        $template = $this->route(
+            'inspectionChecklistTemplate',
+        );
+
+        return $actor instanceof User
+            && $template instanceof InspectionChecklistTemplate
+            && $actor->can('update', $template);
     }
 
     /**
@@ -18,11 +27,30 @@ class UpdateInspectionChecklistTemplateRequest extends FormRequest
      */
     public function rules(): array
     {
+        $template = $this->route(
+            'inspectionChecklistTemplate',
+        );
+
         return [
-            'code' => ['required', 'string', 'max:80', Rule::unique('inspection_checklist_templates', 'code')->ignore($this->route('inspectionChecklistTemplate'))],
+            'code' => [
+                'required',
+                'string',
+                'max:80',
+                Rule::unique(
+                    'inspection_checklist_templates',
+                    'code',
+                )->ignore($template),
+            ],
             'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:5000'],
-            'inspection_type' => ['nullable', Rule::enum(InspectionType::class)],
+            'description' => [
+                'nullable',
+                'string',
+                'max:5000',
+            ],
+            'inspection_type' => [
+                'nullable',
+                Rule::enum(InspectionType::class),
+            ],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

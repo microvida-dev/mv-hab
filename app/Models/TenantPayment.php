@@ -8,9 +8,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * @property TenantPaymentStatus $status
+ * @property Carbon|null $registered_at
+ * @property Carbon|null $confirmed_at
+ * @property Carbon|null $reconciled_at
+ * @property-read User|null $tenant
  * @property-read TenantInvoice|null $invoice
  */
 class TenantPayment extends Model

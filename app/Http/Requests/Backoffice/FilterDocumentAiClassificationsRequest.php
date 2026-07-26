@@ -12,7 +12,7 @@ class FilterDocumentAiClassificationsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('viewAny', DocumentAiAnalysis::class) ?? false;
+        return $this->user()?->can('viewAnyBackoffice', DocumentAiAnalysis::class) ?? false;
     }
 
     /**

@@ -9,7 +9,9 @@ use App\Http\Requests\UpdateEligibilityRuleSetRequest;
 use App\Models\Contest;
 use App\Models\EligibilityRuleSet;
 use App\Models\Program;
+use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -19,12 +21,16 @@ use Illuminate\Support\Facades\Gate;
 
 class EligibilityRuleSetController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        Gate::authorize('viewAny', EligibilityRuleSet::class);
-        $ruleSets = EligibilityRuleSet::query()
+        Gate::authorize('viewAnyBackoffice', EligibilityRuleSet::class);
+        $ruleSets = $this->municipalScope
+            ->eligibilityRuleSets(EligibilityRuleSet::query(), $this->authenticatedUser($request))
             ->with(['program', 'contest'])
             ->withCount(['criteria', 'checks'])
             ->latest()
@@ -33,30 +39,27 @@ class EligibilityRuleSetController extends Controller
         return view('backoffice.eligibility.rule-sets.index', compact('ruleSets'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        Gate::authorize('create', EligibilityRuleSet::class);
+        Gate::authorize('createBackoffice', EligibilityRuleSet::class);
 
-        return view('backoffice.eligibility.rule-sets.create', $this->formData());
+        return view(
+            'backoffice.eligibility.rule-sets.create',
+            $this->formData($this->authenticatedUser($request)),
+        );
     }
 
     public function store(StoreEligibilityRuleSetRequest $request): RedirectResponse
     {
         $ruleSet = DB::transaction(function () use ($request) {
             $data = $this->normalized($request->validated());
-            $status = $data['status'];
-            unset($data['status']);
 
             $ruleSet = EligibilityRuleSet::query()->create($data);
             $ruleSet->forceFill([
-                'status' => $status,
+                'status' => EligibilityRuleSetStatus::Draft,
                 'created_by' => $this->authenticatedUser($request)->id,
                 'updated_by' => $this->authenticatedUser($request)->id,
             ])->save();
-
-            if ($status === EligibilityRuleSetStatus::Active) {
-                $this->archiveConflicts($ruleSet);
-            }
 
             return $ruleSet;
         });
@@ -69,7 +72,7 @@ class EligibilityRuleSetController extends Controller
 
     public function show(EligibilityRuleSet $eligibilityRuleSet): View
     {
-        Gate::authorize('view', $eligibilityRuleSet);
+        Gate::authorize('viewBackoffice', $eligibilityRuleSet);
         $eligibilityRuleSet->load(['program', 'contest', 'criteria', 'createdBy', 'updatedBy'])
             ->loadCount('checks');
 
@@ -78,11 +81,11 @@ class EligibilityRuleSetController extends Controller
 
     public function edit(EligibilityRuleSet $eligibilityRuleSet): View
     {
-        Gate::authorize('update', $eligibilityRuleSet);
+        Gate::authorize('updateBackoffice', $eligibilityRuleSet);
 
         return view('backoffice.eligibility.rule-sets.edit', [
             'ruleSet' => $eligibilityRuleSet,
-            ...$this->formData(),
+            ...$this->formData($this->currentUser()),
         ]);
     }
 
@@ -91,17 +94,10 @@ class EligibilityRuleSetController extends Controller
         EligibilityRuleSet $eligibilityRuleSet,
     ): RedirectResponse {
         $data = $this->normalized($request->validated());
-        $status = $data['status'];
-        unset($data['status']);
         $eligibilityRuleSet->update($data);
         $eligibilityRuleSet->forceFill([
-            'status' => $status,
             'updated_by' => $this->authenticatedUser($request)->id,
         ])->save();
-
-        if ($status === EligibilityRuleSetStatus::Active) {
-            $this->archiveConflicts($eligibilityRuleSet);
-        }
 
         $this->audit('update', AuditEvents::UPDATE, $eligibilityRuleSet, $request);
 
@@ -111,7 +107,7 @@ class EligibilityRuleSetController extends Controller
 
     public function activate(Request $request, EligibilityRuleSet $eligibilityRuleSet): RedirectResponse
     {
-        Gate::authorize('activate', $eligibilityRuleSet);
+        Gate::authorize('activateBackoffice', $eligibilityRuleSet);
         DB::transaction(function () use ($eligibilityRuleSet, $request) {
             $this->archiveConflicts($eligibilityRuleSet);
             $eligibilityRuleSet->forceFill([
@@ -126,7 +122,7 @@ class EligibilityRuleSetController extends Controller
 
     public function archive(Request $request, EligibilityRuleSet $eligibilityRuleSet): RedirectResponse
     {
-        Gate::authorize('archive', $eligibilityRuleSet);
+        Gate::authorize('archiveBackoffice', $eligibilityRuleSet);
         $eligibilityRuleSet->forceFill([
             'status' => EligibilityRuleSetStatus::Archived,
             'updated_by' => $this->authenticatedUser($request)->id,
@@ -138,7 +134,7 @@ class EligibilityRuleSetController extends Controller
 
     public function duplicate(Request $request, EligibilityRuleSet $eligibilityRuleSet): RedirectResponse
     {
-        Gate::authorize('duplicate', $eligibilityRuleSet);
+        Gate::authorize('duplicateBackoffice', $eligibilityRuleSet);
 
         $copy = DB::transaction(function () use ($request, $eligibilityRuleSet) {
             $eligibilityRuleSet->load('criteria');
@@ -170,12 +166,17 @@ class EligibilityRuleSetController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formData(): array
+    private function formData(User $actor): array
     {
         return [
-            'programs' => Program::query()->orderBy('name')->get(['id', 'name']),
-            'contests' => Contest::query()->orderBy('title')->get(['id', 'program_id', 'title']),
-            'statuses' => EligibilityRuleSetStatus::options(),
+            'programs' => $this->municipalScope
+                ->programs(Program::query(), $actor)
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'contests' => $this->municipalScope
+                ->contests(Contest::query(), $actor)
+                ->orderBy('title')
+                ->get(['id', 'program_id', 'title']),
         ];
     }
 
@@ -186,7 +187,6 @@ class EligibilityRuleSetController extends Controller
     private function normalized(array $data): array
     {
         $data['is_default'] = (bool) ($data['is_default'] ?? false);
-        $data['status'] = EligibilityRuleSetStatus::from($data['status']);
 
         return $data;
     }

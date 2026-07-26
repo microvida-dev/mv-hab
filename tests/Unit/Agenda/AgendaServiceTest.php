@@ -15,7 +15,7 @@ use App\Services\Agenda\Builders\AgendaMonthBuilder;
 use App\Services\Agenda\Builders\AgendaWeekBuilder;
 use App\Services\Dashboard\Timeline\TimelineAggregatorService;
 use Illuminate\Support\Carbon;
-use Mockery;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 class AgendaServiceTest extends TestCase
@@ -24,7 +24,7 @@ class AgendaServiceTest extends TestCase
     {
         $service = $this->serviceWithEvents($this->events());
 
-        $agenda = $service->today(new User());
+        $agenda = $service->today(new User);
 
         $this->assertArrayHasKey('date', $agenda);
         $this->assertArrayHasKey('events', $agenda);
@@ -34,7 +34,7 @@ class AgendaServiceTest extends TestCase
     {
         $service = $this->serviceWithEvents($this->events());
 
-        $agenda = $service->week(new User());
+        $agenda = $service->week(new User);
 
         $this->assertArrayHasKey('start', $agenda);
         $this->assertArrayHasKey('end', $agenda);
@@ -45,7 +45,7 @@ class AgendaServiceTest extends TestCase
     {
         $service = $this->serviceWithEvents($this->events());
 
-        $agenda = $service->month(new User());
+        $agenda = $service->month(new User);
 
         $this->assertArrayHasKey('month', $agenda);
         $this->assertArrayHasKey('weeks', $agenda);
@@ -53,12 +53,19 @@ class AgendaServiceTest extends TestCase
 
     public function test_next_events_are_sorted(): void
     {
-        $service = $this->serviceWithEvents($this->events());
+        $service = $this->serviceWithEvents([
+            ...$this->events(),
+            new TimelineEvent(
+                id: 'without-date',
+                title: 'Evento sem data',
+                type: TimelineType::Task,
+            ),
+        ]);
 
-        $events = $service->nextEvents(new User());
+        $events = $service->nextEvents(new User);
 
         $this->assertSame(
-            ['critical', 'normal'],
+            ['critical', 'normal', 'without-date'],
             $events->pluck('id')->all()
         );
     }
@@ -67,33 +74,51 @@ class AgendaServiceTest extends TestCase
     {
         $service = $this->serviceWithEvents($this->events());
 
-        $events = $service->nextCriticalEvents(new User());
+        $events = $service->nextCriticalEvents(new User);
 
         $this->assertCount(1, $events);
-        $this->assertSame('critical', $events->first()->id);
+        $event = $events->first();
+        $this->assertInstanceOf(TimelineEvent::class, $event);
+        $this->assertSame('critical', $event->id);
     }
 
     /**
-     * @param array<int,TimelineEvent> $events
+     * @param  array<int,TimelineEvent>  $events
      */
     private function serviceWithEvents(array $events): AgendaService
     {
-        $timeline = Mockery::mock(TimelineAggregatorService::class);
+        $timeline = new class($events) extends TimelineAggregatorService
+        {
+            /**
+             * @param  array<int, TimelineEvent>  $events
+             */
+            public function __construct(private readonly array $events) {}
 
-        $timeline->shouldReceive('eventsForUser')
-            ->andReturn(collect($events));
+            /**
+             * @param  array<string, mixed>  $dashboard
+             * @return Collection<int, TimelineEvent>
+             */
+            public function eventsForUser(User $user, array $dashboard = []): Collection
+            {
+                return collect($this->events);
+            }
 
-        $timeline->shouldReceive('forUser')
-            ->andReturn([
-                'nextAction' => null,
-            ]);
+            /**
+             * @param  array<string, mixed>  $dashboard
+             * @return array<string, mixed>
+             */
+            public function forUser(User $user, array $dashboard = []): array
+            {
+                return ['nextAction' => null];
+            }
+        };
 
         return new AgendaService(
             $timeline,
-            new AgendaEventFilter(),
-            new AgendaDayBuilder(),
-            new AgendaWeekBuilder(),
-            new AgendaMonthBuilder(),
+            new AgendaEventFilter,
+            new AgendaDayBuilder,
+            new AgendaWeekBuilder,
+            new AgendaMonthBuilder,
         );
     }
 
@@ -123,12 +148,5 @@ class AgendaServiceTest extends TestCase
                 datetime: Carbon::parse('2026-07-02 09:00'),
             ),
         ];
-    }
-
-    protected function tearDown(): void
-    {
-        Mockery::close();
-
-        parent::tearDown();
     }
 }

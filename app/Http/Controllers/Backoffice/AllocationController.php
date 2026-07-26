@@ -24,7 +24,7 @@ class AllocationController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('viewAny', Allocation::class);
+        Gate::authorize('viewAnyBackoffice', Allocation::class);
 
         return view('backoffice.allocation.allocations.index', [
             'allocations' => Allocation::query()
@@ -36,7 +36,7 @@ class AllocationController extends Controller
 
     public function show(Allocation $allocation): View
     {
-        Gate::authorize('view', $allocation);
+        Gate::authorize('viewBackoffice', $allocation);
         $allocation->load([
             'candidate',
             'application',
@@ -54,7 +54,7 @@ class AllocationController extends Controller
 
     public function createManual(): View
     {
-        Gate::authorize('create', Allocation::class);
+        Gate::authorize('createBackoffice', Allocation::class);
 
         return view('backoffice.allocation.allocations.manual-create', [
             'runs' => AllocationRun::query()->with(['contest', 'definitiveList'])->latest()->get(),
@@ -65,7 +65,7 @@ class AllocationController extends Controller
 
     public function storeManual(CreateManualAllocationRequest $request): RedirectResponse
     {
-        Gate::authorize('create', Allocation::class);
+        Gate::authorize('createBackoffice', Allocation::class);
         $run = AllocationRun::query()->findOrFail($request->integer('allocation_run_id'));
         $entry = DefinitiveListEntry::query()->findOrFail($request->integer('definitive_list_entry_id'));
         $unit = ContestHousingUnit::query()->findOrFail($request->integer('contest_housing_unit_id'));

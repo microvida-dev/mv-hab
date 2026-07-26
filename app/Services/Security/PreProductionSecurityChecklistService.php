@@ -6,6 +6,7 @@ use App\Enums\SecurityChecklistStatus;
 use App\Models\SecurityChecklist;
 use App\Models\SecurityChecklistItem;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -30,10 +31,19 @@ class PreProductionSecurityChecklistService
         'production_config',
     ];
 
+    public function __construct(
+        private readonly SecurityMunicipalScopeService $municipalScope,
+    ) {}
+
     public function create(User $actor, string $environment = 'pre-production'): SecurityChecklist
     {
+        if ($actor->municipality_id === null) {
+            throw new AuthorizationException('A checklist exige contexto municipal.');
+        }
+
         $checklist = SecurityChecklist::query()->create([
             'checklist_number' => 'CHK-'.now()->format('YmdHis').'-'.Str::upper(Str::random(5)),
+            'municipality_id' => $actor->municipality_id,
             'name' => 'Checklist de segurança pré-produção',
             'status' => SecurityChecklistStatus::InProgress,
             'environment' => $environment,
@@ -57,6 +67,10 @@ class PreProductionSecurityChecklistService
 
     public function updateItem(SecurityChecklistItem $item, User $actor, string $status, ?string $evidence = null): SecurityChecklistItem
     {
+        if (! $this->municipalScope->ownsChecklistItem($actor, $item)) {
+            throw new AuthorizationException('O item não pertence ao município do utilizador.');
+        }
+
         $item->forceFill([
             'status' => SecurityChecklistStatus::from($status),
             'evidence' => $evidence,
@@ -69,6 +83,10 @@ class PreProductionSecurityChecklistService
 
     public function approve(SecurityChecklist $checklist, User $actor): SecurityChecklist
     {
+        if (! $this->municipalScope->ownsChecklist($actor, $checklist)) {
+            throw new AuthorizationException('A checklist não pertence ao município do utilizador.');
+        }
+
         if ($checklist->items()->where('status', SecurityChecklistStatus::Failed->value)->exists()) {
             throw new RuntimeException('Não é possível aprovar checklist com itens falhados.');
         }

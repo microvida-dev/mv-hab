@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\FeatureKey;
 use App\Enums\InconsistencySeverity;
 use App\Enums\InconsistencyType;
 use App\Enums\InteractionType;
@@ -26,19 +27,24 @@ use App\Models\VisitSlot;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class Sprint22CandidateSupportTest extends TestCase
 {
-    use RefreshDatabase;
+    use InteractsWithMunicipalFeatures, RefreshDatabase;
 
     public function test_candidate_books_reschedules_and_cancels_visit_with_ownership_protection(): void
     {
         $this->seed(SystemAccessSeeder::class);
         $candidate = $this->userWithRole('candidate');
         $otherCandidate = $this->userWithRole('candidate');
-        $staff = $this->userWithRole('municipal_technician');
-        $contest = Contest::factory()->for(Program::factory()->published())->open()->create();
+        $program = Program::factory()->published()->create();
+        $contest = Contest::factory()->for($program)->open()->create();
+        $staff = User::factory()->create([
+            'municipality_id' => $program->municipality_id,
+        ]);
+        $staff->assignRole('municipal_technician');
         $availability = VisitAvailability::factory()->create(['contest_id' => $contest->id, 'staff_user_id' => $staff->id]);
         $firstSlot = VisitSlot::factory()->create(['visit_availability_id' => $availability->id, 'contest_id' => $contest->id, 'staff_user_id' => $staff->id]);
         $secondSlot = VisitSlot::factory()->create(['visit_availability_id' => $availability->id, 'contest_id' => $contest->id, 'staff_user_id' => $staff->id]);
@@ -128,7 +134,10 @@ class Sprint22CandidateSupportTest extends TestCase
         $this->seed(SystemAccessSeeder::class);
         $staff = $this->userWithRole('municipal_technician');
         $candidate = $this->userWithRole('candidate');
-        $contest = Contest::factory()->for(Program::factory()->published())->open()->create();
+        $program = Program::factory()->published()->create([
+            'municipality_id' => $staff->municipality_id,
+        ]);
+        $contest = Contest::factory()->for($program)->open()->create();
 
         $this->withSession(['mfa.verified_at' => now()])
             ->actingAs($staff)
@@ -252,6 +261,11 @@ class Sprint22CandidateSupportTest extends TestCase
         ]);
 
         $application = Application::factory()->create(['user_id' => $candidate->id]);
+        $this->assignApplicationMunicipality(
+            $staff,
+            $application,
+            FeatureKey::ApplicationReview,
+        );
         $inconsistency = ApplicationSimulationInconsistency::factory()->create([
             'application_id' => $application->id,
             'user_id' => $candidate->id,

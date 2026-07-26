@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property VisitStatus $status
+ * @property Carbon|null $scheduled_at
  * @property Carbon|null $starts_at
  * @property Carbon|null $ends_at
  */
@@ -54,6 +56,14 @@ class HousingVisit extends Model
     public function slot(): BelongsTo
     {
         return $this->belongsTo(VisitSlot::class, 'visit_slot_id');
+    }
+
+    /**
+     * @return BelongsTo<Municipality, $this>
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 
     /**

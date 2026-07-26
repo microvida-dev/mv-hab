@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\ListPublicationChannel;
+use App\Models\ProvisionalList;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +11,10 @@ class PublishProvisionalListRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $list = $this->route('provisionalList');
+
+        return $list instanceof ProvisionalList
+            && ($this->user()?->can('publishBackoffice', $list) ?? false);
     }
 
     /**

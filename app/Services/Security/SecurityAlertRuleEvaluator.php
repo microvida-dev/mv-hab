@@ -15,6 +15,7 @@ class SecurityAlertRuleEvaluator
 
         if ($event instanceof AccessLog) {
             return AccessLog::query()
+                ->where('municipality_id', $event->municipality_id)
                 ->where('access_type', $event->access_type)
                 ->where('ip_address', $event->ip_address)
                 ->where('accessed_at', '>=', $window)
@@ -22,6 +23,7 @@ class SecurityAlertRuleEvaluator
         }
 
         return SensitiveDataAccessLog::query()
+            ->where('municipality_id', $event->municipality_id)
             ->where('user_id', $event->user_id)
             ->where('action', $event->action)
             ->where('accessed_at', '>=', $window)

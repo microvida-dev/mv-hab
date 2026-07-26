@@ -11,6 +11,7 @@ use App\Models\IncomeRecord;
 use App\Models\IncomeSource;
 use App\Models\RentRuleSet;
 use App\Models\User;
+use App\Support\DecimalMoney;
 use BackedEnum;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -60,8 +61,8 @@ class RentSnapshotService
             'household' => [
                 'id' => $household?->id,
                 'members_count' => $household instanceof Household ? ($household->members_count ?? $household->members->count()) : 0,
-                'monthly_income' => (float) $incomeRecords->sum('monthly_amount'),
-                'annual_income' => (float) $incomeRecords->sum('annual_amount'),
+                'monthly_income' => DecimalMoney::sum($incomeRecords->pluck('monthly_amount')),
+                'annual_income' => DecimalMoney::sum($incomeRecords->pluck('annual_amount')),
             ],
             'income_records' => $incomeRecords->map(function (IncomeRecord $record): array {
                 /** @var IncomeSource|null $incomeSource */
@@ -73,8 +74,8 @@ class RentSnapshotService
                 return [
                     'id' => $record->id,
                     'source' => $source,
-                    'monthly_amount' => (float) $record->monthly_amount,
-                    'annual_amount' => (float) $record->annual_amount,
+                    'monthly_amount' => DecimalMoney::normalize((string) $record->monthly_amount),
+                    'annual_amount' => DecimalMoney::normalize((string) $record->annual_amount),
                     'reference_year' => $record->reference_year,
                     'is_current' => (bool) $record->is_current,
                 ];
@@ -85,7 +86,9 @@ class RentSnapshotService
                 'address' => $housingUnit->address ?? null,
                 'typology' => $contestHousingUnit->typology ?? $housingUnit->typology ?? null,
                 'bedrooms' => $contestHousingUnit->bedrooms ?? $housingUnit->bedrooms ?? null,
-                'monthly_rent_reference' => (float) ($contestHousingUnit->monthly_rent ?? $housingUnit->monthly_rent ?? 0),
+                'monthly_rent_reference' => DecimalMoney::normalize(
+                    (string) ($contestHousingUnit->monthly_rent ?? $housingUnit->monthly_rent ?? '0'),
+                ),
             ],
             'allocation' => [
                 'id' => $allocation->id,
@@ -100,10 +103,10 @@ class RentSnapshotService
                 'calculation_method' => $this->enumValue($ruleSet->calculation_method),
                 'income_period' => $ruleSet->income_period,
                 'income_basis' => $ruleSet->income_basis,
-                'effort_rate_percentage' => (float) $ruleSet->effort_rate_percentage,
-                'minimum_rent' => $ruleSet->minimum_rent !== null ? (float) $ruleSet->minimum_rent : null,
-                'maximum_rent' => $ruleSet->maximum_rent !== null ? (float) $ruleSet->maximum_rent : null,
-                'deposit_months' => $ruleSet->deposit_months !== null ? (float) $ruleSet->deposit_months : null,
+                'effort_rate_percentage' => $ruleSet->effort_rate_percentage,
+                'minimum_rent' => $ruleSet->minimum_rent,
+                'maximum_rent' => $ruleSet->maximum_rent,
+                'deposit_months' => $ruleSet->deposit_months,
             ],
         ];
     }

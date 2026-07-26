@@ -7,6 +7,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "ext-bcmath": "*",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0"
     },
@@ -35,6 +36,9 @@
         }
     },
     "scripts": {
+        "quality:pint": "@php vendor/bin/pint --test",
+        "quality:pint:changed": "@php scripts/quality/pint-changed.php",
+        "quality:tests:integrity": "@php scripts/quality/audit-test-integrity.php",
         "setup": [
             "composer install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",

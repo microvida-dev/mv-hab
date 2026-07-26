@@ -10,6 +10,9 @@ use Illuminate\Support\Carbon;
 
 final readonly class TimelineEvent
 {
+    /**
+     * @param  array<string, mixed>  $metadata
+     */
     public function __construct(
         public string $id,
         public TimelineType $type,
@@ -30,6 +33,25 @@ final readonly class TimelineEvent
         return $this->priority->weight();
     }
 
+    /**
+     * @return array{
+     *     id: string,
+     *     type: string,
+     *     priority: string,
+     *     priority_weight: int,
+     *     status: string,
+     *     datetime: string|null,
+     *     date: string|null,
+     *     time: string|null,
+     *     title: string,
+     *     description: string|null,
+     *     route: string|null,
+     *     icon: string,
+     *     tone: string,
+     *     workspace: string|null,
+     *     metadata: array<string, mixed>
+     * }
+     */
     public function toArray(): array
     {
         return [

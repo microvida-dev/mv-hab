@@ -12,12 +12,14 @@ use App\Enums\ContractClauseStatus;
 use App\Enums\ContractTemplateStatus;
 use App\Enums\DocumentAppliesTo;
 use App\Enums\DocumentCategory;
+use App\Enums\DocumentReferencePeriodUnit;
 use App\Enums\EligibilityCriterionCategory;
 use App\Enums\EligibilityOperator;
 use App\Enums\EligibilityRuleSetStatus;
 use App\Enums\HousingLocationPrecision;
 use App\Enums\HousingPublicStatus;
 use App\Enums\HousingUnitStatus;
+use App\Enums\IncomeSourceType;
 use App\Enums\NotificationPriority;
 use App\Enums\ProgramStatus;
 use App\Enums\PublicVisibilityStatus;
@@ -484,6 +486,8 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
 
     private function seedDocuments(Program $program, Contest $contest): void
     {
+        $this->call(DocumentTypeSeeder::class);
+
         $definitions = [
             ['alcanena_identificacao_residencia', 'Identificação civil ou autorização de residência', DocumentCategory::Identification, DocumentAppliesTo::HouseholdMember, false],
             ['alcanena_nif', 'Cartão ou comprovativo de NIF', DocumentCategory::Tax, DocumentAppliesTo::HouseholdMember, false],
@@ -528,10 +532,19 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
             ['alcanena_situacao_regular_iss', DocumentAppliesTo::AdhesionRegistration, 'always', RequiredDocumentConditionOperator::Always, null, 'Certidão de situação contributiva regularizada do candidato/agregado.'],
             ['alcanena_atestado_incapacidade', DocumentAppliesTo::HouseholdMember, 'household_member.is_disabled', RequiredDocumentConditionOperator::IsTrue, null, 'Aplicável a elementos com deficiência ou multideficiência declarada.'],
             ['alcanena_declaracao_gravidez', DocumentAppliesTo::HouseholdMember, 'household_member.is_pregnant', RequiredDocumentConditionOperator::IsTrue, null, 'Aplicável ao elemento que declare gravidez.'],
+            [
+                'recibos_vencimento',
+                DocumentAppliesTo::IncomeRecord,
+                'income_record.income_source',
+                RequiredDocumentConditionOperator::Equals,
+                IncomeSourceType::Employment->value,
+                'Configuração demo sujeita ao edital do concurso: submeta os três recibos de vencimento mais recentes disponíveis, relativos a meses distintos.',
+            ],
         ];
 
         foreach ($requirements as $index => [$code, $requiredFor, $conditionKey, $operator, $conditionValue, $instructions]) {
             $documentType = DocumentType::query()->where('code', $code)->firstOrFail();
+            $isRepeatablePayslip = $code === 'recibos_vencimento';
             $required = RequiredDocument::withTrashed()->firstOrNew([
                 'document_type_id' => $documentType->id,
                 'program_id' => $program->id,
@@ -546,6 +559,17 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
                 'is_active' => true,
                 'instructions' => $instructions,
                 'sort_order' => ($index + 1) * 10,
+
+                'required_submissions' => $isRepeatablePayslip ? 3 : 1,
+
+                'reference_period_unit' => $isRepeatablePayslip
+                    ? DocumentReferencePeriodUnit::Month->value
+                    : null,
+
+                'requires_distinct_reference_periods' => $isRepeatablePayslip,
+
+                'reference_period_recency' => $isRepeatablePayslip ? 3 : null,
+
                 'deleted_at' => null,
             ])->save();
         }

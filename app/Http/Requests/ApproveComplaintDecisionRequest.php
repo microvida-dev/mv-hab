@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ComplaintDecision;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ApproveComplaintDecisionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $decision = $this->route('complaintDecision');
+
+        return $decision instanceof ComplaintDecision
+            && ($this->user()?->can('approveBackoffice', $decision) ?? false);
     }
 
     /**

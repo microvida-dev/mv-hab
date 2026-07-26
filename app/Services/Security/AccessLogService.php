@@ -24,6 +24,7 @@ class AccessLogService
         $type = $type instanceof AccessLogType ? $type : AccessLogType::from($type);
 
         return AccessLog::query()->create([
+            'municipality_id' => $user?->municipality_id,
             'user_id' => $user?->id,
             'access_type' => $type,
             'resource_type' => $resource?->getMorphClass(),

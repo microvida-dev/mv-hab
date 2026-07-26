@@ -11,35 +11,48 @@ use App\Http\Requests\ValidateLotteryResultRequest;
 use App\Models\AllocationRun;
 use App\Models\LotteryDraw;
 use App\Services\Lottery\LotteryDrawService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class LotteryDrawController extends Controller
 {
-    public function __construct(private readonly LotteryDrawService $draws) {}
+    public function __construct(
+        private readonly LotteryDrawService $draws,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        Gate::authorize('viewAny', LotteryDraw::class);
+        Gate::authorize('viewAnyBackoffice', LotteryDraw::class);
 
         return view('backoffice.lottery-draws.index', [
-            'lotteryDraws' => LotteryDraw::query()->with(['contest', 'allocationRun'])->latest()->paginate(20),
+            'lotteryDraws' => $this->municipalScope
+                ->lotteryDraws(LotteryDraw::query(), $this->authenticatedUser($request))
+                ->with(['contest', 'allocationRun'])
+                ->latest()
+                ->paginate(20),
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        Gate::authorize('create', LotteryDraw::class);
+        Gate::authorize('createBackoffice', LotteryDraw::class);
 
         return view('backoffice.lottery-draws.create', [
-            'allocationRuns' => AllocationRun::query()->with(['contest', 'definitiveList'])->latest()->get(),
+            'allocationRuns' => $this->municipalScope
+                ->allocationRuns(AllocationRun::query(), $this->authenticatedUser($request))
+                ->with(['contest', 'definitiveList'])
+                ->latest()
+                ->get(),
         ]);
     }
 
     public function store(StoreLotteryDrawRequest $request): RedirectResponse
     {
-        Gate::authorize('create', LotteryDraw::class);
+        Gate::authorize('createBackoffice', LotteryDraw::class);
 
         $draw = $this->draws->create($request->validated(), $this->authenticatedUser($request));
 
@@ -48,7 +61,7 @@ class LotteryDrawController extends Controller
 
     public function show(LotteryDraw $lotteryDraw): View
     {
-        Gate::authorize('view', $lotteryDraw);
+        Gate::authorize('viewBackoffice', $lotteryDraw);
 
         $lotteryDraw->load(['contest', 'allocationRun', 'participants.candidate', 'results.candidate', 'convocations', 'attendances', 'winnerRegistrations']);
 
@@ -57,14 +70,14 @@ class LotteryDrawController extends Controller
 
     public function edit(LotteryDraw $lotteryDraw): View
     {
-        Gate::authorize('update', $lotteryDraw);
+        Gate::authorize('updateBackoffice', $lotteryDraw);
 
         return view('backoffice.lottery-draws.edit', compact('lotteryDraw'));
     }
 
     public function update(UpdateLotteryDrawRequest $request, LotteryDraw $lotteryDraw): RedirectResponse
     {
-        Gate::authorize('update', $lotteryDraw);
+        Gate::authorize('updateBackoffice', $lotteryDraw);
 
         $this->draws->update($lotteryDraw, $request->validated(), $this->authenticatedUser($request));
 
@@ -73,7 +86,7 @@ class LotteryDrawController extends Controller
 
     public function run(RunLotteryDrawRequest $request, LotteryDraw $lotteryDraw): RedirectResponse
     {
-        Gate::authorize('update', $lotteryDraw);
+        Gate::authorize('runBackoffice', $lotteryDraw);
 
         $this->draws->run($lotteryDraw, $this->authenticatedUser($request), $request->validated('seed'));
 
@@ -82,7 +95,7 @@ class LotteryDrawController extends Controller
 
     public function validateResult(ValidateLotteryResultRequest $request, LotteryDraw $lotteryDraw): RedirectResponse
     {
-        Gate::authorize('approve', $lotteryDraw);
+        Gate::authorize('validateBackoffice', $lotteryDraw);
 
         $this->draws->validateResult($lotteryDraw, $this->authenticatedUser($request));
 
@@ -91,7 +104,7 @@ class LotteryDrawController extends Controller
 
     public function cancel(CancelLotteryDrawRequest $request, LotteryDraw $lotteryDraw): RedirectResponse
     {
-        Gate::authorize('update', $lotteryDraw);
+        Gate::authorize('cancelBackoffice', $lotteryDraw);
 
         $this->draws->cancel($lotteryDraw, $this->authenticatedUser($request), (string) $request->validated('reason'));
 

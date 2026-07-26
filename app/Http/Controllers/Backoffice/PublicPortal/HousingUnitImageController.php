@@ -19,7 +19,7 @@ class HousingUnitImageController extends Controller
         HousingUnit $housingUnit,
         PublicHousingPublicationService $publicationService,
     ): RedirectResponse {
-        Gate::authorize('updatePublicProfile', $housingUnit);
+        Gate::authorize('createBackoffice', HousingUnitImage::class);
 
         $publicationService->storeImage(
             $housingUnit,
@@ -33,7 +33,7 @@ class HousingUnitImageController extends Controller
 
     public function update(UpdateHousingUnitImageRequest $request, HousingUnitImage $image): RedirectResponse
     {
-        Gate::authorize('update', $image);
+        Gate::authorize('updateBackoffice', $image);
 
         $data = $request->validated();
         $data['is_cover'] = $request->boolean('is_cover');
@@ -53,7 +53,7 @@ class HousingUnitImageController extends Controller
 
     public function destroy(HousingUnitImage $image): RedirectResponse
     {
-        Gate::authorize('delete', $image);
+        Gate::authorize('deleteBackoffice', $image);
 
         Storage::disk($image->disk)->delete($image->path);
         $image->delete();

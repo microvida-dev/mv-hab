@@ -10,6 +10,7 @@ use App\Enums\TenantCommunicationStatus;
 use App\Enums\TenantInvoiceStatus;
 use App\Enums\TenantPaymentStatus;
 use App\Enums\TenantTransitionStatus;
+use App\Models\HousingUnit;
 use App\Models\TenantCommunication;
 use App\Models\TenantInvoice;
 use App\Models\TenantPayment;
@@ -20,9 +21,8 @@ use App\Services\Dashboard\Timeline\TimelineEventFactory;
 
 class TenantOperationsTimelineProvider extends BaseTimelineProvider
 {
-
     public function __construct(
-        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory,
     ) {}
 
     public function forUser(User $user, array $dashboard = []): array
@@ -268,22 +268,25 @@ class TenantOperationsTimelineProvider extends BaseTimelineProvider
 
     private function transitionDescription(TenantTransition $transition): string
     {
-        return trim(($transition->tenant?->name ?? 'Inquilino').' · '.($transition->housingUnit?->reference ?? $transition->housingUnit?->code ?? 'Habitação'));
+        $unit = $transition->housingUnit;
+        $housingUnitCode = $unit instanceof HousingUnit ? $unit->code : 'Habitação';
+
+        return trim($this->tenantName($transition->tenant).' · '.$housingUnitCode);
     }
 
     private function invoiceDescription(TenantInvoice $invoice): string
     {
-        return trim(($invoice->invoice_number ?? 'Fatura').' · '.($invoice->tenant?->name ?? 'Inquilino').' · '.$invoice->amount_due.' €');
+        return trim(($invoice->invoice_number ?? 'Fatura').' · '.$this->tenantName($invoice->tenant).' · '.$invoice->amount_due.' €');
     }
 
     private function paymentDescription(TenantPayment $payment): string
     {
-        return trim(($payment->payment_number ?? 'Pagamento').' · '.($payment->tenant?->name ?? 'Inquilino').' · '.$payment->amount.' €');
+        return trim(($payment->payment_number ?? 'Pagamento').' · '.$this->tenantName($payment->tenant).' · '.$payment->amount.' €');
     }
 
     private function communicationDescription(TenantCommunication $communication): string
     {
-        return trim(($communication->subject ?? 'Comunicação').' · '.($communication->tenant?->name ?? 'Inquilino'));
+        return trim(($communication->subject ?? 'Comunicação').' · '.$this->tenantName($communication->tenant));
     }
 
     /** @return array<string, mixed> */
@@ -294,7 +297,7 @@ class TenantOperationsTimelineProvider extends BaseTimelineProvider
             'user_id' => $transition->user_id,
             'housing_unit_id' => $transition->housing_unit_id,
             'lease_contract_id' => $transition->lease_contract_id,
-            'status' => $transition->status?->value ?? $transition->status,
+            'status' => $transition->status->value,
         ];
     }
 
@@ -306,7 +309,7 @@ class TenantOperationsTimelineProvider extends BaseTimelineProvider
             'invoice_number' => $invoice->invoice_number,
             'user_id' => $invoice->user_id,
             'lease_contract_id' => $invoice->lease_contract_id,
-            'status' => $invoice->status?->value ?? $invoice->status,
+            'status' => $invoice->status->value,
             'amount_due' => $invoice->amount_due,
             'due_date' => $invoice->due_date?->toDateString(),
         ];
@@ -320,7 +323,7 @@ class TenantOperationsTimelineProvider extends BaseTimelineProvider
             'payment_number' => $payment->payment_number,
             'user_id' => $payment->user_id,
             'lease_contract_id' => $payment->lease_contract_id,
-            'status' => $payment->status?->value ?? $payment->status,
+            'status' => $payment->status->value,
             'amount' => $payment->amount,
         ];
     }
@@ -333,7 +336,16 @@ class TenantOperationsTimelineProvider extends BaseTimelineProvider
             'subject' => $communication->subject,
             'user_id' => $communication->user_id,
             'lease_contract_id' => $communication->lease_contract_id,
-            'status' => $communication->status?->value ?? $communication->status,
+            'status' => $communication->status->value,
         ];
+    }
+
+    private function tenantName(?User $tenant): string
+    {
+        if ($tenant === null) {
+            return 'Inquilino';
+        }
+
+        return $tenant->name;
     }
 }

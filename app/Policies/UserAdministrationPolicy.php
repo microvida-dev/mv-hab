@@ -3,47 +3,56 @@
 namespace App\Policies;
 
 use App\Models\User;
+use App\Services\Access\AccessMunicipalScopeService;
 
 class UserAdministrationPolicy
 {
+    public function __construct(private readonly AccessMunicipalScopeService $municipalScope) {}
+
     public function viewAny(User $user): bool
     {
-        return $this->can($user, 'view');
+        return $this->can($user, 'view') && $user->municipality_id !== null;
     }
 
     public function view(User $user, User $target): bool
     {
-        return $this->can($user, 'view');
+        return $this->canTarget($user, $target, 'view');
     }
 
     public function create(User $user): bool
     {
-        return $this->can($user, 'create');
+        return $this->can($user, 'create') && $user->municipality_id !== null;
     }
 
     public function update(User $user, User $target): bool
     {
-        return $this->can($user, 'update');
+        return $this->canTarget($user, $target, 'update');
     }
 
     public function deactivate(User $user, User $target): bool
     {
-        return $this->can($user, 'deactivate');
+        return $this->canTarget($user, $target, 'deactivate');
     }
 
     public function reactivate(User $user, User $target): bool
     {
-        return $this->can($user, 'reactivate');
+        return $this->canTarget($user, $target, 'reactivate');
     }
 
     public function forceMfa(User $user, User $target): bool
     {
-        return $this->can($user, 'force_mfa');
+        return $this->canTarget($user, $target, 'force_mfa');
     }
 
     public function resetPassword(User $user, User $target): bool
     {
-        return $this->can($user, 'reset_password');
+        return $this->canTarget($user, $target, 'reset_password');
+    }
+
+    private function canTarget(User $user, User $target, string $action): bool
+    {
+        return $this->can($user, $action)
+            && $this->municipalScope->ownsUser($user, $target);
     }
 
     private function can(User $user, string $action): bool

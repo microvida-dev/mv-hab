@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\UX;
 
+use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\Contest;
 use App\Models\DocumentSubmission;
@@ -68,6 +69,7 @@ class CaseWorkspaceAuthorizationTest extends TestCase
     {
         $auditor = $this->userWithRole('auditor');
         $application = Application::factory()->submitted()->create();
+        $this->assignApplicationMunicipality($auditor, $application, FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview);
         DocumentSubmission::factory()->create([
             'application_id' => $application->id,
             'status' => 'submitted',

@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\MaintenanceUrgency;
+use App\Models\MaintenanceRequest;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +12,17 @@ class UpdateMaintenanceRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $actor = $this->user();
+        $maintenanceRequest = $this->route(
+            'maintenanceRequest',
+        );
+
+        return $actor instanceof User
+            && $maintenanceRequest instanceof MaintenanceRequest
+            && $actor->can(
+                'updateBackoffice',
+                $maintenanceRequest,
+            );
     }
 
     /**
@@ -19,14 +31,45 @@ class UpdateMaintenanceRequestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'maintenance_category_id' => ['nullable', 'integer', 'exists:maintenance_categories,id'],
-            'urgency' => ['required', Rule::enum(MaintenanceUrgency::class)],
-            'technical_priority' => ['nullable', Rule::enum(MaintenanceUrgency::class)],
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string', 'min:10', 'max:10000'],
-            'location_in_property' => ['nullable', 'string', 'max:255'],
-            'tenant_availability' => ['nullable', 'string', 'max:3000'],
-            'access_instructions' => ['nullable', 'string', 'max:3000'],
+            'maintenance_category_id' => [
+                'nullable',
+                'integer',
+                'exists:maintenance_categories,id',
+            ],
+            'urgency' => [
+                'required',
+                Rule::enum(MaintenanceUrgency::class),
+            ],
+            'technical_priority' => [
+                'nullable',
+                Rule::enum(MaintenanceUrgency::class),
+            ],
+            'title' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+            'description' => [
+                'required',
+                'string',
+                'min:10',
+                'max:10000',
+            ],
+            'location_in_property' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'tenant_availability' => [
+                'nullable',
+                'string',
+                'max:3000',
+            ],
+            'access_instructions' => [
+                'nullable',
+                'string',
+                'max:3000',
+            ],
         ];
     }
 }

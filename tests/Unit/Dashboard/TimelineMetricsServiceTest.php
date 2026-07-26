@@ -17,7 +17,7 @@ class TimelineMetricsServiceTest extends TestCase
     {
         Carbon::setTestNow('2026-07-02 10:00:00');
 
-        $metrics = (new TimelineMetricsService())->calculate(new Collection([
+        $metrics = (new TimelineMetricsService)->calculate(new Collection([
             new TimelineEvent(
                 id: 'overdue',
                 type: TimelineType::Complaint,

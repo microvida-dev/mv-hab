@@ -27,11 +27,13 @@ class VisitsAndSupportAuthorizationTest extends TestCase
             'subject' => 'Pedido financeiro sintético',
         ]);
 
-        $this->actingAs($support)
+        $this->withSession(['mfa.verified_at' => now()])
+            ->actingAs($support)
             ->get(route('backoffice.support-tickets.show', $ticket))
             ->assertForbidden();
 
-        $this->actingAs($support)
+        $this->withSession(['mfa.verified_at' => now()])
+            ->actingAs($support)
             ->get(route('backoffice.support-tickets.index'))
             ->assertOk()
             ->assertDontSee('Pedido financeiro sintético');

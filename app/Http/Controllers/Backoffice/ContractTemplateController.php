@@ -10,7 +10,9 @@ use App\Models\Contest;
 use App\Models\ContractClause;
 use App\Models\ContractTemplate;
 use App\Models\Program;
+use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -19,27 +21,38 @@ use Illuminate\Support\Facades\Gate;
 
 class ContractTemplateController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        Gate::authorize('viewAny', ContractTemplate::class);
+        Gate::authorize('viewAnyBackoffice', ContractTemplate::class);
+        $actor = $this->authenticatedUser($request);
 
         return view('backoffice.contracts.templates.index', [
-            'templates' => ContractTemplate::query()->with(['program', 'contest'])->withCount('clauses')->latest()->paginate(20),
+            'templates' => $this->municipalScope
+                ->contractTemplates(ContractTemplate::query(), $actor)
+                ->with(['program', 'contest'])
+                ->withCount('clauses')
+                ->latest()
+                ->paginate(20),
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        Gate::authorize('create', ContractTemplate::class);
+        Gate::authorize('createBackoffice', ContractTemplate::class);
 
-        return view('backoffice.contracts.templates.create', $this->formData());
+        return view('backoffice.contracts.templates.create', $this->formData(
+            $this->authenticatedUser($request),
+        ));
     }
 
     public function store(StoreContractTemplateRequest $request): RedirectResponse
     {
-        Gate::authorize('create', ContractTemplate::class);
+        Gate::authorize('createBackoffice', ContractTemplate::class);
         $data = $this->normalized($request->validated());
         $status = $data['status'];
         $clauses = $data['clause_ids'] ?? [];
@@ -54,22 +67,25 @@ class ContractTemplateController extends Controller
 
     public function show(ContractTemplate $contractTemplate): View
     {
-        Gate::authorize('view', $contractTemplate);
+        Gate::authorize('viewBackoffice', $contractTemplate);
         $contractTemplate->load(['program', 'contest', 'clauses']);
 
         return view('backoffice.contracts.templates.show', compact('contractTemplate'));
     }
 
-    public function edit(ContractTemplate $contractTemplate): View
+    public function edit(Request $request, ContractTemplate $contractTemplate): View
     {
-        Gate::authorize('update', $contractTemplate);
+        Gate::authorize('updateBackoffice', $contractTemplate);
 
-        return view('backoffice.contracts.templates.edit', ['contractTemplate' => $contractTemplate->load('clauses'), ...$this->formData()]);
+        return view('backoffice.contracts.templates.edit', [
+            'contractTemplate' => $contractTemplate->load('clauses'),
+            ...$this->formData($this->authenticatedUser($request)),
+        ]);
     }
 
     public function update(UpdateContractTemplateRequest $request, ContractTemplate $contractTemplate): RedirectResponse
     {
-        Gate::authorize('update', $contractTemplate);
+        Gate::authorize('updateBackoffice', $contractTemplate);
         $data = $this->normalized($request->validated());
         $status = $data['status'];
         $clauses = $data['clause_ids'] ?? [];
@@ -84,7 +100,7 @@ class ContractTemplateController extends Controller
 
     public function activate(Request $request, ContractTemplate $contractTemplate): RedirectResponse
     {
-        Gate::authorize('activate', $contractTemplate);
+        Gate::authorize('activateBackoffice', $contractTemplate);
         $contractTemplate->forceFill(['status' => ContractTemplateStatus::Active, 'updated_by' => $this->authenticatedUser($request)->id])->save();
         $this->auditLogger->record(AuditEvents::APPROVE, $contractTemplate, 'contracts', 'contract_template_activate', 'Minuta contratual ativada.');
 
@@ -93,7 +109,7 @@ class ContractTemplateController extends Controller
 
     public function archive(Request $request, ContractTemplate $contractTemplate): RedirectResponse
     {
-        Gate::authorize('archive', $contractTemplate);
+        Gate::authorize('archiveBackoffice', $contractTemplate);
         $contractTemplate->forceFill(['status' => ContractTemplateStatus::Archived, 'updated_by' => $this->authenticatedUser($request)->id])->save();
         $this->auditLogger->record(AuditEvents::UPDATE, $contractTemplate, 'contracts', 'contract_template_archive', 'Minuta contratual arquivada.');
 
@@ -102,7 +118,7 @@ class ContractTemplateController extends Controller
 
     public function duplicate(Request $request, ContractTemplate $contractTemplate): RedirectResponse
     {
-        Gate::authorize('duplicate', $contractTemplate);
+        Gate::authorize('duplicateBackoffice', $contractTemplate);
         $copy = $contractTemplate->replicate();
         $copy->name = $contractTemplate->name.' - cópia';
         $copy->forceFill([
@@ -113,6 +129,7 @@ class ContractTemplateController extends Controller
         $copy->version_number = $contractTemplate->version_number + 1;
         $copy->save();
         $this->syncClauses($copy, $contractTemplate->clauses()->pluck('contract_clauses.id')->all());
+        $this->auditLogger->record(AuditEvents::CREATE, $copy, 'contracts', 'contract_template_duplicate', 'Cópia de minuta contratual criada.');
 
         return to_route('backoffice.contracts.templates.edit', $copy)->with('success', 'Cópia criada em rascunho.');
     }
@@ -120,12 +137,21 @@ class ContractTemplateController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formData(): array
+    private function formData(User $actor): array
     {
         return [
-            'programs' => Program::query()->orderBy('name')->get(['id', 'name']),
-            'contests' => Contest::query()->orderBy('title')->get(['id', 'title']),
-            'clauses' => ContractClause::query()->orderBy('title')->get(['id', 'title', 'code']),
+            'programs' => $this->municipalScope
+                ->programs(Program::query(), $actor)
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'contests' => $this->municipalScope
+                ->contests(Contest::query(), $actor)
+                ->orderBy('title')
+                ->get(['id', 'title']),
+            'clauses' => $this->municipalScope
+                ->contractClauses(ContractClause::query(), $actor)
+                ->orderBy('title')
+                ->get(['id', 'title', 'code']),
             'statuses' => ContractTemplateStatus::options(),
         ];
     }

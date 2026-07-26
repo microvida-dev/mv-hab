@@ -8,6 +8,7 @@ use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\Contract;
+use App\Models\HousingUnit;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
@@ -15,7 +16,7 @@ use App\Services\Dashboard\Timeline\TimelineEventFactory;
 class ContractTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
-        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory,
     ) {}
 
     public function forUser(User $user, array $dashboard = []): array
@@ -150,10 +151,13 @@ class ContractTimelineProvider extends BaseTimelineProvider
     private function description(Contract $contract): string
     {
         $number = $contract->contract_number ?? 'Contrato';
-        $candidate = $contract->candidate?->name ?? 'Inquilino';
-        $housing = $contract->housingUnit?->reference ?? $contract->housingUnit?->code ?? 'Habitação';
 
-        return trim("{$number} · {$candidate} · {$housing}");
+        return trim(sprintf(
+            '%s · %s · %s',
+            $number,
+            $this->candidateName($contract),
+            $this->housingCode($contract),
+        ));
     }
 
     /**
@@ -161,17 +165,51 @@ class ContractTimelineProvider extends BaseTimelineProvider
      */
     private function metadata(Contract $contract): array
     {
+        $candidate = $this->candidate($contract);
+
         return [
             'contract_id' => $contract->getKey(),
             'contract_number' => $contract->contract_number,
             'user_id' => $contract->user_id,
-            'candidate_name' => $contract->candidate?->name,
+            'candidate_name' => $candidate?->name,
             'housing_unit_id' => $contract->housing_unit_id,
-            'status' => $contract->status?->value ?? $contract->status,
+            'status' => $contract->status->value,
             'monthly_rent' => $contract->monthly_rent,
             'deposit_amount' => $contract->deposit_amount,
             'start_date' => $contract->start_date?->toDateString(),
             'end_date' => $contract->end_date?->toDateString(),
         ];
+    }
+
+    private function candidate(Contract $contract): ?User
+    {
+        $relation = $contract->relationLoaded('candidate')
+            ? $contract->getRelation('candidate')
+            : null;
+
+        return $relation instanceof User ? $relation : null;
+    }
+
+    private function candidateName(Contract $contract): string
+    {
+        $candidate = $this->candidate($contract);
+
+        return $candidate === null ? 'Inquilino' : $candidate->name;
+    }
+
+    private function housingUnit(Contract $contract): ?HousingUnit
+    {
+        $relation = $contract->relationLoaded('housingUnit')
+            ? $contract->getRelation('housingUnit')
+            : null;
+
+        return $relation instanceof HousingUnit ? $relation : null;
+    }
+
+    private function housingCode(Contract $contract): string
+    {
+        $housingUnit = $this->housingUnit($contract);
+
+        return $housingUnit === null ? 'Habitação' : $housingUnit->code;
     }
 }

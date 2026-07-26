@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\GeneratedOfficialDocument;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CancelGeneratedOfficialDocumentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $document = $this->route('generatedOfficialDocument');
+
+        return $document instanceof GeneratedOfficialDocument
+            && $this->user()?->can('cancelBackoffice', $document) === true;
     }
 
     /**

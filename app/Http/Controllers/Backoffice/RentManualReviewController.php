@@ -18,7 +18,7 @@ class RentManualReviewController extends Controller
 
     public function store(StoreRentManualReviewRequest $request, RentCalculation $rentCalculation): RedirectResponse
     {
-        Gate::authorize('create', RentManualReview::class);
+        Gate::authorize('createBackoffice', [RentManualReview::class, $rentCalculation]);
         $this->service->request($rentCalculation, $request->validated(), $this->authenticatedUser($request));
 
         return back()->with('success', 'Revisão manual solicitada.');
@@ -26,7 +26,7 @@ class RentManualReviewController extends Controller
 
     public function approve(ApproveRentManualReviewRequest $request, RentManualReview $rentManualReview): RedirectResponse
     {
-        Gate::authorize('approve', $rentManualReview);
+        Gate::authorize('approveBackoffice', $rentManualReview);
         $this->service->approve($rentManualReview, $this->authenticatedUser($request), $request->validated('approved_rent'), $request->validated('internal_notes'));
 
         return back()->with('success', 'Revisão manual aprovada.');
@@ -34,7 +34,7 @@ class RentManualReviewController extends Controller
 
     public function reject(RejectRentManualReviewRequest $request, RentManualReview $rentManualReview): RedirectResponse
     {
-        Gate::authorize('approve', $rentManualReview);
+        Gate::authorize('rejectBackoffice', $rentManualReview);
         $this->service->reject($rentManualReview, $this->authenticatedUser($request), $request->validated('reason'));
 
         return back()->with('success', 'Revisão manual rejeitada.');

@@ -2,8 +2,18 @@
 
 namespace App\Http\Requests;
 
+use App\Models\KeyHandoverAppointment;
+
 class UpdateKeyHandoverAppointmentRequest extends StoreKeyHandoverAppointmentRequest
 {
+    public function authorize(): bool
+    {
+        $appointment = $this->route('keyHandoverAppointment');
+
+        return $appointment instanceof KeyHandoverAppointment
+            && ($this->user()?->can('updateBackoffice', $appointment) ?? false);
+    }
+
     /**
      * @return array<string, mixed>
      */

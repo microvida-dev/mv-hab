@@ -21,7 +21,7 @@ class DocumentTypeController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('viewAny', DocumentType::class);
+        Gate::authorize('viewAnyBackoffice', DocumentType::class);
 
         $documentTypes = DocumentType::query()
             ->orderBy('sort_order')
@@ -33,7 +33,7 @@ class DocumentTypeController extends Controller
 
     public function create(): View
     {
-        Gate::authorize('create', DocumentType::class);
+        Gate::authorize('createBackoffice', DocumentType::class);
 
         return view('admin.document-types.create', $this->formData());
     }
@@ -56,7 +56,7 @@ class DocumentTypeController extends Controller
 
     public function edit(DocumentType $documentType): View
     {
-        Gate::authorize('update', $documentType);
+        Gate::authorize('updateBackoffice', $documentType);
 
         return view('admin.document-types.edit', [
             'documentType' => $documentType,
@@ -82,7 +82,7 @@ class DocumentTypeController extends Controller
 
     public function destroy(Request $request, DocumentType $documentType): RedirectResponse
     {
-        Gate::authorize('delete', $documentType);
+        Gate::authorize('deleteBackoffice', $documentType);
         $documentType->delete();
         $this->auditLogger->record(
             event: AuditEvents::DELETE,

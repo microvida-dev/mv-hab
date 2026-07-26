@@ -40,7 +40,7 @@ final class ContractTimelineProviderTest extends TestCase
             ->once()
             ->andReturnFalse();
 
-        $events = (new ContractTimelineProvider())->forUser($user);
+        $events = (new ContractTimelineProvider)->forUser($user);
 
         $this->assertSame([], $events);
     }
@@ -61,7 +61,7 @@ final class ContractTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new ContractTimelineProvider())->forUser($user);
+        $events = (new ContractTimelineProvider)->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::ContractIssued, $events[0]->type);
@@ -87,7 +87,7 @@ final class ContractTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new ContractTimelineProvider())->forUser($user);
+        $events = (new ContractTimelineProvider)->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::ContractSigned, $events[0]->type);
@@ -111,7 +111,7 @@ final class ContractTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new ContractTimelineProvider())->forUser($user);
+        $events = (new ContractTimelineProvider)->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::ContractActive, $events[0]->type);
@@ -135,7 +135,7 @@ final class ContractTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new ContractTimelineProvider())->forUser($user);
+        $events = (new ContractTimelineProvider)->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::ContractSuspended, $events[0]->type);
@@ -159,7 +159,7 @@ final class ContractTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new ContractTimelineProvider())->forUser($user);
+        $events = (new ContractTimelineProvider)->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::ContractTerminated, $events[0]->type);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Citizen;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +10,7 @@ class StoreCitizenRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('createBackoffice', Citizen::class) === true;
     }
 
     /**

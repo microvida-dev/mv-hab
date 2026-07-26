@@ -7,6 +7,7 @@ use App\Enums\ApplicationScoreStatus;
 use App\Enums\ApplicationStatus;
 use App\Enums\EligibilityCheckType;
 use App\Enums\EligibilityResult;
+use App\Enums\FeatureKey;
 use App\Enums\ScoringCalculationType;
 use App\Enums\ScoringOperator;
 use App\Enums\ScoringRuleSetStatus;
@@ -21,6 +22,7 @@ use App\Models\EligibilityCheck;
 use App\Models\Household;
 use App\Models\HouseholdMember;
 use App\Models\IncomeRecord;
+use App\Models\Municipality;
 use App\Models\Program;
 use App\Models\RankingSnapshot;
 use App\Models\ScoringCriterion;
@@ -30,19 +32,26 @@ use App\Services\Scoring\ScoringEngine;
 use App\Services\Scoring\ScoringRuleSetResolver;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class Sprint10ScoringRankingTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
+
+    private Municipality $municipality;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed(SystemAccessSeeder::class);
+        $this->municipality = $this->municipalityWithFeatures(
+            FeatureKey::ApplicationReview,
+        );
     }
 
-    public function test_backoffice_scoring_access_is_protected_by_role_and_permission(): void
+    public function test_backoffice_scoring_access_is_permission_first_and_scoped(): void
     {
         $this->get(route('backoffice.scoring.rule-sets.index'))
             ->assertRedirect(route('login'));
@@ -54,6 +63,7 @@ class Sprint10ScoringRankingTest extends TestCase
 
         $technician = $this->userWithRole('municipal_technician');
         $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.scoring.rule-sets.index'))
             ->assertOk();
     }
@@ -61,9 +71,12 @@ class Sprint10ScoringRankingTest extends TestCase
     public function test_admin_can_create_update_activate_and_archive_scoring_rule_set_with_audit(): void
     {
         $administrator = $this->userWithRole('administrator');
-        $program = Program::factory()->create();
+        $program = Program::factory()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.scoring.rule-sets.store'), [
                 'program_id' => $program->id,
                 'name' => 'Matriz de teste',
@@ -100,7 +113,9 @@ class Sprint10ScoringRankingTest extends TestCase
 
     public function test_contest_rule_set_precedes_program_and_inactive_sets_are_ignored(): void
     {
-        $program = Program::factory()->create();
+        $program = Program::factory()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         $contest = Contest::factory()->for($program)->create();
         $programSet = ScoringRuleSet::factory()->active()->for($program)->create();
         $contestSet = ScoringRuleSet::factory()->active()->for($program)->for($contest)->create();
@@ -118,7 +133,9 @@ class Sprint10ScoringRankingTest extends TestCase
     public function test_scoring_run_scores_only_admitted_and_eligible_applications_and_creates_snapshot(): void
     {
         $technician = $this->userWithRole('municipal_technician');
-        $program = Program::factory()->published()->create();
+        $program = Program::factory()->published()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         $contest = Contest::factory()->for($program)->open()->create();
         $ruleSet = $this->activeRuleSet($program, $contest, includeManual: true);
         $eligibleApplication = $this->submittedApplication($contest, monthlyIncome: 900);
@@ -153,12 +170,15 @@ class Sprint10ScoringRankingTest extends TestCase
     public function test_manual_score_is_validated_updates_total_and_locked_scores_cannot_be_edited(): void
     {
         $technician = $this->userWithRole('municipal_technician');
-        $program = Program::factory()->published()->create();
+        $program = Program::factory()->published()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         $contest = Contest::factory()->for($program)->open()->create();
         $this->activeRuleSet($program, $contest, includeManual: true);
         $this->submittedApplication($contest, monthlyIncome: 900);
 
-        $this->actingAs($technician);
+        $this->actingAs($technician)
+            ->withSession(['mfa.verified_at' => now()]);
         app(ScoringEngine::class)->run($technician, contest: $contest);
         $score = ApplicationScore::query()->with('details')->firstOrFail();
         $manualDetail = $score->details->firstWhere('requires_manual_review', true);
@@ -193,7 +213,9 @@ class Sprint10ScoringRankingTest extends TestCase
     public function test_ranking_orders_by_score_and_configured_tie_breaker(): void
     {
         $technician = $this->userWithRole('municipal_technician');
-        $program = Program::factory()->published()->create();
+        $program = Program::factory()->published()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         $contest = Contest::factory()->for($program)->open()->create();
         $ruleSet = $this->activeRuleSet($program, $contest);
         $ruleSet->tieBreakerRules()->create([
@@ -324,7 +346,9 @@ class Sprint10ScoringRankingTest extends TestCase
 
     private function userWithRole(string $role): User
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         $user->assignRole($role);
 
         return $user;

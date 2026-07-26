@@ -23,11 +23,9 @@ class MfaEnforcementBackofficeTest extends TestCase
     {
         $mfa = app(MfaEnforcementService::class);
 
-        foreach (['administrator', 'municipal_technician', 'jury', 'legal_manager', 'financial_manager', 'housing_manager', 'inspection_manager', 'auditor'] as $role) {
+        foreach (['administrator', 'municipal_technician', 'jury', 'legal_manager', 'financial_manager', 'housing_manager', 'inspection_manager', 'support_agent', 'auditor'] as $role) {
             $this->assertTrue($mfa->requiresMfa($this->userWithRole($role)), $role.' should require MFA');
         }
-
-        $this->assertFalse($mfa->requiresMfa($this->userWithRole('support_agent')));
     }
 
     public function test_administrator_can_force_mfa_for_user(): void

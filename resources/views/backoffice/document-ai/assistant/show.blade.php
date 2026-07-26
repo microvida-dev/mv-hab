@@ -5,8 +5,16 @@
                 <h1 class="text-2xl font-semibold text-ink-900">Assistente IA documental</h1>
                 <p class="text-sm text-ink-500">Análise #{{ $analysis->id }} · {{ $analysis->documentSubmission?->documentType?->name ?? $analysis->detected_document_type?->label() ?? 'Tipo documental não identificado' }}</p>
             </div>
-            <div class="flex gap-2">
-                <a href="{{ route('backoffice.document-ai.assistant.index') }}" class="mv-button-secondary">Voltar</a>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('backoffice.document-ai.assistant.index') }}" class="mv-button-secondary">
+                    Voltar
+                </a>
+
+                @if ($analysis->documentSubmission)
+                    <a href="{{ route('admin.document-reviews.show', $analysis->documentSubmission) }}" class="mv-button-secondary">
+                        Voltar à revisão documental
+                    </a>
+                @endif
                 <form method="POST" action="{{ route('backoffice.document-ai.assistant.recalculate', $analysis) }}">
                     @csrf
                     <input type="hidden" name="confirm_recalculate" value="1">

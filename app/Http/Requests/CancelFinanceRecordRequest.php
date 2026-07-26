@@ -2,13 +2,29 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Arrear;
+use App\Models\DefaultNotice;
+use App\Models\PaymentReceipt;
+use App\Models\RegularizationAgreement;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CancelFinanceRecordRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $record = $this->route('arrear')
+            ?? $this->route('defaultNotice')
+            ?? $this->route('regularizationAgreement')
+            ?? $this->route('paymentReceipt');
+
+        if ($record instanceof Arrear) {
+            return $this->user()?->can('resolveBackoffice', $record) === true;
+        }
+
+        return ($record instanceof DefaultNotice
+                || $record instanceof RegularizationAgreement
+                || $record instanceof PaymentReceipt)
+            && $this->user()?->can('cancelBackoffice', $record) === true;
     }
 
     /**

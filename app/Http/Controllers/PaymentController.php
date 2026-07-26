@@ -7,14 +7,25 @@ use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdatePaymentRequest;
 use App\Models\Contract;
 use App\Models\Payment;
+use App\Services\Finance\LegacyPaymentService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 
 class PaymentController extends Controller
 {
+    public function __construct(
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly LegacyPaymentService $payments,
+    ) {}
+
     public function index(): View
     {
-        $payments = Payment::query()
+        Gate::authorize('viewAnyBackoffice', Payment::class);
+
+        $payments = $this->municipalScope
+            ->payments(Payment::query(), $this->currentUser())
             ->with(['contract.citizen', 'contract.housingUnit'])
             ->latest()
             ->paginate(15);
@@ -24,7 +35,10 @@ class PaymentController extends Controller
 
     public function create(): View
     {
-        $contracts = Contract::query()
+        Gate::authorize('createBackoffice', Payment::class);
+
+        $contracts = $this->municipalScope
+            ->contracts(Contract::query(), $this->currentUser())
             ->with(['citizen:id,name', 'housingUnit:id,code'])
             ->latest()
             ->get(['id', 'citizen_id', 'housing_unit_id']);
@@ -35,17 +49,13 @@ class PaymentController extends Controller
 
     public function store(StorePaymentRequest $request): RedirectResponse
     {
+        Gate::authorize('createBackoffice', Payment::class);
         $validated = $request->validated();
+        $this->municipalScope
+            ->contracts(Contract::query(), $this->authenticatedUser($request))
+            ->findOrFail((int) $validated['contract_id']);
 
-        if (($validated['status'] ?? null) === PaymentStatus::Paid->value && empty($validated['paid_at'])) {
-            $validated['paid_at'] = now();
-        }
-
-        if (($validated['status'] ?? null) !== PaymentStatus::Paid->value) {
-            $validated['paid_at'] = null;
-        }
-
-        Payment::create($validated);
+        $this->payments->create($validated, $this->authenticatedUser($request));
 
         return to_route('payments.index')
             ->with('success', 'Pagamento criado com sucesso.');
@@ -53,6 +63,7 @@ class PaymentController extends Controller
 
     public function show(Payment $payment): View
     {
+        Gate::authorize('viewBackoffice', $payment);
         $payment->load(['contract.citizen', 'contract.housingUnit']);
 
         return view('payments.show', compact('payment'));
@@ -60,7 +71,10 @@ class PaymentController extends Controller
 
     public function edit(Payment $payment): View
     {
-        $contracts = Contract::query()
+        Gate::authorize('updateBackoffice', $payment);
+
+        $contracts = $this->municipalScope
+            ->contracts(Contract::query(), $this->currentUser())
             ->with(['citizen:id,name', 'housingUnit:id,code'])
             ->latest()
             ->get(['id', 'citizen_id', 'housing_unit_id']);
@@ -71,17 +85,13 @@ class PaymentController extends Controller
 
     public function update(UpdatePaymentRequest $request, Payment $payment): RedirectResponse
     {
+        Gate::authorize('updateBackoffice', $payment);
         $validated = $request->validated();
+        $this->municipalScope
+            ->contracts(Contract::query(), $this->authenticatedUser($request))
+            ->findOrFail((int) $validated['contract_id']);
 
-        if (($validated['status'] ?? null) === PaymentStatus::Paid->value && empty($validated['paid_at'])) {
-            $validated['paid_at'] = $payment->paid_at ?? now();
-        }
-
-        if (($validated['status'] ?? null) !== PaymentStatus::Paid->value) {
-            $validated['paid_at'] = null;
-        }
-
-        $payment->update($validated);
+        $this->payments->update($payment, $validated, $this->authenticatedUser($request));
 
         return to_route('payments.index')
             ->with('success', 'Pagamento atualizado com sucesso.');
@@ -89,7 +99,8 @@ class PaymentController extends Controller
 
     public function destroy(Payment $payment): RedirectResponse
     {
-        $payment->delete();
+        Gate::authorize('deleteBackoffice', $payment);
+        $this->payments->delete($payment, $this->currentUser());
 
         return to_route('payments.index')
             ->with('success', 'Pagamento eliminado com sucesso.');

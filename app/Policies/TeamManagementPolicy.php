@@ -4,32 +4,41 @@ namespace App\Policies;
 
 use App\Models\MunicipalTeam;
 use App\Models\User;
+use App\Services\Access\AccessMunicipalScopeService;
 
 class TeamManagementPolicy
 {
+    public function __construct(private readonly AccessMunicipalScopeService $municipalScope) {}
+
     public function viewAny(User $user): bool
     {
-        return $this->can($user, 'view');
+        return $this->can($user, 'view') && $user->municipality_id !== null;
     }
 
     public function view(User $user, MunicipalTeam $team): bool
     {
-        return $this->can($user, 'view');
+        return $this->canTeam($user, $team, 'view');
     }
 
     public function create(User $user): bool
     {
-        return $this->can($user, 'create');
+        return $this->can($user, 'create') && $user->municipality_id !== null;
     }
 
     public function update(User $user, MunicipalTeam $team): bool
     {
-        return $this->can($user, 'update');
+        return $this->canTeam($user, $team, 'update');
     }
 
     public function manageMembers(User $user, MunicipalTeam $team): bool
     {
-        return $this->can($user, 'manage_members');
+        return $this->canTeam($user, $team, 'manage_members');
+    }
+
+    private function canTeam(User $user, MunicipalTeam $team, string $action): bool
+    {
+        return $this->can($user, $action)
+            && $this->municipalScope->ownsTeam($user, $team);
     }
 
     private function can(User $user, string $action): bool

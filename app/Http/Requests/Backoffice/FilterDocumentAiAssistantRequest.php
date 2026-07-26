@@ -4,7 +4,7 @@ namespace App\Http\Requests\Backoffice;
 
 use App\Enums\DocumentAiRiskFlagCode;
 use App\Enums\DocumentAiScoreLabel;
-use App\Models\DocumentAiScore;
+use App\Models\DocumentAiAnalysis;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -12,7 +12,7 @@ class FilterDocumentAiAssistantRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('viewAny', DocumentAiScore::class) ?? false;
+        return $this->user()?->can('viewAnyBackoffice', DocumentAiAnalysis::class) ?? false;
     }
 
     /**

@@ -3,19 +3,21 @@
 namespace App\Services\Dashboard\Timeline\Providers;
 
 use App\Data\Dashboard\TimelineEvent;
+use App\Enums\ComplaintDecisionStatus;
+use App\Enums\ComplaintStatus;
 use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\Complaint;
 use App\Models\ComplaintDecision;
 use App\Models\User;
-use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Dashboard\Timeline\BaseTimelineProvider;
+use App\Services\Dashboard\Timeline\TimelineEventFactory;
 
 class ComplaintTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
-        private readonly TimelineEventFactory $factory = new TimelineEventFactory(),
+        private readonly TimelineEventFactory $factory = new TimelineEventFactory,
     ) {}
 
     public function forUser(User $user, array $dashboard = []): array
@@ -32,10 +34,15 @@ class ComplaintTimelineProvider extends BaseTimelineProvider
             ->all();
     }
 
+    /** @return list<TimelineEvent> */
     private function openComplaints(): array
     {
-        return Complaint::query()
-            ->whereIn('status', ['submitted', 'registered', 'in_analysis'])
+        return array_values(Complaint::query()
+            ->whereIn('status', [
+                ComplaintStatus::Submitted->value,
+                ComplaintStatus::Received->value,
+                ComplaintStatus::UnderReview->value,
+            ])
             ->orderByDesc('submitted_at')
             ->limit(20)
             ->get()
@@ -53,17 +60,22 @@ class ComplaintTimelineProvider extends BaseTimelineProvider
                 metadata: [
                     'complaint_id' => $complaint->getKey(),
                     'complaint_number' => $complaint->complaint_number,
-                    'status' => $complaint->status,
+                    'status' => $complaint->status->value,
                 ],
             ))
-            ->all();
+            ->values()
+            ->all());
     }
 
+    /** @return list<TimelineEvent> */
     private function additionalInformationDeadlines(): array
     {
-        return Complaint::query()
+        return array_values(Complaint::query()
             ->whereNotNull('additional_information_deadline_at')
-            ->whereIn('status', ['additional_information_requested'])
+            ->whereIn('status', [
+                ComplaintStatus::RequiresAdditionalInformation->value,
+                ComplaintStatus::AwaitingCandidateResponse->value,
+            ])
             ->orderBy('additional_information_deadline_at')
             ->limit(20)
             ->get()
@@ -83,17 +95,19 @@ class ComplaintTimelineProvider extends BaseTimelineProvider
                 metadata: [
                     'complaint_id' => $complaint->getKey(),
                     'complaint_number' => $complaint->complaint_number,
-                    'status' => $complaint->status,
+                    'status' => $complaint->status->value,
                 ],
             ))
-            ->all();
+            ->values()
+            ->all());
     }
 
+    /** @return list<TimelineEvent> */
     private function decisions(): array
     {
-        return ComplaintDecision::query()
+        return array_values(ComplaintDecision::query()
             ->whereNotNull('proposed_at')
-            ->whereIn('status', ['proposed', 'pending_approval'])
+            ->where('status', ComplaintDecisionStatus::Proposed->value)
             ->orderBy('proposed_at')
             ->limit(20)
             ->get()
@@ -111,9 +125,10 @@ class ComplaintTimelineProvider extends BaseTimelineProvider
                 metadata: [
                     'complaint_decision_id' => $decision->getKey(),
                     'decision_number' => $decision->decision_number,
-                    'status' => $decision->status,
+                    'status' => $decision->status->value,
                 ],
             ))
-            ->all();
+            ->values()
+            ->all());
     }
 }

@@ -9,8 +9,10 @@ use App\Models\DrawConvocation;
 use App\Models\LotteryDraw;
 use App\Services\Convocations\AutomaticConvocationService;
 use App\Services\Convocations\DrawConvocationService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class DrawConvocationController extends Controller
@@ -18,20 +20,28 @@ class DrawConvocationController extends Controller
     public function __construct(
         private readonly AutomaticConvocationService $automatic,
         private readonly DrawConvocationService $convocations,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        Gate::authorize('viewAny', DrawConvocation::class);
+        Gate::authorize('viewAnyBackoffice', DrawConvocation::class);
 
         return view('backoffice.draw-convocations.index', [
-            'convocations' => DrawConvocation::query()->with(['lotteryDraw.contest', 'candidate'])->latest()->paginate(25),
+            'convocations' => $this->municipalScope
+                ->drawConvocations(
+                    DrawConvocation::query(),
+                    $this->authenticatedUser($request),
+                )
+                ->with(['lotteryDraw.contest', 'candidate'])
+                ->latest()
+                ->paginate(25),
         ]);
     }
 
     public function show(DrawConvocation $drawConvocation): View
     {
-        Gate::authorize('view', $drawConvocation);
+        Gate::authorize('viewBackoffice', $drawConvocation);
 
         $drawConvocation->load(['lotteryDraw.contest', 'candidate', 'application']);
 
@@ -40,7 +50,7 @@ class DrawConvocationController extends Controller
 
     public function generate(GenerateDrawConvocationsRequest $request, LotteryDraw $lotteryDraw): RedirectResponse
     {
-        Gate::authorize('create', DrawConvocation::class);
+        Gate::authorize('generateConvocationsBackoffice', $lotteryDraw);
 
         $this->automatic->forDraw($lotteryDraw, $request->validated(), $this->authenticatedUser($request));
 
@@ -49,7 +59,7 @@ class DrawConvocationController extends Controller
 
     public function send(SendDrawConvocationRequest $request, DrawConvocation $drawConvocation): RedirectResponse
     {
-        Gate::authorize('update', $drawConvocation);
+        Gate::authorize('sendBackoffice', $drawConvocation);
 
         $this->convocations->send($drawConvocation, $this->authenticatedUser($request));
 

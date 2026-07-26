@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Backoffice;
 
+use App\Models\Municipality;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -18,11 +19,14 @@ class UserAdministrationTest extends TestCase
 {
     use RefreshDatabase;
 
+    private Municipality $municipality;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->seed(SystemAccessSeeder::class);
+        $this->municipality = Municipality::factory()->create();
     }
 
     public function test_technician_without_permission_cannot_create_backoffice_user(): void
@@ -58,7 +62,12 @@ class UserAdministrationTest extends TestCase
     public function test_last_active_administrator_is_protected_from_deactivation(): void
     {
         $permission = Permission::query()->where('name', 'users.deactivate')->firstOrFail();
-        $managerRole = Role::query()->create(['name' => 'user_manager_test', 'label' => 'User manager test', 'scope' => 'test']);
+        $managerRole = Role::query()->create([
+            'municipality_id' => $this->municipality->id,
+            'name' => 'user_manager_test',
+            'label' => 'User manager test',
+            'scope' => 'municipal',
+        ]);
         $managerRole->permissions()->attach($permission);
 
         $actor = User::factory()->create();
@@ -123,6 +132,7 @@ class UserAdministrationTest extends TestCase
     private function userWithRole(string $role, array $attributes = []): User
     {
         $user = User::factory()->create(array_merge([
+            'municipality_id' => $this->municipality->id,
             'email' => $role.'-users-qa30-'.fake()->unique()->numerify('####').'@example.test',
         ], $attributes));
         $user->assignRole($role);

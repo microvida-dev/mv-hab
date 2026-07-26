@@ -12,6 +12,7 @@ use App\Enums\TenantPaymentStatus;
 use App\Models\Contract;
 use App\Models\MaintenanceCategory;
 use App\Models\MaintenanceRequest;
+use App\Models\Municipality;
 use App\Models\PropertyInspection;
 use App\Models\TenantChargeRun;
 use App\Models\TenantCommunication;
@@ -32,11 +33,15 @@ class Sprint26TenantPostAwardTest extends TestCase
 
         $this->get(route('tenant.dashboard'))->assertRedirect();
 
+        $contractNumber = $context['contract']->contract_number;
+
+        $this->assertIsString($contractNumber);
+
         $this->actingAs($context['candidate'])
             ->get(route('tenant.dashboard'))
             ->assertOk()
             ->assertSee('Área do inquilino')
-            ->assertSee($context['contract']->contract_number);
+            ->assertSee($contractNumber);
 
         $otherCandidate = User::factory()->create();
         $otherCandidate->assignRole('candidate');
@@ -153,7 +158,15 @@ class Sprint26TenantPostAwardTest extends TestCase
     public function test_tenant_maintenance_and_inspections_use_existing_private_modules(): void
     {
         $context = $this->tenantContext();
-        $category = MaintenanceCategory::factory()->create(['default_urgency' => MaintenanceUrgency::Normal]);
+        $municipalityId = $context['manager']->municipality_id;
+
+        $this->assertIsInt($municipalityId);
+
+        $category = MaintenanceCategory::factory()->create([
+            'municipality_id' => $municipalityId,
+            'is_system' => false,
+            'default_urgency' => MaintenanceUrgency::Normal,
+        ]);
 
         $this->actingAs($context['candidate'])
             ->post(route('tenant.maintenance.store'), [
@@ -189,14 +202,23 @@ class Sprint26TenantPostAwardTest extends TestCase
             ->assertSee('Exploração pós-atribuição');
     }
 
+    /**
+     * @return array{
+     *     candidate: User,
+     *     manager: User,
+     *     contract: Contract
+     * }
+     */
     private function tenantContext(): array
     {
         $this->seed(SystemAccessSeeder::class);
+        session(['mfa.verified_at' => now()]);
 
-        $candidate = User::factory()->create();
+        $municipality = Municipality::factory()->create();
+        $candidate = User::factory()->create(['municipality_id' => $municipality->id]);
         $candidate->assignRole('candidate');
 
-        $manager = User::factory()->create();
+        $manager = User::factory()->create(['municipality_id' => $municipality->id]);
         $manager->assignRole('financial_manager');
 
         $contract = Contract::factory()->create([
@@ -212,6 +234,7 @@ class Sprint26TenantPostAwardTest extends TestCase
             'activated_at' => now(),
             'activated_by' => $manager->id,
         ]);
+        $contract->housingUnit()->update(['municipality_id' => $municipality->id]);
 
         return compact('candidate', 'manager', 'contract');
     }

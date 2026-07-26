@@ -1,0 +1,3326 @@
+{
+    "schema_version": "2.0",
+    "sprint": "47D",
+    "source_inventory": "docs/access/backoffice-route-inventory.json",
+    "source_commit": "1aa94d6b8695cdc4df12636b96ab2c0b5d51e9c2",
+    "generated_at": "2026-07-24T00:00:00+01:00",
+    "immutable_input": true,
+    "summary": {
+        "expected_total": 78,
+        "found_total": 78,
+        "reconciled_total": 78,
+        "already_permission_first_total": 0,
+        "candidate_or_public_excluded_total": 0,
+        "to_migrate_total": 78,
+        "semantic_permission_gaps": 62,
+        "missing_policies_before": 1,
+        "form_requests_with_unconditional_authorization_before": 29,
+        "municipality_scope_not_confirmed_before": 78,
+        "mutation_audit_not_confirmed_before": 2,
+        "routes_without_detected_tests_before": 59,
+        "excluded_as_completed_in_47c": [
+            "backoffice.complaint-decisions.create",
+            "backoffice.complaint-decisions.store",
+            "backoffice.complaint-decisions.show",
+            "backoffice.complaint-decisions.approve",
+            "backoffice.complaint-decisions.cancel"
+        ],
+        "bounded_context_totals": {
+            "allocations": 27,
+            "complaints": 15,
+            "hearings": 13,
+            "lists": 23
+        }
+    },
+    "reconciliation": {
+        "unique_route_names": 78,
+        "missing_route_names": [],
+        "renamed_route_names": [],
+        "removed_route_names": [],
+        "new_route_names": [],
+        "candidate_route_names": [],
+        "public_route_names": [],
+        "mixed_context_route_names": [
+            "backoffice.cases.complaints.show"
+        ]
+    },
+    "routes": [
+        {
+            "route_name": "backoffice.additional-information-requests.close",
+            "uri": "backoffice/additional-information-requests/{additionalInformationRequest}/close",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\AdditionalInformationRequestController",
+            "action": "close",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.update",
+            "permission_final": "complaints.close",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\AdditionalInformationRequestPolicy",
+            "ability": "closeBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\AdditionalInformationRequest",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.additional-information-requests.create",
+            "uri": "backoffice/complaints/{complaint}/additional-information/create",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\AdditionalInformationRequestController",
+            "action": "create",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.create",
+            "permission_final": "complaints.request_information",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ComplaintPolicy",
+            "ability": "requestInformationBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\Complaint",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.additional-information-requests.mark-overdue",
+            "uri": "backoffice/additional-information-requests/{additionalInformationRequest}/mark-overdue",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\AdditionalInformationRequestController",
+            "action": "markOverdue",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "complaints.mark_overdue",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\AdditionalInformationRequestPolicy",
+            "ability": "markOverdueBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\AdditionalInformationRequest",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.additional-information-requests.show",
+            "uri": "backoffice/additional-information-requests/{additionalInformationRequest}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\AdditionalInformationRequestController",
+            "action": "show",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "complaints.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\AdditionalInformationRequestPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\AdditionalInformationRequest",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.additional-information-requests.store",
+            "uri": "backoffice/complaints/{complaint}/additional-information",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\AdditionalInformationRequestController",
+            "action": "store",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.create",
+            "permission_final": "complaints.request_information",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ComplaintPolicy",
+            "ability": "requestInformationBackoffice",
+            "form_request": "App\\Http\\Requests\\StoreAdditionalInformationRequestRequest",
+            "principal_model": "App\\Models\\Complaint",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.cases.complaints.show",
+            "uri": "backoffice/cases/complaints/{complaint}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\CaseWorkspaceController",
+            "action": "complaint",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "complaints.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ComplaintPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\Complaint",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": "Case Workspace de reclamação; reutiliza ComplaintPolicy e permanece exclusivamente backoffice."
+        },
+        {
+            "route_name": "backoffice.complaints.assign",
+            "uri": "backoffice/complaints/{complaint}/assign",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ComplaintController",
+            "action": "assign",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": null,
+            "permission_final": "complaints.assign",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ComplaintPolicy",
+            "ability": "assignBackoffice",
+            "form_request": "App\\Http\\Requests\\AssignComplaintRequest",
+            "principal_model": "App\\Models\\Complaint",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.complaints.close",
+            "uri": "backoffice/complaints/{complaint}/close",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ComplaintController",
+            "action": "close",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.update",
+            "permission_final": "complaints.close",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ComplaintPolicy",
+            "ability": "closeBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\Complaint",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.complaints.index",
+            "uri": "backoffice/complaints",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ComplaintController",
+            "action": "index",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "complaints.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ComplaintPolicy",
+            "ability": "viewAnyBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\Complaint",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.complaints.mark-received",
+            "uri": "backoffice/complaints/{complaint}/mark-received",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ComplaintController",
+            "action": "markReceived",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "complaints.mark_received",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ComplaintPolicy",
+            "ability": "markReceivedBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\Complaint",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.complaints.reviews.store",
+            "uri": "backoffice/complaints/{complaint}/reviews",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ComplaintReviewController",
+            "action": "store",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.create",
+            "permission_final": "complaints.review",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ComplaintPolicy",
+            "ability": "createBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\Complaint",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.complaints.show",
+            "uri": "backoffice/complaints/{complaint}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ComplaintController",
+            "action": "show",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "complaints.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ComplaintPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\Complaint",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.complaints.start-review",
+            "uri": "backoffice/complaints/{complaint}/start-review",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ComplaintController",
+            "action": "startReview",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.update",
+            "permission_final": "complaints.review",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ComplaintPolicy",
+            "ability": "reviewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\Complaint",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.contest-closures.show",
+            "uri": "backoffice/fechos-concurso/{contestClosure}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ContestClosureController",
+            "action": "show",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "contests.view",
+            "permission_final": "allocations.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ContestClosurePolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\ContestClosure",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.draw-convocations.index",
+            "uri": "backoffice/convocatorias-sorteio",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DrawConvocationController",
+            "action": "index",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.view",
+            "permission_final": "lotteries.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\DrawConvocationPolicy",
+            "ability": "viewAnyBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\DrawConvocation",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.draw-convocations.send",
+            "uri": "backoffice/convocatorias-sorteio/{drawConvocation}/enviar",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DrawConvocationController",
+            "action": "send",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.view",
+            "permission_final": "lotteries.convocations.send",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\DrawConvocationPolicy",
+            "ability": "sendBackoffice",
+            "form_request": "App\\Http\\Requests\\SendDrawConvocationRequest",
+            "principal_model": "App\\Models\\DrawConvocation",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.draw-convocations.show",
+            "uri": "backoffice/convocatorias-sorteio/{drawConvocation}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DrawConvocationController",
+            "action": "show",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.view",
+            "permission_final": "lotteries.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\DrawConvocationPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\DrawConvocation",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.hearing-submissions.accept",
+            "uri": "backoffice/hearing-submissions/{hearingSubmission}/accept",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\HearingSubmissionReviewController",
+            "action": "accept",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "hearings.accept",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\HearingSubmissionPolicy",
+            "ability": "acceptBackoffice",
+            "form_request": "App\\Http\\Requests\\ReviewHearingSubmissionRequest",
+            "principal_model": "App\\Models\\HearingSubmission",
+            "municipality_scope_source": "hearing/submission -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.hearing-submissions.reject",
+            "uri": "backoffice/hearing-submissions/{hearingSubmission}/reject",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\HearingSubmissionReviewController",
+            "action": "reject",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.reject",
+            "permission_final": "hearings.reject",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\HearingSubmissionPolicy",
+            "ability": "rejectBackoffice",
+            "form_request": "App\\Http\\Requests\\ReviewHearingSubmissionRequest",
+            "principal_model": "App\\Models\\HearingSubmission",
+            "municipality_scope_source": "hearing/submission -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.hearing-submissions.show",
+            "uri": "backoffice/hearing-submissions/{hearingSubmission}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\HearingSubmissionReviewController",
+            "action": "show",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "hearings.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\HearingSubmissionPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\HearingSubmission",
+            "municipality_scope_source": "hearing/submission -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.hearings.cancel",
+            "uri": "backoffice/hearings/{hearing}/cancel",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\HearingController",
+            "action": "cancel",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": null,
+            "permission_final": "hearings.cancel",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\HearingPolicy",
+            "ability": "cancelBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\Hearing",
+            "municipality_scope_source": "hearing/submission -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.hearings.close",
+            "uri": "backoffice/hearings/{hearing}/close",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\HearingController",
+            "action": "close",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.update",
+            "permission_final": "hearings.close",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\HearingPolicy",
+            "ability": "closeBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\Hearing",
+            "municipality_scope_source": "hearing/submission -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.hearings.create",
+            "uri": "backoffice/hearings/create",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\HearingController",
+            "action": "create",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.create",
+            "permission_final": "hearings.create",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\HearingPolicy",
+            "ability": "createBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\Hearing",
+            "municipality_scope_source": "hearing/submission -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.hearings.index",
+            "uri": "backoffice/hearings",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\HearingController",
+            "action": "index",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "hearings.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\HearingPolicy",
+            "ability": "viewAnyBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\Hearing",
+            "municipality_scope_source": "hearing/submission -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.hearings.issue",
+            "uri": "backoffice/hearings/{hearing}/issue",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\HearingController",
+            "action": "issue",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "hearings.issue",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\HearingPolicy",
+            "ability": "issueBackoffice",
+            "form_request": "App\\Http\\Requests\\IssueHearingRequest",
+            "principal_model": "App\\Models\\Hearing",
+            "municipality_scope_source": "hearing/submission -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.hearings.show",
+            "uri": "backoffice/hearings/{hearing}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\HearingController",
+            "action": "show",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "hearings.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\HearingPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\Hearing",
+            "municipality_scope_source": "hearing/submission -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.hearings.store",
+            "uri": "backoffice/hearings",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\HearingController",
+            "action": "store",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.create",
+            "permission_final": "hearings.create",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\HearingPolicy",
+            "ability": "createBackoffice",
+            "form_request": "App\\Http\\Requests\\StoreHearingRequest",
+            "principal_model": "App\\Models\\Hearing",
+            "municipality_scope_source": "hearing/submission -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.automation-runs.approve",
+            "uri": "backoffice/lists/automation-runs/{listAutomationRun}/approve",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ListAutomationController",
+            "action": "approve",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.approve",
+            "permission_final": "public_lists.approve",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ListAutomationRunPolicy",
+            "ability": "approveBackoffice",
+            "form_request": "App\\Http\\Requests\\ApproveListAutomationRunRequest",
+            "principal_model": "App\\Models\\ListAutomationRun",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.automation-runs.show",
+            "uri": "backoffice/lists/automation-runs/{listAutomationRun}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ListAutomationController",
+            "action": "show",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.view",
+            "permission_final": "public_lists.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ListAutomationRunPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\ListAutomationRun",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.automation.definitive",
+            "uri": "backoffice/lists/automation/{contest}/definitive",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ListAutomationController",
+            "action": "generateDefinitive",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": null,
+            "permission_final": "public_lists.generate",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ContestPolicy",
+            "ability": "generateBackoffice",
+            "form_request": "App\\Http\\Requests\\RunDefinitiveListAutomationRequest",
+            "principal_model": "App\\Models\\Contest",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.automation.index",
+            "uri": "backoffice/lists/automation/{contest}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ListAutomationController",
+            "action": "index",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "contests.view",
+            "permission_final": "public_lists.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ContestPolicy",
+            "ability": "viewListsBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\Contest",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.automation.provisional",
+            "uri": "backoffice/lists/automation/{contest}/provisional",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ListAutomationController",
+            "action": "generateProvisional",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": null,
+            "permission_final": "public_lists.generate",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ContestPolicy",
+            "ability": "generateBackoffice",
+            "form_request": "App\\Http\\Requests\\RunProvisionalListAutomationRequest",
+            "principal_model": "App\\Models\\Contest",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.definitive.approve",
+            "uri": "backoffice/lists/definitive/{definitiveList}/approve",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DefinitiveListController",
+            "action": "approve",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.approve",
+            "permission_final": "public_lists.approve",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\DefinitiveListPolicy",
+            "ability": "approveBackoffice",
+            "form_request": "App\\Http\\Requests\\ApproveDefinitiveListRequest",
+            "principal_model": "App\\Models\\DefinitiveList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.definitive.archive",
+            "uri": "backoffice/lists/definitive/{definitiveList}/archive",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DefinitiveListController",
+            "action": "archive",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.update",
+            "permission_final": "public_lists.archive",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\DefinitiveListPolicy",
+            "ability": "archiveBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\DefinitiveList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.definitive.create",
+            "uri": "backoffice/lists/definitive/create",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DefinitiveListController",
+            "action": "create",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.create",
+            "permission_final": "public_lists.generate",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\DefinitiveListPolicy",
+            "ability": "generateAnyBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\DefinitiveList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.definitive.index",
+            "uri": "backoffice/lists/definitive",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DefinitiveListController",
+            "action": "index",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.view",
+            "permission_final": "public_lists.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\DefinitiveListPolicy",
+            "ability": "viewAnyBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\DefinitiveList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.definitive.lock",
+            "uri": "backoffice/lists/definitive/{definitiveList}/lock",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DefinitiveListController",
+            "action": "lock",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": null,
+            "permission_final": "public_lists.lock",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\DefinitiveListPolicy",
+            "ability": "lockBackoffice",
+            "form_request": "App\\Http\\Requests\\LockDefinitiveListRequest",
+            "principal_model": "App\\Models\\DefinitiveList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.definitive.publish",
+            "uri": "backoffice/lists/definitive/{definitiveList}/publish",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DefinitiveListController",
+            "action": "publish",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.publish",
+            "permission_final": "public_lists.publish",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\DefinitiveListPolicy",
+            "ability": "publishBackoffice",
+            "form_request": "App\\Http\\Requests\\PublishDefinitiveListRequest",
+            "principal_model": "App\\Models\\DefinitiveList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.definitive.review",
+            "uri": "backoffice/lists/definitive/{definitiveList}/review",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DefinitiveListController",
+            "action": "review",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.update",
+            "permission_final": "public_lists.review",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\DefinitiveListPolicy",
+            "ability": "reviewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\DefinitiveList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.definitive.show",
+            "uri": "backoffice/lists/definitive/{definitiveList}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DefinitiveListController",
+            "action": "show",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.view",
+            "permission_final": "public_lists.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\DefinitiveListPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\DefinitiveList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.definitive.store",
+            "uri": "backoffice/lists/definitive",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DefinitiveListController",
+            "action": "store",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.create",
+            "permission_final": "public_lists.generate",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\DefinitiveListPolicy",
+            "ability": "generateBackoffice",
+            "form_request": "App\\Http\\Requests\\GenerateDefinitiveListRequest",
+            "principal_model": "App\\Models\\DefinitiveList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.provisional.approve",
+            "uri": "backoffice/lists/provisional/{provisionalList}/approve",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ProvisionalListController",
+            "action": "approve",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.approve",
+            "permission_final": "public_lists.approve",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ProvisionalListPolicy",
+            "ability": "approveBackoffice",
+            "form_request": "App\\Http\\Requests\\ApproveProvisionalListRequest",
+            "principal_model": "App\\Models\\ProvisionalList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.provisional.archive",
+            "uri": "backoffice/lists/provisional/{provisionalList}/archive",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ProvisionalListController",
+            "action": "archive",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.update",
+            "permission_final": "public_lists.archive",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ProvisionalListPolicy",
+            "ability": "archiveBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\ProvisionalList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.provisional.cancel",
+            "uri": "backoffice/lists/provisional/{provisionalList}/cancel",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ProvisionalListController",
+            "action": "cancel",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": null,
+            "permission_final": "public_lists.cancel",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ProvisionalListPolicy",
+            "ability": "cancelBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\ProvisionalList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.provisional.close-complaint-period",
+            "uri": "backoffice/lists/provisional/{provisionalList}/close-complaint-period",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ProvisionalListController",
+            "action": "closeComplaintPeriod",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.update",
+            "permission_final": "public_lists.close_complaint_period",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ProvisionalListPolicy",
+            "ability": "closeComplaintPeriodBackoffice",
+            "form_request": "App\\Http\\Requests\\CloseComplaintPeriodRequest",
+            "principal_model": "App\\Models\\ProvisionalList",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.provisional.create",
+            "uri": "backoffice/lists/provisional/create",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ProvisionalListController",
+            "action": "create",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.create",
+            "permission_final": "public_lists.generate",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ProvisionalListPolicy",
+            "ability": "generateAnyBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\ProvisionalList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.provisional.index",
+            "uri": "backoffice/lists/provisional",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ProvisionalListController",
+            "action": "index",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.view",
+            "permission_final": "public_lists.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ProvisionalListPolicy",
+            "ability": "viewAnyBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\ProvisionalList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.provisional.open-complaint-period",
+            "uri": "backoffice/lists/provisional/{provisionalList}/open-complaint-period",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ProvisionalListController",
+            "action": "openComplaintPeriod",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "public_lists.open_complaint_period",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ProvisionalListPolicy",
+            "ability": "openComplaintPeriodBackoffice",
+            "form_request": "App\\Http\\Requests\\OpenComplaintPeriodRequest",
+            "principal_model": "App\\Models\\ProvisionalList",
+            "municipality_scope_source": "complaint/information request -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.provisional.publish",
+            "uri": "backoffice/lists/provisional/{provisionalList}/publish",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ProvisionalListController",
+            "action": "publish",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.publish",
+            "permission_final": "public_lists.publish",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ProvisionalListPolicy",
+            "ability": "publishBackoffice",
+            "form_request": "App\\Http\\Requests\\PublishProvisionalListRequest",
+            "principal_model": "App\\Models\\ProvisionalList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.provisional.review",
+            "uri": "backoffice/lists/provisional/{provisionalList}/review",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ProvisionalListController",
+            "action": "review",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.update",
+            "permission_final": "public_lists.review",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ProvisionalListPolicy",
+            "ability": "reviewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\ProvisionalList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.provisional.show",
+            "uri": "backoffice/lists/provisional/{provisionalList}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ProvisionalListController",
+            "action": "show",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.view",
+            "permission_final": "public_lists.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ProvisionalListPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\ProvisionalList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lists.provisional.store",
+            "uri": "backoffice/lists/provisional",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ProvisionalListController",
+            "action": "store",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "public_lists.create",
+            "permission_final": "public_lists.generate",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ProvisionalListPolicy",
+            "ability": "generateBackoffice",
+            "form_request": "App\\Http\\Requests\\GenerateProvisionalListRequest",
+            "principal_model": "App\\Models\\ProvisionalList",
+            "municipality_scope_source": "list/automation run -> contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.attendance.bulk-store",
+            "uri": "backoffice/sorteios/{lotteryDraw}/presencas/lote",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DrawAttendanceController",
+            "action": "bulkStore",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.create",
+            "permission_final": "lotteries.attendance.manage",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "registerAttendanceBackoffice",
+            "form_request": "App\\Http\\Requests\\BulkRegisterDrawAttendanceRequest",
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.attendance.index",
+            "uri": "backoffice/sorteios/{lotteryDraw}/presencas",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DrawAttendanceController",
+            "action": "index",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.view",
+            "permission_final": "lotteries.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.attendance.store",
+            "uri": "backoffice/sorteios/{lotteryDraw}/presencas",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DrawAttendanceController",
+            "action": "store",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.create",
+            "permission_final": "lotteries.attendance.manage",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "registerAttendanceBackoffice",
+            "form_request": "App\\Http\\Requests\\RegisterDrawAttendanceRequest",
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.cancel",
+            "uri": "backoffice/sorteios/{lotteryDraw}/cancelar",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\LotteryDrawController",
+            "action": "cancel",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": null,
+            "permission_final": "lotteries.cancel",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "cancelBackoffice",
+            "form_request": "App\\Http\\Requests\\CancelLotteryDrawRequest",
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.convocations.generate",
+            "uri": "backoffice/sorteios/{lotteryDraw}/convocatorias/gerar",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\DrawConvocationController",
+            "action": "generate",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": null,
+            "permission_final": "lotteries.convocations.generate",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "generateConvocationsBackoffice",
+            "form_request": "App\\Http\\Requests\\GenerateDrawConvocationsRequest",
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.create",
+            "uri": "backoffice/sorteios/create",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\LotteryDrawController",
+            "action": "create",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.create",
+            "permission_final": "lotteries.create",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "createBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.edit",
+            "uri": "backoffice/sorteios/{lotteryDraw}/edit",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\LotteryDrawController",
+            "action": "edit",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.update",
+            "permission_final": "lotteries.update",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "updateBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.index",
+            "uri": "backoffice/sorteios",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\LotteryDrawController",
+            "action": "index",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.view",
+            "permission_final": "lotteries.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "viewAnyBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.participants.load",
+            "uri": "backoffice/sorteios/{lotteryDraw}/participantes/carregar",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\LotteryParticipantController",
+            "action": "load",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.view",
+            "permission_final": "lotteries.participants.load",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "loadParticipantsBackoffice",
+            "form_request": "App\\Http\\Requests\\LoadLotteryParticipantsRequest",
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.participants.lock",
+            "uri": "backoffice/sorteios/{lotteryDraw}/participantes/bloquear",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\LotteryParticipantController",
+            "action": "lock",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": null,
+            "permission_final": "lotteries.participants.lock",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "lockParticipantsBackoffice",
+            "form_request": "App\\Http\\Requests\\LockLotteryParticipantsRequest",
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.post-draw-report.generate",
+            "uri": "backoffice/sorteios/{lotteryDraw}/relatorio-pos-sorteio/gerar",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\PostDrawReportController",
+            "action": "generate",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": null,
+            "permission_final": "lotteries.reports.generate",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "generateReportBackoffice",
+            "form_request": "App\\Http\\Requests\\GeneratePostDrawReportRequest",
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.results.index",
+            "uri": "backoffice/sorteios/{lotteryDraw}/resultados",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\LotteryResultController",
+            "action": "index",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.view",
+            "permission_final": "lotteries.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.run",
+            "uri": "backoffice/sorteios/{lotteryDraw}/executar",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\LotteryDrawController",
+            "action": "run",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": null,
+            "permission_final": "lotteries.run",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "runBackoffice",
+            "form_request": "App\\Http\\Requests\\RunLotteryDrawRequest",
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.show",
+            "uri": "backoffice/sorteios/{lotteryDraw}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\LotteryDrawController",
+            "action": "show",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.view",
+            "permission_final": "lotteries.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.store",
+            "uri": "backoffice/sorteios",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\LotteryDrawController",
+            "action": "store",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.create",
+            "permission_final": "lotteries.create",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "createBackoffice",
+            "form_request": "App\\Http\\Requests\\StoreLotteryDrawRequest",
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.update",
+            "uri": "backoffice/sorteios/{lotteryDraw}",
+            "http_methods": [
+                "PUT",
+                "PATCH"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\LotteryDrawController",
+            "action": "update",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.update",
+            "permission_final": "lotteries.update",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "updateBackoffice",
+            "form_request": "App\\Http\\Requests\\UpdateLotteryDrawRequest",
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-draws.validate",
+            "uri": "backoffice/sorteios/{lotteryDraw}/validar",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\LotteryDrawController",
+            "action": "validateResult",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": null,
+            "permission_final": "lotteries.validate",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryDrawPolicy",
+            "ability": "validateBackoffice",
+            "form_request": "App\\Http\\Requests\\ValidateLotteryResultRequest",
+            "principal_model": "App\\Models\\LotteryDraw",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.lottery-results.winner.store",
+            "uri": "backoffice/resultados-sorteio/{lotteryResult}/vencedor",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\WinnerRegistrationController",
+            "action": "store",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.create",
+            "permission_final": "lotteries.winners.register",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\LotteryResultPolicy",
+            "ability": "registerWinnerBackoffice",
+            "form_request": "App\\Http\\Requests\\RegisterWinnerRequest",
+            "principal_model": "App\\Models\\LotteryResult",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.post-draw-reports.download",
+            "uri": "backoffice/relatorios-pos-sorteio/{postDrawReport}/download",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\PostDrawReportController",
+            "action": "download",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": null,
+            "permission_final": "lotteries.export",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\PostDrawReportPolicy",
+            "ability": "exportBackoffice",
+            "form_request": "App\\Http\\Requests\\DownloadPostDrawReportRequest",
+            "principal_model": "App\\Models\\PostDrawReport",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "critical",
+            "mutation": false,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.post-draw-reports.show",
+            "uri": "backoffice/relatorios-pos-sorteio/{postDrawReport}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\PostDrawReportController",
+            "action": "show",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.view",
+            "permission_final": "lotteries.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\PostDrawReportPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\PostDrawReport",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.preliminary-hearings.decide",
+            "uri": "backoffice/audiencias-previas/{preliminaryHearingSubmission}/decidir",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\PreliminaryHearingSubmissionController",
+            "action": "decide",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "hearings.review",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\HearingSubmissionPolicy",
+            "ability": "reviewBackoffice",
+            "form_request": "App\\Http\\Requests\\UpdatePreliminaryHearingSubmissionRequest",
+            "principal_model": "App\\Models\\HearingSubmission",
+            "municipality_scope_source": "hearing/submission -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.preliminary-hearings.index",
+            "uri": "backoffice/audiencias-previas",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\PreliminaryHearingSubmissionController",
+            "action": "index",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "hearings.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\HearingSubmissionPolicy",
+            "ability": "viewAnyBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\HearingSubmission",
+            "municipality_scope_source": "hearing/submission -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.preliminary-hearings.show",
+            "uri": "backoffice/audiencias-previas/{preliminaryHearingSubmission}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\PreliminaryHearingSubmissionController",
+            "action": "show",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "complaints.view",
+            "permission_final": "hearings.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\HearingSubmissionPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\HearingSubmission",
+            "municipality_scope_source": "hearing/submission -> application -> program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Sprint11ListsComplaintsHearingTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.withdrawals.index",
+            "uri": "backoffice/desistencias",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ControlledWithdrawalController",
+            "action": "index",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.view",
+            "permission_final": "allocations.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ControlledWithdrawalPolicy",
+            "ability": "viewAnyBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\ControlledWithdrawal",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.withdrawals.process",
+            "uri": "backoffice/desistencias/{controlledWithdrawal}/processar",
+            "http_methods": [
+                "POST"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ControlledWithdrawalController",
+            "action": "process",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.view",
+            "permission_final": "allocations.process_withdrawal",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ControlledWithdrawalPolicy",
+            "ability": "processBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\ControlledWithdrawal",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": true,
+            "audit": "required",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        },
+        {
+            "route_name": "backoffice.withdrawals.show",
+            "uri": "backoffice/desistencias/{controlledWithdrawal}",
+            "http_methods": [
+                "GET"
+            ],
+            "controller": "App\\Http\\Controllers\\Backoffice\\ControlledWithdrawalController",
+            "action": "show",
+            "middleware_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "middleware_resolved_before": [
+                "web",
+                "auth",
+                "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+            ],
+            "fixed_role_before": "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor",
+            "permission_candidate": "allocations.view",
+            "permission_final": "allocations.view",
+            "decision_origin": "semantic_review_sprint_47d",
+            "feature_candidate": null,
+            "feature_final": "applications.review",
+            "policy": "App\\Policies\\ControlledWithdrawalPolicy",
+            "ability": "viewBackoffice",
+            "form_request": null,
+            "principal_model": "App\\Models\\ControlledWithdrawal",
+            "municipality_scope_source": "draw/result/convocation/withdrawal/closure -> procedure contest/program -> municipality",
+            "private_data": true,
+            "risk": "high",
+            "mutation": false,
+            "audit": "recommended",
+            "mfa": true,
+            "tests": [
+                "tests/Feature/Security/HearingsComplaintsListsPermissionRoutesTest.php",
+                "tests/Feature/Security/HearingsComplaintsListsMunicipalBoundaryTest.php",
+                "tests/Feature/Backoffice/LotteryClosureFlowTest.php"
+            ],
+            "reconciliation_status": "reconciled_current_route_collection",
+            "mixed_context_notes": null
+        }
+    ]
+}

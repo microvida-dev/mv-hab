@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\HousingVisit;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RejectVisitRequest extends FormRequest
@@ -10,8 +11,11 @@ class RejectVisitRequest extends FormRequest
     public function authorize(): bool
     {
         $visit = $this->route('housingVisit');
+        $actor = $this->user();
 
-        return $visit instanceof HousingVisit && ($this->user()?->can('reject', $visit) ?? false);
+        return $actor instanceof User
+            && $visit instanceof HousingVisit
+            && $actor->can('rejectBackoffice', $visit);
     }
 
     /**

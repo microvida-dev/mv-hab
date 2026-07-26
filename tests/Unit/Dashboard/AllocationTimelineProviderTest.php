@@ -40,7 +40,7 @@ final class AllocationTimelineProviderTest extends TestCase
             ->once()
             ->andReturnFalse();
 
-        $events = (new AllocationTimelineProvider())->forUser($user);
+        $events = (new AllocationTimelineProvider)->forUser($user);
 
         $this->assertSame([], $events);
     }
@@ -62,7 +62,7 @@ final class AllocationTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new AllocationTimelineProvider())->forUser($user);
+        $events = (new AllocationTimelineProvider)->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::AllocationOffer, $events[0]->type);
@@ -88,7 +88,7 @@ final class AllocationTimelineProviderTest extends TestCase
             ->once()
             ->andReturnTrue();
 
-        $events = (new AllocationTimelineProvider())->forUser($user);
+        $events = (new AllocationTimelineProvider)->forUser($user);
 
         $this->assertCount(3, $events);
 

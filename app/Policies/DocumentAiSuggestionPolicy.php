@@ -5,12 +5,15 @@ namespace App\Policies;
 use App\Models\DocumentAiSuggestion;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class DocumentAiSuggestionPolicy
 {
     use ChecksPermissions;
 
     private const MODULE = 'documents';
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -39,6 +42,13 @@ class DocumentAiSuggestionPolicy
     public function dismiss(User $user, DocumentAiSuggestion $suggestion): bool
     {
         return $this->manage($user);
+    }
+
+    public function reviewBackoffice(User $user, DocumentAiSuggestion $suggestion): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'review_ai')
+            && $this->municipalScope->ownsDocumentAiSuggestion($user, $suggestion);
     }
 
     private function manage(User $user): bool

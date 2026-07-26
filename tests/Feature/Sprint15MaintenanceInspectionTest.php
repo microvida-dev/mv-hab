@@ -15,11 +15,13 @@ use App\Enums\MaintenanceInterventionStatus;
 use App\Enums\MaintenanceRequestStatus;
 use App\Enums\MaintenanceUrgency;
 use App\Models\Contract;
+use App\Models\HousingUnit;
 use App\Models\InspectionChecklistTemplate;
 use App\Models\MaintenanceCategory;
 use App\Models\MaintenanceCost;
 use App\Models\MaintenanceIntervention;
 use App\Models\MaintenanceRequest;
+use App\Models\Municipality;
 use App\Models\PropertyHistoryEvent;
 use App\Models\PropertyInspection;
 use App\Models\PropertyInspectionReport;
@@ -85,10 +87,15 @@ class Sprint15MaintenanceInspectionTest extends TestCase
             'urgency' => MaintenanceUrgency::Normal,
         ]);
 
-        $technician = User::factory()->create();
+        $technician = User::factory()->create([
+            'municipality_id' => $context['municipalityId'],
+        ]);
         $technician->assignRole('municipal_technician');
 
-        $this->actingAs($context['manager'])
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['manager'])
             ->post(route('backoffice.maintenance.requests.review', $request), [
                 'urgency' => MaintenanceUrgency::Urgent->value,
                 'technical_priority' => MaintenanceUrgency::Urgent->value,
@@ -99,7 +106,10 @@ class Sprint15MaintenanceInspectionTest extends TestCase
 
         $this->assertSame(MaintenanceRequestStatus::UnderReview, $request->refresh()->status);
 
-        $this->actingAs($context['manager'])
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['manager'])
             ->post(route('backoffice.maintenance.assignments.store', $request), [
                 'assignment_type' => MaintenanceAssignmentType::InternalTechnician->value,
                 'assigned_user_id' => $technician->id,
@@ -110,7 +120,10 @@ class Sprint15MaintenanceInspectionTest extends TestCase
         $assignment = $request->assignments()->firstOrFail();
         $this->assertSame(MaintenanceAssignmentStatus::Assigned, $assignment->status);
 
-        $this->actingAs($context['manager'])
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['manager'])
             ->post(route('backoffice.maintenance.interventions.store', $request), [
                 'scheduled_for' => now()->addDay()->toDateTimeString(),
                 'performed_by_user_id' => $technician->id,
@@ -121,7 +134,10 @@ class Sprint15MaintenanceInspectionTest extends TestCase
         $intervention = MaintenanceIntervention::query()->firstOrFail();
         $this->assertSame(MaintenanceInterventionStatus::Scheduled, $intervention->status);
 
-        $this->actingAs($context['manager'])
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['manager'])
             ->post(route('backoffice.maintenance.interventions.complete', $intervention), [
                 'work_description' => 'Foi reparada a vedação afetada.',
                 'result_summary' => 'Problema resolvido em visita técnica.',
@@ -131,7 +147,10 @@ class Sprint15MaintenanceInspectionTest extends TestCase
 
         $this->assertSame(MaintenanceInterventionStatus::Completed, $intervention->refresh()->status);
 
-        $this->actingAs($context['manager'])
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['manager'])
             ->post(route('backoffice.maintenance.costs.store', $request), [
                 'maintenance_intervention_id' => $intervention->id,
                 'cost_type' => MaintenanceCostType::Materials->value,
@@ -144,19 +163,25 @@ class Sprint15MaintenanceInspectionTest extends TestCase
         $cost = MaintenanceCost::query()->firstOrFail();
         $this->assertSame(MaintenanceCostStatus::Estimated, $cost->status);
 
-        $this->actingAs($context['manager'])
+        $this->actingAs($context['financialManager'])
             ->post(route('backoffice.maintenance.costs.approve', $cost))
             ->assertRedirect();
 
         $this->assertSame(MaintenanceCostStatus::Approved, $cost->refresh()->status);
 
-        $this->actingAs($context['manager'])
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['manager'])
             ->post(route('backoffice.maintenance.requests.resolve', $request), [
                 'resolution_summary' => 'Pedido resolvido após intervenção municipal.',
             ])
             ->assertRedirect();
 
-        $this->actingAs($context['manager'])
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['manager'])
             ->post(route('backoffice.maintenance.requests.close', $request), [
                 'closure_notes' => 'Fecho administrativo.',
             ])
@@ -170,10 +195,17 @@ class Sprint15MaintenanceInspectionTest extends TestCase
     {
         Storage::fake('local');
         $context = $this->maintenanceContext();
-        $template = InspectionChecklistTemplate::factory()->create(['inspection_type' => InspectionType::Periodic]);
+        $template = InspectionChecklistTemplate::factory()->create([
+            'municipality_id' => $context['municipalityId'],
+            'is_system' => false,
+            'inspection_type' => InspectionType::Periodic,
+        ]);
         $template->items()->create(['code' => 'walls', 'label' => 'Paredes', 'sort_order' => 1]);
 
-        $this->actingAs($context['manager'])
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['manager'])
             ->post(route('backoffice.inspections.store'), [
                 'housing_unit_id' => $context['contract']->housing_unit_id,
                 'lease_contract_id' => $context['contract']->id,
@@ -187,7 +219,10 @@ class Sprint15MaintenanceInspectionTest extends TestCase
         $this->assertSame(1, $inspection->items()->count());
         $this->assertSame(InspectionStatus::Scheduled, $inspection->status);
 
-        $this->actingAs($context['manager'])
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['manager'])
             ->post(route('backoffice.inspections.complete', $inspection), [
                 'general_condition' => InspectionCondition::Acceptable->value,
                 'summary' => 'Vistoria concluída sem anomalias críticas.',
@@ -195,19 +230,32 @@ class Sprint15MaintenanceInspectionTest extends TestCase
             ])
             ->assertRedirect();
 
-        $this->actingAs($context['manager'])
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['manager'])
             ->post(route('backoffice.inspections.validate', $inspection))
             ->assertRedirect();
 
-        $this->actingAs($context['manager'])
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['manager'])
             ->post(route('backoffice.inspections.reports.generate', $inspection))
             ->assertRedirect();
 
         $report = PropertyInspectionReport::query()->firstOrFail();
         $this->assertSame(InspectionReportStatus::Generated, $report->status);
-        Storage::disk('local')->assertExists($report->storage_path);
+        $this->assertIsString($report->storage_path);
 
-        $this->actingAs($context['manager'])
+        Storage::disk('local')->assertExists(
+            $report->storage_path,
+        );
+
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['manager'])
             ->post(route('backoffice.inspections.reports.validate', $report))
             ->assertRedirect();
 
@@ -227,42 +275,87 @@ class Sprint15MaintenanceInspectionTest extends TestCase
     {
         $context = $this->maintenanceContext();
 
-        $this->actingAs($context['manager'])
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['manager'])
             ->get(route('backoffice.maintenance.index'))
             ->assertOk();
 
-        $this->actingAs($context['manager'])
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['manager'])
             ->get(route('backoffice.maintenance.cost-reports.index'))
             ->assertOk();
 
-        $this->actingAs($context['candidate'])
+        $this->withSession([
+            'mfa.verified_at' => now(),
+        ])
+            ->actingAs($context['candidate'])
             ->get(route('backoffice.maintenance.index'))
             ->assertForbidden();
     }
 
+    /**
+     * @return array{
+     *     candidate: User,
+     *     manager: User,
+     *     financialManager: User,
+     *     contract: Contract,
+     *     category: MaintenanceCategory,
+     *     municipalityId: int
+     * }
+     */
     private function maintenanceContext(): array
     {
         $this->seed(SystemAccessSeeder::class);
 
+        $municipality = Municipality::factory()->create();
+
+        $housingUnit = HousingUnit::factory()->create([
+            'municipality_id' => $municipality->id,
+        ]);
+
         $candidate = User::factory()->create();
         $candidate->assignRole('candidate');
 
-        $manager = User::factory()->create();
+        $manager = User::factory()->create([
+            'municipality_id' => $municipality->id,
+        ]);
         $manager->assignRole('maintenance_manager');
+
+        $financialManager = User::factory()->create([
+            'municipality_id' => $municipality->id,
+        ]);
+        $financialManager->assignRole('financial_manager');
 
         $contract = Contract::factory()->create([
             'user_id' => $candidate->id,
+            'housing_unit_id' => $housingUnit->id,
             'tenant_name' => $candidate->name,
             'tenant_email' => $candidate->email,
-            'contract_number' => 'CTR-MAINT-'.fake()->unique()->numerify('####'),
+            'contract_number' => 'CTR-MAINT-'
+                .fake()->unique()->numerify('####'),
             'status' => ContractStatus::Active,
             'activated_at' => now(),
             'activated_by' => $manager->id,
             'start_date' => now()->subMonth()->toDateString(),
         ]);
 
-        $category = MaintenanceCategory::factory()->create(['default_urgency' => MaintenanceUrgency::Normal]);
+        $category = MaintenanceCategory::factory()->create([
+            'municipality_id' => $municipality->id,
+            'is_system' => false,
+            'default_urgency' => MaintenanceUrgency::Normal,
+        ]);
 
-        return compact('candidate', 'manager', 'contract', 'category');
+        return [
+            'candidate' => $candidate,
+            'manager' => $manager,
+            'financialManager' => $financialManager,
+            'contract' => $contract,
+            'category' => $category,
+            'municipalityId' => $municipality->id,
+        ];
     }
 }

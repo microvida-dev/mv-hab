@@ -42,6 +42,7 @@ class HouseholdService
             $household->forceFill([
                 'adhesion_registration_id' => $registration->id,
                 'citizen_id' => null,
+                'municipality_id' => $actor->municipality_id,
             ]);
             $household->save();
 

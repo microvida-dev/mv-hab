@@ -5,6 +5,7 @@ namespace App\Services\Simulator;
 use App\Enums\SimulationScope;
 use App\Enums\SimulationSessionStatus;
 use App\Models\Application;
+use App\Models\Contest;
 use App\Models\SimulationSession;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -25,6 +26,18 @@ class SimulationSessionService
         ?User $user = null,
         ?Application $application = null,
     ): SimulationSession {
+        $municipalityId = null;
+
+        if ($application instanceof Application) {
+            $municipalityId = $application->program->municipality_id;
+        }
+
+        if ($municipalityId === null && $user instanceof User) {
+            $municipalityId = $user->municipality_id;
+        }
+
+        $municipalityId ??= $this->municipalityIdFromInput($input);
+
         $session = SimulationSession::query()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $user?->id,
@@ -38,6 +51,7 @@ class SimulationSessionService
             'ip_hash' => $this->hashNullable($request->ip()),
             'user_agent_hash' => $this->hashNullable($request->userAgent()),
         ]);
+        $session->forceFill(['municipality_id' => $municipalityId])->save();
 
         $session->inputSnapshot()->create([
             'household_members_count' => $input['household_members_count'] ?? null,
@@ -75,5 +89,24 @@ class SimulationSessionService
         }
 
         return hash('sha256', config('app.key').'|'.$value);
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     */
+    private function municipalityIdFromInput(array $input): ?int
+    {
+        $contestId = $input['contest_id'] ?? null;
+
+        if (! is_numeric($contestId)) {
+            return null;
+        }
+
+        $municipalityId = Contest::query()
+            ->join('programs', 'programs.id', '=', 'contests.program_id')
+            ->where('contests.id', (int) $contestId)
+            ->value('programs.municipality_id');
+
+        return is_numeric($municipalityId) ? (int) $municipalityId : null;
     }
 }

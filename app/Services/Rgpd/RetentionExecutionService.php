@@ -10,18 +10,29 @@ use App\Models\RetentionPolicy;
 use App\Models\User;
 use App\Services\Audit\AuditTrailService;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use RuntimeException;
 
 class RetentionExecutionService
 {
-    public function __construct(private readonly AuditTrailService $audit) {}
+    public function __construct(
+        private readonly AuditTrailService $audit,
+        private readonly PrivacyMunicipalScopeService $scope,
+    ) {}
 
     public function simulate(RetentionPolicy $policy, User $actor): RetentionExecution
     {
-        $matched = $this->countRecords($policy->entity_type);
+        abort_unless(
+            $actor->municipality_id !== null
+            && $this->scope->canUseRetentionPolicy($actor, $policy),
+            403,
+        );
+
+        $matched = $this->countRecords($policy->entity_type, $actor);
 
         $execution = RetentionExecution::query()->create([
+            'municipality_id' => $actor->municipality_id,
             'execution_number' => 'RET-'.now()->format('YmdHis').'-'.Str::upper(Str::random(5)),
             'retention_policy_id' => $policy->id,
             'status' => RetentionExecutionStatus::Simulation,
@@ -42,6 +53,8 @@ class RetentionExecutionService
 
     public function approve(RetentionExecution $execution, User $actor): RetentionExecution
     {
+        abort_unless($this->scope->ownsRetentionExecution($actor, $execution), 403);
+
         $execution->forceFill(['status' => RetentionExecutionStatus::Approved, 'approved_by' => $actor->id])->save();
         $this->audit->record('rgpd_retention_approved', $execution, AuditEventCategory::Rgpd, AuditEventSeverity::Warning, 'Execução de retenção aprovada.', actor: $actor);
 
@@ -50,6 +63,8 @@ class RetentionExecutionService
 
     public function run(RetentionExecution $execution, User $actor): RetentionExecution
     {
+        abort_unless($this->scope->ownsRetentionExecution($actor, $execution), 403);
+
         $execution->loadMissing('policy');
         $policy = $execution->policy;
 
@@ -77,8 +92,20 @@ class RetentionExecutionService
         return $execution->refresh();
     }
 
-    private function countRecords(string $class): int
+    private function countRecords(string $class, User $actor): int
     {
-        return is_subclass_of($class, Model::class) ? $class::query()->count() : 0;
+        if (! is_subclass_of($class, Model::class)) {
+            return 0;
+        }
+
+        /** @var Model $model */
+        $model = new $class;
+        if (! Schema::hasColumn($model->getTable(), 'municipality_id')) {
+            return 0;
+        }
+
+        return $model->newQuery()
+            ->where('municipality_id', $actor->municipality_id)
+            ->count();
     }
 }

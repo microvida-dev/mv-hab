@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Enums\ExportScope;
+use App\Enums\FeatureKey;
 use App\Enums\ReportSensitivityLevel;
 use App\Models\Application;
 use App\Models\Contest;
 use App\Models\IndicatorDefinition;
+use App\Models\Municipality;
 use App\Models\Program;
 use App\Models\ReportAccessLog;
 use App\Models\ReportDefinition;
@@ -22,11 +24,15 @@ use Database\Seeders\ReportDefinitionSeeder;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\TestCase;
 
 class Sprint17ReportingDashboardTest extends TestCase
 {
+    use InteractsWithMunicipalFeatures;
     use RefreshDatabase;
+
+    private Municipality $municipality;
 
     protected function setUp(): void
     {
@@ -39,6 +45,7 @@ class Sprint17ReportingDashboardTest extends TestCase
             DashboardWidgetSeeder::class,
             ReportDefinitionSeeder::class,
         ]);
+        $this->municipality = $this->municipalityWithFeatures(FeatureKey::ApplicationIntake, FeatureKey::ApplicationReview, FeatureKey::ApplicationExport);
     }
 
     public function test_reporting_area_blocks_guest_and_candidate(): void
@@ -73,7 +80,7 @@ class Sprint17ReportingDashboardTest extends TestCase
     public function test_indicators_apply_program_and_contest_filters(): void
     {
         $user = $this->userWithRole('administrator');
-        $program = Program::factory()->create();
+        $program = Program::factory()->create(['municipality_id' => $this->municipality->id]);
         $contest = Contest::factory()->create(['program_id' => $program->id]);
         Application::factory()->count(2)->submitted()->create(['program_id' => $program->id, 'contest_id' => $contest->id]);
         Application::factory()->submitted()->create();
@@ -92,7 +99,7 @@ class Sprint17ReportingDashboardTest extends TestCase
     public function test_report_run_records_filters_access_and_audit_without_personal_data(): void
     {
         $admin = $this->userWithRole('administrator');
-        $program = Program::factory()->create();
+        $program = Program::factory()->create(['municipality_id' => $this->municipality->id]);
         $contest = Contest::factory()->create(['program_id' => $program->id]);
         $application = Application::factory()->submitted()->create(['program_id' => $program->id, 'contest_id' => $contest->id]);
         $report = ReportDefinition::query()->where('code', 'applications_by_contest')->firstOrFail();
@@ -123,10 +130,12 @@ class Sprint17ReportingDashboardTest extends TestCase
         $report = ReportDefinition::query()->where('code', 'application_status_summary')->firstOrFail();
         Application::factory()->submitted()->create(['candidate_notes' => '=unsafe']);
 
-        $this->actingAs($admin)->post(route('backoffice.reports.exports.store', $report), [
-            'format' => 'csv',
-            'scope' => ExportScope::Aggregated->value,
-        ])->assertSessionHasNoErrors()->assertRedirect();
+        $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
+            ->post(route('backoffice.reports.exports.store', $report), [
+                'format' => 'csv',
+                'scope' => ExportScope::Aggregated->value,
+            ])->assertSessionHasNoErrors()->assertRedirect();
 
         $export = ReportExport::query()->firstOrFail();
         Storage::disk('local')->assertExists($export->file_path);
@@ -134,6 +143,7 @@ class Sprint17ReportingDashboardTest extends TestCase
         $this->assertStringNotContainsString('..', $export->file_path);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.reports.exports.download', $export))
             ->assertOk();
 
@@ -146,10 +156,12 @@ class Sprint17ReportingDashboardTest extends TestCase
         $report = ReportDefinition::query()->where('code', 'financial_arrears_report')->firstOrFail();
 
         $this->actingAs($this->userWithRole('municipal_technician'))
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.reports.definitions.show', $report))
             ->assertForbidden();
 
         $this->actingAs($this->userWithRole('administrator'))
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.reports.exports.store', $report), [
                 'date_from' => now()->startOfMonth()->toDateString(),
                 'format' => 'csv',
@@ -164,10 +176,12 @@ class Sprint17ReportingDashboardTest extends TestCase
         $report = ReportDefinition::query()->where('code', 'application_status_summary')->firstOrFail();
 
         foreach (['xlsx' => 'csv', 'pdf' => 'html'] as $requested => $actual) {
-            $this->actingAs($admin)->post(route('backoffice.reports.exports.store', $report), [
-                'format' => $requested,
-                'scope' => 'aggregated',
-            ])->assertSessionHasNoErrors()->assertRedirect();
+            $this->actingAs($admin)
+                ->withSession(['mfa.verified_at' => now()])
+                ->post(route('backoffice.reports.exports.store', $report), [
+                    'format' => $requested,
+                    'scope' => 'aggregated',
+                ])->assertSessionHasNoErrors()->assertRedirect();
 
             $export = ReportExport::query()->latest('id')->firstOrFail();
             $this->assertSame($requested, $export->requested_format->value);
@@ -189,13 +203,16 @@ class Sprint17ReportingDashboardTest extends TestCase
         $this->assertSame('applicationStatusSummary', $report->query_method);
 
         $auditor = $this->userWithRole('auditor');
-        $this->actingAs($auditor)->get(route('backoffice.reports.access-logs.index'))->assertOk();
+        $this->actingAs($auditor)
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('backoffice.reports.access-logs.index'))
+            ->assertOk();
         $this->actingAs($auditor)->post(route('backoffice.reports.definitions.store'), [])->assertForbidden();
     }
 
     private function userWithRole(string $role): User
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['municipality_id' => $this->municipality->id]);
         $user->assignRole($role);
 
         return $user;

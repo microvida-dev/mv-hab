@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\AccessChangeEvent;
+use App\Models\Municipality;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -22,5 +23,14 @@ class AccessChangeEventFactory extends Factory
             'new_values' => [],
             'occurred_at' => now(),
         ];
+    }
+
+    public function forMunicipality(Municipality|int $municipality): static
+    {
+        $municipalityId = $municipality instanceof Municipality
+            ? $municipality->getKey()
+            : $municipality;
+
+        return $this->state(fn (): array => ['municipality_id' => $municipalityId]);
     }
 }

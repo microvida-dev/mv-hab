@@ -6,10 +6,13 @@ use App\Enums\ComplaintStatus;
 use App\Models\Complaint;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class ComplaintPolicy
 {
     use ChecksPermissions;
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -45,6 +48,56 @@ class ComplaintPolicy
     public function approve(User $user, Complaint $complaint): bool
     {
         return ! $user->hasRole(['candidate', 'auditor']) && $this->canAccess($user, 'complaints', 'approve');
+    }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $user->municipality_id !== null
+            && $this->canAccess($user, 'complaints', 'view');
+    }
+
+    public function viewBackoffice(User $user, Complaint $complaint): bool
+    {
+        return $this->viewAnyBackoffice($user)
+            && $this->municipalScope->ownsComplaint($user, $complaint);
+    }
+
+    public function createBackoffice(User $user, Complaint $complaint): bool
+    {
+        return $this->canMutateBackoffice($user, $complaint, 'review');
+    }
+
+    public function assignBackoffice(User $user, Complaint $complaint): bool
+    {
+        return $this->canMutateBackoffice($user, $complaint, 'assign');
+    }
+
+    public function markReceivedBackoffice(User $user, Complaint $complaint): bool
+    {
+        return $this->canMutateBackoffice($user, $complaint, 'mark_received');
+    }
+
+    public function reviewBackoffice(User $user, Complaint $complaint): bool
+    {
+        return $this->canMutateBackoffice($user, $complaint, 'review');
+    }
+
+    public function closeBackoffice(User $user, Complaint $complaint): bool
+    {
+        return $this->canMutateBackoffice($user, $complaint, 'close');
+    }
+
+    public function requestInformationBackoffice(User $user, Complaint $complaint): bool
+    {
+        return $this->canMutateBackoffice($user, $complaint, 'request_information');
+    }
+
+    private function canMutateBackoffice(User $user, Complaint $complaint, string $action): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, 'complaints', $action)
+            && $this->municipalScope->ownsComplaint($user, $complaint);
     }
 
     private function status(Complaint $complaint): ?ComplaintStatus

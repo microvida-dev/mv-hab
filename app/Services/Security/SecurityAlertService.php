@@ -9,11 +9,15 @@ use App\Models\SecurityAlert;
 use App\Models\SecurityAlertRule;
 use App\Models\SensitiveDataAccessLog;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Str;
 
 class SecurityAlertService
 {
-    public function __construct(private readonly SecurityAlertRuleEvaluator $evaluator) {}
+    public function __construct(
+        private readonly SecurityAlertRuleEvaluator $evaluator,
+        private readonly SecurityMunicipalScopeService $municipalScope,
+    ) {}
 
     public function evaluateAccess(AccessLog $log): ?SecurityAlert
     {
@@ -21,7 +25,16 @@ class SecurityAlertService
             return null;
         }
 
-        $rule = SecurityAlertRule::query()->where('code', 'multiple_failed_logins')->where('is_active', true)->first();
+        $rule = SecurityAlertRule::query()
+            ->where(function ($rules) use ($log): void {
+                $rules
+                    ->where('municipality_id', $log->municipality_id)
+                    ->orWhereNull('municipality_id');
+            })
+            ->where('code', 'multiple_failed_logins')
+            ->where('is_active', true)
+            ->orderByRaw('municipality_id IS NULL')
+            ->first();
         $user = $log->user instanceof User ? $log->user : null;
 
         return $rule && $this->evaluator->thresholdReached($rule, $log)
@@ -37,7 +50,16 @@ class SecurityAlertService
             default => 'access_to_multiple_candidate_records',
         };
 
-        $rule = SecurityAlertRule::query()->where('code', $code)->where('is_active', true)->first();
+        $rule = SecurityAlertRule::query()
+            ->where(function ($rules) use ($log): void {
+                $rules
+                    ->where('municipality_id', $log->municipality_id)
+                    ->orWhereNull('municipality_id');
+            })
+            ->where('code', $code)
+            ->where('is_active', true)
+            ->orderByRaw('municipality_id IS NULL')
+            ->first();
         $user = $log->user instanceof User ? $log->user : null;
 
         return $rule && $this->evaluator->thresholdReached($rule, $log)
@@ -52,6 +74,7 @@ class SecurityAlertService
     {
         return SecurityAlert::query()->create([
             'alert_number' => 'SEC-'.now()->format('YmdHis').'-'.Str::upper(Str::random(6)),
+            'municipality_id' => $user->municipality_id ?? $rule->municipality_id,
             'security_alert_rule_id' => $rule->id,
             'user_id' => $user?->id,
             'status' => SecurityAlertStatus::Open,
@@ -65,6 +88,10 @@ class SecurityAlertService
 
     public function review(SecurityAlert $alert, User $actor): SecurityAlert
     {
+        if (! $this->municipalScope->ownsAlert($actor, $alert)) {
+            throw new AuthorizationException('O alerta não pertence ao município do utilizador.');
+        }
+
         $alert->forceFill(['status' => SecurityAlertStatus::UnderReview, 'reviewed_by' => $actor->id, 'reviewed_at' => now()])->save();
 
         return $alert->refresh();
@@ -72,6 +99,10 @@ class SecurityAlertService
 
     public function resolve(SecurityAlert $alert, User $actor, string $notes, bool $falsePositive = false): SecurityAlert
     {
+        if (! $this->municipalScope->ownsAlert($actor, $alert)) {
+            throw new AuthorizationException('O alerta não pertence ao município do utilizador.');
+        }
+
         $alert->forceFill([
             'status' => $falsePositive ? SecurityAlertStatus::FalsePositive : SecurityAlertStatus::Resolved,
             'resolved_by' => $actor->id,
