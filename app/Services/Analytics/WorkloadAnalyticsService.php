@@ -57,6 +57,53 @@ class WorkloadAnalyticsService
      */
     private function applyFilters($query, array $filters): void
     {
+        if (isset($filters['municipality_id'])) {
+            $municipalityId = (int) $filters['municipality_id'];
+
+            $query->where(function (Builder $tasks) use (
+                $municipalityId,
+            ): void {
+                $tasks
+                    ->whereIn(
+                        'work_tasks.municipal_team_id',
+                        DB::table('municipal_teams')
+                            ->where('municipality_id', $municipalityId)
+                            ->select('id'),
+                    )
+                    ->orWhere(function (Builder $assigned) use (
+                        $municipalityId,
+                    ): void {
+                        $assigned
+                            ->whereNull('work_tasks.municipal_team_id')
+                            ->whereIn(
+                                'work_tasks.assigned_user_id',
+                                DB::table('users')
+                                    ->where(
+                                        'municipality_id',
+                                        $municipalityId,
+                                    )
+                                    ->select('id'),
+                            );
+                    })
+                    ->orWhere(function (Builder $created) use (
+                        $municipalityId,
+                    ): void {
+                        $created
+                            ->whereNull('work_tasks.municipal_team_id')
+                            ->whereNull('work_tasks.assigned_user_id')
+                            ->whereIn(
+                                'work_tasks.created_by',
+                                DB::table('users')
+                                    ->where(
+                                        'municipality_id',
+                                        $municipalityId,
+                                    )
+                                    ->select('id'),
+                            );
+                    });
+            });
+        }
+
         foreach (['municipal_team_id', 'assigned_user_id', 'status', 'priority'] as $column) {
             if (isset($filters[$column]) && Schema::hasColumn('work_tasks', $column)) {
                 $query->where('work_tasks.'.$column, $filters[$column]);

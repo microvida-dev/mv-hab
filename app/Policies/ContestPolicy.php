@@ -81,6 +81,12 @@ class ContestPolicy
             && $this->canAccess($user, self::MODULE, 'publish');
     }
 
+    public function closeBackoffice(User $user, Contest $contest): bool
+    {
+        return $this->canAccess($user, self::MODULE, 'close')
+            && $this->municipalScope->ownsContest($user, $contest);
+    }
+
     public function viewListsBackoffice(User $user, Contest $contest): bool
     {
         return ! $user->hasRole('candidate')

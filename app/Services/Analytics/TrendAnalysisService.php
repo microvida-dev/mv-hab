@@ -108,6 +108,14 @@ class TrendAnalysisService
      */
     private function applyFilters($query, string $table, string $dateColumn, array $filters): void
     {
+        if (isset($filters['municipality_id'])) {
+            $this->applyMunicipalityFilter(
+                $query,
+                $table,
+                (int) $filters['municipality_id'],
+            );
+        }
+
         foreach (['program_id', 'contest_id', 'status'] as $column) {
             if (isset($filters[$column]) && Schema::hasColumn($table, $column)) {
                 $query->where($table.'.'.$column, $filters[$column]);
@@ -121,5 +129,63 @@ class TrendAnalysisService
         if (isset($filters['date_to'])) {
             $query->whereDate($table.'.'.$dateColumn, '<=', (string) $filters['date_to']);
         }
+    }
+
+    private function applyMunicipalityFilter(
+        Builder $query,
+        string $table,
+        int $municipalityId,
+    ): void {
+        match ($table) {
+            'applications' => $query->whereIn(
+                'applications.program_id',
+                DB::table('programs')
+                    ->where('municipality_id', $municipalityId)
+                    ->select('id'),
+            ),
+            'work_tasks' => $query->where(function (Builder $tasks) use (
+                $municipalityId,
+            ): void {
+                $tasks
+                    ->whereIn(
+                        'work_tasks.municipal_team_id',
+                        DB::table('municipal_teams')
+                            ->where('municipality_id', $municipalityId)
+                            ->select('id'),
+                    )
+                    ->orWhere(function (Builder $assigned) use (
+                        $municipalityId,
+                    ): void {
+                        $assigned
+                            ->whereNull('work_tasks.municipal_team_id')
+                            ->whereIn(
+                                'work_tasks.assigned_user_id',
+                                DB::table('users')
+                                    ->where(
+                                        'municipality_id',
+                                        $municipalityId,
+                                    )
+                                    ->select('id'),
+                            );
+                    })
+                    ->orWhere(function (Builder $created) use (
+                        $municipalityId,
+                    ): void {
+                        $created
+                            ->whereNull('work_tasks.municipal_team_id')
+                            ->whereNull('work_tasks.assigned_user_id')
+                            ->whereIn(
+                                'work_tasks.created_by',
+                                DB::table('users')
+                                    ->where(
+                                        'municipality_id',
+                                        $municipalityId,
+                                    )
+                                    ->select('id'),
+                            );
+                    });
+            }),
+            default => $query->whereRaw('1 = 0'),
+        };
     }
 }

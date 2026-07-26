@@ -2,17 +2,17 @@
 
 namespace App\Http\Requests;
 
-use App\Models\User;
+use App\Models\WorkTask;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AssignWorkTaskRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $user = $this->user();
+        $task = $this->route('workTask');
 
-        return $user instanceof User
-            && ($user->hasPermission('work_tasks.assign') || $user->hasPermission('work_tasks.reassign'));
+        return $task instanceof WorkTask
+            && $this->user()?->can('reassign', $task) === true;
     }
 
     /**

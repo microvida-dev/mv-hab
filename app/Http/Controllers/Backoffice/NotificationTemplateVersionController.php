@@ -17,7 +17,7 @@ class NotificationTemplateVersionController extends Controller
 
     public function store(StoreNotificationTemplateVersionRequest $request, NotificationTemplate $notificationTemplate): RedirectResponse
     {
-        Gate::authorize('update', $notificationTemplate);
+        Gate::authorize('createBackoffice', $notificationTemplate);
         $version = $this->service->create($notificationTemplate, $request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.communications.template-versions.show', $version);
@@ -25,14 +25,14 @@ class NotificationTemplateVersionController extends Controller
 
     public function show(NotificationTemplateVersion $notificationTemplateVersion): View
     {
-        Gate::authorize('view', $notificationTemplateVersion);
+        Gate::authorize('viewBackoffice', $notificationTemplateVersion);
 
         return view('backoffice.communications.template-versions.show', compact('notificationTemplateVersion'));
     }
 
     public function approve(NotificationTemplateVersion $notificationTemplateVersion): RedirectResponse
     {
-        Gate::authorize('approve', $notificationTemplateVersion);
+        Gate::authorize('approveBackoffice', $notificationTemplateVersion);
         $this->service->approve($notificationTemplateVersion, $this->currentUser());
 
         return back()->with('success', 'Versão aprovada.');
@@ -40,7 +40,7 @@ class NotificationTemplateVersionController extends Controller
 
     public function activate(NotificationTemplateVersion $notificationTemplateVersion): RedirectResponse
     {
-        Gate::authorize('approve', $notificationTemplateVersion);
+        Gate::authorize('activateBackoffice', $notificationTemplateVersion);
         $this->service->activate($notificationTemplateVersion, $this->currentUser());
 
         return back()->with('success', 'Versão ativada.');
@@ -48,8 +48,11 @@ class NotificationTemplateVersionController extends Controller
 
     public function archive(NotificationTemplateVersion $notificationTemplateVersion): RedirectResponse
     {
-        Gate::authorize('update', $notificationTemplateVersion);
-        $this->service->archive($notificationTemplateVersion);
+        Gate::authorize('archiveBackoffice', $notificationTemplateVersion);
+        $this->service->archive(
+            $notificationTemplateVersion,
+            $this->currentUser(),
+        );
 
         return back()->with('success', 'Versão arquivada.');
     }

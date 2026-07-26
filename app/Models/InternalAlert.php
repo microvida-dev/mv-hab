@@ -65,6 +65,14 @@ class InternalAlert extends Model
     }
 
     /**
+     * @return BelongsTo<Program, $this>
+     */
+    public function program(): BelongsTo
+    {
+        return $this->belongsTo(Program::class);
+    }
+
+    /**
      * @return BelongsTo<Contest, $this>
      */
     public function contest(): BelongsTo

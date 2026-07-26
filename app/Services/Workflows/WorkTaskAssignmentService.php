@@ -11,7 +11,9 @@ use App\Models\User;
 use App\Models\WorkTask;
 use App\Models\WorkTaskHistory;
 use App\Services\Audit\AuditTrailService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use DomainException;
+use Illuminate\Database\Eloquent\Model;
 
 class WorkTaskAssignmentService
 {
@@ -24,6 +26,10 @@ class WorkTaskAssignmentService
         WorkTask::STATUS_WAITING_EXTERNAL,
         WorkTask::STATUS_OVERDUE,
     ];
+
+    public function __construct(
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
     /**
      * @return array<string, array{teams: list<string>, roles: list<string>}>
@@ -50,7 +56,17 @@ class WorkTaskAssignmentService
 
     public function assignByCompetency(WorkTask $task, ?User $actor = null): WorkTask
     {
-        $team = $this->activeTeamFor($task->type);
+        $contextUser = $actor;
+
+        if (! $contextUser instanceof User && $task->created_by !== null) {
+            $contextUser = User::query()->find($task->created_by);
+        }
+
+        $team = $this->activeTeamFor(
+            $task->type,
+            $contextUser,
+            $this->assignmentMunicipalityId($task, $contextUser),
+        );
         $assignee = $team instanceof MunicipalTeam ? $this->leastLoadedActiveUser($task->type, $team) : null;
 
         return $this->assign(
@@ -65,6 +81,12 @@ class WorkTaskAssignmentService
 
     public function claim(WorkTask $task, User $actor): WorkTask
     {
+        abort_unless(
+            $actor->hasPermission('work_tasks.claim')
+                && $this->municipalScope->ownsWorkTask($actor, $task),
+            403,
+        );
+
         if (! $task->isActive()) {
             throw new DomainException('A tarefa já não está ativa.');
         }
@@ -89,6 +111,29 @@ class WorkTaskAssignmentService
 
     public function reassign(WorkTask $task, User $actor, ?MunicipalTeam $team, ?User $assignee, string $reason): WorkTask
     {
+        abort_unless(
+            (
+                $actor->hasPermission('work_tasks.assign')
+                || (
+                    $actor->hasPermission('work_tasks.reassign')
+                    && $this->hasOperationalVisibility($actor, $task)
+                )
+            )
+                && $this->municipalScope->ownsWorkTask($actor, $task)
+                && (
+                    ! $team instanceof MunicipalTeam
+                    || $this->municipalScope->ownsMunicipalTeam(
+                        $actor,
+                        $team,
+                    )
+                )
+                && (
+                    ! $assignee instanceof User
+                    || $this->municipalScope->ownsUser($actor, $assignee)
+                ),
+            403,
+        );
+
         if (trim($reason) === '') {
             throw new DomainException('A reatribuição exige justificação.');
         }
@@ -125,15 +170,28 @@ class WorkTaskAssignmentService
         return $user->hasRole('administrator') || $user->hasRole($roles);
     }
 
-    public function activeTeamFor(string $type): ?MunicipalTeam
-    {
+    public function activeTeamFor(
+        string $type,
+        ?User $contextUser = null,
+        ?int $municipalityId = null,
+    ): ?MunicipalTeam {
         $teamNames = $this->matrix()[$type]['teams'] ?? [];
 
         foreach ($teamNames as $teamName) {
-            $team = MunicipalTeam::query()
+            $query = MunicipalTeam::query()
                 ->where('name', $teamName)
-                ->where('status', 'active')
-                ->first();
+                ->where('status', 'active');
+
+            if ($municipalityId !== null) {
+                $query->where('municipality_id', $municipalityId);
+            } elseif ($contextUser instanceof User) {
+                $query = $this->municipalScope->municipalTeams(
+                    $query,
+                    $contextUser,
+                );
+            }
+
+            $team = $query->first();
 
             if ($team instanceof MunicipalTeam) {
                 return $team;
@@ -179,6 +237,48 @@ class WorkTaskAssignmentService
 
         return $user->deactivated_at === null
             && $status === 'active';
+    }
+
+    private function assignmentMunicipalityId(
+        WorkTask $task,
+        ?User $contextUser,
+    ): ?int {
+        $task->loadMissing('related');
+        $related = $task->related;
+        $relatedMunicipalityId = $related instanceof Model
+            ? $this->positiveId($related->getAttribute('municipality_id'))
+            : null;
+        $actorMunicipalityId = $contextUser instanceof User
+            ? $this->positiveId($contextUser->municipality_id)
+            : null;
+
+        if (
+            $relatedMunicipalityId !== null
+            && $actorMunicipalityId !== null
+            && $relatedMunicipalityId !== $actorMunicipalityId
+        ) {
+            throw new DomainException(
+                'A tarefa e o ator pertencem a Municípios distintos.',
+            );
+        }
+
+        return $relatedMunicipalityId ?? $actorMunicipalityId;
+    }
+
+    private function positiveId(mixed $value): ?int
+    {
+        return is_numeric($value) && (int) $value > 0
+            ? (int) $value
+            : null;
+    }
+
+    private function hasOperationalVisibility(User $user, WorkTask $task): bool
+    {
+        return $task->isAssignedTo($user)
+            || (
+                $user->hasPermission('work_tasks.view_team')
+                && $task->isInTeamOf($user)
+            );
     }
 
     private function assign(

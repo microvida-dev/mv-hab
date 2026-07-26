@@ -13,6 +13,7 @@ use App\Models\CommunicationLog;
 use App\Models\OfficialNotification;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Support\AuditEvents;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
@@ -25,6 +26,7 @@ class OfficialNotificationService
         private readonly CommunicationLogService $communications,
         private readonly CommunicationDeliveryService $deliveries,
         private readonly CommunicationReceiptService $receipts,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
     public function createInternal(
@@ -117,12 +119,27 @@ class OfficialNotificationService
     /** @param array<string, mixed> $data */
     public function store(array $data, User $actor): OfficialNotification
     {
-        $user = User::query()
+        abort_unless(
+            $actor->hasPermission('notifications.create')
+                && $this->municipalScope->hasMunicipalOrGlobalScope($actor),
+            403,
+        );
+
+        $user = $this->municipalScope
+            ->users(User::query(), $actor)
             ->whereKey($data['user_id'] ?? null)
             ->firstOrFail();
         $application = isset($data['application_id'])
-            ? Application::query()->whereKey($data['application_id'])->firstOrFail()
+            ? $this->municipalScope
+                ->applications(Application::query(), $actor)
+                ->whereKey($data['application_id'])
+                ->firstOrFail()
             : null;
+        abort_if(
+            $application instanceof Application
+                && (int) $application->user_id !== (int) $user->id,
+            422,
+        );
 
         return $this->createInternal(
             user: $user,
@@ -191,18 +208,56 @@ class OfficialNotificationService
         return $notification->refresh();
     }
 
-    public function markSent(OfficialNotification $notification): OfficialNotification
-    {
+    public function markSent(
+        OfficialNotification $notification,
+        User $actor,
+    ): OfficialNotification {
+        abort_unless(
+            $actor->hasPermission('notifications.mark_sent')
+                && $this->municipalScope->ownsOfficialNotification(
+                    $actor,
+                    $notification,
+                ),
+            403,
+        );
+        $this->auditLogger->record(
+            AuditEvents::UPDATE,
+            $notification,
+            'notifications',
+            'official_notification_mark_sent_rejected',
+            'Tentativa manual de marcar notificação como enviada rejeitada.',
+        );
+
         throw ValidationException::withMessages(['notification' => 'O estado de envio é controlado pelas entregas da comunicação.']);
     }
 
-    public function markFailed(OfficialNotification $notification, ?string $reason = null): OfficialNotification
-    {
+    public function markFailed(
+        OfficialNotification $notification,
+        User $actor,
+        ?string $reason = null,
+    ): OfficialNotification {
+        abort_unless(
+            $actor->hasPermission('notifications.mark_failed')
+                && $this->municipalScope->ownsOfficialNotification(
+                    $actor,
+                    $notification,
+                ),
+            403,
+        );
+
         $notification->forceFill([
             'status' => OfficialNotificationStatus::Failed,
             'failed_at' => now(),
             'failure_reason' => $reason,
         ])->save();
+        $this->auditLogger->record(
+            AuditEvents::UPDATE,
+            $notification,
+            'notifications',
+            'official_notification_mark_failed',
+            'Notificação marcada como falhada.',
+            metadata: ['reason_present' => filled($reason)],
+        );
 
         return $notification->refresh();
     }

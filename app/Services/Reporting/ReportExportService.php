@@ -61,6 +61,7 @@ class ReportExportService
             $filters,
             $actual,
             $scope,
+            'reports.export',
         );
 
         $run = $result->reportRun;

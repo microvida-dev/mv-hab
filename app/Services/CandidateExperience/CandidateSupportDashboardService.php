@@ -12,6 +12,7 @@ use App\Models\SupportTicket;
 use App\Models\User;
 use App\Models\VisitSlot;
 use App\Services\Municipalities\MunicipalRecordScopeService;
+use Illuminate\Database\Eloquent\Builder;
 
 class CandidateSupportDashboardService
 {
@@ -32,6 +33,15 @@ class CandidateSupportDashboardService
             VisitSlot::query(),
             $actor,
         );
+        $tickets = $this->municipalScope->supportTickets(
+            SupportTicket::query(),
+            $actor,
+        );
+        $inconsistencies = $this->municipalScope
+            ->applicationSimulationInconsistencies(
+                ApplicationSimulationInconsistency::query(),
+                $actor,
+            );
         $scheduled = (clone $visits)->whereIn('status', [
             VisitStatus::Requested->value,
             VisitStatus::PendingConfirmation->value,
@@ -64,22 +74,25 @@ class CandidateSupportDashboardService
             'slots_full' => (clone $slots)
                 ->where('status', VisitSlotStatus::Full->value)
                 ->count(),
-            'tickets_open' => SupportTicket::query()->whereIn('status', [TicketStatus::Open->value, TicketStatus::InProgress->value, TicketStatus::Reopened->value])->count(),
-            'tickets_pending_candidate' => SupportTicket::query()->where('status', TicketStatus::PendingCandidate->value)->count(),
-            'tickets_pending_staff' => SupportTicket::query()->where('status', TicketStatus::PendingStaff->value)->count(),
-            'tickets_by_category' => $this->ticketCountsBy('category'),
-            'open_inconsistencies' => ApplicationSimulationInconsistency::query()->open()->count(),
-            'inconsistencies_by_severity' => $this->inconsistencyCountsBySeverity(),
+            'tickets_open' => (clone $tickets)->whereIn('status', [TicketStatus::Open->value, TicketStatus::InProgress->value, TicketStatus::Reopened->value])->count(),
+            'tickets_pending_candidate' => (clone $tickets)->where('status', TicketStatus::PendingCandidate->value)->count(),
+            'tickets_pending_staff' => (clone $tickets)->where('status', TicketStatus::PendingStaff->value)->count(),
+            'tickets_by_category' => $this->ticketCountsBy($tickets, 'category'),
+            'open_inconsistencies' => (clone $inconsistencies)->open()->count(),
+            'inconsistencies_by_severity' => $this->inconsistencyCountsBySeverity($inconsistencies),
         ];
     }
 
     /**
+     * @param  Builder<SupportTicket>  $query
      * @param  literal-string  $field
      * @return array<string, int>
      */
-    private function ticketCountsBy(string $field): array
-    {
-        return SupportTicket::query()
+    private function ticketCountsBy(
+        Builder $query,
+        string $field,
+    ): array {
+        return $query
             ->selectRaw($field.', count(*) as aggregate')
             ->groupBy($field)
             ->pluck('aggregate', $field)
@@ -88,11 +101,13 @@ class CandidateSupportDashboardService
     }
 
     /**
+     * @param  Builder<ApplicationSimulationInconsistency>  $query
      * @return array<string, int>
      */
-    private function inconsistencyCountsBySeverity(): array
-    {
-        $counts = ApplicationSimulationInconsistency::query()
+    private function inconsistencyCountsBySeverity(
+        Builder $query,
+    ): array {
+        $counts = $query
             ->open()
             ->selectRaw('severity, count(*) as aggregate')
             ->groupBy('severity')

@@ -19,8 +19,9 @@ class HousingVisitPolicy
 
     public function view(User $user, HousingVisit $visit): bool
     {
-        if ($visit->belongsToCandidate($user)) {
-            return $user->hasPermission('visits.view')
+        if ($user->hasRole('candidate')) {
+            return $visit->belongsToCandidate($user)
+                && $user->hasPermission('visits.view')
                 && $this->municipalScope
                     ->isStructurallyValidHousingVisit($visit);
         }
@@ -36,8 +37,9 @@ class HousingVisitPolicy
 
     public function update(User $user, HousingVisit $visit): bool
     {
-        if ($visit->belongsToCandidate($user)) {
-            return $visit->isActive()
+        if ($user->hasRole('candidate')) {
+            return $visit->belongsToCandidate($user)
+                && $visit->isActive()
                 && $user->hasPermission('visits.update')
                 && $this->municipalScope
                     ->isStructurallyValidHousingVisit($visit);

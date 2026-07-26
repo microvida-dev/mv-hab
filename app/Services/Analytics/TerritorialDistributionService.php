@@ -27,6 +27,18 @@ class TerritorialDistributionService
             ->join('current_housing_situations', 'current_housing_situations.id', '=', 'applications.current_housing_situation_id')
             ->whereNotNull('current_housing_situations.current_parish');
 
+        if (isset($filters['municipality_id'])) {
+            $query->whereIn(
+                'applications.program_id',
+                DB::table('programs')
+                    ->where(
+                        'municipality_id',
+                        (int) $filters['municipality_id'],
+                    )
+                    ->select('id'),
+            );
+        }
+
         foreach (['program_id', 'contest_id', 'status'] as $column) {
             if (isset($filters[$column]) && Schema::hasColumn('applications', $column)) {
                 $query->where('applications.'.$column, $filters[$column]);

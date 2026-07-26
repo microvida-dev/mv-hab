@@ -16,7 +16,7 @@ class RenderProcedureTemplateRequest extends FormRequest
 
         $ability = $this->routeIs('backoffice.procedure-templates.documents.generate')
             ? 'generateBackoffice'
-            : 'viewBackoffice';
+            : 'previewBackoffice';
 
         return $this->user()?->can($ability, $template) === true;
     }

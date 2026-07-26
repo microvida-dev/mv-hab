@@ -2,13 +2,20 @@
 
 namespace App\Http\Requests;
 
+use App\Models\NotificationTemplate;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreNotificationTemplateVersionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $template = $this->route('notificationTemplate');
+
+        return $template instanceof NotificationTemplate
+            && $this->user()?->can(
+                'createBackoffice',
+                $template,
+            ) === true;
     }
 
     /**

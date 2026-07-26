@@ -11,6 +11,8 @@ use App\Models\NotificationTemplateVersion;
 use App\Models\OfficialNotification;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\CommunicationMunicipalContextService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Support\AuditEvents;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +23,8 @@ class CommunicationLogService
     public function __construct(
         private readonly CommunicationNumberService $numbers,
         private readonly AuditLogger $audit,
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly CommunicationMunicipalContextService $municipalContext,
     ) {}
 
     /**
@@ -38,7 +42,22 @@ class CommunicationLogService
         bool $official = true,
         bool $requiresAcknowledgement = false,
     ): CommunicationLog {
+        $municipalityId = $this->municipalContext->forSources(
+            creator: $actor,
+            related: $related,
+            recipient: $recipient,
+            template: $template,
+            version: $version,
+        );
+
+        if ($municipalityId === null) {
+            throw ValidationException::withMessages([
+                'recipient_user_id' => 'A origem municipal da comunicação não é coerente com o destinatário e o contexto selecionados.',
+            ]);
+        }
+
         $communication = new CommunicationLog([
+            'municipality_id' => $municipalityId,
             'event_code' => $eventCode,
             'recipient_user_id' => $recipient->id,
             'recipient_name' => $recipient->name,
@@ -97,7 +116,10 @@ class CommunicationLogService
     /** @param array<string, mixed> $data */
     public function storeManual(array $data, User $actor): CommunicationLog
     {
-        $recipient = User::query()
+        abort_unless($actor->hasPermission('communications.create'), 403);
+
+        $recipient = $this->municipalScope
+            ->users(User::query(), $actor)
             ->whereKey($data['recipient_user_id'] ?? null)
             ->firstOrFail();
 
@@ -113,6 +135,15 @@ class CommunicationLogService
 
     public function cancel(CommunicationLog $communication, User $actor): CommunicationLog
     {
+        abort_unless(
+            $actor->hasPermission('communications.cancel')
+                && $this->municipalScope->ownsCommunicationLog(
+                    $actor,
+                    $communication,
+                ),
+            403,
+        );
+
         if ($communication->status === CommunicationStatus::Sent) {
             throw ValidationException::withMessages(['communication' => 'Uma comunicação enviada não pode ser cancelada.']);
         }
@@ -131,9 +162,27 @@ class CommunicationLogService
         return $result;
     }
 
-    public function archive(CommunicationLog $communication): CommunicationLog
-    {
+    public function archive(
+        CommunicationLog $communication,
+        User $actor,
+    ): CommunicationLog {
+        abort_unless(
+            $actor->hasPermission('communications.archive')
+                && $this->municipalScope->ownsCommunicationLog(
+                    $actor,
+                    $communication,
+                ),
+            403,
+        );
+
         $communication->forceFill(['status' => CommunicationStatus::Archived, 'archived_at' => now()])->save();
+        $this->audit->record(
+            AuditEvents::UPDATE,
+            $communication,
+            'notifications',
+            'communication_archived',
+            'Comunicação arquivada.',
+        );
 
         return $communication->refresh();
     }

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\CommunicationChannel;
 use App\Enums\NotificationPriority;
+use App\Models\CommunicationLog;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,7 +12,10 @@ class StoreCommunicationLogRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can(
+            'createBackoffice',
+            CommunicationLog::class,
+        ) === true;
     }
 
     /**

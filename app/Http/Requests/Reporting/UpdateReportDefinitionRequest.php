@@ -6,6 +6,9 @@ class UpdateReportDefinitionRequest extends StoreReportDefinitionRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('update', $this->route('reportDefinition')) ?? false;
+        return $this->user()?->can(
+            'updateBackoffice',
+            $this->route('reportDefinition'),
+        ) === true;
     }
 }

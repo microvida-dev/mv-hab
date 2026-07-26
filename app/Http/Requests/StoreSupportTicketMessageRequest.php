@@ -13,7 +13,16 @@ class StoreSupportTicketMessageRequest extends FormRequest
     {
         $ticket = $this->route('supportTicket');
 
-        return $ticket instanceof SupportTicket && ($this->user()?->can('update', $ticket) ?? false);
+        if (! $ticket instanceof SupportTicket) {
+            return false;
+        }
+
+        return $this->routeIs('backoffice.support-ticket-messages.store')
+            ? $this->user()?->can(
+                'messageBackoffice',
+                $ticket,
+            ) === true
+            : $this->user()?->can('update', $ticket) === true;
     }
 
     /**

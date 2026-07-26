@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ProcedureMinute;
 use Illuminate\Foundation\Http\FormRequest;
 
 class GenerateProcedureMinuteRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasPermissionTo('documents', 'create') === true;
+        return $this->user()?->can('create', ProcedureMinute::class) === true;
     }
 
     /**

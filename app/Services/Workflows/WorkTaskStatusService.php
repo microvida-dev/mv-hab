@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\WorkTask;
 use App\Models\WorkTaskHistory;
 use App\Services\Audit\AuditTrailService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use DomainException;
 
 class WorkTaskStatusService
@@ -20,7 +21,10 @@ class WorkTaskStatusService
         WorkTask::STATUS_WAITING_EXTERNAL,
     ];
 
-    public function __construct(private readonly AuditTrailService $audit) {}
+    public function __construct(
+        private readonly AuditTrailService $audit,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
     public function start(WorkTask $task, User $actor, ?string $note = null): WorkTask
     {
@@ -73,6 +77,12 @@ class WorkTaskStatusService
      */
     private function transition(WorkTask $task, User $actor, string $status, string $eventCode, string $note, array $extraValues = []): WorkTask
     {
+        abort_unless(
+            $actor->hasPermission('work_tasks.update_status')
+                && $this->municipalScope->ownsWorkTask($actor, $task),
+            403,
+        );
+
         if (! $task->isActive()) {
             throw new DomainException('A tarefa já não está ativa.');
         }

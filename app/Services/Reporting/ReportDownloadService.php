@@ -14,10 +14,10 @@ use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Security\AccessLogService;
 use App\Services\Security\SensitiveDataAccessService;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ReportDownloadService
 {
@@ -36,12 +36,12 @@ class ReportDownloadService
         $export->loadMissing('run.definition');
         $run = $export->getRelationValue('run');
         if (! $run instanceof ReportRun) {
-            throw new FileNotFoundException('A exportação não tem execução associada.');
+            throw new NotFoundHttpException('A exportação não tem execução associada.');
         }
 
         $definition = $run->getRelationValue('definition');
         if (! $definition instanceof ReportDefinition) {
-            throw new FileNotFoundException('A exportação não tem relatório associado.');
+            throw new NotFoundHttpException('A exportação não tem relatório associado.');
         }
 
         if (
@@ -51,8 +51,17 @@ class ReportDownloadService
             throw new AuthorizationException;
         }
 
-        if ($export->expires_at?->isPast() || ! Storage::disk($export->disk)->exists($export->file_path)) {
-            throw new FileNotFoundException('A exportação expirou ou deixou de estar disponível.');
+        $disk = (string) $export->disk;
+        $path = ltrim((string) $export->file_path, '/');
+
+        if (
+            $disk !== 'local'
+            || $path === ''
+            || str_contains($path, '..')
+            || $export->expires_at?->isPast()
+            || ! Storage::disk($disk)->exists($path)
+        ) {
+            throw new NotFoundHttpException('A exportação expirou ou deixou de estar disponível.');
         }
 
         ReportDownloadLog::query()->create([
@@ -72,6 +81,9 @@ class ReportDownloadService
         $this->accessLogs->record(AccessLogType::ExportDownload, $user, $export, 200);
         $this->sensitiveAccess->record($user, $export, 'export', null, 'sensitive', 'Download de exportação de relatório.');
 
-        return Storage::disk($export->disk)->download($export->file_path, $export->file_name);
+        return Storage::disk($disk)->download(
+            $path,
+            basename((string) $export->file_name),
+        );
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCommunicationLogRequest;
 use App\Models\CommunicationLog;
 use App\Models\User;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Notifications\CommunicationDeliveryService;
 use App\Services\Notifications\CommunicationLogService;
 use App\Services\Notifications\OfficialNotificationService;
@@ -22,12 +23,17 @@ class CommunicationLogController extends Controller
         private readonly CommunicationLogService $service,
         private readonly CommunicationDeliveryService $deliveries,
         private readonly OfficialNotificationService $notifications,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
     public function index(Request $request): View
     {
-        Gate::authorize('viewAny', CommunicationLog::class);
-        $query = CommunicationLog::query()->with('recipient')->latest();
+        Gate::authorize('viewAnyBackoffice', CommunicationLog::class);
+        $user = $this->authenticatedUser($request);
+        $query = $this->municipalScope
+            ->communicationLogs(CommunicationLog::query(), $user)
+            ->with('recipient')
+            ->latest();
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
         }
@@ -37,14 +43,18 @@ class CommunicationLogController extends Controller
 
         return view('backoffice.communications.logs.index', [
             'communications' => $query->paginate(25)->withQueryString(),
-            'users' => User::query()->orderBy('name')->limit(100)->get(),
+            'users' => $this->municipalScope
+                ->users(User::query(), $user)
+                ->orderBy('name')
+                ->limit(100)
+                ->get(),
             'channels' => CommunicationChannel::options(),
         ]);
     }
 
     public function show(CommunicationLog $communicationLog): View
     {
-        Gate::authorize('view', $communicationLog);
+        Gate::authorize('viewBackoffice', $communicationLog);
         $communicationLog->load(['recipient', 'deliveries.attempts', 'receipts', 'templateVersion']);
 
         return view('backoffice.communications.logs.show', compact('communicationLog'));
@@ -52,7 +62,17 @@ class CommunicationLogController extends Controller
 
     public function store(StoreCommunicationLogRequest $request): RedirectResponse
     {
-        Gate::authorize('create', CommunicationLog::class);
+        Gate::authorize('createBackoffice', CommunicationLog::class);
+        abort_unless(
+            $this->municipalScope
+                ->users(
+                    User::query(),
+                    $this->authenticatedUser($request),
+                )
+                ->whereKey($request->integer('recipient_user_id'))
+                ->exists(),
+            422,
+        );
         $communication = $this->service->storeManual($request->validated(), $this->authenticatedUser($request));
         $channel = CommunicationChannel::from($request->validated('channel'));
 
@@ -82,7 +102,7 @@ class CommunicationLogController extends Controller
 
     public function cancel(CommunicationLog $communicationLog): RedirectResponse
     {
-        Gate::authorize('update', $communicationLog);
+        Gate::authorize('cancelBackoffice', $communicationLog);
         $this->service->cancel($communicationLog, $this->currentUser());
 
         return back()->with('success', 'Comunicação cancelada.');
@@ -90,8 +110,8 @@ class CommunicationLogController extends Controller
 
     public function archive(CommunicationLog $communicationLog): RedirectResponse
     {
-        Gate::authorize('update', $communicationLog);
-        $this->service->archive($communicationLog);
+        Gate::authorize('archiveBackoffice', $communicationLog);
+        $this->service->archive($communicationLog, $this->currentUser());
 
         return back()->with('success', 'Comunicação arquivada.');
     }

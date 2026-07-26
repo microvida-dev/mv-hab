@@ -9,9 +9,11 @@ use App\Models\CommunicationReceipt;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CommunicationReceiptService
 {
@@ -73,11 +75,34 @@ class CommunicationReceiptService
 
     public function download(CommunicationReceipt $receipt, User $actor): StreamedResponse
     {
+        $disk = (string) $receipt->storage_disk;
+        $path = ltrim((string) $receipt->storage_path, '/');
+
+        if (
+            $disk !== 'local'
+            || $path === ''
+            || str_contains($path, '..')
+            || ! $this->storage($disk)->exists($path)
+        ) {
+            throw new NotFoundHttpException(
+                'O comprovativo deixou de estar disponível.',
+            );
+        }
+
         $this->audit->record(AuditEvents::ACCESS, $receipt, 'notifications', 'communication_receipt_download', 'Comprovativo de comunicação descarregado.');
 
-        return Storage::disk($receipt->storage_disk)->download(
-            $receipt->storage_path,
-            $receipt->receipt_number.'.'.($receipt->mime_type === 'text/html' ? 'html' : 'bin'),
+        return $this->storage($disk)->download(
+            $path,
+            basename(
+                $receipt->receipt_number.'.'.(
+                    $receipt->mime_type === 'text/html' ? 'html' : 'bin'
+                ),
+            ),
         );
+    }
+
+    private function storage(string $disk): FilesystemAdapter
+    {
+        return Storage::disk($disk);
     }
 }

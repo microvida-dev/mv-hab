@@ -13,7 +13,8 @@ class UpdateSupportTicketStatusRequest extends FormRequest
     {
         $ticket = $this->route('supportTicket');
 
-        return $ticket instanceof SupportTicket && ($this->user()?->can('resolve', $ticket) ?? false);
+        return $ticket instanceof SupportTicket
+            && $this->user()?->can('resolveBackoffice', $ticket) === true;
     }
 
     /**

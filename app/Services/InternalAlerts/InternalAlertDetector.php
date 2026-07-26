@@ -9,16 +9,31 @@ use App\Models\Application;
 use App\Models\DocumentSubmission;
 use App\Models\SupportTicket;
 use App\Models\User;
+use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
+use App\Support\AuditEvents;
 
 class InternalAlertDetector
 {
-    public function __construct(private readonly InternalAlertService $alerts) {}
+    public function __construct(
+        private readonly InternalAlertService $alerts,
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly AuditLogger $audit,
+    ) {}
 
     public function detect(User $actor): int
     {
+        abort_unless(
+            $actor->hasPermission('internal_alerts.detect')
+                && $this->municipalScope
+                    ->hasMunicipalOrGlobalScope($actor),
+            403,
+        );
+
         $count = 0;
 
-        DocumentSubmission::query()
+        $this->municipalScope
+            ->documentSubmissions(DocumentSubmission::query(), $actor)
             ->whereIn('status', [DocumentStatus::Submitted->value, DocumentStatus::UnderReview->value])
             ->whereNotNull('application_id')
             ->limit(20)
@@ -36,7 +51,8 @@ class InternalAlertDetector
                 $count++;
             });
 
-        Application::query()
+        $this->municipalScope
+            ->applications(Application::query(), $actor)
             ->whereDoesntHave('administrativeProcess')
             ->whereIn('status', ['submitted', 'under_review'])
             ->limit(20)
@@ -54,7 +70,8 @@ class InternalAlertDetector
                 $count++;
             });
 
-        SupportTicket::query()
+        $this->municipalScope
+            ->supportTickets(SupportTicket::query(), $actor)
             ->whereIn('status', ['open', 'pending_staff', 'in_progress'])
             ->limit(20)
             ->get()
@@ -70,6 +87,17 @@ class InternalAlertDetector
                 );
                 $count++;
             });
+
+        $this->audit->record(
+            AuditEvents::CREATE,
+            module: 'notifications',
+            action: 'internal_alert_detection',
+            description: 'Deteção manual de alertas internos executada.',
+            metadata: [
+                'actor_id' => $actor->id,
+                'alerts_processed' => $count,
+            ],
+        );
 
         return $count;
     }

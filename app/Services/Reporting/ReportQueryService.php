@@ -90,6 +90,13 @@ class ReportQueryService
     public function housingOccupancy(array $filters): array
     {
         return HousingUnit::query()
+            ->when(
+                $filters['municipality_id'] ?? null,
+                fn ($query, $municipalityId) => $query->where(
+                    'municipality_id',
+                    (int) $municipalityId,
+                ),
+            )
             ->when($filters['location'] ?? null, fn ($query, $location) => $query->where('address', 'like', '%'.$location.'%'))
             ->select('typology as Tipologia', 'status as Estado', DB::raw('COUNT(*) as Total'))
             ->groupBy('typology', 'status')->orderBy('typology')->get()->map->toArray()->all();

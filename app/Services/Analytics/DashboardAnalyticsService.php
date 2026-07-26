@@ -3,6 +3,8 @@
 namespace App\Services\Analytics;
 
 use App\Models\User;
+use App\Services\Municipalities\MunicipalRecordScopeService;
+use Illuminate\Auth\Access\AuthorizationException;
 
 class DashboardAnalyticsService
 {
@@ -17,6 +19,7 @@ class DashboardAnalyticsService
         private readonly OperationalStatisticsService $statistics,
         private readonly MunicipalInsightsService $insights,
         private readonly ProfileAnalyticsService $profiles,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
     /**
@@ -25,6 +28,14 @@ class DashboardAnalyticsService
      */
     public function forUser(User $user, array $filters): array
     {
+        if (! $this->municipalScope->hasMunicipalOrGlobalScope($user)) {
+            throw new AuthorizationException;
+        }
+
+        if ($user->municipality_id !== null) {
+            $filters['municipality_id'] = (int) $user->municipality_id;
+        }
+
         $snapshot = $this->metrics->snapshot($filters);
         $kpis = is_array($snapshot['kpis'] ?? null) ? $snapshot['kpis'] : [];
 

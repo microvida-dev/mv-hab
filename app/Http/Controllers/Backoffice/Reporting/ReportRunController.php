@@ -11,6 +11,7 @@ use App\Http\Requests\Reporting\RunReportRequest;
 use App\Models\ReportDefinition;
 use App\Models\ReportRun;
 use App\Services\Municipalities\MunicipalRecordScopeService;
+use App\Services\Reporting\ReportPermissionService;
 use App\Services\Reporting\ReportRunService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -21,18 +22,18 @@ class ReportRunController extends Controller
     public function __construct(
         private readonly ReportRunService $runs,
         private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly ReportPermissionService $permissions,
     ) {}
 
     public function index(): View
     {
-        Gate::authorize('viewAny', ReportRun::class);
-
-        $allowedReportIds = ReportDefinition::query()
-            ->get()
-            ->filter(
-                fn (ReportDefinition $report): bool => $this->currentUser()->can('view', $report)
+        Gate::authorize('viewAnyBackoffice', ReportRun::class);
+        $allowedReportIds = $this->permissions
+            ->visibleReports(
+                ReportDefinition::query(),
+                $this->currentUser(),
             )
-            ->pluck('id');
+            ->select('id');
 
         return view('backoffice.reports.runs.index', [
             'runs' => $this->municipalScope
@@ -51,6 +52,7 @@ class ReportRunController extends Controller
         RunReportRequest $request,
         ReportDefinition $reportDefinition,
     ): RedirectResponse {
+        Gate::authorize('runBackoffice', $reportDefinition);
         $result = $this->runs->run(
             $reportDefinition,
             $this->authenticatedUser($request),
@@ -67,7 +69,7 @@ class ReportRunController extends Controller
 
     public function show(ReportRun $reportRun): View
     {
-        Gate::authorize('view', $reportRun);
+        Gate::authorize('viewBackoffice', $reportRun);
 
         return view('backoffice.reports.runs.show', [
             'run' => $reportRun->load([

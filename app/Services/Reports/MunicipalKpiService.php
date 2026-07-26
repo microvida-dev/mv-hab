@@ -2,6 +2,8 @@
 
 namespace App\Services\Reports;
 
+use App\Models\DefinitiveList;
+use App\Models\ProvisionalList;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -72,7 +74,19 @@ class MunicipalKpiService
      */
     public function allowedFilters(): array
     {
-        return ['program_id', 'contest_id', 'status', 'typology', 'parish', 'date_from', 'date_to', 'municipal_team_id', 'assigned_user_id', 'sla'];
+        return [
+            'program_id',
+            'contest_id',
+            'status',
+            'typology',
+            'parish',
+            'date_from',
+            'date_to',
+            'municipal_team_id',
+            'assigned_user_id',
+            'sla',
+            'municipality_id',
+        ];
     }
 
     /**
@@ -239,6 +253,14 @@ class MunicipalKpiService
      */
     private function applyStandardFilters(Builder $query, string $table, array $filters, ?string $dateColumn): void
     {
+        if (isset($filters['municipality_id'])) {
+            $this->applyMunicipalityFilter(
+                $query,
+                $table,
+                (int) $filters['municipality_id'],
+            );
+        }
+
         foreach (['program_id', 'contest_id', 'status', 'municipal_team_id', 'assigned_user_id'] as $column) {
             if (isset($filters[$column]) && Schema::hasColumn($table, $column)) {
                 $query->where($table.'.'.$column, $filters[$column]);
@@ -262,5 +284,191 @@ class MunicipalKpiService
                 $query->whereDate($table.'.'.$dateColumn, '<=', (string) $filters['date_to']);
             }
         }
+    }
+
+    private function applyMunicipalityFilter(
+        Builder $query,
+        string $table,
+        int $municipalityId,
+    ): void {
+        if (Schema::hasColumn($table, 'municipality_id')) {
+            $query->where($table.'.municipality_id', $municipalityId);
+
+            return;
+        }
+
+        match ($table) {
+            'programs' => $query->where(
+                'programs.municipality_id',
+                $municipalityId,
+            ),
+            'contests', 'applications', 'contracts' => $query->whereIn(
+                $table.'.program_id',
+                DB::table('programs')
+                    ->where('municipality_id', $municipalityId)
+                    ->select('id'),
+            ),
+            'document_submissions',
+            'correction_requests',
+            'complaints',
+            'hearings',
+            'eligibility_checks',
+            'scoring_runs',
+            'allocation_offers' => $query->whereIn(
+                $table.'.application_id',
+                $this->municipalApplicationIds($municipalityId),
+            ),
+            'rent_installments' => $query->whereIn(
+                $table.'.lease_contract_id',
+                $this->municipalContractIds($municipalityId),
+            ),
+            'maintenance_requests',
+            'property_inspections' => $query->whereIn(
+                $table.'.housing_unit_id',
+                DB::table('housing_units')
+                    ->where('municipality_id', $municipalityId)
+                    ->select('id'),
+            ),
+            'work_tasks' => $query->where(
+                function (Builder $tasks) use ($municipalityId): void {
+                    $tasks
+                        ->whereIn(
+                            'work_tasks.municipal_team_id',
+                            DB::table('municipal_teams')
+                                ->where(
+                                    'municipality_id',
+                                    $municipalityId,
+                                )
+                                ->select('id'),
+                        )
+                        ->orWhere(function (Builder $assigned) use (
+                            $municipalityId,
+                        ): void {
+                            $assigned
+                                ->whereNull('work_tasks.municipal_team_id')
+                                ->whereIn(
+                                    'work_tasks.assigned_user_id',
+                                    $this->municipalUserIds(
+                                        $municipalityId,
+                                    ),
+                                );
+                        })
+                        ->orWhere(function (Builder $created) use (
+                            $municipalityId,
+                        ): void {
+                            $created
+                                ->whereNull('work_tasks.municipal_team_id')
+                                ->whereNull('work_tasks.assigned_user_id')
+                                ->whereIn(
+                                    'work_tasks.created_by',
+                                    $this->municipalUserIds(
+                                        $municipalityId,
+                                    ),
+                                );
+                        });
+                },
+            ),
+            'support_tickets' => $query->whereIn(
+                'support_tickets.user_id',
+                $this->municipalUserIds($municipalityId),
+            ),
+            'audit_events' => $query->whereIn(
+                'audit_events.actor_id',
+                $this->municipalUserIds($municipalityId),
+            ),
+            'list_publications' => $this->applyListPublicationMunicipality(
+                $query,
+                $municipalityId,
+            ),
+            default => $query->whereRaw('1 = 0'),
+        };
+    }
+
+    private function municipalApplicationIds(int $municipalityId): Builder
+    {
+        return DB::table('applications')
+            ->whereIn(
+                'program_id',
+                DB::table('programs')
+                    ->where('municipality_id', $municipalityId)
+                    ->select('id'),
+            )
+            ->select('id');
+    }
+
+    private function municipalContractIds(int $municipalityId): Builder
+    {
+        return DB::table('contracts')
+            ->whereIn(
+                'program_id',
+                DB::table('programs')
+                    ->where('municipality_id', $municipalityId)
+                    ->select('id'),
+            )
+            ->select('id');
+    }
+
+    private function municipalUserIds(int $municipalityId): Builder
+    {
+        return DB::table('users')
+            ->where('municipality_id', $municipalityId)
+            ->select('id');
+    }
+
+    private function applyListPublicationMunicipality(
+        Builder $query,
+        int $municipalityId,
+    ): void {
+        $query->where(function (Builder $publications) use (
+            $municipalityId,
+        ): void {
+            $publications
+                ->where(function (Builder $provisional) use (
+                    $municipalityId,
+                ): void {
+                    $provisional
+                        ->where(
+                            'list_publications.publishable_type',
+                            (new ProvisionalList)->getMorphClass(),
+                        )
+                        ->whereIn(
+                            'list_publications.publishable_id',
+                            DB::table('provisional_lists')
+                                ->whereIn(
+                                    'program_id',
+                                    DB::table('programs')
+                                        ->where(
+                                            'municipality_id',
+                                            $municipalityId,
+                                        )
+                                        ->select('id'),
+                                )
+                                ->select('id'),
+                        );
+                })
+                ->orWhere(function (Builder $definitive) use (
+                    $municipalityId,
+                ): void {
+                    $definitive
+                        ->where(
+                            'list_publications.publishable_type',
+                            (new DefinitiveList)->getMorphClass(),
+                        )
+                        ->whereIn(
+                            'list_publications.publishable_id',
+                            DB::table('definitive_lists')
+                                ->whereIn(
+                                    'program_id',
+                                    DB::table('programs')
+                                        ->where(
+                                            'municipality_id',
+                                            $municipalityId,
+                                        )
+                                        ->select('id'),
+                                )
+                                ->select('id'),
+                        );
+                });
+        });
     }
 }

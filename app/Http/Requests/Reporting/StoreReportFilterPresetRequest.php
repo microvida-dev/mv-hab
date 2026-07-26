@@ -9,7 +9,10 @@ class StoreReportFilterPresetRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', ReportFilterPreset::class) ?? false;
+        return $this->user()?->can(
+            'createBackoffice',
+            ReportFilterPreset::class,
+        ) === true;
     }
 
     /**

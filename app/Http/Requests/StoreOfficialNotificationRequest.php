@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\OfficialNotificationChannel;
 use App\Enums\OfficialNotificationType;
+use App\Models\OfficialNotification;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,7 +12,10 @@ class StoreOfficialNotificationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can(
+            'createBackoffice',
+            OfficialNotification::class,
+        ) === true;
     }
 
     /**

@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
+ * @property int|null $municipality_id
  * @property CommunicationStatus $status
  * @property NotificationPriority $priority
  * @property string $event_code
@@ -62,6 +63,18 @@ class CommunicationLog extends Model
     public function recipient(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recipient_user_id');
+    }
+
+    /** @return BelongsTo<Municipality, $this> */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     /** @return MorphTo<Model, $this> */

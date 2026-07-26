@@ -9,7 +9,10 @@ use App\Models\Application;
 use App\Models\Contest;
 use App\Models\ProcedureMinute;
 use App\Models\ProcedureTemplate;
+use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\ProcedureMinutes\ProcedureMinuteService;
+use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -18,21 +21,29 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProcedureMinuteController extends Controller
 {
-    public function __construct(private readonly ProcedureMinuteService $minutes) {}
+    public function __construct(
+        private readonly ProcedureMinuteService $minutes,
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly AuditLogger $audit,
+    ) {}
 
     public function index(): View
     {
-        Gate::authorize('viewAny', ProcedureMinute::class);
-        $minutes = ProcedureMinute::query()
+        Gate::authorize('viewAnyBackoffice', ProcedureMinute::class);
+        $user = $this->currentUser();
+        $minutes = $this->municipalScope
+            ->procedureMinutes(ProcedureMinute::query(), $user)
             ->with(['contest', 'application.user', 'template'])
             ->latest()
             ->paginate(20);
         $templates = ProcedureTemplate::query()->where('type', 'procedure_minute')->latest()->get();
-        $contests = Contest::query()
+        $contests = $this->municipalScope
+            ->contests(Contest::query(), $user)
             ->latest()
             ->limit(100)
             ->get(['id', 'code', 'title', 'status']);
-        $applications = Application::query()
+        $applications = $this->municipalScope
+            ->applications(Application::query(), $user)
             ->with('user')
             ->latest()
             ->limit(100)
@@ -51,7 +62,7 @@ class ProcedureMinuteController extends Controller
 
     public function show(ProcedureMinute $procedureMinute): View
     {
-        Gate::authorize('view', $procedureMinute);
+        Gate::authorize('viewBackoffice', $procedureMinute);
         $procedureMinute->loadMissing(['contest', 'application.user', 'template']);
 
         return view('backoffice.procedure-minutes.show', compact('procedureMinute'));
@@ -59,7 +70,7 @@ class ProcedureMinuteController extends Controller
 
     public function approve(ApproveProcedureMinuteRequest $request, ProcedureMinute $procedureMinute): RedirectResponse
     {
-        Gate::authorize('approve', $procedureMinute);
+        Gate::authorize('approveBackoffice', $procedureMinute);
         $this->minutes->approve($procedureMinute, $this->authenticatedUser($request));
 
         return back()->with('success', 'Ata aprovada.');
@@ -67,15 +78,31 @@ class ProcedureMinuteController extends Controller
 
     public function download(ProcedureMinute $procedureMinute): StreamedResponse
     {
-        Gate::authorize('download', $procedureMinute);
-        abort_if($procedureMinute->file_path === null || ! Storage::disk('local')->exists($procedureMinute->file_path), 404);
+        Gate::authorize('downloadBackoffice', $procedureMinute);
+        $path = ltrim((string) $procedureMinute->file_path, '/');
+        abort_if(
+            $path === ''
+                || str_contains($path, '..')
+                || ! Storage::disk('local')->exists($path),
+            404,
+        );
+        $this->audit->record(
+            AuditEvents::ACCESS,
+            $procedureMinute,
+            'documents',
+            'procedure_minute_downloaded',
+            'Ata do procedimento descarregada.',
+        );
 
-        return Storage::disk('local')->download($procedureMinute->file_path, $procedureMinute->minute_number.'.html');
+        return Storage::disk('local')->download(
+            $path,
+            basename($procedureMinute->minute_number.'.html'),
+        );
     }
 
     public function destroy(ProcedureMinute $procedureMinute): RedirectResponse
     {
-        Gate::authorize('delete', $procedureMinute);
+        Gate::authorize('deleteBackoffice', $procedureMinute);
 
         $this->minutes->delete($procedureMinute, $this->currentUser());
 

@@ -10,7 +10,10 @@ class RunReportRequest extends DashboardFilterRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('run', $this->route('reportDefinition')) ?? false;
+        return $this->user()?->can(
+            'runBackoffice',
+            $this->route('reportDefinition'),
+        ) === true;
     }
 
     /**

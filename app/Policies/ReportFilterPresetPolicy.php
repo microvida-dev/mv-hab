@@ -31,4 +31,30 @@ class ReportFilterPresetPolicy
     {
         return $this->view($user, $preset);
     }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return $user->hasPermission('report_filter_presets.view');
+    }
+
+    public function createBackoffice(User $user): bool
+    {
+        return $user->hasPermission('report_filter_presets.create');
+    }
+
+    public function updateBackoffice(
+        User $user,
+        ReportFilterPreset $preset,
+    ): bool {
+        return $user->hasPermission('report_filter_presets.update')
+            && $preset->user_id === $user->getKey();
+    }
+
+    public function deleteBackoffice(
+        User $user,
+        ReportFilterPreset $preset,
+    ): bool {
+        return $user->hasPermission('report_filter_presets.delete')
+            && $preset->user_id === $user->getKey();
+    }
 }

@@ -14,7 +14,10 @@ class StoreReportDefinitionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', ReportDefinition::class) ?? false;
+        return $this->user()?->can(
+            'createBackoffice',
+            ReportDefinition::class,
+        ) === true;
     }
 
     /**

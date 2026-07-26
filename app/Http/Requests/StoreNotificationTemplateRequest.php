@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\CommunicationChannel;
 use App\Enums\TemplateType;
+use App\Models\NotificationTemplate;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,7 +12,17 @@ class StoreNotificationTemplateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $template = $this->route('notificationTemplate');
+
+        return $template instanceof NotificationTemplate
+            ? $this->user()?->can(
+                'updateBackoffice',
+                $template,
+            ) === true
+            : $this->user()?->can(
+                'createBackoffice',
+                NotificationTemplate::class,
+            ) === true;
     }
 
     /**

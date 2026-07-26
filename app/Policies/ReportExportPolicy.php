@@ -16,7 +16,7 @@ class ReportExportPolicy
 
     public function viewAny(User $user): bool
     {
-        return ! $user->hasRole('candidate') && $user->hasPermission('reports.view');
+        return $user->hasPermission('reports.view');
     }
 
     public function view(User $user, ReportExport $export): bool
@@ -32,7 +32,8 @@ class ReportExportPolicy
 
     public function download(User $user, ReportExport $export): bool
     {
-        return $this->permissions->canExport($user, $export->run->definition, $export->scope)
+        return ! $user->hasRole('auditor')
+            && $this->permissions->canExport($user, $export->run->definition, $export->scope)
             && $this->municipalScope->ownsReportExport($user, $export);
     }
 }

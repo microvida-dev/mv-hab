@@ -2,6 +2,7 @@
 
 namespace App\Services\Analytics;
 
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -26,6 +27,13 @@ class OperationalStatisticsService
         $query = DB::table('applications')
             ->join('contests', 'contests.id', '=', 'applications.contest_id')
             ->join('programs', 'programs.id', '=', 'applications.program_id');
+
+        if (isset($filters['municipality_id'])) {
+            $query->where(
+                'programs.municipality_id',
+                (int) $filters['municipality_id'],
+            );
+        }
 
         foreach (['program_id', 'contest_id', 'status'] as $column) {
             if (isset($filters[$column]) && Schema::hasColumn('applications', $column)) {
@@ -66,7 +74,17 @@ class OperationalStatisticsService
                 continue;
             }
 
-            DB::table($table)
+            $query = DB::table($table);
+
+            if (isset($filters['municipality_id'])) {
+                $this->applyMunicipalityFilter(
+                    $query,
+                    $table,
+                    (int) $filters['municipality_id'],
+                );
+            }
+
+            $query
                 ->select($statusColumn.' as status')
                 ->selectRaw('COUNT(*) as total')
                 ->groupBy($statusColumn)
@@ -83,5 +101,49 @@ class OperationalStatisticsService
         }
 
         return array_slice($rows, 0, 12);
+    }
+
+    private function applyMunicipalityFilter(
+        Builder $query,
+        string $table,
+        int $municipalityId,
+    ): void {
+        match ($table) {
+            'document_submissions' => $query->whereIn(
+                'document_submissions.application_id',
+                $this->municipalApplicationIds($municipalityId),
+            ),
+            'support_tickets' => $query->whereIn(
+                'support_tickets.user_id',
+                $this->municipalUserIds($municipalityId),
+            ),
+            'maintenance_requests',
+            'property_inspections' => $query->whereIn(
+                $table.'.housing_unit_id',
+                DB::table('housing_units')
+                    ->where('municipality_id', $municipalityId)
+                    ->select('id'),
+            ),
+            default => $query->whereRaw('1 = 0'),
+        };
+    }
+
+    private function municipalApplicationIds(int $municipalityId): Builder
+    {
+        return DB::table('applications')
+            ->whereIn(
+                'program_id',
+                DB::table('programs')
+                    ->where('municipality_id', $municipalityId)
+                    ->select('id'),
+            )
+            ->select('id');
+    }
+
+    private function municipalUserIds(int $municipalityId): Builder
+    {
+        return DB::table('users')
+            ->where('municipality_id', $municipalityId)
+            ->select('id');
     }
 }

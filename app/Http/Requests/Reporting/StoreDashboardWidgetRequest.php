@@ -11,7 +11,10 @@ class StoreDashboardWidgetRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', DashboardWidget::class) ?? false;
+        return $this->user()?->can(
+            'createBackoffice',
+            DashboardWidget::class,
+        ) === true;
     }
 
     /**

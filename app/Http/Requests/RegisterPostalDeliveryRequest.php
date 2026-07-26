@@ -2,13 +2,20 @@
 
 namespace App\Http\Requests;
 
+use App\Models\CommunicationDelivery;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RegisterPostalDeliveryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $delivery = $this->route('communicationDelivery');
+
+        return $delivery instanceof CommunicationDelivery
+            && $this->user()?->can(
+                'registerPostalBackoffice',
+                $delivery,
+            ) === true;
     }
 
     /**

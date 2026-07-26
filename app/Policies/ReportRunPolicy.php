@@ -24,4 +24,17 @@ class ReportRunPolicy
         return $this->permissions->canViewReport($user, $run->definition)
             && $this->municipalScope->ownsReportRun($user, $run);
     }
+
+    public function viewAnyBackoffice(User $user): bool
+    {
+        return $user->hasPermission('reports.view')
+            && $this->municipalScope->hasMunicipalOrGlobalScope($user);
+    }
+
+    public function viewBackoffice(User $user, ReportRun $run): bool
+    {
+        return $this->viewAnyBackoffice($user)
+            && $this->permissions->canViewReport($user, $run->definition)
+            && $this->municipalScope->ownsReportRun($user, $run);
+    }
 }

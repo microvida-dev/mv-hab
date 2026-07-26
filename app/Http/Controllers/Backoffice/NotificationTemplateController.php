@@ -10,28 +10,42 @@ use App\Http\Requests\UpdateNotificationTemplateRequest;
 use App\Models\NotificationTemplate;
 use App\Models\NotificationTemplateVersion;
 use App\Models\TemplateVariable;
+use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Notifications\NotificationTemplateService;
 use App\Services\Notifications\TemplateRenderingService;
+use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 
 class NotificationTemplateController extends Controller
 {
-    public function __construct(private readonly NotificationTemplateService $service) {}
+    public function __construct(
+        private readonly NotificationTemplateService $service,
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly AuditLogger $audit,
+    ) {}
 
     public function index(): View
     {
-        Gate::authorize('viewAny', NotificationTemplate::class);
+        Gate::authorize('viewAnyBackoffice', NotificationTemplate::class);
 
         return view('backoffice.communications.templates.index', [
-            'templates' => NotificationTemplate::query()->with('activeVersion')->latest()->paginate(20),
+            'templates' => $this->municipalScope
+                ->notificationTemplates(
+                    NotificationTemplate::query(),
+                    $this->currentUser(),
+                )
+                ->with('activeVersion')
+                ->latest()
+                ->paginate(20),
         ]);
     }
 
     public function create(): View
     {
-        Gate::authorize('create', NotificationTemplate::class);
+        Gate::authorize('createBackoffice', NotificationTemplate::class);
 
         return view('backoffice.communications.templates.create', [
             'channels' => CommunicationChannel::options(),
@@ -41,7 +55,7 @@ class NotificationTemplateController extends Controller
 
     public function store(StoreNotificationTemplateRequest $request): RedirectResponse
     {
-        Gate::authorize('create', NotificationTemplate::class);
+        Gate::authorize('createBackoffice', NotificationTemplate::class);
         $template = $this->service->store($request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.communications.templates.show', $template)->with('success', 'Template criado.');
@@ -49,7 +63,7 @@ class NotificationTemplateController extends Controller
 
     public function show(NotificationTemplate $notificationTemplate): View
     {
-        Gate::authorize('view', $notificationTemplate);
+        Gate::authorize('viewBackoffice', $notificationTemplate);
         $notificationTemplate->load(['versions', 'activeVersion', 'eventRules']);
 
         return view('backoffice.communications.templates.show', compact('notificationTemplate'));
@@ -57,7 +71,7 @@ class NotificationTemplateController extends Controller
 
     public function edit(NotificationTemplate $notificationTemplate): View
     {
-        Gate::authorize('update', $notificationTemplate);
+        Gate::authorize('updateBackoffice', $notificationTemplate);
 
         return view('backoffice.communications.templates.edit', [
             'notificationTemplate' => $notificationTemplate,
@@ -68,7 +82,7 @@ class NotificationTemplateController extends Controller
 
     public function update(UpdateNotificationTemplateRequest $request, NotificationTemplate $notificationTemplate): RedirectResponse
     {
-        Gate::authorize('update', $notificationTemplate);
+        Gate::authorize('updateBackoffice', $notificationTemplate);
         $this->service->update($notificationTemplate, $request->validated(), $this->authenticatedUser($request));
 
         return to_route('backoffice.communications.templates.show', $notificationTemplate)->with('success', 'Template atualizado com nova versão.');
@@ -76,7 +90,7 @@ class NotificationTemplateController extends Controller
 
     public function archive(NotificationTemplate $notificationTemplate): RedirectResponse
     {
-        Gate::authorize('update', $notificationTemplate);
+        Gate::authorize('archiveBackoffice', $notificationTemplate);
         $this->service->archive($notificationTemplate, $this->currentUser());
 
         return back()->with('success', 'Template arquivado.');
@@ -84,7 +98,7 @@ class NotificationTemplateController extends Controller
 
     public function preview(NotificationTemplate $notificationTemplate, TemplateRenderingService $renderer): View
     {
-        Gate::authorize('view', $notificationTemplate);
+        Gate::authorize('previewBackoffice', $notificationTemplate);
         $version = $notificationTemplate->activeVersion;
 
         if (! $version instanceof NotificationTemplateVersion) {
@@ -101,6 +115,14 @@ class NotificationTemplateController extends Controller
             'body' => $version->body ?? $notificationTemplate->body,
             'html_body' => $version->html_body ?? $notificationTemplate->html_body,
         ], $variables);
+        $this->audit->record(
+            AuditEvents::ACCESS,
+            $notificationTemplate,
+            'notifications',
+            'notification_template_previewed',
+            'Pré-visualização de template de comunicação gerada.',
+            metadata: ['version_id' => $version->id],
+        );
 
         return view('backoffice.communications.templates.preview', compact('notificationTemplate', 'rendered'));
     }

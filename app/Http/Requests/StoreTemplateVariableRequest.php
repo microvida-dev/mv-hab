@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\TemplateVariableType;
+use App\Models\TemplateVariable;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +11,17 @@ class StoreTemplateVariableRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $variable = $this->route('templateVariable');
+
+        return $variable instanceof TemplateVariable
+            ? $this->user()?->can(
+                'updateBackoffice',
+                $variable,
+            ) === true
+            : $this->user()?->can(
+                'createBackoffice',
+                TemplateVariable::class,
+            ) === true;
     }
 
     /**

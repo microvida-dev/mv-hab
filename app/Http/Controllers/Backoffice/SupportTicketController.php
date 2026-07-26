@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateSupportTicketStatusRequest;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\CandidateExperience\CandidateSupportDashboardService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Support\SupportTicketAssignmentService;
 use App\Services\Support\SupportTicketStatusService;
 use Illuminate\Contracts\View\View;
@@ -21,16 +22,18 @@ class SupportTicketController extends Controller
         private readonly SupportTicketAssignmentService $assignments,
         private readonly SupportTicketStatusService $statuses,
         private readonly CandidateSupportDashboardService $dashboard,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
     public function index(): View
     {
-        Gate::authorize('viewAny', SupportTicket::class);
+        Gate::authorize('viewAnyBackoffice', SupportTicket::class);
 
         $user = $this->currentUser();
 
         return view('backoffice.support-tickets.index', [
-            'tickets' => SupportTicket::query()
+            'tickets' => $this->municipalScope
+                ->supportTickets(SupportTicket::query(), $user)
                 ->visibleToBackofficeUser($user)
                 ->with(['user', 'application.contest', 'assignee'])
                 ->latest('last_message_at')
@@ -41,19 +44,28 @@ class SupportTicketController extends Controller
 
     public function show(SupportTicket $supportTicket): View
     {
-        Gate::authorize('view', $supportTicket);
+        Gate::authorize('viewBackoffice', $supportTicket);
         $supportTicket->load(['user', 'application.contest', 'contest', 'housingUnit', 'assignee', 'messages.sender', 'attachments']);
 
         return view('backoffice.support-tickets.show', [
             'ticket' => $supportTicket,
             'statuses' => TicketStatus::options(),
-            'staffUsers' => User::query()->orderBy('name')->get(),
+            'staffUsers' => $this->municipalScope
+                ->users(User::query(), $this->currentUser())
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
     public function assign(AssignSupportTicketRequest $request, SupportTicket $supportTicket): RedirectResponse
     {
-        $staff = User::query()->findOrFail($request->integer('assigned_to'));
+        Gate::authorize('assignBackoffice', $supportTicket);
+        $staff = $this->municipalScope
+            ->users(
+                User::query(),
+                $this->authenticatedUser($request),
+            )
+            ->findOrFail($request->integer('assigned_to'));
         $ticket = $this->assignments->assign($supportTicket, $staff, $this->authenticatedUser($request));
 
         return to_route('backoffice.support-tickets.show', $ticket)->with('success', 'Ticket atribuído.');
@@ -61,6 +73,7 @@ class SupportTicketController extends Controller
 
     public function updateStatus(UpdateSupportTicketStatusRequest $request, SupportTicket $supportTicket): RedirectResponse
     {
+        Gate::authorize('resolveBackoffice', $supportTicket);
         $ticket = $this->statuses->update(
             $supportTicket,
             TicketStatus::from((string) $request->validated('status')),

@@ -7,25 +7,46 @@ use App\Models\CommunicationDelivery;
 use App\Models\CommunicationLog;
 use App\Models\GeneratedOfficialDocument;
 use App\Models\NotificationTemplate;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 
 class NotificationCenterController extends Controller
 {
+    public function __construct(
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
+
     public function index(): View
     {
-        Gate::authorize('viewAny', CommunicationLog::class);
+        Gate::authorize('viewAnyBackoffice', CommunicationLog::class);
+        $user = $this->currentUser();
+        $communications = $this->municipalScope
+            ->communicationLogs(CommunicationLog::query(), $user);
+        $deliveries = $this->municipalScope
+            ->communicationDeliveries(CommunicationDelivery::query(), $user);
+        $templates = $this->municipalScope
+            ->notificationTemplates(NotificationTemplate::query(), $user);
+        $documents = $this->municipalScope
+            ->generatedOfficialDocuments(
+                GeneratedOfficialDocument::query(),
+                $user,
+            );
 
         return view('backoffice.communications.dashboard', [
             'totals' => [
-                'communications' => CommunicationLog::query()->count(),
-                'queued' => CommunicationLog::query()->where('status', 'queued')->count(),
-                'failed' => CommunicationLog::query()->where('status', 'failed')->count(),
-                'pending_configuration' => CommunicationDelivery::query()->where('status', 'pending_configuration')->count(),
-                'templates' => NotificationTemplate::query()->count(),
-                'documents' => GeneratedOfficialDocument::query()->count(),
+                'communications' => (clone $communications)->count(),
+                'queued' => (clone $communications)->where('status', 'queued')->count(),
+                'failed' => (clone $communications)->where('status', 'failed')->count(),
+                'pending_configuration' => (clone $deliveries)->where('status', 'pending_configuration')->count(),
+                'templates' => (clone $templates)->count(),
+                'documents' => (clone $documents)->count(),
             ],
-            'recent' => CommunicationLog::query()->with('recipient')->latest()->limit(10)->get(),
+            'recent' => $communications
+                ->with('recipient')
+                ->latest()
+                ->limit(10)
+                ->get(),
         ]);
     }
 }

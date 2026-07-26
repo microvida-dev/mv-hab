@@ -11,7 +11,10 @@ class StoreDashboardDefinitionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', DashboardDefinition::class) ?? false;
+        return $this->user()?->can(
+            'createBackoffice',
+            DashboardDefinition::class,
+        ) === true;
     }
 
     /**

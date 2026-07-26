@@ -9,7 +9,15 @@ use Illuminate\Support\Carbon;
 
 class ReportFilterService
 {
-    private const ALLOWED = ['date_from', 'date_to', 'program_id', 'contest_id', 'status', 'location'];
+    private const ALLOWED = [
+        'date_from',
+        'date_to',
+        'program_id',
+        'contest_id',
+        'status',
+        'location',
+        'municipality_id',
+    ];
 
     /**
      * @param  array<string, mixed>  $filters
@@ -106,6 +114,7 @@ class ReportFilterService
     public function applyThroughContract(Builder $query, array $filters, string $dateColumn = 'created_at'): Builder
     {
         return $this->applyDates($query, $filters, $dateColumn)
+            ->when($filters['municipality_id'] ?? null, fn (Builder $builder, int $id) => $builder->whereHas('leaseContract', fn (Builder $contract) => $contract->whereHas('program', fn (Builder $program) => $program->where('municipality_id', $id))))
             ->when($filters['program_id'] ?? null, fn (Builder $builder, int $id) => $builder->whereHas('leaseContract', fn (Builder $contract) => $contract->where('program_id', $id)))
             ->when($filters['contest_id'] ?? null, fn (Builder $builder, int $id) => $builder->whereHas('leaseContract', fn (Builder $contract) => $contract->where('contest_id', $id)))
             ->when($filters['status'] ?? null, fn (Builder $builder, string $status) => $builder->where('status', $status));
