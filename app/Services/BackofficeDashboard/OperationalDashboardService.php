@@ -34,7 +34,8 @@ class OperationalDashboardService
                     ->latest()
                     ->limit(10)
                     ->get(),
-                'visits_week' => app(VisitStatisticsService::class)->summary($filters),
+                'visits_week' => app(VisitStatisticsService::class)
+                    ->summary($actor, $filters),
                 'tickets_pending' => SupportTicket::query()
                     ->whereIn('status', [TicketStatus::Open->value, TicketStatus::PendingStaff->value, TicketStatus::InProgress->value])
                     ->latest()

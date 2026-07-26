@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\HousingVisit;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RescheduleVisitRequest extends FormRequest
@@ -10,8 +11,11 @@ class RescheduleVisitRequest extends FormRequest
     public function authorize(): bool
     {
         $visit = $this->route('housingVisit');
+        $actor = $this->user();
 
-        return $visit instanceof HousingVisit && ($this->user()?->can('update', $visit) ?? false);
+        return $actor instanceof User
+            && $visit instanceof HousingVisit
+            && $actor->can('update', $visit);
     }
 
     /**

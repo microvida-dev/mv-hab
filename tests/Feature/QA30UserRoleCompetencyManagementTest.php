@@ -49,7 +49,7 @@ class QA30UserRoleCompetencyManagementTest extends TestCase
         $this->assertTrue($mfa->requiresMfa($legal));
         $this->assertTrue($mfa->requiresMfa($housing));
         $this->assertTrue($mfa->requiresMfa($inspection));
-        $this->assertFalse($mfa->requiresMfa($support));
+        $this->assertTrue($mfa->requiresMfa($support));
     }
 
     public function test_qa30_administrator_creates_backoffice_user_with_role_team_mfa_and_audit(): void

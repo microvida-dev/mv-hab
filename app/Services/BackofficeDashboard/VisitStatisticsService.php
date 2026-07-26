@@ -4,16 +4,25 @@ namespace App\Services\BackofficeDashboard;
 
 use App\Enums\VisitStatus;
 use App\Models\HousingVisit;
+use App\Models\User;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class VisitStatisticsService
 {
+    public function __construct(
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
+
     /**
      * @param  array<string, mixed>  $filters
      * @return array<string, int>
      */
-    public function summary(array $filters = []): array
+    public function summary(User $actor, array $filters = []): array
     {
-        $query = HousingVisit::query();
+        $query = $this->municipalScope->housingVisits(
+            HousingVisit::query(),
+            $actor,
+        );
 
         if (! empty($filters['contest_id'])) {
             $query->where('contest_id', (int) $filters['contest_id']);

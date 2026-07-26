@@ -53,6 +53,7 @@ use App\Models\HearingSubmission;
 use App\Models\Household;
 use App\Models\HousingApplication;
 use App\Models\HousingUnit;
+use App\Models\HousingVisit;
 use App\Models\IncomeChangeDeclaration;
 use App\Models\InspectionChecklistTemplate;
 use App\Models\KeyHandoverAppointment;
@@ -103,9 +104,12 @@ use App\Models\TenantPayment;
 use App\Models\TenantTransition;
 use App\Models\TieBreakerRule;
 use App\Models\User;
+use App\Models\VisitAvailability;
+use App\Models\VisitSlot;
 use App\Models\WinnerRegistration;
 use App\Services\Platform\PlatformOperatorScopeService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class MunicipalRecordScopeService
 {
@@ -2676,6 +2680,359 @@ class MunicipalRecordScopeService
     }
 
     /**
+     * @param  Builder<VisitAvailability>  $query
+     * @return Builder<VisitAvailability>
+     */
+    public function visitAvailabilities(
+        Builder $query,
+        User $user,
+    ): Builder {
+        return $this->structurallyValidVisitAvailabilities(
+            $this->canonicalMunicipalScope(
+                $query,
+                $user,
+                'visit_availabilities',
+            ),
+        );
+    }
+
+    /**
+     * @param  Builder<VisitAvailability>  $query
+     * @return Builder<VisitAvailability>
+     */
+    public function structurallyValidVisitAvailabilities(
+        Builder $query,
+    ): Builder {
+        return $query
+            ->whereNotNull(
+                'visit_availabilities.municipality_id',
+            )
+            ->where(function (Builder $origins): void {
+                $origins
+                    ->whereNotNull('contest_id')
+                    ->orWhereNotNull('housing_unit_id');
+            })
+            ->where(function (Builder $contestScope): void {
+                $contestScope
+                    ->whereNull('contest_id')
+                    ->orWhereHas(
+                        'contest.program',
+                        fn (Builder $program): Builder => $program
+                            ->whereColumn(
+                                'programs.municipality_id',
+                                'visit_availabilities.municipality_id',
+                            ),
+                    );
+            })
+            ->where(function (Builder $housingScope): void {
+                $housingScope
+                    ->whereNull('housing_unit_id')
+                    ->orWhereHas(
+                        'housingUnit',
+                        fn (Builder $housingUnit): Builder => $housingUnit
+                            ->whereNotNull('municipality_id')
+                            ->whereColumn(
+                                'housing_units.municipality_id',
+                                'visit_availabilities.municipality_id',
+                            ),
+                    );
+            })
+            ->where(function (Builder $staffScope): void {
+                $staffScope
+                    ->whereNull('staff_user_id')
+                    ->orWhereHas(
+                        'staff',
+                        fn (Builder $staff): Builder => $staff
+                            ->whereNotNull('municipality_id')
+                            ->whereColumn(
+                                'users.municipality_id',
+                                'visit_availabilities.municipality_id',
+                            ),
+                    );
+            });
+    }
+
+    public function ownsVisitAvailability(
+        User $user,
+        VisitAvailability $availability,
+    ): bool {
+        return $this->visitAvailabilities(
+            VisitAvailability::query()->whereKey($availability),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<VisitSlot>  $query
+     * @return Builder<VisitSlot>
+     */
+    public function visitSlots(
+        Builder $query,
+        User $user,
+    ): Builder {
+        return $this->structurallyValidVisitSlots(
+            $this->canonicalMunicipalScope(
+                $query,
+                $user,
+                'visit_slots',
+            ),
+        );
+    }
+
+    /**
+     * @param  Builder<VisitSlot>  $query
+     * @return Builder<VisitSlot>
+     */
+    public function structurallyValidVisitSlots(
+        Builder $query,
+    ): Builder {
+        $availabilityIds = $this
+            ->structurallyValidVisitAvailabilities(
+                VisitAvailability::query(),
+            )
+            ->whereColumn(
+                'visit_availabilities.municipality_id',
+                'visit_slots.municipality_id',
+            )
+            ->where(function (Builder $ids): void {
+                $this->whereColumnsEqualOrBothNull(
+                    $ids,
+                    'visit_availabilities.contest_id',
+                    'visit_slots.contest_id',
+                );
+            })
+            ->where(function (Builder $ids): void {
+                $this->whereColumnsEqualOrBothNull(
+                    $ids,
+                    'visit_availabilities.housing_unit_id',
+                    'visit_slots.housing_unit_id',
+                );
+            })
+            ->where(function (Builder $ids): void {
+                $this->whereColumnsEqualOrBothNull(
+                    $ids,
+                    'visit_availabilities.staff_user_id',
+                    'visit_slots.staff_user_id',
+                );
+            })
+            ->select('visit_availabilities.id');
+
+        return $query
+            ->whereNotNull('visit_slots.municipality_id')
+            ->whereNotNull('visit_availability_id')
+            ->whereIn('visit_availability_id', $availabilityIds)
+            ->where(function (Builder $contestScope): void {
+                $contestScope
+                    ->whereNull('contest_id')
+                    ->orWhereHas(
+                        'contest.program',
+                        fn (Builder $program): Builder => $program
+                            ->whereColumn(
+                                'programs.municipality_id',
+                                'visit_slots.municipality_id',
+                            ),
+                    );
+            })
+            ->where(function (Builder $housingScope): void {
+                $housingScope
+                    ->whereNull('housing_unit_id')
+                    ->orWhereHas(
+                        'housingUnit',
+                        fn (Builder $housingUnit): Builder => $housingUnit
+                            ->whereNotNull('municipality_id')
+                            ->whereColumn(
+                                'housing_units.municipality_id',
+                                'visit_slots.municipality_id',
+                            ),
+                    );
+            })
+            ->where(function (Builder $staffScope): void {
+                $staffScope
+                    ->whereNull('staff_user_id')
+                    ->orWhereHas(
+                        'staff',
+                        fn (Builder $staff): Builder => $staff
+                            ->whereNotNull('municipality_id')
+                            ->whereColumn(
+                                'users.municipality_id',
+                                'visit_slots.municipality_id',
+                            ),
+                    );
+            });
+    }
+
+    public function ownsVisitSlot(
+        User $user,
+        VisitSlot $slot,
+    ): bool {
+        return $this->visitSlots(
+            VisitSlot::query()->whereKey($slot),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<HousingVisit>  $query
+     * @return Builder<HousingVisit>
+     */
+    public function housingVisits(
+        Builder $query,
+        User $user,
+    ): Builder {
+        return $this->structurallyValidHousingVisits(
+            $this->canonicalMunicipalScope(
+                $query,
+                $user,
+                'housing_visits',
+            ),
+        );
+    }
+
+    /**
+     * @param  Builder<HousingVisit>  $query
+     * @return Builder<HousingVisit>
+     */
+    public function structurallyValidHousingVisits(
+        Builder $query,
+    ): Builder {
+        $slotIds = $this
+            ->structurallyValidVisitSlots(
+                VisitSlot::query(),
+            )
+            ->whereColumn(
+                'visit_slots.municipality_id',
+                'housing_visits.municipality_id',
+            )
+            ->where(function (Builder $ids): void {
+                $this->whereColumnsEqualOrBothNull(
+                    $ids,
+                    'visit_slots.contest_id',
+                    'housing_visits.contest_id',
+                );
+            })
+            ->where(function (Builder $ids): void {
+                $this->whereColumnsEqualOrBothNull(
+                    $ids,
+                    'visit_slots.housing_unit_id',
+                    'housing_visits.housing_unit_id',
+                );
+            })
+            ->select('visit_slots.id');
+
+        $applicationIds = Application::query()
+            ->select('applications.id')
+            ->join(
+                'programs as visit_application_programs',
+                'visit_application_programs.id',
+                '=',
+                'applications.program_id',
+            )
+            ->join(
+                'contests as visit_application_contests',
+                'visit_application_contests.id',
+                '=',
+                'applications.contest_id',
+            )
+            ->join(
+                'programs as visit_contest_programs',
+                'visit_contest_programs.id',
+                '=',
+                'visit_application_contests.program_id',
+            )
+            ->whereColumn(
+                'applications.program_id',
+                'visit_application_contests.program_id',
+            )
+            ->whereColumn(
+                'visit_application_programs.municipality_id',
+                'housing_visits.municipality_id',
+            )
+            ->whereColumn(
+                'visit_contest_programs.municipality_id',
+                'housing_visits.municipality_id',
+            )
+            ->whereColumn(
+                'applications.contest_id',
+                'housing_visits.contest_id',
+            )
+            ->whereColumn(
+                'applications.user_id',
+                'housing_visits.candidate_user_id',
+            )
+            ->whereNull('visit_application_programs.deleted_at')
+            ->whereNull('visit_application_contests.deleted_at')
+            ->whereNull('visit_contest_programs.deleted_at');
+
+        return $query
+            ->whereNotNull('housing_visits.municipality_id')
+            ->whereNotNull('visit_slot_id')
+            ->whereIn('visit_slot_id', $slotIds)
+            ->where(function (Builder $applicationScope) use (
+                $applicationIds,
+            ): void {
+                $applicationScope
+                    ->whereNull('application_id')
+                    ->orWhereIn('application_id', $applicationIds);
+            })
+            ->where(function (Builder $contestScope): void {
+                $contestScope
+                    ->whereNull('contest_id')
+                    ->orWhereHas(
+                        'contest.program',
+                        fn (Builder $program): Builder => $program
+                            ->whereColumn(
+                                'programs.municipality_id',
+                                'housing_visits.municipality_id',
+                            ),
+                    );
+            })
+            ->where(function (Builder $housingScope): void {
+                $housingScope
+                    ->whereNull('housing_unit_id')
+                    ->orWhereHas(
+                        'housingUnit',
+                        fn (Builder $housingUnit): Builder => $housingUnit
+                            ->whereNotNull('municipality_id')
+                            ->whereColumn(
+                                'housing_units.municipality_id',
+                                'housing_visits.municipality_id',
+                            ),
+                    );
+            })
+            ->where(function (Builder $staffScope): void {
+                $staffScope
+                    ->whereNull('staff_user_id')
+                    ->orWhereHas(
+                        'staff',
+                        fn (Builder $staff): Builder => $staff
+                            ->whereNotNull('municipality_id')
+                            ->whereColumn(
+                                'users.municipality_id',
+                                'housing_visits.municipality_id',
+                            ),
+                    );
+            });
+    }
+
+    public function isStructurallyValidHousingVisit(
+        HousingVisit $visit,
+    ): bool {
+        return $this->structurallyValidHousingVisits(
+            HousingVisit::query()->whereKey($visit),
+        )->exists();
+    }
+
+    public function ownsHousingVisit(
+        User $user,
+        HousingVisit $visit,
+    ): bool {
+        return $this->housingVisits(
+            HousingVisit::query()->whereKey($visit),
+            $user,
+        )->exists();
+    }
+
+    /**
      * @param  Builder<MaintenanceCategory>  $query
      * @return Builder<MaintenanceCategory>
      */
@@ -2972,5 +3329,54 @@ class MunicipalRecordScopeService
         }
 
         return $query->where('municipality_id', $user->municipality_id);
+    }
+
+    /**
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
+     */
+    private function canonicalMunicipalScope(
+        Builder $query,
+        User $user,
+        string $table,
+    ): Builder {
+        $query->whereNotNull($table.'.municipality_id');
+
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(
+            $table.'.municipality_id',
+            $user->municipality_id,
+        );
+    }
+
+    /**
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>  $query
+     */
+    private function whereColumnsEqualOrBothNull(
+        Builder $query,
+        string $first,
+        string $second,
+    ): void {
+        $query
+            ->whereColumn($first, $second)
+            ->orWhere(function (Builder $nulls) use (
+                $first,
+                $second,
+            ): void {
+                $nulls
+                    ->whereNull($first)
+                    ->whereNull($second);
+            });
     }
 }

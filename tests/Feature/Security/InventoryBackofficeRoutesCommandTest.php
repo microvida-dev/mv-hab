@@ -155,20 +155,22 @@ class InventoryBackofficeRoutesCommandTest extends TestCase
         $this->artisan('access:inventory-backoffice-routes', [
             '--format' => 'json',
             '--output' => $output,
-            '--only-fixed-role' => true,
             '--bounded-context' => 'maintenance',
             '--risk' => 'critical',
-            '--missing-permission' => true,
         ])->assertSuccessful();
 
         $routes = collect($this->jsonFile($output)['routes']);
 
-        $this->assertNotEmpty($routes);
+        $this->assertCount(1, $routes);
         $this->assertTrue($routes->every(
-            fn (array $route): bool => is_string($route['role_middleware_active'])
+            fn (array $route): bool => $route['route_name'] === 'backoffice.maintenance.attachments.download'
                 && $route['bounded_context'] === 'maintenance'
                 && $route['risk'] === 'critical'
-                && $route['permission_semantically_adequate'] === false
+                && $route['permission_middleware'] === ['maintenance.attachments.download']
+                && $route['role_middleware_active'] === null
+                && $route['active_backoffice_present'] === true
+                && $route['mfa_backoffice_present'] === true
+                && $route['log_backoffice_present'] === true
         ));
     }
 

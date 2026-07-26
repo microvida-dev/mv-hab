@@ -32,7 +32,7 @@ final class TimelineProviderRegistry
     {
         return [
             new WorkTaskTimelineProvider,
-            new VisitTimelineProvider,
+            app(VisitTimelineProvider::class),
             app(InspectionTimelineProvider::class),
             new CorrectionRequestTimelineProvider,
             new HearingTimelineProvider,

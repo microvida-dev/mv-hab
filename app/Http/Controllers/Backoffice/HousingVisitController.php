@@ -8,6 +8,7 @@ use App\Http\Requests\CancelVisitRequest;
 use App\Http\Requests\CompleteVisitRequest;
 use App\Http\Requests\RejectVisitRequest;
 use App\Models\HousingVisit;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Visits\VisitBookingService;
 use App\Services\Visits\VisitCancellationService;
 use Illuminate\Contracts\View\View;
@@ -20,20 +21,34 @@ class HousingVisitController extends Controller
     public function __construct(
         private readonly VisitBookingService $booking,
         private readonly VisitCancellationService $cancellation,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        Gate::authorize('viewAny', HousingVisit::class);
+        Gate::authorize('viewAnyBackoffice', HousingVisit::class);
 
         return view('backoffice.housing-visits.index', [
-            'visits' => HousingVisit::query()->with(['candidate', 'application.contest', 'contest', 'housingUnit', 'staff'])->latest('starts_at')->paginate(20),
+            'visits' => $this->municipalScope
+                ->housingVisits(
+                    HousingVisit::query(),
+                    $this->authenticatedUser($request),
+                )
+                ->with([
+                    'candidate',
+                    'application.contest',
+                    'contest',
+                    'housingUnit',
+                    'staff',
+                ])
+                ->latest('starts_at')
+                ->paginate(20),
         ]);
     }
 
     public function show(HousingVisit $housingVisit): View
     {
-        Gate::authorize('view', $housingVisit);
+        Gate::authorize('viewBackoffice', $housingVisit);
         $housingVisit->load(['candidate', 'application.contest', 'contest', 'housingUnit', 'staff', 'slot', 'statusHistories.changedBy']);
 
         return view('backoffice.housing-visits.show', ['visit' => $housingVisit]);
@@ -41,7 +56,7 @@ class HousingVisitController extends Controller
 
     public function confirm(Request $request, HousingVisit $housingVisit): RedirectResponse
     {
-        Gate::authorize('approve', $housingVisit);
+        Gate::authorize('confirmBackoffice', $housingVisit);
         $visit = $this->booking->confirm($housingVisit, $this->authenticatedUser($request));
 
         return to_route('backoffice.housing-visits.show', $visit)->with('success', 'Visita confirmada.');

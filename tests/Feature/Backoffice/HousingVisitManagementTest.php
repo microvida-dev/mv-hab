@@ -3,7 +3,9 @@
 namespace Tests\Feature\Backoffice;
 
 use App\Enums\VisitStatus;
+use App\Models\Contest;
 use App\Models\HousingVisit;
+use App\Models\Program;
 use App\Models\User;
 use App\Models\VisitAvailability;
 use App\Models\VisitSlot;
@@ -19,7 +21,7 @@ class HousingVisitManagementTest extends TestCase
     {
         $this->seed(SystemAccessSeeder::class);
         $staff = $this->userWithRole('municipal_technician');
-        $availability = VisitAvailability::factory()->create(['staff_user_id' => $staff->id]);
+        $availability = $this->availabilityForStaff($staff);
         VisitSlot::factory()->create([
             'visit_availability_id' => $availability->id,
             'staff_user_id' => $staff->id,
@@ -55,9 +57,8 @@ class HousingVisitManagementTest extends TestCase
     {
         $this->seed(SystemAccessSeeder::class);
         $staff = $this->userWithRole('municipal_technician');
-        $visit = HousingVisit::factory()->create([
+        $visit = $this->visitForStaff($staff, [
             'status' => VisitStatus::Confirmed->value,
-            'staff_user_id' => $staff->id,
         ]);
 
         $this->withSession(['mfa.verified_at' => now()])
@@ -91,7 +92,7 @@ class HousingVisitManagementTest extends TestCase
     {
         $this->seed(SystemAccessSeeder::class);
         $staff = $this->userWithRole('municipal_technician');
-        $visit = HousingVisit::factory()->create(['staff_user_id' => $staff->id]);
+        $visit = $this->visitForStaff($staff);
 
         $this->withSession(['mfa.verified_at' => now()])
             ->from(route('backoffice.housing-visits.show', $visit))
@@ -118,9 +119,8 @@ class HousingVisitManagementTest extends TestCase
     {
         $this->seed(SystemAccessSeeder::class);
         $staff = $this->userWithRole('municipal_technician');
-        $visit = HousingVisit::factory()->create([
+        $visit = $this->visitForStaff($staff, [
             'status' => VisitStatus::Confirmed->value,
-            'staff_user_id' => $staff->id,
         ]);
 
         $this->withSession(['mfa.verified_at' => now()])
@@ -154,5 +154,41 @@ class HousingVisitManagementTest extends TestCase
         $user->assignRole($role);
 
         return $user;
+    }
+
+    private function availabilityForStaff(
+        User $staff,
+    ): VisitAvailability {
+        $program = Program::factory()->create([
+            'municipality_id' => $staff->municipality_id,
+        ]);
+        $contest = Contest::factory()->create([
+            'program_id' => $program->id,
+        ]);
+
+        return VisitAvailability::factory()->create([
+            'contest_id' => $contest->id,
+            'staff_user_id' => $staff->id,
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function visitForStaff(
+        User $staff,
+        array $attributes = [],
+    ): HousingVisit {
+        $availability = $this->availabilityForStaff($staff);
+        $slot = VisitSlot::factory()->create([
+            'visit_availability_id' => $availability->id,
+            'staff_user_id' => $staff->id,
+        ]);
+
+        return HousingVisit::factory()->create([
+            'visit_slot_id' => $slot->id,
+            'staff_user_id' => $staff->id,
+            ...$attributes,
+        ]);
     }
 }

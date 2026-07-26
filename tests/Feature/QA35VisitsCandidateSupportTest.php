@@ -8,6 +8,7 @@ use App\Enums\VisitStatus;
 use App\Models\Contest;
 use App\Models\HousingUnit;
 use App\Models\HousingVisit;
+use App\Models\Municipality;
 use App\Models\MunicipalTeam;
 use App\Models\Program;
 use App\Models\User;
@@ -26,10 +27,25 @@ class QA35VisitsCandidateSupportTest extends TestCase
     public function test_candidate_visit_flow_creates_idempotent_work_task_and_preserves_history(): void
     {
         $this->seedAccess();
+        $municipality = Municipality::factory()->create();
         $candidate = $this->userWithRole('candidate');
-        $staff = $this->userWithRole('support_agent', 'Atendimento');
-        $contest = Contest::factory()->for(Program::factory()->published())->open()->create();
-        $housingUnit = HousingUnit::factory()->publiclyVisible()->create();
+        $staff = $this->userWithRole(
+            'support_agent',
+            'Atendimento',
+            $municipality,
+        );
+        $program = Program::factory()->published()->create([
+            'municipality_id' => $municipality->id,
+        ]);
+        $contest = Contest::factory()
+            ->for($program)
+            ->open()
+            ->create();
+        $housingUnit = HousingUnit::factory()
+            ->publiclyVisible()
+            ->create([
+                'municipality_id' => $municipality->id,
+            ]);
         $availability = VisitAvailability::factory()->create([
             'contest_id' => $contest->id,
             'housing_unit_id' => $housingUnit->id,
@@ -112,10 +128,19 @@ class QA35VisitsCandidateSupportTest extends TestCase
     public function test_visit_to_non_public_housing_unit_is_blocked(): void
     {
         $this->seedAccess();
+        $municipality = Municipality::factory()->create();
         $candidate = $this->userWithRole('candidate');
-        $staff = $this->userWithRole('support_agent', 'Atendimento');
-        $housingUnit = HousingUnit::factory()->create(['is_public' => false]);
+        $staff = $this->userWithRole(
+            'support_agent',
+            'Atendimento',
+            $municipality,
+        );
+        $housingUnit = HousingUnit::factory()->create([
+            'is_public' => false,
+            'municipality_id' => $municipality->id,
+        ]);
         $availability = VisitAvailability::factory()->create([
+            'contest_id' => null,
             'housing_unit_id' => $housingUnit->id,
             'staff_user_id' => $staff->id,
         ]);
@@ -157,9 +182,17 @@ class QA35VisitsCandidateSupportTest extends TestCase
         $this->seed(MunicipalTeamSeeder::class);
     }
 
-    private function userWithRole(string $role, ?string $teamName = null): User
-    {
-        $user = User::factory()->create();
+    private function userWithRole(
+        string $role,
+        ?string $teamName = null,
+        ?Municipality $municipality = null,
+    ): User {
+        $factory = User::factory();
+        $user = $role === 'candidate'
+            ? $factory->withoutMunicipality()->create()
+            : $factory->create([
+                'municipality_id' => $municipality?->id,
+            ]);
         $user->assignRole($role);
 
         if ($teamName !== null) {

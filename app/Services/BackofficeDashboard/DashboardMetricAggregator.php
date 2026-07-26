@@ -44,7 +44,8 @@ class DashboardMetricAggregator
                 'validated' => $this->documentCount($filters, [DocumentStatus::Validated->value]),
                 'expired' => $this->documentCount($filters, [DocumentStatus::Expired->value]),
             ],
-            'visits' => app(VisitStatisticsService::class)->summary($filters),
+            'visits' => app(VisitStatisticsService::class)
+                ->summary($actor, $filters),
             'tickets' => [
                 'open' => SupportTicket::query()->whereIn('status', [
                     TicketStatus::Open->value,

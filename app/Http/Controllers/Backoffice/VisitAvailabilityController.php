@@ -10,10 +10,13 @@ use App\Models\Contest;
 use App\Models\HousingUnit;
 use App\Models\User;
 use App\Models\VisitAvailability;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Visits\VisitAvailabilityService;
 use App\Services\Visits\VisitSlotGenerationService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class VisitAvailabilityController extends Controller
@@ -21,22 +24,40 @@ class VisitAvailabilityController extends Controller
     public function __construct(
         private readonly VisitAvailabilityService $availabilities,
         private readonly VisitSlotGenerationService $slots,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        Gate::authorize('viewAny', VisitAvailability::class);
+        Gate::authorize(
+            'viewAnyBackoffice',
+            VisitAvailability::class,
+        );
+        $actor = $this->authenticatedUser($request);
 
         return view('backoffice.visit-availabilities.index', [
-            'availabilities' => VisitAvailability::query()->with(['contest', 'housingUnit', 'staff'])->latest('starts_at')->paginate(15),
+            'availabilities' => $this->municipalScope
+                ->visitAvailabilities(
+                    VisitAvailability::query(),
+                    $actor,
+                )
+                ->with(['contest', 'housingUnit', 'staff'])
+                ->latest('starts_at')
+                ->paginate(15),
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        Gate::authorize('create', VisitAvailability::class);
+        Gate::authorize(
+            'createBackoffice',
+            VisitAvailability::class,
+        );
 
-        return view('backoffice.visit-availabilities.create', $this->formData());
+        return view(
+            'backoffice.visit-availabilities.create',
+            $this->formData($this->authenticatedUser($request)),
+        );
     }
 
     public function store(StoreVisitAvailabilityRequest $request): RedirectResponse
@@ -48,19 +69,23 @@ class VisitAvailabilityController extends Controller
 
     public function show(VisitAvailability $visitAvailability): View
     {
-        Gate::authorize('view', $visitAvailability);
+        Gate::authorize('viewBackoffice', $visitAvailability);
         $visitAvailability->load(['contest', 'housingUnit', 'staff', 'slots.visits']);
 
         return view('backoffice.visit-availabilities.show', ['availability' => $visitAvailability]);
     }
 
-    public function edit(VisitAvailability $visitAvailability): View
-    {
-        Gate::authorize('update', $visitAvailability);
+    public function edit(
+        Request $request,
+        VisitAvailability $visitAvailability,
+    ): View {
+        Gate::authorize('updateBackoffice', $visitAvailability);
 
         return view('backoffice.visit-availabilities.edit', [
             'availability' => $visitAvailability,
-            ...$this->formData(),
+            ...$this->formData(
+                $this->authenticatedUser($request),
+            ),
         ]);
     }
 
@@ -73,7 +98,7 @@ class VisitAvailabilityController extends Controller
 
     public function destroy(VisitAvailability $visitAvailability): RedirectResponse
     {
-        Gate::authorize('delete', $visitAvailability);
+        Gate::authorize('deleteBackoffice', $visitAvailability);
         $visitAvailability->delete();
 
         return to_route('backoffice.visit-availabilities.index')->with('success', 'Disponibilidade removida.');
@@ -89,12 +114,25 @@ class VisitAvailabilityController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formData(): array
+    private function formData(User $actor): array
     {
         return [
-            'contests' => Contest::query()->orderBy('title')->get(),
-            'housingUnits' => HousingUnit::query()->orderBy('code')->get(),
-            'staffUsers' => User::query()->orderBy('name')->get(),
+            'contests' => $this->municipalScope
+                ->contests(Contest::query(), $actor)
+                ->whereHas('program', fn (Builder $query): Builder => $query
+                    ->whereNotNull('municipality_id'))
+                ->orderBy('title')
+                ->get(['id', 'code', 'title', 'program_id']),
+            'housingUnits' => $this->municipalScope
+                ->housingUnits(HousingUnit::query(), $actor)
+                ->whereNotNull('municipality_id')
+                ->orderBy('code')
+                ->get(['id', 'code', 'municipality_id']),
+            'staffUsers' => $this->municipalScope
+                ->users(User::query(), $actor)
+                ->whereNotNull('municipality_id')
+                ->orderBy('name')
+                ->get(['id', 'name', 'municipality_id']),
         ];
     }
 }

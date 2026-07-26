@@ -74,11 +74,13 @@ class CustomRoleManagementTest extends TestCase
         $this->grantPermissionThroughCustomRole($candidate, 'candidate_role_reader', ['roles.view']);
 
         $this->actingAs($candidate)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.roles.index'))
             ->assertForbidden();
 
         $support = $this->userWithRole('support_agent');
         $this->actingAs($support)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.roles.index'))
             ->assertForbidden();
     }

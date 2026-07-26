@@ -29,4 +29,27 @@ class HousingVisitFactory extends Factory
             'meeting_point' => 'Entrada principal',
         ];
     }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (HousingVisit $visit): void {
+            $visit->loadMissing('slot');
+
+            $slot = $visit->slot;
+
+            if (! $slot instanceof VisitSlot) {
+                return;
+            }
+
+            $visit->forceFill([
+                'municipality_id' => $slot->municipality_id,
+                'contest_id' => $visit->contest_id
+                    ?? $slot->contest_id,
+                'housing_unit_id' => $visit->housing_unit_id
+                    ?? $slot->housing_unit_id,
+                'staff_user_id' => $visit->staff_user_id
+                    ?? $slot->staff_user_id,
+            ])->saveQuietly();
+        });
+    }
 }

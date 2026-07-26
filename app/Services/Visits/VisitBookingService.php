@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\VisitSlot;
 use App\Models\WorkTask;
 use App\Services\CandidateExperience\CandidateInteractionService;
+use App\Services\Municipalities\VisitMunicipalContextService;
 use App\Services\Workflows\WorkTaskCreationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -25,6 +26,7 @@ class VisitBookingService
         private readonly VisitNotificationService $notifications,
         private readonly VisitAuditService $audit,
         private readonly WorkTaskCreationService $tasks,
+        private readonly VisitMunicipalContextService $municipalContext,
     ) {}
 
     /**
@@ -37,8 +39,18 @@ class VisitBookingService
             $this->ensureBookable($slot);
 
             $application = $this->applicationForCandidate($candidate, $data);
-            $contest = $this->contestFromContext($slot, $application, $data);
-            $housingUnit = $this->housingUnitFromContext($slot, $data);
+            $context = $this->municipalContext->bookingContext(
+                $slot,
+                $application,
+                isset($data['contest_id'])
+                    ? (int) $data['contest_id']
+                    : null,
+                isset($data['housing_unit_id'])
+                    ? (int) $data['housing_unit_id']
+                    : null,
+            );
+            $contest = $context['contest'];
+            $housingUnit = $context['housing_unit'];
 
             $this->ensureContextIsVisitable($application, $contest, $housingUnit);
             $this->ensureNoDuplicate($candidate, $slot, $application);
@@ -54,6 +66,7 @@ class VisitBookingService
                 'candidate_notes' => $data['candidate_notes'] ?? null,
             ]);
             $visit->forceFill([
+                'municipality_id' => $context['municipality_id'],
                 'visit_number' => $this->nextNumber(),
                 'visit_slot_id' => $slot->id,
                 'application_id' => $application?->id,
@@ -91,99 +104,112 @@ class VisitBookingService
 
     public function confirm(HousingVisit $visit, User $actor): HousingVisit
     {
-        $from = VisitStatus::tryFrom((string) $visit->getRawOriginal('status'));
+        return DB::transaction(function () use ($visit, $actor): HousingVisit {
+            $visit = $this->lockedVisitForActor($visit, $actor);
+            $from = VisitStatus::tryFrom((string) $visit->getRawOriginal('status'));
 
-        $visit->forceFill([
-            'status' => VisitStatus::Confirmed,
-            'confirmed_at' => now(),
-            'staff_user_id' => $visit->staff_user_id ?: $actor->id,
-        ])->save();
+            $visit->forceFill([
+                'status' => VisitStatus::Confirmed,
+                'confirmed_at' => now(),
+                'staff_user_id' => $this->staffUserId($visit, $actor),
+            ])->save();
 
-        $this->history($visit, $from, VisitStatus::Confirmed, $actor, 'Visita confirmada.');
-        $this->audit->updated($visit, $actor, 'Visita confirmada.');
-        $this->notifications->visitConfirmed($visit->refresh(), $actor);
+            $this->history($visit, $from, VisitStatus::Confirmed, $actor, 'Visita confirmada.');
+            $this->audit->updated($visit, $actor, 'Visita confirmada.');
+            $this->notifications->visitConfirmed($visit->refresh(), $actor);
 
-        return $visit->refresh();
+            return $visit->refresh();
+        });
     }
 
     public function complete(HousingVisit $visit, User $actor, ?string $notes = null): HousingVisit
     {
-        $from = VisitStatus::tryFrom((string) $visit->getRawOriginal('status'));
-        $candidate = User::query()->findOrFail($visit->candidate_user_id);
+        return DB::transaction(function () use ($visit, $actor, $notes): HousingVisit {
+            $visit = $this->lockedVisitForActor($visit, $actor);
+            $from = VisitStatus::tryFrom((string) $visit->getRawOriginal('status'));
+            $candidate = User::query()->findOrFail($visit->candidate_user_id);
 
-        $visit->forceFill([
-            'status' => VisitStatus::Completed,
-            'completed_at' => now(),
-            'staff_notes' => $notes,
-            'staff_user_id' => $visit->staff_user_id ?: $actor->id,
-        ])->save();
+            $visit->forceFill([
+                'status' => VisitStatus::Completed,
+                'completed_at' => now(),
+                'staff_notes' => $notes,
+                'staff_user_id' => $this->staffUserId($visit, $actor),
+            ])->save();
 
-        $this->history($visit, $from, VisitStatus::Completed, $actor, 'Visita concluída.', $notes);
-        $this->interactions->record(
-            user: $candidate,
-            type: InteractionType::VisitCompleted,
-            title: 'Visita concluída',
-            description: 'A visita foi marcada como concluída.',
-            related: $visit,
-            application: $visit->application,
-            contest: $visit->contest,
-            housingUnit: $visit->housingUnit,
-            actor: $actor,
-        );
-        $this->audit->updated($visit, $actor, 'Visita concluída.');
-        $this->notifications->visitCompleted($visit->refresh(), $actor);
+            $this->history($visit, $from, VisitStatus::Completed, $actor, 'Visita concluída.', $notes);
+            $this->interactions->record(
+                user: $candidate,
+                type: InteractionType::VisitCompleted,
+                title: 'Visita concluída',
+                description: 'A visita foi marcada como concluída.',
+                related: $visit,
+                application: $visit->application,
+                contest: $visit->contest,
+                housingUnit: $visit->housingUnit,
+                actor: $actor,
+            );
+            $this->audit->updated($visit, $actor, 'Visita concluída.');
+            $this->notifications->visitCompleted($visit->refresh(), $actor);
 
-        return $visit->refresh();
+            return $visit->refresh();
+        });
     }
 
     public function markNoShow(HousingVisit $visit, User $actor, string $notes): HousingVisit
     {
-        $from = VisitStatus::tryFrom((string) $visit->getRawOriginal('status'));
-        $candidate = User::query()->findOrFail($visit->candidate_user_id);
+        return DB::transaction(function () use ($visit, $actor, $notes): HousingVisit {
+            $visit = $this->lockedVisitForActor($visit, $actor);
+            $from = VisitStatus::tryFrom((string) $visit->getRawOriginal('status'));
+            $candidate = User::query()->findOrFail($visit->candidate_user_id);
 
-        $visit->forceFill([
-            'status' => VisitStatus::Missed,
-            'completed_at' => now(),
-            'staff_notes' => $notes,
-            'staff_user_id' => $visit->staff_user_id ?: $actor->id,
-        ])->save();
+            $visit->forceFill([
+                'status' => VisitStatus::Missed,
+                'completed_at' => now(),
+                'staff_notes' => $notes,
+                'staff_user_id' => $this->staffUserId($visit, $actor),
+            ])->save();
 
-        $this->history($visit, $from, VisitStatus::Missed, $actor, 'Falta de comparência.', $notes);
-        $this->interactions->record(
-            user: $candidate,
-            type: InteractionType::VisitNoShow,
-            title: 'Falta de comparência registada',
-            description: 'A visita foi marcada como falta de comparência.',
-            related: $visit,
-            application: $visit->application,
-            contest: $visit->contest,
-            housingUnit: $visit->housingUnit,
-            actor: $actor,
-        );
-        $this->audit->updated($visit, $actor, 'Falta de comparência registada.');
-        $this->notifications->visitNoShow($visit->refresh(), $actor);
+            $this->history($visit, $from, VisitStatus::Missed, $actor, 'Falta de comparência.', $notes);
+            $this->interactions->record(
+                user: $candidate,
+                type: InteractionType::VisitNoShow,
+                title: 'Falta de comparência registada',
+                description: 'A visita foi marcada como falta de comparência.',
+                related: $visit,
+                application: $visit->application,
+                contest: $visit->contest,
+                housingUnit: $visit->housingUnit,
+                actor: $actor,
+            );
+            $this->audit->updated($visit, $actor, 'Falta de comparência registada.');
+            $this->notifications->visitNoShow($visit->refresh(), $actor);
 
-        return $visit->refresh();
+            return $visit->refresh();
+        });
     }
 
     public function reject(HousingVisit $visit, User $actor, ?string $reason = null): HousingVisit
     {
-        $from = VisitStatus::tryFrom((string) $visit->getRawOriginal('status'));
+        return DB::transaction(function () use ($visit, $actor, $reason): HousingVisit {
+            $visit = $this->lockedVisitForActor($visit, $actor);
+            $from = VisitStatus::tryFrom((string) $visit->getRawOriginal('status'));
 
-        $visit->forceFill([
-            'status' => VisitStatus::Rejected,
-            'staff_notes' => $reason,
-            'staff_user_id' => $visit->staff_user_id ?: $actor->id,
-        ])->save();
+            $visit->forceFill([
+                'status' => VisitStatus::Rejected,
+                'staff_notes' => $reason,
+                'staff_user_id' => $this->staffUserId($visit, $actor),
+            ])->save();
 
-        $this->history($visit, $from, VisitStatus::Rejected, $actor, 'Visita recusada.', $reason);
-        $this->audit->updated($visit, $actor, 'Visita recusada.');
+            $this->history($visit, $from, VisitStatus::Rejected, $actor, 'Visita recusada.', $reason);
+            $this->audit->updated($visit, $actor, 'Visita recusada.');
 
-        return $visit->refresh();
+            return $visit->refresh();
+        });
     }
 
     public function reserveSlot(VisitSlot $slot): void
     {
+        $this->municipalContext->validateSlot($slot);
         $this->ensureBookable($slot);
         $nextCount = (int) $slot->booked_count + 1;
         $slot->forceFill([
@@ -194,6 +220,7 @@ class VisitBookingService
 
     public function releaseSlot(VisitSlot $slot): void
     {
+        $this->municipalContext->validateSlot($slot);
         $nextCount = max(0, (int) $slot->booked_count - 1);
         $slot->forceFill([
             'booked_count' => $nextCount,
@@ -224,26 +251,6 @@ class VisitBookingService
         }
 
         return $application;
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    private function contestFromContext(VisitSlot $slot, ?Application $application, array $data): ?Contest
-    {
-        $contestId = $slot->contest_id ?: $application?->contest_id ?: ($data['contest_id'] ?? null);
-
-        return $contestId ? Contest::query()->whereKey((int) $contestId)->first() : null;
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    private function housingUnitFromContext(VisitSlot $slot, array $data): ?HousingUnit
-    {
-        $housingUnitId = $slot->housing_unit_id ?: ($data['housing_unit_id'] ?? null);
-
-        return $housingUnitId ? HousingUnit::query()->whereKey((int) $housingUnitId)->first() : null;
     }
 
     private function ensureContextIsVisitable(?Application $application, ?Contest $contest, ?HousingUnit $housingUnit): void
@@ -335,5 +342,36 @@ class VisitBookingService
     private function workTaskSource(HousingVisit $visit): string
     {
         return 'housing_visit:'.$visit->id;
+    }
+
+    private function lockedVisitForActor(
+        HousingVisit $visit,
+        User $actor,
+    ): HousingVisit {
+        $lockedVisit = HousingVisit::query()
+            ->whereKey($visit)
+            ->lockForUpdate()
+            ->firstOrFail();
+        $this->municipalContext->validateVisitForActor(
+            $lockedVisit,
+            $actor,
+        );
+
+        return $lockedVisit;
+    }
+
+    private function staffUserId(
+        HousingVisit $visit,
+        User $actor,
+    ): ?int {
+        if ($visit->staff_user_id !== null) {
+            return (int) $visit->staff_user_id;
+        }
+
+        return $actor->municipality_id !== null
+            && (int) $actor->municipality_id
+                === (int) $visit->municipality_id
+                    ? (int) $actor->id
+                    : null;
     }
 }

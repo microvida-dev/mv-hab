@@ -21,7 +21,15 @@ class VisitSlot extends Model
     /** @use HasFactory<VisitSlotFactory> */
     use HasFactory, SoftDeletes;
 
-    protected $guarded = ['id', 'status', 'booked_count', 'created_at', 'updated_at', 'deleted_at'];
+    protected $guarded = [
+        'id',
+        'municipality_id',
+        'status',
+        'booked_count',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
 
     /**
      * @return array<string, string>
@@ -41,6 +49,14 @@ class VisitSlot extends Model
     public function availability(): BelongsTo
     {
         return $this->belongsTo(VisitAvailability::class, 'visit_availability_id');
+    }
+
+    /**
+     * @return BelongsTo<Municipality, $this>
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 
     /**

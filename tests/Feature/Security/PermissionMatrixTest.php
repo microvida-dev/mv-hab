@@ -91,8 +91,11 @@ class PermissionMatrixTest extends TestCase
         );
 
         $this->actingAs($maintenance)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.maintenance.requests.index'))
             ->assertOk();
+
+        $this->app['session']->forget('mfa.verified_at');
 
         $this->actingAs($administrator)
             ->get(route('backoffice.security.dashboard'))

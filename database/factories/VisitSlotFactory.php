@@ -27,4 +27,27 @@ class VisitSlotFactory extends Factory
             'meeting_point' => 'Entrada principal',
         ];
     }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (VisitSlot $slot): void {
+            $slot->loadMissing('availability');
+
+            $availability = $slot->availability;
+
+            if (! $availability instanceof VisitAvailability) {
+                return;
+            }
+
+            $slot->forceFill([
+                'municipality_id' => $availability->municipality_id,
+                'contest_id' => $slot->contest_id
+                    ?? $availability->contest_id,
+                'housing_unit_id' => $slot->housing_unit_id
+                    ?? $availability->housing_unit_id,
+                'staff_user_id' => $slot->staff_user_id
+                    ?? $availability->staff_user_id,
+            ])->saveQuietly();
+        });
+    }
 }

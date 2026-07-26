@@ -75,6 +75,7 @@ class RoleEscalationProtectionTest extends TestCase
 
         $this
             ->actingAs($support)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.roles.index'))
             ->assertForbidden();
     }

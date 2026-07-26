@@ -20,7 +20,15 @@ class VisitAvailability extends Model
     /** @use HasFactory<VisitAvailabilityFactory> */
     use HasFactory, SoftDeletes;
 
-    protected $guarded = ['id', 'created_by', 'updated_by', 'created_at', 'updated_at', 'deleted_at'];
+    protected $guarded = [
+        'id',
+        'municipality_id',
+        'created_by',
+        'updated_by',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
 
     /**
      * @return array<string, string>
@@ -40,6 +48,14 @@ class VisitAvailability extends Model
     public function contest(): BelongsTo
     {
         return $this->belongsTo(Contest::class);
+    }
+
+    /**
+     * @return BelongsTo<Municipality, $this>
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 
     /**

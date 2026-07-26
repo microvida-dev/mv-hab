@@ -4,18 +4,26 @@ namespace App\Services\Visits;
 
 use App\Models\HousingVisit;
 use App\Models\User;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class VisitCalendarService
 {
+    public function __construct(
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
+
     /**
      * @return Collection<int, HousingVisit>
      */
     public function candidateCalendar(User $candidate, ?CarbonInterface $from = null, ?CarbonInterface $to = null): Collection
     {
-        return $this->baseQuery($from, $to)
+        return $this->municipalScope
+            ->structurallyValidHousingVisits(
+                $this->baseQuery($from, $to),
+            )
             ->forCandidate($candidate)
             ->with(['application', 'contest', 'housingUnit', 'slot'])
             ->orderBy('starts_at')
@@ -25,9 +33,17 @@ class VisitCalendarService
     /**
      * @return Collection<int, HousingVisit>
      */
-    public function backofficeCalendar(?CarbonInterface $from = null, ?CarbonInterface $to = null, ?int $staffUserId = null): Collection
-    {
-        return $this->baseQuery($from, $to)
+    public function backofficeCalendar(
+        User $actor,
+        ?CarbonInterface $from = null,
+        ?CarbonInterface $to = null,
+        ?int $staffUserId = null,
+    ): Collection {
+        return $this->municipalScope
+            ->housingVisits(
+                $this->baseQuery($from, $to),
+                $actor,
+            )
             ->when($staffUserId !== null, fn (Builder $query): Builder => $query->where('staff_user_id', $staffUserId))
             ->with(['candidate', 'application', 'contest', 'housingUnit'])
             ->orderBy('starts_at')

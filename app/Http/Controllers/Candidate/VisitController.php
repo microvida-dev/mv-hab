@@ -11,6 +11,7 @@ use App\Http\Requests\RescheduleVisitRequest;
 use App\Models\Application;
 use App\Models\HousingVisit;
 use App\Models\VisitSlot;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Visits\VisitBookingService;
 use App\Services\Visits\VisitCalendarService;
 use App\Services\Visits\VisitCancellationService;
@@ -28,6 +29,7 @@ class VisitController extends Controller
         private readonly VisitReschedulingService $rescheduling,
         private readonly VisitCancellationService $cancellation,
         private readonly VisitCalendarService $calendar,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
     public function index(Request $request): View
@@ -37,7 +39,10 @@ class VisitController extends Controller
         $calendar = $this->calendar->candidateCalendar($user);
 
         return view('candidate.visits.index', [
-            'visits' => HousingVisit::query()
+            'visits' => $this->municipalScope
+                ->structurallyValidHousingVisits(
+                    HousingVisit::query(),
+                )
                 ->forCandidate($user)
                 ->with(['application.contest', 'contest', 'housingUnit', 'slot', 'statusHistories.changedBy'])
                 ->latest('starts_at')
@@ -57,7 +62,15 @@ class VisitController extends Controller
         Gate::authorize('create', HousingVisit::class);
 
         return view('candidate.visits.create', [
-            'slots' => VisitSlot::query()->available()->with(['contest', 'housingUnit'])->orderBy('starts_at')->limit(50)->get(),
+            'slots' => $this->municipalScope
+                ->structurallyValidVisitSlots(
+                    VisitSlot::query(),
+                )
+                ->available()
+                ->with(['contest', 'housingUnit'])
+                ->orderBy('starts_at')
+                ->limit(50)
+                ->get(),
             'applications' => Application::query()->forUser($this->authenticatedUser($request))->with('contest')->latest()->get(),
             'notice' => 'O agendamento de visita está sujeito à disponibilidade dos serviços municipais e poderá ser alterado ou cancelado por motivos operacionais. A confirmação será apresentada na plataforma e, quando aplicável, enviada por notificação.',
         ]);
@@ -87,8 +100,15 @@ class VisitController extends Controller
 
         return view('candidate.visits.reschedule', [
             'visit' => $housingVisit,
-            'slots' => VisitSlot::query()
+            'slots' => $this->municipalScope
+                ->structurallyValidVisitSlots(
+                    VisitSlot::query(),
+                )
                 ->available()
+                ->where(
+                    'municipality_id',
+                    $housingVisit->municipality_id,
+                )
                 ->when($housingVisit->contest_id !== null, fn (Builder $query) => $query->where('contest_id', $housingVisit->contest_id))
                 ->when($housingVisit->housing_unit_id !== null, fn (Builder $query) => $query->where('housing_unit_id', $housingVisit->housing_unit_id))
                 ->orderBy('starts_at')

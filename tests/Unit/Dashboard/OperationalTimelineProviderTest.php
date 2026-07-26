@@ -12,6 +12,7 @@ use App\Enums\KeyHandoverStatus;
 use App\Enums\MaintenanceInterventionStatus;
 use App\Enums\MaintenanceRequestStatus;
 use App\Enums\VisitStatus;
+use App\Models\Contest;
 use App\Models\DataSubjectRequest;
 use App\Models\HousingVisit;
 use App\Models\InternalAlert;
@@ -19,8 +20,12 @@ use App\Models\KeyHandoverAppointment;
 use App\Models\MaintenanceIntervention;
 use App\Models\MaintenanceRequest;
 use App\Models\Municipality;
+use App\Models\PlatformOperatorAssignment;
+use App\Models\Program;
 use App\Models\PropertyInspection;
 use App\Models\User;
+use App\Models\VisitAvailability;
+use App\Models\VisitSlot;
 use App\Services\Dashboard\Timeline\Providers\InspectionTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\InternalAlertTimelineProvider;
 use App\Services\Dashboard\Timeline\Providers\KeyHandoverTimelineProvider;
@@ -291,18 +296,98 @@ final class OperationalTimelineProviderTest extends TestCase
         $this->assertSame($request->request_type->value, $events[0]->metadata['type']);
     }
 
-    public function test_visit_provider_exposes_today_schedule(): void
+    public function test_visit_provider_exposes_only_today_schedule_from_user_municipality(): void
     {
-        HousingVisit::factory()->create([
-            'status' => VisitStatus::Confirmed,
-            'scheduled_at' => today()->setTime(12, 0),
-        ]);
+        $municipality = Municipality::factory()->create();
+        $otherMunicipality = Municipality::factory()->create();
+        $user = $this->authorizedUser($municipality->id);
+        $visit = $this->visitForMunicipality(
+            $municipality,
+            today()->setTime(12, 0),
+        );
+        $foreignVisit = $this->visitForMunicipality(
+            $otherMunicipality,
+            today()->setTime(13, 0),
+        );
 
-        $events = (new VisitTimelineProvider)->forUser($this->authorizedUser());
+        $events = app(VisitTimelineProvider::class)
+            ->forUser($user);
 
         $this->assertCount(1, $events);
         $this->assertSame(TimelineType::Visit, $events[0]->type);
         $this->assertSame(VisitStatus::Confirmed->value, $events[0]->metadata['status']);
+        $this->assertSame(
+            $visit->id,
+            $events[0]->metadata['visit_id'],
+        );
+        $this->assertNotSame(
+            $foreignVisit->id,
+            $events[0]->metadata['visit_id'],
+        );
+    }
+
+    public function test_visit_provider_fails_closed_without_municipal_or_global_scope(): void
+    {
+        $municipality = Municipality::factory()->create();
+        $this->visitForMunicipality(
+            $municipality,
+            today()->setTime(12, 0),
+        );
+
+        $events = app(VisitTimelineProvider::class)
+            ->forUser($this->authorizedUser(
+                withoutMunicipality: true,
+            ));
+
+        $this->assertSame([], $events);
+    }
+
+    public function test_visit_provider_allows_explicit_active_global_operator_scope(): void
+    {
+        $municipalityA = Municipality::factory()->create();
+        $municipalityB = Municipality::factory()->create();
+        $visitA = $this->visitForMunicipality(
+            $municipalityA,
+            today()->setTime(12, 0),
+        );
+        $visitB = $this->visitForMunicipality(
+            $municipalityB,
+            today()->setTime(13, 0),
+        );
+        $operator = $this->authorizedUser(
+            withoutMunicipality: true,
+        );
+        PlatformOperatorAssignment::factory()
+            ->for($operator)
+            ->create();
+
+        $events = app(VisitTimelineProvider::class)
+            ->forUser($operator);
+
+        $this->assertEqualsCanonicalizing(
+            [$visitA->id, $visitB->id],
+            collect($events)
+                ->pluck('metadata.visit_id')
+                ->all(),
+        );
+    }
+
+    public function test_visit_provider_requires_source_permission(): void
+    {
+        $municipality = Municipality::factory()->create();
+        $this->visitForMunicipality(
+            $municipality,
+            today()->setTime(12, 0),
+        );
+        $user = User::factory()->create([
+            'status' => 'active',
+            'municipality_id' => $municipality->id,
+        ]);
+
+        $events = app(VisitTimelineProvider::class)
+            ->forUser($user);
+
+        $this->assertSame([], $events);
     }
 
     private function authorizedUser(
@@ -328,5 +413,31 @@ final class OperationalTimelineProviderTest extends TestCase
         $user->assignRole('administrator');
 
         return $user;
+    }
+
+    private function visitForMunicipality(
+        Municipality $municipality,
+        \DateTimeInterface $scheduledAt,
+    ): HousingVisit {
+        $program = Program::factory()->create([
+            'municipality_id' => $municipality->id,
+        ]);
+        $contest = Contest::factory()->create([
+            'program_id' => $program->id,
+        ]);
+        $availability = VisitAvailability::factory()->create([
+            'contest_id' => $contest->id,
+        ]);
+        $slot = VisitSlot::factory()->create([
+            'visit_availability_id' => $availability->id,
+            'contest_id' => $contest->id,
+        ]);
+
+        return HousingVisit::factory()->create([
+            'visit_slot_id' => $slot->id,
+            'contest_id' => $contest->id,
+            'status' => VisitStatus::Confirmed,
+            'scheduled_at' => $scheduledAt,
+        ]);
     }
 }

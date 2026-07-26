@@ -26,7 +26,11 @@ class ApplicationFactory extends Factory
             'user_id' => User::factory(),
             'adhesion_registration_id' => AdhesionRegistration::factory(),
             'program_id' => Program::factory(),
-            'contest_id' => Contest::factory(),
+            'contest_id' => fn (
+                array $attributes,
+            ): int => (int) Contest::factory()->create([
+                'program_id' => $attributes['program_id'],
+            ])->id,
             'household_id' => Household::factory(),
             'current_housing_situation_id' => CurrentHousingSituation::factory(),
             'status' => ApplicationStatus::Draft->value,

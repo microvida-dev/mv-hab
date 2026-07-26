@@ -49,6 +49,7 @@ class FavoritesTest extends TestCase
         $supportAgent = $this->userWithRole('support_agent');
 
         $this->actingAs($supportAgent)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('navigation.favorites.store'), [
                 'workspace_key' => 'administracao',
             ])

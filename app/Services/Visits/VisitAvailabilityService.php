@@ -4,6 +4,7 @@ namespace App\Services\Visits;
 
 use App\Models\User;
 use App\Models\VisitAvailability;
+use App\Services\Municipalities\VisitMunicipalContextService;
 use App\Support\AuditEvents;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -11,20 +12,27 @@ use Illuminate\Validation\ValidationException;
 
 class VisitAvailabilityService
 {
-    public function __construct(private readonly VisitAuditService $audit) {}
+    public function __construct(
+        private readonly VisitAuditService $audit,
+        private readonly VisitMunicipalContextService $municipalContext,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data
      */
     public function store(array $data, User $actor): VisitAvailability
     {
+        unset($data['municipality_id']);
         $this->validateWindow($data);
 
         return DB::transaction(function () use ($data, $actor): VisitAvailability {
-            $this->ensureNoConflict($data);
+            $municipalityId = $this->municipalContext
+                ->municipalityForAvailabilityData($data, $actor);
+            $this->ensureNoConflict($data, $municipalityId);
 
             $availability = new VisitAvailability($data);
             $availability->forceFill([
+                'municipality_id' => $municipalityId,
                 'created_by' => $actor->id,
                 'updated_by' => $actor->id,
                 'timezone' => $data['timezone'] ?? config('app.timezone', 'UTC'),
@@ -42,6 +50,7 @@ class VisitAvailabilityService
      */
     public function update(VisitAvailability $availability, array $data, User $actor): VisitAvailability
     {
+        unset($data['municipality_id']);
         $payload = array_replace($availability->only([
             'contest_id',
             'housing_unit_id',
@@ -57,30 +66,41 @@ class VisitAvailabilityService
         $this->validateWindow($payload);
 
         return DB::transaction(function () use ($availability, $data, $actor, $payload): VisitAvailability {
-            $this->ensureNoConflict($payload, $availability);
+            $lockedAvailability = VisitAvailability::query()
+                ->whereKey($availability)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $municipalityId = $this->municipalContext
+                ->municipalityForAvailabilityData(
+                    $payload,
+                    $actor,
+                    $lockedAvailability,
+                );
+            $this->ensureNoConflict(
+                $payload,
+                $municipalityId,
+                $lockedAvailability,
+            );
 
-            $availability->fill($data);
-            $availability->forceFill(['updated_by' => $actor->id])->save();
-            $this->audit->availability(AuditEvents::UPDATE, $availability, 'Disponibilidade de visitas atualizada.');
+            $lockedAvailability->fill($data);
+            $lockedAvailability->forceFill([
+                'municipality_id' => $municipalityId,
+                'updated_by' => $actor->id,
+            ])->save();
+            $this->audit->availability(AuditEvents::UPDATE, $lockedAvailability, 'Disponibilidade de visitas atualizada.');
 
-            return $availability->refresh();
+            return $lockedAvailability->refresh();
         });
     }
 
     public function activate(VisitAvailability $availability, User $actor): VisitAvailability
     {
-        $availability->forceFill(['is_active' => true, 'updated_by' => $actor->id])->save();
-        $this->audit->availability(AuditEvents::UPDATE, $availability, 'Disponibilidade de visitas ativada.');
-
-        return $availability->refresh();
+        return $this->setActive($availability, $actor, true);
     }
 
     public function deactivate(VisitAvailability $availability, User $actor): VisitAvailability
     {
-        $availability->forceFill(['is_active' => false, 'updated_by' => $actor->id])->save();
-        $this->audit->availability(AuditEvents::UPDATE, $availability, 'Disponibilidade de visitas desativada.');
-
-        return $availability->refresh();
+        return $this->setActive($availability, $actor, false);
     }
 
     /**
@@ -100,10 +120,14 @@ class VisitAvailabilityService
     /**
      * @param  array<string, mixed>  $data
      */
-    private function ensureNoConflict(array $data, ?VisitAvailability $current = null): void
-    {
+    private function ensureNoConflict(
+        array $data,
+        int $municipalityId,
+        ?VisitAvailability $current = null,
+    ): void {
         $query = VisitAvailability::query()
             ->active()
+            ->where('municipality_id', $municipalityId)
             ->where('starts_at', '<', $data['ends_at'])
             ->where('ends_at', '>', $data['starts_at']);
 
@@ -112,7 +136,11 @@ class VisitAvailabilityService
         }
 
         $query->where(function (Builder $builder) use ($data): void {
-            foreach (['staff_user_id', 'housing_unit_id'] as $field) {
+            foreach ([
+                'staff_user_id',
+                'housing_unit_id',
+                'contest_id',
+            ] as $field) {
                 if (! empty($data[$field])) {
                     $builder->orWhere($field, $data[$field]);
                 }
@@ -122,5 +150,39 @@ class VisitAvailabilityService
         if ($query->exists()) {
             throw ValidationException::withMessages(['availability' => 'Já existe uma disponibilidade sobreposta para o técnico ou imóvel indicado.']);
         }
+    }
+
+    private function setActive(
+        VisitAvailability $availability,
+        User $actor,
+        bool $active,
+    ): VisitAvailability {
+        return DB::transaction(function () use (
+            $availability,
+            $actor,
+            $active,
+        ): VisitAvailability {
+            $lockedAvailability = VisitAvailability::query()
+                ->whereKey($availability)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $this->municipalContext->validateAvailabilityForActor(
+                $lockedAvailability,
+                $actor,
+            );
+            $lockedAvailability->forceFill([
+                'is_active' => $active,
+                'updated_by' => $actor->id,
+            ])->save();
+            $this->audit->availability(
+                AuditEvents::UPDATE,
+                $lockedAvailability,
+                $active
+                    ? 'Disponibilidade de visitas ativada.'
+                    : 'Disponibilidade de visitas desativada.',
+            );
+
+            return $lockedAvailability->refresh();
+        });
     }
 }
