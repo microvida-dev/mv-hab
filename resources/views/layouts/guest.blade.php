@@ -18,6 +18,8 @@
         Saltar para o conteúdo principal
     </a>
 
+    <x-demo-environment-banner />
+
     <div class="relative min-h-screen overflow-hidden bg-slate-50">
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(96,165,250,0.30),transparent_32%),radial-gradient(circle_at_20%_85%,rgba(124,58,237,0.22),transparent_30%),linear-gradient(115deg,#eef5ff_0%,#f8fbff_45%,#ffffff_100%)]"></div>
         <div class="absolute left-0 top-0 hidden h-full w-1/2 bg-gradient-to-br from-blue-100/80 via-indigo-100/60 to-purple-100/70 lg:block"></div>

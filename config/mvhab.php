@@ -5,6 +5,17 @@ return [
     'seed_state_of_art_demo' => env('MVHAB_SEED_STATE_OF_ART_DEMO', false),
     'regulatory_demo_mode' => env('MVHAB_REGULATORY_DEMO_MODE', false),
 
+    'municipal_application_demo' => [
+        'enabled' => env(
+            'MVHAB_MUNICIPAL_APPLICATION_DEMO',
+            false,
+        ),
+
+        'reference_date' => env(
+            'MVHAB_DEMO_REFERENCE_DATE',
+        ),
+    ],
+
     'permissions' => [
         'dashboard' => ['view', 'export', 'audit'],
         'users' => ['view', 'create', 'update', 'delete', 'deactivate', 'reactivate', 'force_mfa', 'reset_password', 'audit'],
