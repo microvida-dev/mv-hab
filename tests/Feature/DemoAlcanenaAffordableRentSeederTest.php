@@ -6,11 +6,13 @@ use App\Enums\ContestStatus;
 use App\Enums\ContractTemplateStatus;
 use App\Enums\EligibilityRuleSetStatus;
 use App\Enums\ProgramStatus;
+use App\Enums\RegulatoryConfigurationStatus;
 use App\Enums\RentRuleSetStatus;
 use App\Enums\ScoringRuleSetStatus;
 use App\Enums\TemplateStatus;
 use App\Models\AdhesionRegistration;
 use App\Models\AdministrativeWorkflowConfig;
+use App\Models\AffordableRentRegulatoryProfile;
 use App\Models\AllocationRuleSet;
 use App\Models\Application;
 use App\Models\Contest;
@@ -29,6 +31,7 @@ use App\Models\IncomeRecord;
 use App\Models\NotificationEventRule;
 use App\Models\NotificationTemplate;
 use App\Models\Program;
+use App\Models\RegulatorySnapshot;
 use App\Models\RentRuleSet;
 use App\Models\RequiredDocument;
 use App\Models\ScoringRule;
@@ -39,6 +42,7 @@ use App\Services\Documents\DocumentChecklistService;
 use App\Services\Eligibility\EligibilityDataProvider;
 use App\Services\Scoring\ScoringCriterionEvaluator;
 use App\Services\Scoring\ScoringDataProvider;
+use Database\Seeders\AffordableRentRegulatoryProfileSeeder;
 use Database\Seeders\DemoAlcanenaAffordableRentSeeder;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -63,6 +67,24 @@ class DemoAlcanenaAffordableRentSeederTest extends TestCase
 
         $this->assertSame(ProgramStatus::Published, $program->status);
         $this->assertSame(ContestStatus::Published, $contest->status);
+        $this->assertNotNull($program->regulatory_profile_id);
+        $this->assertNotNull($program->regulatory_snapshot_id);
+        $this->assertSame($program->regulatory_profile_id, $contest->regulatory_profile_id);
+        $this->assertNotNull($contest->regulatory_snapshot_id);
+        $this->assertSame(2, RegulatorySnapshot::query()
+            ->whereIn('source_id', [$program->id, $contest->id])
+            ->count());
+        $this->assertDatabaseHas('affordable_rent_regulatory_profiles', [
+            'code' => AffordableRentRegulatoryProfileSeeder::RSAA_NATIONAL_CODE,
+            'configuration_status' => RegulatoryConfigurationStatus::Incomplete->value,
+            'rent_limits_configured' => false,
+        ]);
+        $this->assertSame(1, AffordableRentRegulatoryProfile::query()
+            ->where('code', 'ALCANENA-PAA-2026-DEMO')
+            ->count());
+        $this->assertSame(1, AffordableRentRegulatoryProfile::query()
+            ->where('code', 'ALCANENA-RSAA-2026-DEMO-INCOMPLETE')
+            ->count());
         $this->assertNotNull($program->published_at);
         $this->assertNotNull($contest->published_at);
         $this->assertSame('Município de Alcanena', $program->municipality->name);

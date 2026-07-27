@@ -3,7 +3,9 @@
 namespace Tests\Feature\Security;
 
 use App\Models\Contest;
+use App\Models\Municipality;
 use App\Models\Permission;
+use App\Models\Program;
 use App\Models\Role;
 use App\Models\TypologyAdequacyRule;
 use App\Models\User;
@@ -80,7 +82,7 @@ class TypologyAdequacyRulesPermissionAccessTest extends TestCase
             'allocations.view',
         ]);
 
-        $rule = TypologyAdequacyRule::factory()->create();
+        $rule = $this->ruleFor($user);
 
         $this->getAsBackofficeUser(
             $user,
@@ -109,7 +111,7 @@ class TypologyAdequacyRulesPermissionAccessTest extends TestCase
             'allocations.create',
         ]);
 
-        $rule = TypologyAdequacyRule::factory()->create();
+        $rule = $this->ruleFor($user);
 
         $this->getAsBackofficeUser(
             $user,
@@ -119,7 +121,7 @@ class TypologyAdequacyRulesPermissionAccessTest extends TestCase
         $this->postAsBackofficeUser(
             $user,
             route('backoffice.allocation.typology-rules.store'),
-            $this->validPayload(['name' => 'Regra autorizada']),
+            $this->validPayload($user, ['name' => 'Regra autorizada']),
         )->assertRedirect();
 
         $this->assertDatabaseHas('typology_adequacy_rules', [
@@ -143,7 +145,7 @@ class TypologyAdequacyRulesPermissionAccessTest extends TestCase
             'allocations.update',
         ]);
 
-        $rule = TypologyAdequacyRule::factory()->create([
+        $rule = $this->ruleFor($user, [
             'is_active' => false,
         ]);
 
@@ -155,7 +157,7 @@ class TypologyAdequacyRulesPermissionAccessTest extends TestCase
         $this->putAsBackofficeUser(
             $user,
             route('backoffice.allocation.typology-rules.update', $rule),
-            $this->validPayload(['name' => 'Regra atualizada']),
+            $this->validPayload($user, ['name' => 'Regra atualizada']),
         )->assertRedirect();
 
         $this->assertDatabaseHas('typology_adequacy_rules', [
@@ -191,7 +193,7 @@ class TypologyAdequacyRulesPermissionAccessTest extends TestCase
     public function test_user_without_allocation_permissions_is_blocked(): void
     {
         $user = $this->userWithCustomRole([]);
-        $rule = TypologyAdequacyRule::factory()->create();
+        $rule = $this->ruleFor($user);
 
         $this->getAsBackofficeUser(
             $user,
@@ -217,7 +219,7 @@ class TypologyAdequacyRulesPermissionAccessTest extends TestCase
             'allocations.update',
         ]);
 
-        $rule = TypologyAdequacyRule::factory()->create([
+        $rule = $this->ruleFor($candidate, [
             'is_active' => false,
         ]);
 
@@ -247,7 +249,7 @@ class TypologyAdequacyRulesPermissionAccessTest extends TestCase
             'allocations.update',
         ]);
 
-        $rule = TypologyAdequacyRule::factory()->create([
+        $rule = $this->ruleFor($auditor, [
             'is_active' => false,
         ]);
 
@@ -288,7 +290,7 @@ class TypologyAdequacyRulesPermissionAccessTest extends TestCase
             'allocations.update',
         ]);
 
-        $rule = TypologyAdequacyRule::factory()->create();
+        $rule = $this->ruleFor($viewer);
 
         $this->assertTrue(
             Gate::forUser($viewer)->allows(
@@ -343,7 +345,7 @@ class TypologyAdequacyRulesPermissionAccessTest extends TestCase
             'allocations.update',
         ]);
 
-        $rule = TypologyAdequacyRule::factory()->create();
+        $rule = $this->ruleFor($updater);
 
         $this->assertFalse(
             Gate::forUser($creator)->allows(
@@ -362,13 +364,39 @@ class TypologyAdequacyRulesPermissionAccessTest extends TestCase
         $this->putAsBackofficeUser(
             $creator,
             route('backoffice.allocation.typology-rules.update', $rule),
-            $this->validPayload(['name' => 'Tentativa recusada']),
+            $this->validPayload($creator, ['name' => 'Tentativa recusada']),
         )->assertForbidden();
 
         $this->assertDatabaseMissing('typology_adequacy_rules', [
             'id' => $rule->id,
             'name' => 'Tentativa recusada',
         ]);
+    }
+
+    public function test_rule_from_another_municipality_is_not_listed_or_mutable(): void
+    {
+        $user = $this->userWithCustomRole([
+            'allocations.view',
+            'allocations.update',
+        ]);
+        $foreignUser = User::factory()->create([
+            'municipality_id' => Municipality::factory()->create()->id,
+        ]);
+        $foreignRule = $this->ruleFor($foreignUser, [
+            'name' => 'Regra de outro município',
+        ]);
+
+        $this->getAsBackofficeUser(
+            $user,
+            route('backoffice.allocation.typology-rules.index'),
+        )
+            ->assertOk()
+            ->assertDontSee('Regra de outro município');
+
+        $this->getAsBackofficeUser(
+            $user,
+            route('backoffice.allocation.typology-rules.edit', $foreignRule),
+        )->assertForbidden();
     }
 
     private function getAsBackofficeUser(
@@ -410,11 +438,13 @@ class TypologyAdequacyRulesPermissionAccessTest extends TestCase
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
      */
-    private function validPayload(array $overrides = []): array
+    private function validPayload(User $user, array $overrides = []): array
     {
+        $contest = $this->contestFor($user);
+
         return array_merge([
             'program_id' => null,
-            'contest_id' => Contest::factory()->create()->id,
+            'contest_id' => $contest->id,
             'name' => 'Regra de adequação',
             'description' => 'Adequação tipológica de teste.',
             'is_active' => true,
@@ -431,6 +461,30 @@ class TypologyAdequacyRulesPermissionAccessTest extends TestCase
             'special_condition_key' => null,
             'priority_order' => 10,
         ], $overrides);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function ruleFor(
+        User $user,
+        array $overrides = [],
+    ): TypologyAdequacyRule {
+        $contest = $this->contestFor($user);
+
+        return TypologyAdequacyRule::factory()->create(array_merge([
+            'program_id' => $contest->program_id,
+            'contest_id' => $contest->id,
+        ], $overrides));
+    }
+
+    private function contestFor(User $user): Contest
+    {
+        $program = Program::factory()->create([
+            'municipality_id' => $user->municipality_id,
+        ]);
+
+        return Contest::factory()->for($program)->create();
     }
 
     /**

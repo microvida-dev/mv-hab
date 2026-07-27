@@ -5,9 +5,15 @@ namespace Tests\Feature;
 use App\Enums\ContestDeadlineType;
 use App\Enums\ContestStatus;
 use App\Enums\ProgramStatus;
+use App\Models\AffordableRentRegulatoryProfile;
+use App\Models\AllocationRuleSet;
 use App\Models\Contest;
+use App\Models\EligibilityRuleSet;
 use App\Models\Municipality;
+use App\Models\PlatformOperatorAssignment;
 use App\Models\Program;
+use App\Models\RentRuleSet;
+use App\Models\TypologyAdequacyRule;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -139,11 +145,13 @@ class Sprint3PortalProgramsTest extends TestCase
     {
         $administrator = $this->administrator();
         $municipality = Municipality::factory()->create();
+        $profile = AffordableRentRegulatoryProfile::factory()->create();
 
         $response = $this->actingAs($administrator)
             ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.programs.store'), [
                 'municipality_id' => $municipality->id,
+                'regulatory_profile_id' => $profile->id,
                 'name' => 'Programa de Arrendamento Municipal',
                 'slug' => '',
                 'summary' => 'Programa público municipal destinado a apoiar o acesso a habitação.',
@@ -192,7 +200,11 @@ class Sprint3PortalProgramsTest extends TestCase
     public function test_administrator_can_create_and_publish_contest_with_formal_deadline(): void
     {
         $administrator = $this->administrator();
-        $program = Program::factory()->published()->create();
+        $profile = AffordableRentRegulatoryProfile::factory()->create();
+        $program = Program::factory()->published()->create([
+            'regulatory_profile_id' => $profile->id,
+            'legal_regime' => $profile->legal_regime,
+        ]);
 
         $response = $this->actingAs($administrator)
             ->withSession(['mfa.verified_at' => now()])
@@ -224,6 +236,27 @@ class Sprint3PortalProgramsTest extends TestCase
         $response->assertRedirect(route('admin.contests.show', $contest));
         $this->assertSame(ContestStatus::Draft, $contest->status);
         $this->assertSame(1, $contest->deadlines()->count());
+
+        EligibilityRuleSet::factory()->active()->create([
+            'program_id' => $program->id,
+            'contest_id' => $contest->id,
+            'regulatory_profile_id' => $profile->id,
+        ]);
+        RentRuleSet::factory()->create([
+            'program_id' => $program->id,
+            'contest_id' => $contest->id,
+            'regulatory_profile_id' => $profile->id,
+        ]);
+        TypologyAdequacyRule::factory()->create([
+            'program_id' => $program->id,
+            'contest_id' => $contest->id,
+            'regulatory_profile_id' => $profile->id,
+        ]);
+        AllocationRuleSet::factory()->create([
+            'program_id' => $program->id,
+            'contest_id' => $contest->id,
+            'regulatory_profile_id' => $profile->id,
+        ]);
 
         $this->actingAs($administrator)
             ->withSession(['mfa.verified_at' => now()])
@@ -269,9 +302,12 @@ class Sprint3PortalProgramsTest extends TestCase
     {
         $this->seed(SystemAccessSeeder::class);
 
-        $administrator = User::factory()->create();
+        $administrator = User::factory()->withoutMunicipality()->create([
+            'status' => 'active',
+        ]);
         $administrator->assignRole('administrator');
+        PlatformOperatorAssignment::factory()->for($administrator)->create();
 
-        return $administrator;
+        return $administrator->refresh();
     }
 }
