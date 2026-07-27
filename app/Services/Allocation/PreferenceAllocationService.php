@@ -4,6 +4,7 @@ namespace App\Services\Allocation;
 
 use App\DataTransferObjects\AllocationExecutionResult;
 use App\Enums\AllocationStatus;
+use App\Enums\ApplicationSnapshotType;
 use App\Enums\HousingCompatibilityStatus;
 use App\Enums\HousingUnitStatus;
 use App\Models\AllocationRun;
@@ -11,6 +12,7 @@ use App\Models\ContestHousingUnit;
 use App\Models\DefinitiveListEntry;
 use App\Models\HousingPreference;
 use App\Models\User;
+use App\Services\Applications\ApplicationHousingPreferenceSourceResolver;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
 use Illuminate\Support\Collection;
@@ -21,6 +23,7 @@ class PreferenceAllocationService extends RankingAllocationService
         TypologyAdequacyService $typologyService,
         ContestHousingUnitService $contestHousingUnitService,
         private readonly AuditLogger $auditLogger,
+        private readonly ApplicationHousingPreferenceSourceResolver $preferenceSource,
     ) {
         parent::__construct($typologyService, $contestHousingUnitService);
     }
@@ -32,6 +35,7 @@ class PreferenceAllocationService extends RankingAllocationService
             ->with([
                 'application.housingPreferences',
                 'application.regulatorySnapshot',
+                'application.snapshots',
             ])
             ->orderBy('rank_position')
             ->get();
@@ -125,6 +129,21 @@ class PreferenceAllocationService extends RankingAllocationService
     ): ?ContestHousingUnit {
         $application = $this->requiredApplication($entry);
         $regulatorySnapshotId = $application->regulatory_snapshot_id;
+        $finalSnapshot = $application->snapshots->firstWhere(
+            'snapshot_type',
+            ApplicationSnapshotType::HousingPreferences,
+        );
+        $snapshotData = $finalSnapshot?->getAttribute('data');
+        $snapshotPreferences = is_array($snapshotData)
+            ? collect($snapshotData)
+            : collect();
+
+        if (
+            ! $this->preferenceSource->source($application)->isOfficial()
+            || $snapshotPreferences->isEmpty()
+        ) {
+            return null;
+        }
 
         foreach (
             $application->housingPreferences
@@ -135,6 +154,21 @@ class PreferenceAllocationService extends RankingAllocationService
                         && $preference->compatibility_status === HousingCompatibilityStatus::Compatible
                         && $regulatorySnapshotId !== null
                         && $preference->regulatory_snapshot_id === $regulatorySnapshotId,
+                )
+                ->filter(
+                    fn (HousingPreference $preference): bool => $preference->preference_order >= 1
+                        && $preference->preference_order <= 3
+                        && $snapshotPreferences->contains(
+                            fn (mixed $snapshot): bool => is_array($snapshot)
+                                && ($snapshot['source'] ?? null)
+                                    === 'housing_preferences'
+                                && (int) ($snapshot['contest_housing_unit_id'] ?? 0)
+                                    === $preference->contest_housing_unit_id
+                                && (int) ($snapshot['preference_order'] ?? 0)
+                                    === $preference->preference_order
+                                && (int) ($snapshot['regulatory_snapshot_id'] ?? 0)
+                                    === $preference->regulatory_snapshot_id,
+                        ),
                 )
                 ->sortBy('preference_order') as $preference
         ) {
