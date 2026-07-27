@@ -2,12 +2,12 @@
 
 namespace App\Services\Candidate;
 
+use App\Events\HousingPreferenceInputsChanged;
 use App\Models\AdhesionRegistration;
 use App\Models\Household;
 use App\Models\HouseholdMember;
 use App\Models\IncomeRecord;
 use App\Models\User;
-use App\Services\Allocation\HousingPreferenceInvalidationService;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +19,6 @@ class IncomeService
         private readonly HouseholdService $householdService,
         private readonly HouseholdMemberService $memberService,
         private readonly AuditLogger $auditLogger,
-        private readonly HousingPreferenceInvalidationService $preferenceInvalidation,
     ) {}
 
     /**
@@ -45,9 +44,10 @@ class IncomeService
             ]);
             $record->save();
             $this->refreshTotals($member, $household);
-            $this->preferenceInvalidation->forHousehold(
+            HousingPreferenceInputsChanged::dispatch(
                 $household,
                 'Rendimentos do agregado alterados.',
+                HousingPreferenceInputsChanged::INCOME,
             );
 
             $this->auditLogger->record(
@@ -103,9 +103,10 @@ class IncomeService
             }
 
             if ($changedFields !== []) {
-                $this->preferenceInvalidation->forHousehold(
+                HousingPreferenceInputsChanged::dispatch(
                     $household,
                     'Rendimentos do agregado alterados.',
+                    HousingPreferenceInputsChanged::INCOME,
                 );
             }
 
@@ -135,9 +136,10 @@ class IncomeService
         DB::transaction(function () use ($record, $actor, $member, $household) {
             $record->delete();
             $this->refreshTotals($member, $household);
-            $this->preferenceInvalidation->forHousehold(
+            HousingPreferenceInputsChanged::dispatch(
                 $household,
                 'Rendimentos do agregado alterados.',
+                HousingPreferenceInputsChanged::INCOME,
             );
 
             $this->auditLogger->record(

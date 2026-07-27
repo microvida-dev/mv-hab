@@ -50,6 +50,16 @@ class HousingPreferenceInvalidationService
             ->each(function (Application $application) use ($reason, &$affected): void {
                 $count = $application->housingPreferences()
                     ->whereNull('locked_at')
+                    ->where(function ($query) use ($reason): void {
+                        $query
+                            ->whereNull('invalidated_at')
+                            ->orWhere(
+                                'compatibility_status',
+                                '!=',
+                                HousingCompatibilityStatus::RequiresRevalidation->value,
+                            )
+                            ->orWhere('invalidation_reason', '!=', $reason);
+                    })
                     ->update([
                         'compatibility_status' => HousingCompatibilityStatus::RequiresRevalidation->value,
                         'invalidated_at' => now(),

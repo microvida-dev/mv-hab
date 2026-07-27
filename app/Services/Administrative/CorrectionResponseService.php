@@ -7,6 +7,7 @@ use App\Enums\CorrectionRequestItemStatus;
 use App\Enums\CorrectionRequestStatus;
 use App\Enums\CorrectionResponseReviewResult;
 use App\Enums\CorrectionResponseStatus;
+use App\Events\HousingPreferenceInputsChanged;
 use App\Models\AdministrativeProcess;
 use App\Models\Application;
 use App\Models\CorrectionRequest;
@@ -83,6 +84,17 @@ class CorrectionResponseService
                 description: 'Resposta ao pedido de aperfeiçoamento submetida pelo candidato.',
                 metadata: ['document_linked' => $documentId !== null],
             );
+
+            $application = $this->requiredApplication($request);
+            $household = $application->household;
+
+            if ($household !== null) {
+                HousingPreferenceInputsChanged::dispatch(
+                    $household,
+                    'Resposta a pedido de aperfeiçoamento submetida.',
+                    HousingPreferenceInputsChanged::CORRECTION,
+                );
+            }
 
             $response->refresh();
 

@@ -2,11 +2,11 @@
 
 namespace App\Services\Candidate;
 
+use App\Events\HousingPreferenceInputsChanged;
 use App\Models\AdhesionRegistration;
 use App\Models\Household;
 use App\Models\HouseholdMember;
 use App\Models\User;
-use App\Services\Allocation\HousingPreferenceInvalidationService;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
 use Illuminate\Support\Carbon;
@@ -18,7 +18,6 @@ class HouseholdMemberService
     public function __construct(
         private readonly HouseholdService $householdService,
         private readonly AuditLogger $auditLogger,
-        private readonly HousingPreferenceInvalidationService $preferenceInvalidation,
     ) {}
 
     /**
@@ -36,9 +35,10 @@ class HouseholdMemberService
             ]);
             $member->save();
             $this->householdService->refreshMetrics($household);
-            $this->preferenceInvalidation->forHousehold(
+            HousingPreferenceInputsChanged::dispatch(
                 $household,
                 'Composição do agregado alterada.',
+                HousingPreferenceInputsChanged::COMPOSITION,
             );
 
             $this->auditLogger->record(
@@ -82,9 +82,10 @@ class HouseholdMemberService
             $this->householdService->refreshMetrics($household);
 
             if ($changedFields !== []) {
-                $this->preferenceInvalidation->forHousehold(
+                HousingPreferenceInputsChanged::dispatch(
                     $household,
                     'Dados de um membro do agregado alterados.',
+                    HousingPreferenceInputsChanged::COMPOSITION,
                 );
             }
 
@@ -121,9 +122,10 @@ class HouseholdMemberService
             $member->incomeRecords()->delete();
             $member->delete();
             $this->householdService->refreshMetrics($household);
-            $this->preferenceInvalidation->forHousehold(
+            HousingPreferenceInputsChanged::dispatch(
                 $household,
                 'Composição do agregado alterada.',
+                HousingPreferenceInputsChanged::COMPOSITION,
             );
 
             $this->auditLogger->record(

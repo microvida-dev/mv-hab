@@ -4,10 +4,10 @@ namespace App\Services\Candidate;
 
 use App\Enums\HousingCondition;
 use App\Enums\HousingStatus;
+use App\Events\HousingPreferenceInputsChanged;
 use App\Models\AdhesionRegistration;
 use App\Models\CurrentHousingSituation;
 use App\Models\User;
-use App\Services\Allocation\HousingPreferenceInvalidationService;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +17,6 @@ class HousingSituationService
     public function __construct(
         private readonly HouseholdService $householdService,
         private readonly AuditLogger $auditLogger,
-        private readonly HousingPreferenceInvalidationService $preferenceInvalidation,
     ) {}
 
     /**
@@ -45,9 +44,10 @@ class HousingSituationService
             $situation->save();
 
             if ($changedFields !== []) {
-                $this->preferenceInvalidation->forRegistration(
+                HousingPreferenceInputsChanged::dispatch(
                     $registration,
                     'Situação habitacional ou necessidades de acessibilidade alteradas.',
+                    HousingPreferenceInputsChanged::HOUSING,
                 );
             }
 

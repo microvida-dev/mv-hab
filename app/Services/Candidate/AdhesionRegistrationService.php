@@ -3,6 +3,7 @@
 namespace App\Services\Candidate;
 
 use App\Enums\AdhesionRegistrationStatus;
+use App\Events\HousingPreferenceInputsChanged;
 use App\Models\AdhesionRegistration;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
@@ -65,6 +66,14 @@ class AdhesionRegistrationService
             }
 
             $registration->save();
+
+            if ($changedFields !== []) {
+                HousingPreferenceInputsChanged::dispatch(
+                    $registration,
+                    'Dados do Registo de Adesão alterados.',
+                    HousingPreferenceInputsChanged::REGISTRATION,
+                );
+            }
 
             if ($registration->status !== $beforeStatus) {
                 $this->recordStatusHistory(

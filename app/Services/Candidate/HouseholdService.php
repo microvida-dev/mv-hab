@@ -4,11 +4,11 @@ namespace App\Services\Candidate;
 
 use App\Enums\AdhesionRegistrationStatus;
 use App\Enums\HouseholdRelationship;
+use App\Events\HousingPreferenceInputsChanged;
 use App\Models\AdhesionRegistration;
 use App\Models\Household;
 use App\Models\HouseholdMember;
 use App\Models\User;
-use App\Services\Allocation\HousingPreferenceInvalidationService;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
 use Illuminate\Support\Carbon;
@@ -19,7 +19,6 @@ class HouseholdService
 {
     public function __construct(
         private readonly AuditLogger $auditLogger,
-        private readonly HousingPreferenceInvalidationService $preferenceInvalidation,
     ) {}
 
     /**
@@ -52,9 +51,10 @@ class HouseholdService
 
             $this->syncApplicant($household, $registration);
             $this->refreshMetrics($household);
-            $this->preferenceInvalidation->forHousehold(
+            HousingPreferenceInputsChanged::dispatch(
                 $household,
                 'Agregado familiar atualizado.',
+                HousingPreferenceInputsChanged::COMPOSITION,
             );
 
             $this->auditLogger->record(
@@ -92,9 +92,10 @@ class HouseholdService
             $this->refreshMetrics($household);
 
             if ($changedFields !== []) {
-                $this->preferenceInvalidation->forHousehold(
+                HousingPreferenceInputsChanged::dispatch(
                     $household,
                     'Dados gerais do agregado alterados.',
+                    HousingPreferenceInputsChanged::COMPOSITION,
                 );
             }
 
