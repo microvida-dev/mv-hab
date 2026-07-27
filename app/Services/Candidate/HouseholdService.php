@@ -8,6 +8,7 @@ use App\Models\AdhesionRegistration;
 use App\Models\Household;
 use App\Models\HouseholdMember;
 use App\Models\User;
+use App\Services\Allocation\HousingPreferenceInvalidationService;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
 use Illuminate\Support\Carbon;
@@ -16,7 +17,10 @@ use Illuminate\Validation\ValidationException;
 
 class HouseholdService
 {
-    public function __construct(private readonly AuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly HousingPreferenceInvalidationService $preferenceInvalidation,
+    ) {}
 
     /**
      * @param  array<string, bool|float|int|string|null>  $data
@@ -48,6 +52,10 @@ class HouseholdService
 
             $this->syncApplicant($household, $registration);
             $this->refreshMetrics($household);
+            $this->preferenceInvalidation->forHousehold(
+                $household,
+                'Agregado familiar atualizado.',
+            );
 
             $this->auditLogger->record(
                 event: AuditEvents::CREATE,
@@ -82,6 +90,13 @@ class HouseholdService
 
             $this->syncApplicant($household, $registration);
             $this->refreshMetrics($household);
+
+            if ($changedFields !== []) {
+                $this->preferenceInvalidation->forHousehold(
+                    $household,
+                    'Dados gerais do agregado alterados.',
+                );
+            }
 
             $this->auditLogger->record(
                 event: AuditEvents::UPDATE,

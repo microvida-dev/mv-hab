@@ -7,6 +7,7 @@ use App\Enums\HousingStatus;
 use App\Models\AdhesionRegistration;
 use App\Models\CurrentHousingSituation;
 use App\Models\User;
+use App\Services\Allocation\HousingPreferenceInvalidationService;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ class HousingSituationService
     public function __construct(
         private readonly HouseholdService $householdService,
         private readonly AuditLogger $auditLogger,
+        private readonly HousingPreferenceInvalidationService $preferenceInvalidation,
     ) {}
 
     /**
@@ -41,6 +43,13 @@ class HousingSituationService
             $changedFields = array_keys($situation->getDirty());
             $situation->forceFill(['adhesion_registration_id' => $registration->id]);
             $situation->save();
+
+            if ($changedFields !== []) {
+                $this->preferenceInvalidation->forRegistration(
+                    $registration,
+                    'Situação habitacional ou necessidades de acessibilidade alteradas.',
+                );
+            }
 
             $this->auditLogger->record(
                 event: $created ? AuditEvents::CREATE : AuditEvents::UPDATE,

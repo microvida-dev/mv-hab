@@ -10,9 +10,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
  * @property ContestHousingUnitStatus $status
+ * @property Carbon|null $availability_starts_at
+ * @property Carbon|null $availability_ends_at
+ * @property HousingUnit $housingUnit
  */
 class ContestHousingUnit extends Model
 {

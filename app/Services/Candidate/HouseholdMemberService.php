@@ -6,6 +6,7 @@ use App\Models\AdhesionRegistration;
 use App\Models\Household;
 use App\Models\HouseholdMember;
 use App\Models\User;
+use App\Services\Allocation\HousingPreferenceInvalidationService;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
 use Illuminate\Support\Carbon;
@@ -17,6 +18,7 @@ class HouseholdMemberService
     public function __construct(
         private readonly HouseholdService $householdService,
         private readonly AuditLogger $auditLogger,
+        private readonly HousingPreferenceInvalidationService $preferenceInvalidation,
     ) {}
 
     /**
@@ -34,6 +36,10 @@ class HouseholdMemberService
             ]);
             $member->save();
             $this->householdService->refreshMetrics($household);
+            $this->preferenceInvalidation->forHousehold(
+                $household,
+                'Composição do agregado alterada.',
+            );
 
             $this->auditLogger->record(
                 event: AuditEvents::CREATE,
@@ -75,6 +81,13 @@ class HouseholdMemberService
             $this->refreshIncomeSummary($member);
             $this->householdService->refreshMetrics($household);
 
+            if ($changedFields !== []) {
+                $this->preferenceInvalidation->forHousehold(
+                    $household,
+                    'Dados de um membro do agregado alterados.',
+                );
+            }
+
             $this->auditLogger->record(
                 event: AuditEvents::UPDATE,
                 auditable: $member,
@@ -108,6 +121,10 @@ class HouseholdMemberService
             $member->incomeRecords()->delete();
             $member->delete();
             $this->householdService->refreshMetrics($household);
+            $this->preferenceInvalidation->forHousehold(
+                $household,
+                'Composição do agregado alterada.',
+            );
 
             $this->auditLogger->record(
                 event: AuditEvents::DELETE,

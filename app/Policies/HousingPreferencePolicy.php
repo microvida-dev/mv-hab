@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ApplicationStatus;
 use App\Models\Application;
 use App\Models\HousingPreference;
 use App\Models\User;
@@ -27,6 +28,8 @@ class HousingPreferencePolicy
     {
         return $user->hasRole('candidate')
             && $application->user_id === $user->id
+            && $application->status === ApplicationStatus::Draft
+            && $application->housingPreferences()->whereNotNull('locked_at')->doesntExist()
             && $application->allocations()->doesntExist()
             && $this->canAccess($user, 'allocations', 'update');
     }

@@ -7,6 +7,7 @@ use App\Models\Household;
 use App\Models\HouseholdMember;
 use App\Models\IncomeRecord;
 use App\Models\User;
+use App\Services\Allocation\HousingPreferenceInvalidationService;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,7 @@ class IncomeService
         private readonly HouseholdService $householdService,
         private readonly HouseholdMemberService $memberService,
         private readonly AuditLogger $auditLogger,
+        private readonly HousingPreferenceInvalidationService $preferenceInvalidation,
     ) {}
 
     /**
@@ -43,6 +45,10 @@ class IncomeService
             ]);
             $record->save();
             $this->refreshTotals($member, $household);
+            $this->preferenceInvalidation->forHousehold(
+                $household,
+                'Rendimentos do agregado alterados.',
+            );
 
             $this->auditLogger->record(
                 event: AuditEvents::CREATE,
@@ -96,6 +102,13 @@ class IncomeService
                 $this->memberService->refreshIncomeSummary($previousMember);
             }
 
+            if ($changedFields !== []) {
+                $this->preferenceInvalidation->forHousehold(
+                    $household,
+                    'Rendimentos do agregado alterados.',
+                );
+            }
+
             $this->auditLogger->record(
                 event: AuditEvents::UPDATE,
                 auditable: $record,
@@ -122,6 +135,10 @@ class IncomeService
         DB::transaction(function () use ($record, $actor, $member, $household) {
             $record->delete();
             $this->refreshTotals($member, $household);
+            $this->preferenceInvalidation->forHousehold(
+                $household,
+                'Rendimentos do agregado alterados.',
+            );
 
             $this->auditLogger->record(
                 event: AuditEvents::DELETE,

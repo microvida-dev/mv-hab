@@ -13,7 +13,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property HousingUnitStatus $status
+ * @property HousingPublicStatus|null $public_status
+ * @property PublicVisibilityStatus $public_visibility_status
+ * @property Carbon|null $published_at
+ * @property Carbon|null $unpublished_at
+ */
 class HousingUnit extends Model
 {
     /** @use HasFactory<HousingUnitFactory> */

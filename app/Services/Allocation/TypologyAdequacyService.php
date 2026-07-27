@@ -5,15 +5,30 @@ namespace App\Services\Allocation;
 use App\Enums\TypologyAdequacyResult;
 use App\Models\Application;
 use App\Models\ContestHousingUnit;
+use App\Models\Household;
 use App\Models\TypologyAdequacyRule;
+use App\Support\HousingTypology;
 use Illuminate\Database\Eloquent\Collection;
 
 class TypologyAdequacyService
 {
     public function evaluate(Application $application, ContestHousingUnit $unit): TypologyAdequacyResult
     {
-        $rules = $this->rulesFor($unit);
+        return $this->evaluateWithRules(
+            $application,
+            $unit,
+            $this->rulesFor($unit),
+        );
+    }
 
+    /**
+     * @param  Collection<int, TypologyAdequacyRule>  $rules
+     */
+    public function evaluateWithRules(
+        Application $application,
+        ContestHousingUnit $unit,
+        Collection $rules,
+    ): TypologyAdequacyResult {
         if ($rules->isEmpty()) {
             return TypologyAdequacyResult::RequiresManualReview;
         }
@@ -36,11 +51,20 @@ class TypologyAdequacyService
     /**
      * @return Collection<int, TypologyAdequacyRule>
      */
-    public function rulesFor(ContestHousingUnit $unit): Collection
-    {
+    public function rulesFor(
+        ContestHousingUnit $unit,
+        ?int $regulatoryProfileId = null,
+    ): Collection {
         $contestRules = TypologyAdequacyRule::query()
             ->active()
             ->where('contest_id', $unit->contest_id)
+            ->when(
+                $regulatoryProfileId !== null,
+                fn ($query) => $query->where(
+                    'regulatory_profile_id',
+                    $regulatoryProfileId,
+                ),
+            )
             ->orderBy('priority_order')
             ->get();
 
@@ -52,6 +76,13 @@ class TypologyAdequacyService
             ->active()
             ->where('program_id', $unit->program_id)
             ->whereNull('contest_id')
+            ->when(
+                $regulatoryProfileId !== null,
+                fn ($query) => $query->where(
+                    'regulatory_profile_id',
+                    $regulatoryProfileId,
+                ),
+            )
             ->orderBy('priority_order')
             ->get();
     }
@@ -61,7 +92,11 @@ class TypologyAdequacyService
      */
     public function composition(Application $application): array
     {
-        $members = $application->household?->members()->get() ?? collect();
+        $application->loadMissing('household.members');
+        $household = $application->getRelationValue('household');
+        $members = $household instanceof Household
+            ? $household->members
+            : collect();
 
         return [
             'members' => $members->count(),
@@ -97,8 +132,17 @@ class TypologyAdequacyService
             return false;
         }
 
-        if ($rule->typology && $unit->typology !== $rule->typology) {
-            return false;
+        if ($rule->typology) {
+            $requiredTypology = HousingTypology::from($rule->typology);
+            $unitTypology = HousingTypology::from($unit->typology);
+
+            if (
+                ! $requiredTypology instanceof HousingTypology
+                || ! $unitTypology instanceof HousingTypology
+                || $unitTypology->compare($requiredTypology) !== 0
+            ) {
+                return false;
+            }
         }
 
         if ($rule->requires_accessibility && (! $unit->accessible || ! $composition['requires_accessibility'])) {

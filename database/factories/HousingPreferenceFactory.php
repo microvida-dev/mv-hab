@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\HousingCompatibilityStatus;
 use App\Models\Application;
 use App\Models\Contest;
 use App\Models\ContestHousingUnit;
@@ -23,6 +24,12 @@ class HousingPreferenceFactory extends Factory
             'housing_unit_id' => HousingUnit::factory(),
             'preference_order' => 1,
             'notes' => fake()->optional()->sentence(),
+            'compatibility_status' => HousingCompatibilityStatus::Compatible,
+            'compatibility_snapshot' => ['test_data' => true],
+            'evaluated_at' => now(),
+            'invalidated_at' => null,
+            'invalidation_reason' => null,
+            'locked_at' => null,
         ];
     }
 }
