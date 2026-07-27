@@ -12,8 +12,9 @@ final class MunicipalApplicationDemoSeeder extends Seeder
         app(MunicipalApplicationDemoContext::class)
             ->assertSeederAllowed();
 
-        $this->call(
+        $this->call([
             MunicipalApplicationDemoAccessSeeder::class,
-        );
+            MunicipalApplicationDemoCatalogSeeder::class,
+        ]);
     }
 }
