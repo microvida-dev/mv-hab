@@ -24,6 +24,7 @@ use App\Models\RegulatorySnapshot;
 use App\Models\TypologyAdequacyRule;
 use App\Services\Allocation\AllocationRuleSetResolver;
 use App\Services\Allocation\TypologyAdequacyService;
+use App\Services\Regulatory\AnnualHouseholdIncomeLimitCalculator;
 use App\Services\Regulatory\MunicipalRegulatoryOverlayService;
 use App\Support\DecimalMoney;
 use App\Support\HousingTypology;
@@ -38,6 +39,7 @@ class HousingCompatibilityService
         private readonly AllocationRuleSetResolver $allocationRules,
         private readonly TypologyAdequacyService $typology,
         private readonly MunicipalRegulatoryOverlayService $regulatoryOverlay,
+        private readonly AnnualHouseholdIncomeLimitCalculator $annualIncomeLimits,
     ) {}
 
     /**
@@ -175,6 +177,7 @@ class HousingCompatibilityService
      *     income_complete: bool,
      *     annual_income: string|null,
      *     annual_income_limit: string|null,
+     *     annual_income_limit_evidence: array<string, mixed>,
      *     monthly_income: string|null,
      *     maximum_monthly_rent: string|null,
      *     maximum_effort_rate_percentage: string|null,
@@ -196,10 +199,12 @@ class HousingCompatibilityService
         $monthlyIncome = $incomeComplete
             ? $this->monthlyIncome($application)
             : null;
-        $annualLimit = $this->annualIncomeLimit(
+        $annualLimitResult = $this->annualIncomeLimits->calculate(
             $memberCount,
             $context['regulatory_parameters'],
+            $context['reference_date'],
         );
+        $annualLimit = $annualLimitResult->effectiveLimit;
         $maximumEffortRate = $this->decimal(
             $context['regulatory_parameters']['maximum_effort_rate_percentage']
                 ?? null,
@@ -227,6 +232,7 @@ class HousingCompatibilityService
             'income_complete' => $incomeComplete,
             'annual_income' => $annualIncome,
             'annual_income_limit' => $annualLimit,
+            'annual_income_limit_evidence' => $annualLimitResult->toArray(),
             'monthly_income' => $monthlyIncome,
             'maximum_monthly_rent' => $monthlyIncome !== null
                 && $maximumEffortRate !== null
@@ -246,7 +252,7 @@ class HousingCompatibilityService
                 && $ruleSet->allow_preferences
                 && $ruleSet->regulatory_profile_id === $profile->id
                 && $context['typology_rules']->isNotEmpty()
-                && $annualLimit !== null
+                && $annualLimitResult->isConfigured()
                 && $maximumEffortRate !== null,
         ];
     }
@@ -358,7 +364,12 @@ class HousingCompatibilityService
         $incomeComplete = $this->incomeIsComplete($members);
         $monthlyIncome = $this->monthlyIncome($application);
         $annualIncome = $this->annualIncome($application);
-        $annualLimit = $this->annualIncomeLimit($memberCount, $parameters);
+        $annualLimitResult = $this->annualIncomeLimits->calculate(
+            $memberCount,
+            $parameters,
+            $referenceDate,
+        );
+        $annualLimit = $annualLimitResult->effectiveLimit;
         $rent = $this->decimal($unit->monthly_rent ?? $housingUnit->monthly_rent);
         $maximumEffortRate = $this->decimal(
             $parameters['maximum_effort_rate_percentage'] ?? null,
@@ -391,7 +402,7 @@ class HousingCompatibilityService
             && $ruleSet instanceof AllocationRuleSet
             && $ruleSet->allow_preferences
             && $ruleSet->regulatory_profile_id === $profile->id
-            && $annualLimit !== null
+            && $annualLimitResult->isConfigured()
             && $maximumEffortRate !== null
             && $context['typology_rules']->isNotEmpty();
         $contestOpen = $contest->status === ContestStatus::Published
@@ -499,6 +510,7 @@ class HousingCompatibilityService
                 'household_members' => $memberCount,
                 'annual_income' => $annualIncome,
                 'annual_income_limit' => $annualLimit,
+                'annual_income_limit_evidence' => $annualLimitResult->toArray(),
                 'monthly_income' => $monthlyIncome,
                 'monthly_rent' => $rent,
                 'maximum_effort_rate_percentage' => $maximumEffortRate,
@@ -589,39 +601,6 @@ class HousingCompatibilityService
         return $amounts->containsStrict(null)
             ? null
             : DecimalMoney::sum($amounts);
-    }
-
-    /**
-     * @param  array<string, mixed>  $parameters
-     */
-    private function annualIncomeLimit(int $members, array $parameters): ?string
-    {
-        $base = $this->decimal($parameters['annual_income_base_limit'] ?? null);
-        $second = $this->decimal($parameters['second_person_increment'] ?? null);
-        $additional = $this->decimal($parameters['additional_person_increment'] ?? null);
-
-        if ($members < 1 || $base === null) {
-            return null;
-        }
-
-        if ($members === 1) {
-            return $base;
-        }
-
-        if ($second === null) {
-            return null;
-        }
-
-        $limit = DecimalMoney::add($base, $second);
-
-        return $members === 2
-            ? $limit
-            : ($additional === null
-                ? null
-                : DecimalMoney::add(
-                    $limit,
-                    DecimalMoney::multiply($additional, $members - 2),
-                ));
     }
 
     /**

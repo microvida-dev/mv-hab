@@ -19,6 +19,7 @@ use App\Models\Program;
 use App\Models\User;
 use App\Services\Allocation\TypologyAdequacyService;
 use App\Services\Documents\DocumentChecklistService;
+use App\Services\Regulatory\AnnualHouseholdIncomeLimitCalculator;
 use App\Services\Regulatory\MunicipalRegulatoryOverlayService;
 use App\Support\DecimalMoney;
 use BackedEnum;
@@ -40,6 +41,7 @@ class EligibilityDataProvider
         private readonly TypologyAdequacyService $typologyAdequacyService,
         private readonly MunicipalRegulatoryOverlayService $overlayService,
         private readonly EligibilityRuleSetResolver $ruleSetResolver,
+        private readonly AnnualHouseholdIncomeLimitCalculator $annualIncomeLimits,
     ) {}
 
     /**
@@ -120,9 +122,12 @@ class EligibilityDataProvider
                     $minimumAdultMonthlyIncome,
                 ) >= 0,
             );
-        $annualIncomeLimit = $memberCount > 0
-            ? $this->annualIncomeLimit($memberCount, $regulatoryParameters)
-            : null;
+        $annualIncomeLimitResult = $this->annualIncomeLimits->calculate(
+            $memberCount,
+            $regulatoryParameters,
+            $referenceDate,
+        );
+        $annualIncomeLimit = $annualIncomeLimitResult->effectiveLimit;
         $selectedUnits = $this->selectedContestUnits($application);
         $typologyResults = $application instanceof Application
             ? $selectedUnits->map(
@@ -298,6 +303,7 @@ class EligibilityDataProvider
                     'monthly_per_capita' => $memberCount > 0 ? (float) DecimalMoney::divide($monthlyIncome, $memberCount) : null,
                     'annual_per_capita' => $memberCount > 0 ? (float) DecimalMoney::divide($annualIncome, $memberCount) : null,
                     'alcanena_annual_income_limit' => $annualIncomeLimit !== null ? (float) $annualIncomeLimit : null,
+                    'annual_income_limit_evidence' => $annualIncomeLimitResult->toArray(),
                     'rmmg_2026' => $minimumAdultMonthlyIncome !== null ? (float) $minimumAdultMonthlyIncome : null,
                     'all_non_dependent_adults_meet_rmmg' => $allAdultsMeetRmmg,
                 ],
@@ -328,6 +334,7 @@ class EligibilityDataProvider
                     'reference_date' => $referenceDate->toIso8601String(),
                     'regulatory_profile_id' => $ruleSet?->regulatory_profile_id,
                     'parameters' => $regulatoryParameters,
+                    'annual_income_limit' => $annualIncomeLimitResult->toArray(),
                 ],
                 'calculated_values' => [
                     'members_count' => $memberCount,
@@ -396,53 +403,19 @@ class EligibilityDataProvider
     }
 
     /**
-     * @param  array{
-     *     maximum_effort_rate_percentage: string|null,
-     *     minimum_adult_monthly_income: string|null,
-     *     annual_income_base_limit: string|null,
-     *     second_person_increment: string|null,
-     *     additional_person_increment: string|null
-     * }  $parameters
-     */
-    private function annualIncomeLimit(int $memberCount, array $parameters): ?string
-    {
-        $base = $parameters['annual_income_base_limit'];
-        $secondPerson = $parameters['second_person_increment'];
-        $additionalPerson = $parameters['additional_person_increment'];
-
-        if ($base === null) {
-            return null;
-        }
-
-        if ($memberCount <= 1) {
-            return DecimalMoney::normalize($base);
-        }
-
-        if ($secondPerson === null) {
-            return null;
-        }
-
-        $limit = DecimalMoney::add($base, $secondPerson);
-
-        if ($memberCount === 2) {
-            return $limit;
-        }
-
-        return $additionalPerson === null
-            ? null
-            : DecimalMoney::add(
-                $limit,
-                DecimalMoney::multiply($additionalPerson, $memberCount - 2),
-            );
-    }
-
-    /**
      * @return array{
      *     maximum_effort_rate_percentage: string|null,
      *     minimum_adult_monthly_income: string|null,
      *     annual_income_base_limit: string|null,
      *     second_person_increment: string|null,
-     *     additional_person_increment: string|null
+     *     additional_person_increment: string|null,
+     *     tax_year: int|null,
+     *     sixth_irs_bracket_upper_limit: string|null,
+     *     irs_source_reference: string|null,
+     *     irs_source_version: string|null,
+     *     irs_effective_from: string|null,
+     *     irs_effective_until: string|null,
+     *     metadata: array<string, mixed>
      * }
      */
     private function regulatoryParameters(?EligibilityRuleSet $ruleSet): array
@@ -454,6 +427,13 @@ class EligibilityDataProvider
                 'annual_income_base_limit' => null,
                 'second_person_increment' => null,
                 'additional_person_increment' => null,
+                'tax_year' => null,
+                'sixth_irs_bracket_upper_limit' => null,
+                'irs_source_reference' => null,
+                'irs_source_version' => null,
+                'irs_effective_from' => null,
+                'irs_effective_until' => null,
+                'metadata' => [],
             ];
         }
 
@@ -489,6 +469,27 @@ class EligibilityDataProvider
             'additional_person_increment' => $this->decimalParameter(
                 $effective['additional_person_increment'] ?? $incomeLimit['additional_person_increment'] ?? null,
             ),
+            'tax_year' => is_numeric($effective['tax_year'] ?? null)
+                ? (int) $effective['tax_year']
+                : null,
+            'sixth_irs_bracket_upper_limit' => $this->decimalParameter(
+                $effective['sixth_irs_bracket_upper_limit'] ?? null,
+            ),
+            'irs_source_reference' => $this->stringParameter(
+                $effective['irs_source_reference'] ?? null,
+            ),
+            'irs_source_version' => $this->stringParameter(
+                $effective['irs_source_version'] ?? null,
+            ),
+            'irs_effective_from' => $this->stringParameter(
+                $effective['irs_effective_from'] ?? null,
+            ),
+            'irs_effective_until' => $this->stringParameter(
+                $effective['irs_effective_until'] ?? null,
+            ),
+            'metadata' => is_array($effective['metadata'] ?? null)
+                ? $effective['metadata']
+                : [],
         ];
     }
 
@@ -505,6 +506,13 @@ class EligibilityDataProvider
     private function decimalParameter(mixed $value): ?string
     {
         return is_numeric($value) ? DecimalMoney::normalize((string) $value) : null;
+    }
+
+    private function stringParameter(mixed $value): ?string
+    {
+        return is_string($value) && trim($value) !== ''
+            ? trim($value)
+            : null;
     }
 
     private function enumValue(mixed $value): string|int|null

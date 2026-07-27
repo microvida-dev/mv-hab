@@ -54,6 +54,7 @@ class MunicipalRegulatoryOverlayService
         $this->assertMaximumNotWeakened($profile, $parent, 'annual_income_base_limit', 'limite anual base');
         $this->assertMaximumNotWeakened($profile, $parent, 'second_person_increment', 'acréscimo da segunda pessoa');
         $this->assertMaximumNotWeakened($profile, $parent, 'additional_person_increment', 'acréscimo por pessoa adicional');
+        $this->assertMaximumNotWeakened($profile, $parent, 'sixth_irs_bracket_upper_limit', 'limite superior do 6.º escalão do IRS');
         $this->assertMinimumNotWeakened($profile, $parent, 'minimum_adult_monthly_income', 'rendimento mínimo de adulto');
         $this->assertIntegerMinimumNotWeakened($profile, $parent, 'minimum_contract_months', 'prazo contratual mínimo');
         $this->assertIntegerMinimumNotWeakened($profile, $parent, 'standard_contract_months', 'prazo contratual normal');
@@ -72,6 +73,7 @@ class MunicipalRegulatoryOverlayService
         if (
             $parent->configuration_status !== RegulatoryConfigurationStatus::Complete
             && $profile->configuration_status === RegulatoryConfigurationStatus::Complete
+            && ! $this->isExplicitDemoOverlay($profile)
         ) {
             $this->fail('Um overlay municipal não pode declarar completa uma configuração nacional incompleta.');
         }
@@ -110,6 +112,12 @@ class MunicipalRegulatoryOverlayService
             'annual_income_base_limit' => $profile->annual_income_base_limit,
             'second_person_increment' => $profile->second_person_increment,
             'additional_person_increment' => $profile->additional_person_increment,
+            'tax_year' => $profile->tax_year,
+            'sixth_irs_bracket_upper_limit' => $profile->sixth_irs_bracket_upper_limit,
+            'irs_source_reference' => $profile->irs_source_reference,
+            'irs_source_version' => $profile->irs_source_version,
+            'irs_effective_from' => $profile->irs_effective_from?->toDateString(),
+            'irs_effective_until' => $profile->irs_effective_until?->toDateString(),
             'minimum_contract_months' => $profile->minimum_contract_months,
             'standard_contract_months' => $profile->standard_contract_months,
             'rent_limits_configured' => $profile->rent_limits_configured,
@@ -168,5 +176,13 @@ class MunicipalRegulatoryOverlayService
     private function fail(string $message): never
     {
         throw ValidationException::withMessages(['regulatory_profile_id' => $message]);
+    }
+
+    private function isExplicitDemoOverlay(
+        AffordableRentRegulatoryProfile $profile,
+    ): bool {
+        return config('mvhab.regulatory_demo_mode', false)
+            && (bool) data_get($profile->metadata, 'demo', false)
+            && (bool) data_get($profile->metadata, 'demo_only', false);
     }
 }

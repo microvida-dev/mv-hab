@@ -4,14 +4,16 @@ namespace App\Services\Regulatory\RentLimits;
 
 use App\Data\Regulatory\RentLimitResult;
 use App\Enums\AffordableRentLegalRegime;
-use App\Enums\RentLimitConfigurationStatus;
 use App\Models\AffordableRentRegulatoryProfile;
 use App\Models\RentRuleSet;
-use App\Support\DecimalMoney;
 use Carbon\CarbonInterface;
 
 class RsaaRentLimitProvider implements RentLimitProviderInterface
 {
+    public function __construct(
+        private readonly RentLimitTableAuditService $tableAudit,
+    ) {}
+
     public function supports(AffordableRentRegulatoryProfile $profile): bool
     {
         return $profile->legal_regime === AffordableRentLegalRegime::Rsaa2026;
@@ -22,40 +24,22 @@ class RsaaRentLimitProvider implements RentLimitProviderInterface
         ?RentRuleSet $ruleSet,
         CarbonInterface $referenceDate,
     ): RentLimitResult {
-        if (
-            ! $profile->rent_limits_configured
-            || blank($profile->official_source)
-            || blank($profile->source_version)
-        ) {
-            return new RentLimitResult(
-                RentLimitConfigurationStatus::Incomplete,
-                null,
-                null,
-                $profile->source_version,
-                'A tabela oficial de limites de renda RSAA ainda não está configurada.',
-            );
-        }
-
-        if (! $ruleSet instanceof RentRuleSet || $ruleSet->regulatory_profile_id !== $profile->id) {
-            return new RentLimitResult(
-                RentLimitConfigurationStatus::Incomplete,
-                null,
-                null,
-                $profile->source_version,
-                'Não existe um conjunto de regras de renda RSAA versionado para este contexto.',
-            );
-        }
+        $audit = $this->tableAudit->audit($profile, $ruleSet, $referenceDate);
 
         return new RentLimitResult(
-            RentLimitConfigurationStatus::Configured,
-            $ruleSet->minimum_rent !== null ? DecimalMoney::normalize($ruleSet->minimum_rent) : null,
-            $ruleSet->maximum_rent !== null ? DecimalMoney::normalize($ruleSet->maximum_rent) : null,
-            $profile->source_version,
-            null,
+            $audit->status,
+            $audit->minimumRent,
+            $audit->maximumRent,
+            $audit->sourceVersion,
+            $audit->isConfigured()
+                ? null
+                : 'RSAA: '.($audit->findings[0]
+                    ?? 'A tabela oficial de limites de renda ainda não está configurada.'),
             [
                 'reference_date' => $referenceDate->toDateString(),
-                'rent_rule_set_id' => $ruleSet->id,
-                'effort_rate_percentage' => $ruleSet->effort_rate_percentage,
+                'rent_rule_set_id' => $ruleSet?->id,
+                'effort_rate_percentage' => $ruleSet?->effort_rate_percentage,
+                'manifest' => $audit->toArray(),
             ],
         );
     }

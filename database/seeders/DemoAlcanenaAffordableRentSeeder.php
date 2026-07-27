@@ -28,6 +28,7 @@ use App\Enums\RegulatoryConfigurationStatus;
 use App\Enums\RegulatoryContext;
 use App\Enums\RegulatoryProfileStatus;
 use App\Enums\RentCalculationMethod;
+use App\Enums\RentLimitConfigurationStatus;
 use App\Enums\RentRuleSetStatus;
 use App\Enums\RequiredDocumentConditionOperator;
 use App\Enums\ScoringCalculationType;
@@ -54,6 +55,8 @@ use App\Models\NotificationEventRule;
 use App\Models\NotificationTemplate;
 use App\Models\NotificationTemplateVersion;
 use App\Models\Program;
+use App\Models\RentLimitTableManifest;
+use App\Models\RentLimitTableRow;
 use App\Models\RentRuleSet;
 use App\Models\RequiredDocument;
 use App\Models\Role;
@@ -63,6 +66,7 @@ use App\Models\TypologyAdequacyRule;
 use App\Models\User;
 use App\Services\Regulatory\MunicipalRegulatoryOverlayService;
 use App\Services\Regulatory\RegulatorySnapshotService;
+use App\Services\Regulatory\RentLimits\RentLimitTableChecksumService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -79,6 +83,12 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
 
     public function run(): void
     {
+        if (! config('mvhab.regulatory_demo_mode', false)) {
+            throw new \LogicException(
+                'O seeder municipal demo exige MVHAB_REGULATORY_DEMO_MODE=true.',
+            );
+        }
+
         $requiredRoles = ['administrator', 'municipal_technician', 'jury', 'candidate'];
 
         if (Role::query()->whereIn('name', $requiredRoles)->count() < count($requiredRoles)) {
@@ -108,6 +118,9 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
             );
 
             $this->seedDemoAccessUsers($municipality);
+            $administrator ??= User::query()
+                ->where('email', 'admin-demo@exemplo.pt')
+                ->first();
             [$paaProfile] = $this->seedRegulatoryProfiles($municipality, $administrator);
             $programStartsAt = new CarbonImmutable('2026-01-01 00:00:00', 'Europe/Lisbon');
             $contestOpensAt = new CarbonImmutable('2026-06-01 09:00:00', 'Europe/Lisbon');
@@ -214,14 +227,20 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
                 'effective_until' => CarbonImmutable::create(2026, 8, 31),
                 'status' => RegulatoryProfileStatus::Active,
                 'configuration_status' => RegulatoryConfigurationStatus::Complete,
-                'official_source' => 'Regulamento Municipal de Arrendamento Acessível de Alcanena e diplomas PAA do perfil nacional.',
-                'publication_reference' => 'Edital n.º 1820/2024',
+                'official_source' => 'Dados fictícios de demonstração; não constituem fonte regulamentar oficial.',
+                'publication_reference' => 'DEMO-ALCANENA-2026-SEM-VALOR-JURIDICO',
                 'source_version' => 'alcanena-paa-2026-demo',
                 'maximum_effort_rate_percentage' => '35.00',
                 'minimum_adult_monthly_income' => '920.00',
                 'annual_income_base_limit' => null,
                 'second_person_increment' => null,
                 'additional_person_increment' => null,
+                'tax_year' => 2026,
+                'sixth_irs_bracket_upper_limit' => '999999.00',
+                'irs_source_reference' => 'DEMO-IRS-2026-SEM-VALOR-JURIDICO',
+                'irs_source_version' => 'demo-fixture-2026.1',
+                'irs_effective_from' => CarbonImmutable::create(2026, 1, 1),
+                'irs_effective_until' => CarbonImmutable::create(2026, 12, 31),
                 'minimum_contract_months' => 60,
                 'standard_contract_months' => 60,
                 'rent_limits_configured' => true,
@@ -231,6 +250,7 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
                 'metadata' => [
                     'catalogue_type' => 'municipal_overlay',
                     'demo' => true,
+                    'demo_only' => true,
                     'municipal_rule_set' => 'Alcanena 01/2026',
                 ],
                 'created_by' => $administrator?->id,
@@ -262,6 +282,12 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
                 'annual_income_base_limit' => null,
                 'second_person_increment' => null,
                 'additional_person_increment' => null,
+                'tax_year' => null,
+                'sixth_irs_bracket_upper_limit' => null,
+                'irs_source_reference' => null,
+                'irs_source_version' => null,
+                'irs_effective_from' => null,
+                'irs_effective_until' => null,
                 'minimum_contract_months' => null,
                 'standard_contract_months' => null,
                 'rent_limits_configured' => false,
@@ -271,6 +297,7 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
                 'metadata' => [
                     'catalogue_type' => 'municipal_overlay',
                     'demo' => true,
+                    'demo_only' => true,
                     'rent_table_status' => 'missing_official_source',
                     'publication_blocked' => true,
                 ],
@@ -1093,6 +1120,70 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
                 'deleted_at' => null,
             ])->save();
         }
+
+        $this->seedDemoRentLimitManifest(
+            $ruleSet,
+            $profile,
+            $contest,
+            $administrator,
+        );
+    }
+
+    private function seedDemoRentLimitManifest(
+        RentRuleSet $ruleSet,
+        AffordableRentRegulatoryProfile $profile,
+        Contest $contest,
+        ?User $administrator,
+    ): void {
+        $manifest = RentLimitTableManifest::query()->updateOrCreate(
+            ['rent_rule_set_id' => $ruleSet->id],
+            [
+                'regulatory_profile_id' => $profile->id,
+                'source_document' => 'Tabela fictícia de demonstração Alcanena 01/2026; não constitui fonte oficial.',
+                'source_reference' => 'DEMO-ALC-RENDA-01-2026-SEM-VALOR-JURIDICO',
+                'source_version' => $profile->source_version,
+                'effective_from' => $contest->opens_at,
+                'effective_until' => $contest->closes_at,
+                'checksum' => null,
+                'row_count' => 0,
+                'municipality_coverage' => [self::MUNICIPALITY_CODE],
+                'typology_coverage' => ['T1', 'T2', 'T3'],
+                'validation_status' => RentLimitConfigurationStatus::Configured,
+                'demo_only' => true,
+                'validated_at' => CarbonImmutable::create(2026, 5, 20, 8, 0, 0, 'Europe/Lisbon'),
+                'validated_by' => $administrator?->id,
+            ],
+        );
+        $rows = [
+            ['T1', '320.00', '320.00'],
+            ['T2', '390.00', '410.00'],
+            ['T3', '470.00', '470.00'],
+        ];
+
+        foreach ($rows as [$typology, $minimum, $maximum]) {
+            RentLimitTableRow::query()->updateOrCreate(
+                [
+                    'manifest_id' => $manifest->id,
+                    'municipality_code' => self::MUNICIPALITY_CODE,
+                    'typology' => $typology,
+                ],
+                [
+                    'minimum_rent' => $minimum,
+                    'maximum_rent' => $maximum,
+                    'source_row_reference' => "DEMO-{$typology}",
+                ],
+            );
+        }
+
+        $manifest->rows()
+            ->whereNotIn('typology', collect($rows)->pluck(0)->all())
+            ->delete();
+        $manifest->refresh()->load('rows');
+        $manifest->forceFill([
+            'row_count' => $manifest->rows->count(),
+            'checksum' => app(RentLimitTableChecksumService::class)
+                ->calculate($manifest->rows),
+        ])->save();
     }
 
     private function seedContractConfiguration(Program $program, Contest $contest, ?User $administrator): void

@@ -4,14 +4,16 @@ namespace App\Services\Regulatory\RentLimits;
 
 use App\Data\Regulatory\RentLimitResult;
 use App\Enums\AffordableRentLegalRegime;
-use App\Enums\RentLimitConfigurationStatus;
 use App\Models\AffordableRentRegulatoryProfile;
 use App\Models\RentRuleSet;
-use App\Support\DecimalMoney;
 use Carbon\CarbonInterface;
 
 class PaaRentLimitProvider implements RentLimitProviderInterface
 {
+    public function __construct(
+        private readonly RentLimitTableAuditService $tableAudit,
+    ) {}
+
     public function supports(AffordableRentRegulatoryProfile $profile): bool
     {
         return $profile->legal_regime === AffordableRentLegalRegime::PaaLegacy2019;
@@ -22,34 +24,21 @@ class PaaRentLimitProvider implements RentLimitProviderInterface
         ?RentRuleSet $ruleSet,
         CarbonInterface $referenceDate,
     ): RentLimitResult {
-        if (! $profile->rent_limits_configured) {
-            return new RentLimitResult(
-                RentLimitConfigurationStatus::Incomplete,
-                null,
-                null,
-                $profile->source_version,
-                'A tabela de limites de renda PAA não está configurada.',
-            );
-        }
-
-        $effortRate = $ruleSet instanceof RentRuleSet
-            ? $ruleSet->effort_rate_percentage
-            : $profile->maximum_effort_rate_percentage;
+        $audit = $this->tableAudit->audit($profile, $ruleSet, $referenceDate);
 
         return new RentLimitResult(
-            RentLimitConfigurationStatus::Configured,
-            $ruleSet instanceof RentRuleSet && $ruleSet->minimum_rent !== null
-                ? DecimalMoney::normalize($ruleSet->minimum_rent)
-                : null,
-            $ruleSet instanceof RentRuleSet && $ruleSet->maximum_rent !== null
-                ? DecimalMoney::normalize($ruleSet->maximum_rent)
-                : null,
-            $profile->source_version,
-            null,
+            $audit->status,
+            $audit->minimumRent,
+            $audit->maximumRent,
+            $audit->sourceVersion,
+            $audit->isConfigured()
+                ? null
+                : ($audit->findings[0] ?? 'A tabela de limites de renda PAA não está configurada.'),
             [
                 'reference_date' => $referenceDate->toDateString(),
                 'rent_rule_set_id' => $ruleSet instanceof RentRuleSet ? $ruleSet->id : null,
-                'effort_rate_percentage' => $effortRate,
+                'effort_rate_percentage' => $ruleSet?->effort_rate_percentage,
+                'manifest' => $audit->toArray(),
             ],
         );
     }

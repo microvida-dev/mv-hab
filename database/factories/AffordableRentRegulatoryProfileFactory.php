@@ -35,13 +35,23 @@ class AffordableRentRegulatoryProfileFactory extends Factory
             'annual_income_base_limit' => '38632.00',
             'second_person_increment' => '10000.00',
             'additional_person_increment' => '5000.00',
+            'tax_year' => 2026,
+            'sixth_irs_bracket_upper_limit' => '999999.00',
+            'irs_source_reference' => 'TESTE-SEM-VALOR-JURIDICO',
+            'irs_source_version' => 'test-fixture-2026',
+            'irs_effective_from' => '2026-01-01',
+            'irs_effective_until' => '2026-12-31',
             'minimum_contract_months' => null,
             'standard_contract_months' => null,
             'rent_limits_configured' => true,
             'eligibility_rules_configured' => true,
             'typology_rules_configured' => true,
             'contract_terms_configured' => true,
-            'metadata' => ['test_data' => true],
+            'metadata' => [
+                'test_data' => true,
+                'demo' => true,
+                'demo_only' => true,
+            ],
             'created_by' => null,
             'updated_by' => null,
         ];
@@ -57,6 +67,12 @@ class AffordableRentRegulatoryProfileFactory extends Factory
             'effective_until' => null,
             'configuration_status' => RegulatoryConfigurationStatus::Incomplete,
             'rent_limits_configured' => false,
+            'tax_year' => null,
+            'sixth_irs_bracket_upper_limit' => null,
+            'irs_source_reference' => null,
+            'irs_source_version' => null,
+            'irs_effective_from' => null,
+            'irs_effective_until' => null,
         ]);
     }
 }

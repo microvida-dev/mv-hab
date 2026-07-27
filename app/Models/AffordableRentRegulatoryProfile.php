@@ -29,6 +29,12 @@ use Illuminate\Support\Carbon;
  * @property string|null $annual_income_base_limit
  * @property string|null $second_person_increment
  * @property string|null $additional_person_increment
+ * @property int|null $tax_year
+ * @property string|null $sixth_irs_bracket_upper_limit
+ * @property string|null $irs_source_reference
+ * @property string|null $irs_source_version
+ * @property Carbon|null $irs_effective_from
+ * @property Carbon|null $irs_effective_until
  * @property bool $rent_limits_configured
  * @property bool $eligibility_rules_configured
  * @property bool $typology_rules_configured
@@ -55,6 +61,10 @@ class AffordableRentRegulatoryProfile extends Model
             'annual_income_base_limit' => 'decimal:2',
             'second_person_increment' => 'decimal:2',
             'additional_person_increment' => 'decimal:2',
+            'tax_year' => 'integer',
+            'sixth_irs_bracket_upper_limit' => 'decimal:2',
+            'irs_effective_from' => 'date',
+            'irs_effective_until' => 'date',
             'rent_limits_configured' => 'boolean',
             'eligibility_rules_configured' => 'boolean',
             'typology_rules_configured' => 'boolean',
@@ -97,6 +107,12 @@ class AffordableRentRegulatoryProfile extends Model
     public function snapshots(): HasMany
     {
         return $this->hasMany(RegulatorySnapshot::class, 'regulatory_profile_id');
+    }
+
+    /** @return HasMany<RentLimitTableManifest, $this> */
+    public function rentLimitTableManifests(): HasMany
+    {
+        return $this->hasMany(RentLimitTableManifest::class, 'regulatory_profile_id');
     }
 
     /**

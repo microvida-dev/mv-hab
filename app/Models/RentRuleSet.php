@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -89,6 +90,12 @@ class RentRuleSet extends Model
     public function calculations(): HasMany
     {
         return $this->hasMany(RentCalculation::class);
+    }
+
+    /** @return HasOne<RentLimitTableManifest, $this> */
+    public function rentLimitTableManifest(): HasOne
+    {
+        return $this->hasOne(RentLimitTableManifest::class);
     }
 
     /**
