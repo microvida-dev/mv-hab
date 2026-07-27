@@ -4,6 +4,9 @@ namespace Tests\Feature\Candidate;
 
 use App\Enums\ContestHousingUnitStatus;
 use App\Enums\HousingUnitStatus;
+use App\Models\HousingPreference;
+use App\Models\Municipality;
+use App\Models\User;
 use App\Services\Allocation\HousingPreferenceService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -47,7 +50,39 @@ class CompatibleHousingPreferenceTest extends TestCase
             ->assertSee('Descer')
             ->assertSee('A seleção não reserva a habitação')
             ->assertSee('aria-live="polite"', false)
-            ->assertSee(':draggable=', false);
+            ->assertSee(':draggable=', false)
+            ->assertSee('@keydown.alt.arrow-up.prevent=', false)
+            ->assertSee('@keydown.alt.arrow-down.prevent=', false)
+            ->assertSee('$nextTick(() => $el.focus())', false)
+            ->assertDontSee($compatible->housingUnit->code);
+    }
+
+    public function test_empty_state_and_municipal_boundary_do_not_reveal_unavailable_units(): void
+    {
+        $context = $this->compatibleHousingContext();
+        $otherMunicipality = Municipality::factory()->create();
+        $foreign = $this->compatibleContestHousingUnit(
+            $context,
+            municipality: $otherMunicipality,
+        );
+        $incompatible = $this->compatibleContestHousingUnit(
+            $context,
+            monthlyRent: '900.00',
+        );
+
+        $this->actingAs($context['candidate'])
+            ->get(route(
+                'candidate.housing-preferences.edit',
+                $context['application'],
+            ))
+            ->assertOk()
+            ->assertSee(
+                'Não existem habitações compatíveis disponíveis neste momento.',
+            )
+            ->assertSee('Rever agregado')
+            ->assertSee('Rever rendimentos')
+            ->assertDontSee($foreign->housingUnit->public_reference)
+            ->assertDontSee($incompatible->housingUnit->public_reference);
     }
 
     public function test_candidate_cannot_access_or_change_another_candidate_application(): void
@@ -55,6 +90,7 @@ class CompatibleHousingPreferenceTest extends TestCase
         $context = $this->compatibleHousingContext();
         $unit = $this->compatibleContestHousingUnit($context);
         $other = $this->candidateApplicationForHousingContext($context);
+        $other['candidate']->assignRole('administrator');
 
         $this->actingAs($other['candidate'])
             ->get(route(
@@ -78,6 +114,32 @@ class CompatibleHousingPreferenceTest extends TestCase
         $this->assertDatabaseMissing('housing_preferences', [
             'application_id' => $context['application']->id,
         ]);
+    }
+
+    public function test_policy_uses_application_boundary_without_opening_candidate_routes_to_backoffice(): void
+    {
+        $context = $this->compatibleHousingContext();
+        $admin = User::factory()->create([
+            'municipality_id' => $context['municipality']->id,
+        ]);
+        $admin->assignRole('administrator');
+        $context['application']->forceFill([
+            'user_id' => $admin->id,
+        ])->save();
+
+        $this->assertTrue(
+            $admin->can(
+                'update',
+                [HousingPreference::class, $context['application']->fresh()],
+            ),
+        );
+
+        $this->actingAs($admin)
+            ->get(route(
+                'candidate.housing-preferences.edit',
+                $context['application'],
+            ))
+            ->assertForbidden();
     }
 
     public function test_server_rejects_limits_duplicates_and_non_consecutive_orders(): void

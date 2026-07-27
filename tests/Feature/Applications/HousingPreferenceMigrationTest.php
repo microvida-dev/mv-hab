@@ -2,6 +2,9 @@
 
 namespace Tests\Feature\Applications;
 
+use App\Enums\ApplicationPreferenceSource;
+use App\Models\Application;
+use App\Models\ApplicationPreference;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
@@ -64,5 +67,56 @@ class HousingPreferenceMigrationTest extends TestCase
             ),
         );
         $this->assertTrue(Schema::hasTable('application_preferences'));
+    }
+
+    public function test_preference_source_migration_is_reversible_and_backfills_legacy_without_deleting_data(): void
+    {
+        $application = Application::factory()->create();
+        ApplicationPreference::factory()->create([
+            'application_id' => $application->id,
+        ]);
+        $path = database_path(
+            'migrations/2026_07_27_000044_add_application_preference_source_state.php',
+        );
+        $migration = require $path;
+
+        $this->assertInstanceOf(Migration::class, $migration);
+        $this->assertTrue(
+            Schema::hasColumn('applications', 'preference_source'),
+        );
+
+        $migration->down();
+
+        $this->assertFalse(
+            Schema::hasColumn('applications', 'preference_source'),
+        );
+        $this->assertDatabaseCount('application_preferences', 1);
+
+        $migration->up();
+
+        $this->assertTrue(
+            Schema::hasColumn('applications', 'preference_source'),
+        );
+        $this->assertDatabaseHas('applications', [
+            'id' => $application->id,
+            'preference_source' => ApplicationPreferenceSource::Legacy->value,
+        ]);
+        $this->assertDatabaseCount('application_preferences', 1);
+    }
+
+    public function test_final_snapshot_unique_constraint_is_structural(): void
+    {
+        $indexes = collect(Schema::getIndexes('application_snapshots'));
+        $index = $indexes->firstWhere(
+            'name',
+            'application_snapshots_type_unique',
+        );
+
+        $this->assertIsArray($index);
+        $this->assertTrue($index['unique']);
+        $this->assertSame(
+            ['application_id', 'snapshot_type'],
+            $index['columns'],
+        );
     }
 }

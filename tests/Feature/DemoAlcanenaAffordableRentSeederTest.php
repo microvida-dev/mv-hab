@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ApplicationPreferenceSource;
 use App\Enums\ContestStatus;
 use App\Enums\ContractTemplateStatus;
 use App\Enums\EligibilityRuleSetStatus;
@@ -227,6 +228,8 @@ class DemoAlcanenaAffordableRentSeederTest extends TestCase
             'contest_id' => $contest->id,
             'household_id' => $household->id,
             'current_housing_situation_id' => $housing->id,
+            'preference_source' => ApplicationPreferenceSource::Official,
+            'official_preferences_initialized_at' => now(),
         ]);
         $unit = ContestHousingUnit::query()
             ->where('contest_id', $contest->id)

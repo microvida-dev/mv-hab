@@ -10,11 +10,14 @@ use App\Models\ApplicationSnapshot;
 use App\Services\Allocation\HousingPreferenceService;
 use App\Services\Applications\ApplicationReceiptService;
 use App\Services\Applications\ApplicationSnapshotService;
+use App\Services\Applications\HousingPreferenceSnapshotService;
 use App\Services\Candidate\HouseholdMemberService;
 use App\Services\Candidate\IncomeService;
 use App\Services\DocumentStandardization\DocumentDossierBuilder;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
+use LogicException;
 use Tests\Concerns\CreatesCompatibleHousingContext;
 use Tests\TestCase;
 
@@ -223,7 +226,7 @@ class HousingPreferenceSubmissionTest extends TestCase
         ]);
     }
 
-    public function test_application_snapshot_is_idempotent_and_immutable(): void
+    public function test_draft_preview_is_in_memory_and_cannot_create_final_snapshot(): void
     {
         $context = $this->compatibleHousingContext();
         $unit = $this->compatibleContestHousingUnit($context);
@@ -235,10 +238,41 @@ class HousingPreferenceSubmissionTest extends TestCase
             ]],
             $context['candidate'],
         );
+        $preview = app(HousingPreferenceSnapshotService::class)
+            ->liveForApplication($context['application']->fresh());
+
+        $this->assertCount(1, $preview);
+        $this->assertDatabaseCount('application_snapshots', 0);
+
+        $this->expectException(ValidationException::class);
+        app(ApplicationSnapshotService::class)
+            ->create($context['application']->fresh());
+    }
+
+    public function test_submitted_snapshot_is_idempotent_and_model_is_immutable(): void
+    {
+        $context = $this->compatibleHousingContext();
+        $unit = $this->compatibleContestHousingUnit($context);
+        app(HousingPreferenceService::class)->replace(
+            $context['application'],
+            [[
+                'contest_housing_unit_id' => $unit->id,
+                'preference_order' => 1,
+            ]],
+            $context['candidate'],
+        );
+        $this->actingAs($context['candidate'])
+            ->post(route(
+                'candidate.applications.submit',
+                $context['application'],
+            ), $this->acceptedDeclarations())
+            ->assertRedirect();
+        $application = $context['application']->fresh();
         $service = app(ApplicationSnapshotService::class);
-        $service->create($context['application']->fresh());
+        $first = $service->create($application);
+        $second = $service->create($application->fresh());
         $snapshot = ApplicationSnapshot::query()
-            ->where('application_id', $context['application']->id)
+            ->where('application_id', $application->id)
             ->where(
                 'snapshot_type',
                 ApplicationSnapshotType::HousingPreferences->value,
@@ -246,30 +280,57 @@ class HousingPreferenceSubmissionTest extends TestCase
             ->firstOrFail();
         $original = $snapshot->data;
 
-        $unit->housingUnit->forceFill([
-            'public_title' => 'Título alterado depois do snapshot',
-        ])->save();
-        $context['application']->housingPreferences()->update([
-            'compatibility_snapshot' => json_encode([
-                'monthly_rent' => '999.00',
-            ]),
-        ]);
-        $service->create($context['application']->fresh());
-
+        $this->assertSame($first->modelKeys(), $second->modelKeys());
         $this->assertSame(
             $original,
             $snapshot->fresh()->data,
         );
         $this->assertSame(
-            1,
+            count(ApplicationSnapshotType::cases()),
             ApplicationSnapshot::query()
-                ->where('application_id', $context['application']->id)
-                ->where(
-                    'snapshot_type',
-                    ApplicationSnapshotType::HousingPreferences->value,
-                )
+                ->where('application_id', $application->id)
                 ->count(),
         );
+
+        $this->expectException(LogicException::class);
+        $snapshot->forceFill(['data' => ['mutated' => true]])->save();
+    }
+
+    public function test_snapshot_failure_rolls_back_without_partial_rows_or_audit(): void
+    {
+        $context = $this->compatibleHousingContext();
+        $submittedAt = now();
+        $application = $context['application'];
+        $application->forceFill([
+            'status' => ApplicationStatus::Submitted,
+            'submitted_at' => $submittedAt,
+            'locked_at' => $submittedAt,
+        ])->save();
+        $application->snapshots()->create([
+            'snapshot_type' => ApplicationSnapshotType::Summary,
+            'data' => ['existing' => true],
+        ]);
+        $context['housing_situation']->delete();
+
+        try {
+            app(ApplicationSnapshotService::class)
+                ->create($application->fresh());
+            $this->fail('Era esperada uma falha de validação.');
+        } catch (ValidationException) {
+            $this->assertDatabaseHas('application_snapshots', [
+                'application_id' => $application->id,
+                'snapshot_type' => ApplicationSnapshotType::Summary->value,
+            ]);
+            $this->assertSame(
+                1,
+                $application->snapshots()->count(),
+            );
+            $this->assertDatabaseMissing('audit_logs', [
+                'auditable_type' => $application->getMorphClass(),
+                'auditable_id' => $application->id,
+                'action' => 'snapshot',
+            ]);
+        }
     }
 
     /**

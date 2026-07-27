@@ -3,6 +3,8 @@
 namespace Tests\Feature\Allocation;
 
 use App\Enums\AllocationMethod;
+use App\Enums\ApplicationPreferenceSource;
+use App\Enums\ApplicationSnapshotType;
 use App\Enums\ApplicationStatus;
 use App\Enums\ContestHousingUnitStatus;
 use App\Enums\DefinitiveListStatus;
@@ -10,11 +12,14 @@ use App\Enums\HousingCompatibilityStatus;
 use App\Enums\ListEntryStatus;
 use App\Enums\ListEntryType;
 use App\Models\AllocationRun;
+use App\Models\ApplicationSnapshot;
 use App\Models\DefinitiveList;
 use App\Models\DefinitiveListEntry;
 use App\Models\HousingPreference;
 use App\Models\ProvisionalList;
+use App\Models\RegulatorySnapshot;
 use App\Models\User;
+use App\Services\Allocation\ContestHousingUnitService;
 use App\Services\Allocation\PreferenceAllocationService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -103,12 +108,105 @@ class StrictPreferenceAllocationTest extends TestCase
         ]);
     }
 
+    public function test_legacy_source_or_missing_final_snapshot_never_allocates(): void
+    {
+        $legacyScenario = $this->allocationScenario();
+        $legacyScenario['application']->forceFill([
+            'preference_source' => ApplicationPreferenceSource::Legacy,
+        ])->save();
+
+        $legacyResult = app(PreferenceAllocationService::class)->allocate(
+            $legacyScenario['run'],
+            $legacyScenario['actor'],
+        );
+
+        $this->assertCount(0, $legacyResult->allocations);
+        $this->assertCount(1, $legacyResult->reserveEntries);
+
+        $missingSnapshotScenario = $this->allocationScenario(
+            createFinalSnapshot: false,
+        );
+        $missingSnapshotResult = app(PreferenceAllocationService::class)
+            ->allocate(
+                $missingSnapshotScenario['run'],
+                $missingSnapshotScenario['actor'],
+            );
+
+        $this->assertCount(0, $missingSnapshotResult->allocations);
+        $this->assertCount(1, $missingSnapshotResult->reserveEntries);
+    }
+
+    public function test_divergent_invalidated_or_unlocked_preferences_never_allocate(): void
+    {
+        $divergent = $this->allocationScenario();
+        $otherSnapshot = RegulatorySnapshot::factory()->create([
+            'municipality_id' => $divergent['municipality']->id,
+        ]);
+        $divergent['application']->housingPreferences()
+            ->update([
+                'regulatory_snapshot_id' => $otherSnapshot->id,
+            ]);
+        $divergentResult = app(PreferenceAllocationService::class)->allocate(
+            $divergent['run'],
+            $divergent['actor'],
+        );
+
+        $this->assertCount(0, $divergentResult->allocations);
+        $this->assertCount(1, $divergentResult->reserveEntries);
+
+        $invalidated = $this->allocationScenario();
+        $invalidated['application']->housingPreferences()
+            ->update([
+                'compatibility_status' => HousingCompatibilityStatus::RequiresRevalidation,
+                'invalidated_at' => now(),
+            ]);
+        $invalidatedResult = app(PreferenceAllocationService::class)->allocate(
+            $invalidated['run'],
+            $invalidated['actor'],
+        );
+
+        $this->assertCount(0, $invalidatedResult->allocations);
+        $this->assertCount(1, $invalidatedResult->reserveEntries);
+
+        $unlocked = $this->allocationScenario();
+        $unlocked['application']->housingPreferences()
+            ->update(['locked_at' => null]);
+        $unlockedResult = app(PreferenceAllocationService::class)->allocate(
+            $unlocked['run'],
+            $unlocked['actor'],
+        );
+
+        $this->assertCount(0, $unlockedResult->allocations);
+        $this->assertCount(1, $unlockedResult->reserveEntries);
+    }
+
+    public function test_reserved_unit_returns_to_available_when_released(): void
+    {
+        $scenario = $this->allocationScenario();
+        $unit = $scenario['units'][0];
+        $service = app(ContestHousingUnitService::class);
+
+        $service->markReserved($unit, $scenario['actor']);
+        $this->assertSame(
+            ContestHousingUnitStatus::Reserved,
+            $unit->fresh()->status,
+        );
+
+        $service->release($unit->fresh(), $scenario['actor']);
+        $this->assertSame(
+            ContestHousingUnitStatus::Available,
+            $unit->fresh()->status,
+        );
+    }
+
     /**
      * @param  list<int>  $unavailableOrders
      * @return array<string, mixed>
      */
-    private function allocationScenario(array $unavailableOrders = []): array
-    {
+    private function allocationScenario(
+        array $unavailableOrders = [],
+        bool $createFinalSnapshot = true,
+    ): array {
         $context = $this->compatibleHousingContext();
         $units = collect(range(1, 4))
             ->map(fn () => $this->compatibleContestHousingUnit($context));
@@ -119,7 +217,11 @@ class StrictPreferenceAllocationTest extends TestCase
             'status' => ApplicationStatus::Submitted,
             'submitted_at' => $submittedAt,
             'locked_at' => $submittedAt,
+            'preference_source' => ApplicationPreferenceSource::Official,
+            'official_preferences_initialized_at' => $submittedAt,
         ])->save();
+
+        $snapshotPreferences = [];
 
         foreach ($units->take(3)->values() as $index => $unit) {
             $preference = new HousingPreference([
@@ -143,6 +245,21 @@ class StrictPreferenceAllocationTest extends TestCase
                 'submitted_at' => $submittedAt,
                 'locked_at' => $submittedAt,
             ])->save();
+            $snapshotPreferences[] = [
+                'preference_order' => $index + 1,
+                'contest_housing_unit_id' => $unit->id,
+                'housing_unit_id' => $unit->housing_unit_id,
+                'regulatory_snapshot_id' => $application->regulatory_snapshot_id,
+                'source' => 'housing_preferences',
+            ];
+        }
+
+        if ($createFinalSnapshot) {
+            ApplicationSnapshot::factory()->create([
+                'application_id' => $application->id,
+                'snapshot_type' => ApplicationSnapshotType::HousingPreferences,
+                'data' => $snapshotPreferences,
+            ]);
         }
 
         foreach ($unavailableOrders as $order) {
