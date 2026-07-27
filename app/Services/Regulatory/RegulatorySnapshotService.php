@@ -44,7 +44,7 @@ class RegulatorySnapshotService
             $existing = $this->existing($subject, $context);
 
             if ($existing instanceof RegulatorySnapshot) {
-                return $existing;
+                return $this->attachSubject($subject, $existing);
             }
 
             $profile->loadMissing('parentProfile');
@@ -77,7 +77,7 @@ class RegulatorySnapshotService
                 $parameters,
                 $municipalOverlay,
             );
-        });
+        }, 3);
     }
 
     public function attachFromSnapshot(
@@ -92,7 +92,7 @@ class RegulatorySnapshotService
             $existing = $this->existing($subject, $context);
 
             if ($existing instanceof RegulatorySnapshot) {
-                return $existing;
+                return $this->attachSubject($subject, $existing);
             }
 
             $sourceSnapshot->loadMissing('profile.parentProfile');
@@ -114,7 +114,7 @@ class RegulatorySnapshotService
                 $sourceSnapshot->parameters ?? [],
                 $sourceSnapshot->municipal_overlay ?? [],
             );
-        });
+        }, 3);
     }
 
     private function existing(Model $subject, RegulatoryContext $context): ?RegulatorySnapshot
@@ -123,6 +123,7 @@ class RegulatorySnapshotService
             ->where('source_type', $subject->getMorphClass())
             ->where('source_id', $subject->getKey())
             ->where('context', $context->value)
+            ->lockForUpdate()
             ->first();
     }
 
@@ -174,42 +175,69 @@ class RegulatorySnapshotService
             'origin' => $origin,
         ];
 
-        $snapshot = RegulatorySnapshot::query()->create([
-            ...$payload,
-            'checksum' => hash('sha256', $this->canonicalJson($payload)),
-            'created_by' => $actor?->id,
-            'locked_at' => now(),
-        ]);
+        $snapshot = RegulatorySnapshot::query()->createOrFirst(
+            [
+                'source_type' => $subject->getMorphClass(),
+                'source_id' => $subject->getKey(),
+                'context' => $context->value,
+            ],
+            [
+                ...$payload,
+                'checksum' => hash('sha256', $this->canonicalJson($payload)),
+                'created_by' => $actor?->id,
+                'locked_at' => now(),
+            ],
+        );
 
+        $this->attachSubject($subject, $snapshot);
+
+        if ($snapshot->wasRecentlyCreated) {
+            $this->auditLogger->record(
+                event: AuditEvents::CREATE,
+                auditable: $snapshot,
+                module: 'regulatory',
+                action: 'snapshot_lock',
+                description: 'Snapshot regulamentar criado e bloqueado.',
+                metadata: [
+                    'context' => $context->value,
+                    'source_type' => class_basename($subject),
+                    'source_id' => $subject->getKey(),
+                    'profile_id' => $profile->id,
+                    'checksum' => $snapshot->checksum,
+                ],
+            );
+        }
+
+        return $snapshot;
+    }
+
+    private function attachSubject(
+        Model $subject,
+        RegulatorySnapshot $snapshot,
+    ): RegulatorySnapshot {
+        $currentLegalRegime = $subject->getAttribute('legal_regime');
+        $currentLegalRegime = $currentLegalRegime instanceof \BackedEnum
+            ? $currentLegalRegime->value
+            : $currentLegalRegime;
         $attributes = [
             'regulatory_snapshot_id' => $snapshot->id,
-            'legal_regime' => $profile->legal_regime->value,
+            'legal_regime' => $snapshot->legal_regime->value,
         ];
 
         if ($subject instanceof Program || $subject instanceof Contest) {
-            $attributes['regulatory_profile_id'] = $profile->id;
+            $attributes['regulatory_profile_id'] = $snapshot->regulatory_profile_id;
         }
 
         if ($subject instanceof Contract) {
             $attributes['regulatory_classification_status'] = RegulatoryClassificationStatus::Configured->value;
         }
 
-        $subject->forceFill($attributes)->save();
-
-        $this->auditLogger->record(
-            event: AuditEvents::CREATE,
-            auditable: $snapshot,
-            module: 'regulatory',
-            action: 'snapshot_lock',
-            description: 'Snapshot regulamentar criado e bloqueado.',
-            metadata: [
-                'context' => $context->value,
-                'source_type' => class_basename($subject),
-                'source_id' => $subject->getKey(),
-                'profile_id' => $profile->id,
-                'checksum' => $snapshot->checksum,
-            ],
-        );
+        if (
+            $subject->getAttribute('regulatory_snapshot_id') !== $snapshot->id
+            || $currentLegalRegime !== $snapshot->legal_regime->value
+        ) {
+            $subject->forceFill($attributes)->save();
+        }
 
         return $snapshot;
     }

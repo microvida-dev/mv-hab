@@ -132,6 +132,16 @@ class ProgramService
                 ->firstOrFail();
             $this->assertActorCanManageMunicipality($actor, $locked->municipality_id);
 
+            if ($locked->status === ProgramStatus::Published) {
+                if ($locked->regulatory_snapshot_id === null) {
+                    throw ValidationException::withMessages([
+                        'regulatory' => 'O programa publicado não possui snapshot regulamentar bloqueado.',
+                    ]);
+                }
+
+                return $locked;
+            }
+
             if ($locked->rules()->count() === 0) {
                 throw ValidationException::withMessages([
                     'program' => 'Adicione pelo menos uma regra pública antes de publicar o programa.',

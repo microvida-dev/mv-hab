@@ -21,14 +21,15 @@ class RegulatoryPublicationReadinessService
         private readonly AffordableRentLegalRegimeResolver $resolver,
         private readonly MunicipalRegulatoryOverlayService $overlayService,
         private readonly RentLimitProviderRegistry $rentLimitProviders,
+        private readonly AnnualHouseholdIncomeLimitCalculator $annualIncomeLimits,
     ) {}
 
     public function assertProgramReady(
         Program $program,
         CarbonInterface $referenceDate,
     ): AffordableRentRegulatoryProfile {
-        $program->loadMissing(['municipality', 'regulatoryProfile.parentProfile']);
-        $profile = $program->regulatoryProfile;
+        $program->loadMissing('municipality');
+        $profile = $this->lockedProfile($program->regulatory_profile_id);
 
         if (! $profile instanceof AffordableRentRegulatoryProfile) {
             $this->fail('Selecione um perfil regulamentar antes de publicar o programa.');
@@ -55,12 +56,19 @@ class RegulatoryPublicationReadinessService
         Contest $contest,
         CarbonInterface $referenceDate,
     ): AffordableRentRegulatoryProfile {
-        $contest->loadMissing([
-            'program.municipality',
-            'program.regulatoryProfile.parentProfile',
-            'regulatoryProfile.parentProfile',
-        ]);
-        $profile = $contest->regulatoryProfile ?? $contest->program?->regulatoryProfile;
+        $contest->loadMissing('program.municipality');
+        $programProfileId = $contest->program?->regulatory_profile_id;
+        $contestProfileId = $contest->regulatory_profile_id;
+
+        if (
+            $contestProfileId !== null
+            && $programProfileId !== null
+            && $contestProfileId !== $programProfileId
+        ) {
+            $this->fail('O perfil regulamentar do concurso diverge do perfil publicado do programa.');
+        }
+
+        $profile = $this->lockedProfile($contestProfileId ?? $programProfileId);
 
         if (! $profile instanceof AffordableRentRegulatoryProfile) {
             $this->fail('O concurso não possui perfil regulamentar configurado.');
@@ -104,12 +112,17 @@ class RegulatoryPublicationReadinessService
             }
         }
 
-        $rentLimit = $this->rentLimitProviders
-            ->forProfile($profile)
-            ->limitsFor($profile, null, $referenceDate);
+        $incomeLimit = $this->annualIncomeLimits->calculate(
+            1,
+            $this->overlayService->effectiveParameters($profile),
+            $referenceDate,
+        );
 
-        if (! $rentLimit->isConfigured()) {
-            $this->fail($rentLimit->message ?? 'A tabela de limites de renda está incompleta.');
+        if (! $incomeLimit->isConfigured()) {
+            $this->fail(
+                $incomeLimit->message
+                    ?? 'A fonte fiscal do limite anual de rendimento está incompleta.',
+            );
         }
     }
 
@@ -140,34 +153,44 @@ class RegulatoryPublicationReadinessService
             ->activeAt($referenceDate)
             ->where('regulatory_profile_id', $profile->id)
             ->where($context)
-            ->exists();
+            ->orderByRaw('case when contest_id is null then 1 else 0 end')
+            ->latest('id')
+            ->lockForUpdate()
+            ->first();
         $rentRuleSet = RentRuleSet::query()
             ->activeAt($referenceDate)
             ->where('regulatory_profile_id', $profile->id)
             ->where($context)
             ->orderByRaw('case when contest_id is null then 1 else 0 end')
             ->latest('id')
+            ->lockForUpdate()
             ->first();
         $typology = TypologyAdequacyRule::query()
             ->active()
             ->where('regulatory_profile_id', $profile->id)
             ->where($context)
-            ->exists();
+            ->orderByRaw('case when contest_id is null then 1 else 0 end')
+            ->orderBy('priority_order')
+            ->lockForUpdate()
+            ->first();
         $allocation = AllocationRuleSet::query()
             ->active()
             ->where('regulatory_profile_id', $profile->id)
             ->where($context)
-            ->exists();
+            ->orderByRaw('case when contest_id is null then 1 else 0 end')
+            ->latest('id')
+            ->lockForUpdate()
+            ->first();
 
-        if (! $eligibility) {
+        if (! $eligibility instanceof EligibilityRuleSet) {
             $this->fail("Configure um conjunto de regras de elegibilidade para o {$contextLabel}.");
         }
 
-        if (! $typology) {
+        if (! $typology instanceof TypologyAdequacyRule) {
             $this->fail("Configure regras de adequação tipológica para o {$contextLabel}.");
         }
 
-        if (! $allocation) {
+        if (! $allocation instanceof AllocationRuleSet) {
             $this->fail("Configure regras de atribuição para o {$contextLabel}.");
         }
 
@@ -175,9 +198,37 @@ class RegulatoryPublicationReadinessService
             ->forProfile($profile)
             ->limitsFor($profile, $rentRuleSet, $referenceDate);
 
-        if (! $rentLimit->isConfigured() || ! $rentRuleSet instanceof RentRuleSet) {
+        if (! $rentRuleSet instanceof RentRuleSet || ! $rentLimit->isConfigured()) {
             $this->fail($rentLimit->message ?? "Configure regras de renda para o {$contextLabel}.");
         }
+    }
+
+    private function lockedProfile(mixed $profileId): ?AffordableRentRegulatoryProfile
+    {
+        if (! is_numeric($profileId)) {
+            return null;
+        }
+
+        $profile = AffordableRentRegulatoryProfile::query()
+            ->whereKey((int) $profileId)
+            ->lockForUpdate()
+            ->first();
+
+        if (! $profile instanceof AffordableRentRegulatoryProfile) {
+            return null;
+        }
+
+        if ($profile->parent_profile_id !== null) {
+            $parent = AffordableRentRegulatoryProfile::query()
+                ->whereKey($profile->parent_profile_id)
+                ->lockForUpdate()
+                ->first();
+            $profile->setRelation('parentProfile', $parent);
+        } else {
+            $profile->setRelation('parentProfile', null);
+        }
+
+        return $profile;
     }
 
     private function fail(string $message): never

@@ -138,15 +138,26 @@ class ContestService
             $locked = Contest::query()
                 ->whereKey($contest->getKey())
                 ->lockForUpdate()
-                ->with([
-                    'program.municipality',
-                    'program.regulatoryProfile.parentProfile',
-                    'regulatoryProfile.parentProfile',
-                ])
                 ->firstOrFail();
+            $program = Program::query()
+                ->whereKey($locked->program_id)
+                ->lockForUpdate()
+                ->with('municipality')
+                ->firstOrFail();
+            $locked->setRelation('program', $program);
             $this->assertActorCanManageContest($actor, $locked);
 
-            if (! $locked->program instanceof Program || $locked->program->status !== ProgramStatus::Published) {
+            if ($locked->status === ContestStatus::Published) {
+                if ($locked->regulatory_snapshot_id === null) {
+                    throw ValidationException::withMessages([
+                        'regulatory' => 'O concurso publicado não possui snapshot regulamentar bloqueado.',
+                    ]);
+                }
+
+                return $locked;
+            }
+
+            if ($program->status !== ProgramStatus::Published) {
                 throw ValidationException::withMessages([
                     'contest' => 'O programa associado deve estar publicado antes de publicar o concurso.',
                 ]);
