@@ -439,7 +439,20 @@ Antes do commit documental:
   `origin/sprint-50a1-regulatory-hardening`;
 - branch `main`: não alterada.
 
-Depois da publicação é obrigatório confirmar:
+Verificação do commit de fecho publicado:
+
+- commit documental publicado:
+  `abfdf040b1ab67d7936ee1be4b55eae3cbb37d8d`;
+- HEAD local:
+  `abfdf040b1ab67d7936ee1be4b55eae3cbb37d8d`;
+- HEAD remoto:
+  `abfdf040b1ab67d7936ee1be4b55eae3cbb37d8d`;
+- ahead/behind: `0 0`;
+- working tree: limpa;
+- branch local/remota:
+  `sprint-50e1-preference-integrity-hardening`.
+
+Comandos usados:
 
 ```bash
 git status --short --branch
@@ -449,7 +462,9 @@ git rev-list --left-right --count \
     HEAD...origin/sprint-50e1-preference-integrity-hardening
 ```
 
-Critério: working tree limpa, HEAD local igual ao remoto e `0 0`.
+Esta atualização da própria evidência constitui apenas metadata documental
+posterior ao checkpoint acima. O SHA final dessa atualização é registado no
+fecho da tarefa e volta a ser comparado com o remoto após a publicação.
 
 ## 22. Decisão final
 
