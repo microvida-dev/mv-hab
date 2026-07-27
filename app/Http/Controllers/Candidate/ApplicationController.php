@@ -73,6 +73,7 @@ class ApplicationController extends Controller
             'household.members',
             'household.incomeRecords',
             'currentHousingSituation',
+            'housingPreferences.housingUnit',
             'applicationDocuments.documentType',
             'declarations',
             'statusHistories.changedBy',

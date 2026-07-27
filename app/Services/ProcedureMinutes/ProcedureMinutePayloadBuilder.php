@@ -96,6 +96,7 @@ class ProcedureMinutePayloadBuilder
                 'user',
                 'program',
                 'contest',
+                'housingPreferences.housingUnit',
                 'preferences.housingUnit',
                 'applicationScores.details',
                 'provisionalListEntries',
@@ -132,6 +133,7 @@ class ProcedureMinutePayloadBuilder
             'applications.user',
             'applications.program',
             'applications.contest',
+            'applications.housingPreferences.housingUnit',
             'applications.preferences.housingUnit',
             'applications.applicationScores.details',
             'applications.provisionalListEntries',
@@ -169,6 +171,7 @@ class ProcedureMinutePayloadBuilder
             'user',
             'program',
             'contest',
+            'housingPreferences.housingUnit',
             'preferences.housingUnit',
             'applicationScores.details',
             'provisionalListEntries',
@@ -388,7 +391,7 @@ class ProcedureMinutePayloadBuilder
                     'accessible' => (bool) $contestHousingUnit->accessible,
                     'monthly_rent' => $this->money($contestHousingUnit->monthly_rent),
                     'estimated_expenses' => $this->money($contestHousingUnit->estimated_expenses),
-                    'housing_unit' => $housingUnit ? [
+                    'housing_unit' => [
                         'id' => $housingUnit->id,
                         'code' => $housingUnit->code,
                         'address' => $housingUnit->address,
@@ -402,7 +405,7 @@ class ProcedureMinutePayloadBuilder
                         'gross_area_sqm' => $housingUnit->gross_area_sqm,
                         'usable_area_sqm' => $housingUnit->usable_area_sqm,
                         'energy_rating' => $housingUnit->energy_rating,
-                    ] : null,
+                    ],
                 ];
             })
             ->values()
@@ -437,12 +440,17 @@ class ProcedureMinutePayloadBuilder
                             'label' => $this->enumLabel($latestScore->status ?? null),
                         ],
                     ] : null,
-                    'preferences' => $application->preferences
+                    'preferences' => ($application->housingPreferences->isNotEmpty()
+                        ? $application->housingPreferences
+                        : $application->preferences)
                         ->map(fn ($preference): array => [
                             'preference_order' => $preference->preference_order,
                             'housing_unit' => [
                                 'id' => $preference->housingUnit?->id,
                                 'code' => $preference->housingUnit?->code,
+                                'public_reference' => $preference->housingUnit?->public_reference,
+                                'title' => $preference->housingUnit?->public_title,
+                                'typology' => $preference->housingUnit?->typology,
                             ],
                         ])
                         ->values()

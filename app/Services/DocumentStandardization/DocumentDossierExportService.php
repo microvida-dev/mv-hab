@@ -22,6 +22,20 @@ final class DocumentDossierExportService
                 fn (DocumentDossierItem $item): string => $this->row($item),
             )
             ->implode('');
+        $preferenceRows = $this->preferenceRows(
+            data_get(
+                $dossier->standardization_payload,
+                'housing_preferences',
+                [],
+            ),
+        );
+        $preferences = $preferenceRows !== ''
+            ? '<h2>Habitações pretendidas</h2>'
+                .'<table>'
+                .'<thead><tr><th>Ordem</th><th>Habitação</th><th>Tipologia</th><th>Renda mensal</th></tr></thead>'
+                .'<tbody>'.$preferenceRows.'</tbody>'
+                .'</table>'
+            : '<h2>Habitações pretendidas</h2><p>Sem preferências registadas no snapshot da candidatura.</p>';
 
         $html = '<!doctype html>'
             .'<html lang="pt">'
@@ -38,6 +52,8 @@ final class DocumentDossierExportService
             .'<body>'
             .'<h1>'.e($dossier->title).'</h1>'
             .'<p>'.e((string) $dossier->summary).'</p>'
+            .$preferences
+            .'<h2>Documentos</h2>'
             .'<table>'
             .'<thead>'
             .'<tr>'
@@ -58,6 +74,37 @@ final class DocumentDossierExportService
         Storage::disk('local')->put($path, $html);
 
         return $path;
+    }
+
+    private function preferenceRows(mixed $preferences): string
+    {
+        if (! is_array($preferences)) {
+            return '';
+        }
+
+        return collect($preferences)
+            ->filter(fn (mixed $preference): bool => is_array($preference))
+            ->map(function (array $preference): string {
+                $title = $preference['public_title']
+                    ?? $preference['public_reference']
+                    ?? 'Habitação selecionada';
+                $rent = is_numeric($preference['monthly_rent'] ?? null)
+                    ? number_format(
+                        (float) $preference['monthly_rent'],
+                        2,
+                        ',',
+                        ' ',
+                    ).' €'
+                    : '—';
+
+                return '<tr>'
+                    .'<td>'.e($preference['preference_order'] ?? '—').'</td>'
+                    .'<td>'.e($title).'</td>'
+                    .'<td>'.e($preference['typology'] ?? '—').'</td>'
+                    .'<td>'.e($rent).'</td>'
+                    .'</tr>';
+            })
+            ->implode('');
     }
 
     private function row(DocumentDossierItem $item): string

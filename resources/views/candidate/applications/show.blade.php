@@ -92,6 +92,10 @@
                                 Habitação atual
                             </a>
 
+                            <a href="{{ route('candidate.housing-preferences.edit', $application) }}" class="mv-button-secondary">
+                                Habitações pretendidas
+                            </a>
+
                             <a href="{{ route('candidate.documents.checklist') }}" class="mv-button-secondary">
                                 Documentos
                             </a>
@@ -119,6 +123,48 @@
                         <p class="mt-2 text-sm font-semibold text-ink-900">{{ $application->currentHousingSituation->housing_status->label() }}</p>
                     </div>
                 </div>
+            </x-mv.section>
+
+            <x-mv.section
+                title="Habitações pretendidas"
+                description="A ordem apresentada corresponde às suas preferências para este concurso."
+            >
+                @if ($application->housingPreferences->isNotEmpty())
+                    <ol class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        @foreach ($application->housingPreferences as $preference)
+                            <li class="rounded-2xl border border-ink-100 p-4">
+                                <div class="flex items-start gap-3">
+                                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface font-semibold text-mvhab-primary">
+                                        {{ $preference->preference_order }}
+                                    </span>
+                                    <div>
+                                        <p class="font-semibold text-ink-900">
+                                            {{ $preference->housingUnit?->public_title
+                                                ?: $preference->housingUnit?->public_reference
+                                                ?: 'Habitação selecionada' }}
+                                        </p>
+                                        <p class="mt-1 text-sm text-ink-500">
+                                            {{ $preference->housingUnit?->typology ?? 'Tipologia a confirmar' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ol>
+                @else
+                    <x-mv.alert>
+                        Ainda não existem habitações pretendidas registadas.
+                    </x-mv.alert>
+                @endif
+
+                @if ($application->isEditable())
+                    <a
+                        href="{{ route('candidate.housing-preferences.edit', $application) }}"
+                        class="mv-button-secondary mt-5"
+                    >
+                        Escolher habitações
+                    </a>
+                @endif
             </x-mv.section>
 
             @if ($application->latestEligibilityCheck)

@@ -46,6 +46,51 @@
             </section>
 
             <x-mv.section
+                title="Habitações pretendidas"
+                :description="$readiness['housing_preferences']['passed']
+                    ? 'A seleção será novamente validada no momento da submissão.'
+                    : $readiness['housing_preferences']['message']"
+            >
+                @if ($application->housingPreferences->isNotEmpty())
+                    <ol class="divide-y divide-ink-100 border-y border-ink-100">
+                        @foreach ($application->housingPreferences as $preference)
+                            <li class="flex flex-wrap items-center justify-between gap-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-mvhab-surface font-semibold text-mvhab-primary">
+                                        {{ $preference->preference_order }}
+                                    </span>
+                                    <div>
+                                        <p class="font-semibold text-ink-900">
+                                            {{ $preference->housingUnit?->public_title
+                                                ?: $preference->housingUnit?->public_reference
+                                                ?: 'Habitação selecionada' }}
+                                        </p>
+                                        <p class="mt-1 text-xs text-ink-500">
+                                            {{ $preference->housingUnit?->typology ?? 'Tipologia a confirmar' }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <x-mv.badge :tone="$preference->invalidated_at === null ? 'success' : 'warning'">
+                                    {{ $preference->invalidated_at === null ? 'Validada' : 'Requer nova validação' }}
+                                </x-mv.badge>
+                            </li>
+                        @endforeach
+                    </ol>
+                @else
+                    <x-mv.alert tone="warning">
+                        Ainda não selecionou habitações para esta candidatura.
+                    </x-mv.alert>
+                @endif
+
+                <a
+                    href="{{ route('candidate.housing-preferences.edit', $application) }}"
+                    class="mv-button-secondary mt-5"
+                >
+                    Rever habitações pretendidas
+                </a>
+            </x-mv.section>
+
+            <x-mv.section
                 title="Documentos"
                 :description="$readiness['documents']['summary']['submitted'] . ' de ' . $readiness['documents']['summary']['total_required'] . ' documentos obrigatórios submetidos ou validados.'"
                 class="overflow-hidden"

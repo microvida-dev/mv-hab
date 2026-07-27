@@ -9,6 +9,7 @@ use App\Models\Application;
 use App\Models\Contest;
 use App\Models\HouseholdMember;
 use App\Models\User;
+use App\Services\Allocation\HousingPreferenceService;
 use App\Services\Documents\DocumentChecklistService;
 use BackedEnum;
 use Illuminate\Support\Collection;
@@ -18,6 +19,7 @@ class ApplicationValidationService
 {
     public function __construct(
         private readonly DocumentChecklistService $documentChecklistService,
+        private readonly HousingPreferenceService $housingPreferences,
     ) {}
 
     /**
@@ -111,6 +113,8 @@ class ApplicationValidationService
 
         $registration = $application->adhesionRegistration;
         $documentChecklist = $this->documentChecklistService->forApplication($application);
+        $preferenceReadiness = $this->housingPreferences
+            ->readinessForSubmission($application);
         /** @var list<array{is_required: bool, status: DocumentStatus|string|null}> $documentItems */
         $documentItems = $documentChecklist['items'] ?? [];
         $blockingDocuments = collect($documentItems)
@@ -145,6 +149,13 @@ class ApplicationValidationService
                 $blockingDocuments->isEmpty(),
                 'Existem documentos obrigatórios em falta, rejeitados, expirados ou cancelados.',
             ),
+            $this->check(
+                'preferences',
+                $preferenceReadiness['passed'],
+                $preferenceReadiness['message'],
+                $preferenceReadiness['route'],
+                $preferenceReadiness['routeParameters'],
+            ),
         ];
 
         return [
@@ -152,6 +163,7 @@ class ApplicationValidationService
             'checks' => $checks,
             'documents' => $documentChecklist,
             'blocking_documents' => $blockingDocuments,
+            'housing_preferences' => $preferenceReadiness,
             'eligibility_pre_check' => $this->runEligibilityPreCheck($application),
         ];
     }
@@ -237,6 +249,7 @@ class ApplicationValidationService
             'duplicate' => 'Não existe outra candidatura ativa para este concurso.',
             'draft' => 'A candidatura está em rascunho e pode ser submetida.',
             'documents' => 'A documentação obrigatória está submetida ou validada.',
+            'preferences' => 'As habitações pretendidas estão selecionadas e validadas.',
             default => 'Verificação concluída.',
         };
 

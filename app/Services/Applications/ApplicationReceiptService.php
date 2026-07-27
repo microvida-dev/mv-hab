@@ -25,6 +25,7 @@ class ApplicationReceiptService
             'applicationDocuments.documentType',
             'declarations',
             'snapshots',
+            'housingPreferences.housingUnit',
         ]);
 
         $this->auditLogger->record(
@@ -40,6 +41,12 @@ class ApplicationReceiptService
             'application' => $application,
             'summary' => $application->snapshots
                 ->firstWhere('snapshot_type', ApplicationSnapshotType::Summary)
+                ->data ?? [],
+            'housingPreferences' => $application->snapshots
+                ->firstWhere(
+                    'snapshot_type',
+                    ApplicationSnapshotType::HousingPreferences,
+                )
                 ->data ?? [],
         ];
     }

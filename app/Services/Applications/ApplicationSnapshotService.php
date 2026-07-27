@@ -25,6 +25,7 @@ class ApplicationSnapshotService
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly DocumentSubmissionContextResolver $documentContext,
+        private readonly HousingPreferenceSnapshotService $housingPreferences,
     ) {}
 
     public function create(Application $application): void
@@ -35,6 +36,8 @@ class ApplicationSnapshotService
             'household.incomeRecords.incomeSource',
             'household.incomeRecords.householdMember',
             'currentHousingSituation',
+            'housingPreferences.housingUnit',
+            'preferences.housingUnit',
             'applicationDocuments.documentSubmission.currentVersion',
             'applicationDocuments.documentType',
             'applicationDocuments.documentSubmission.requiredDocument',
@@ -129,6 +132,9 @@ class ApplicationSnapshotService
                     'has_high_rent_burden', 'request_reason',
                 ],
             ),
+            ApplicationSnapshotType::HousingPreferences->value => $this
+                ->housingPreferences
+                ->forApplication($application),
             ApplicationSnapshotType::Documents->value => $applicationDocuments
                 ->map(function (ApplicationDocument $document): array {
                     /** @var DocumentType $documentType */
@@ -184,7 +190,7 @@ class ApplicationSnapshotService
         ];
 
         foreach ($snapshots as $type => $data) {
-            $application->snapshots()->updateOrCreate(
+            $application->snapshots()->firstOrCreate(
                 ['snapshot_type' => $type],
                 ['data' => $data],
             );
