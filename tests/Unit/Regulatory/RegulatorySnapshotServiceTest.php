@@ -7,6 +7,7 @@ use App\Models\AffordableRentRegulatoryProfile;
 use App\Models\EligibilityRuleSet;
 use App\Models\Municipality;
 use App\Models\Program;
+use App\Models\RegulatorySnapshot;
 use App\Models\User;
 use App\Services\Regulatory\RegulatorySnapshotService;
 use Carbon\CarbonImmutable;
@@ -42,11 +43,29 @@ class RegulatorySnapshotServiceTest extends TestCase
         );
 
         $this->assertTrue($sameSnapshot->is($snapshot));
+        $this->assertSame(1, RegulatorySnapshot::query()->count());
         $this->assertNotNull($snapshot->locked_at);
         $this->assertSame($program->municipality_id, $snapshot->municipality_id);
 
         $this->expectException(LogicException::class);
         $snapshot->forceFill(['origin' => 'tampered'])->save();
+    }
+
+    public function test_locked_snapshot_cannot_be_deleted(): void
+    {
+        [$program, $profile, $actor] = $this->context();
+        $snapshot = app(RegulatorySnapshotService::class)->attach(
+            $program,
+            $profile,
+            RegulatoryContext::ProgramPublication,
+            new CarbonImmutable('2026-08-01', 'Europe/Lisbon'),
+            $actor,
+            'unit_test',
+        );
+
+        $this->expectException(LogicException::class);
+
+        $snapshot->delete();
     }
 
     public function test_later_rule_and_profile_changes_do_not_rewrite_snapshot(): void
@@ -68,11 +87,18 @@ class RegulatorySnapshotServiceTest extends TestCase
         $originalParameters = $snapshot->parameters;
 
         $ruleSet->forceFill(['name' => 'Regra alterada depois do snapshot'])->save();
-        $profile->forceFill(['annual_income_base_limit' => '100.00'])->save();
+        $profile->forceFill([
+            'annual_income_base_limit' => '100.00',
+            'sixth_irs_bracket_upper_limit' => '200.00',
+        ])->save();
         $snapshot->refresh();
 
         $this->assertSame($ruleSet->id, $snapshot->rule_sets['eligibility_rule_set_id']);
         $this->assertSame('38632.00', $originalParameters['annual_income_base_limit']);
+        $this->assertSame(
+            '999999.00',
+            $originalParameters['sixth_irs_bracket_upper_limit'],
+        );
         $this->assertSame($originalParameters, $snapshot->parameters);
         $this->assertSame($originalChecksum, $snapshot->checksum);
     }

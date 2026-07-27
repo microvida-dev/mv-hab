@@ -12,9 +12,12 @@ use App\Models\EligibilityRuleSet;
 use App\Models\Municipality;
 use App\Models\PlatformOperatorAssignment;
 use App\Models\Program;
+use App\Models\RentLimitTableManifest;
+use App\Models\RentLimitTableRow;
 use App\Models\RentRuleSet;
 use App\Models\TypologyAdequacyRule;
 use App\Models\User;
+use App\Services\Regulatory\RentLimits\RentLimitTableChecksumService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -242,11 +245,12 @@ class Sprint3PortalProgramsTest extends TestCase
             'contest_id' => $contest->id,
             'regulatory_profile_id' => $profile->id,
         ]);
-        RentRuleSet::factory()->create([
+        $rentRuleSet = RentRuleSet::factory()->create([
             'program_id' => $program->id,
             'contest_id' => $contest->id,
             'regulatory_profile_id' => $profile->id,
         ]);
+        $this->createRentManifest($profile, $rentRuleSet, $administrator);
         TypologyAdequacyRule::factory()->create([
             'program_id' => $program->id,
             'contest_id' => $contest->id,
@@ -309,5 +313,35 @@ class Sprint3PortalProgramsTest extends TestCase
         PlatformOperatorAssignment::factory()->for($administrator)->create();
 
         return $administrator->refresh();
+    }
+
+    private function createRentManifest(
+        AffordableRentRegulatoryProfile $profile,
+        RentRuleSet $ruleSet,
+        User $validator,
+    ): void {
+        $manifest = RentLimitTableManifest::factory()->create([
+            'regulatory_profile_id' => $profile->id,
+            'rent_rule_set_id' => $ruleSet->id,
+            'source_version' => $profile->source_version,
+            'effective_from' => today()->startOfYear(),
+            'effective_until' => today()->endOfYear(),
+            'row_count' => 1,
+            'municipality_coverage' => ['TESTE'],
+            'typology_coverage' => ['T1'],
+            'demo_only' => true,
+            'validated_by' => $validator->id,
+        ]);
+        $row = RentLimitTableRow::factory()->create([
+            'manifest_id' => $manifest->id,
+            'municipality_code' => 'TESTE',
+            'typology' => 'T1',
+            'minimum_rent' => $ruleSet->minimum_rent,
+            'maximum_rent' => $ruleSet->maximum_rent,
+        ]);
+
+        $manifest->forceFill([
+            'checksum' => app(RentLimitTableChecksumService::class)->calculate([$row]),
+        ])->save();
     }
 }

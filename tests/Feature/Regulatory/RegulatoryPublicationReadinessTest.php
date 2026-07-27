@@ -6,18 +6,27 @@ use App\Enums\AffordableRentLegalRegime;
 use App\Enums\ContestDeadlineType;
 use App\Enums\ContestStatus;
 use App\Enums\ProgramStatus;
+use App\Enums\RegulatoryProfileStatus;
 use App\Models\AffordableRentRegulatoryProfile;
 use App\Models\AllocationRuleSet;
+use App\Models\AuditLog;
 use App\Models\Contest;
 use App\Models\EligibilityRuleSet;
 use App\Models\Municipality;
 use App\Models\PlatformOperatorAssignment;
 use App\Models\Program;
+use App\Models\RegulatorySnapshot;
+use App\Models\RentLimitTableManifest;
+use App\Models\RentLimitTableRow;
 use App\Models\RentRuleSet;
 use App\Models\TypologyAdequacyRule;
 use App\Models\User;
+use App\Services\Regulatory\RegulatorySnapshotService;
+use App\Services\Regulatory\RentLimits\RentLimitTableChecksumService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery;
+use RuntimeException;
 use Tests\TestCase;
 
 class RegulatoryPublicationReadinessTest extends TestCase
@@ -54,6 +63,18 @@ class RegulatoryPublicationReadinessTest extends TestCase
             'context' => 'program_publication',
             'legal_regime' => AffordableRentLegalRegime::PaaLegacy2019->value,
         ]);
+
+        $this->actingAs($actor)
+            ->withSession(['mfa.verified_at' => now()])
+            ->post(route('admin.programs.publish', $program->fresh()))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(1, RegulatorySnapshot::query()
+            ->where('source_type', $program->getMorphClass())
+            ->where('source_id', $program->id)
+            ->where('context', 'program_publication')
+            ->count());
     }
 
     public function test_incomplete_rsaa_program_publication_is_rejected(): void
@@ -89,6 +110,50 @@ class RegulatoryPublicationReadinessTest extends TestCase
 
         $this->assertSame(ProgramStatus::Draft, $program->fresh()->status);
         $this->assertNull($program->fresh()->regulatory_snapshot_id);
+    }
+
+    public function test_profile_archived_before_locked_readiness_keeps_program_draft(): void
+    {
+        $actor = $this->globalAdministrator();
+        $profile = AffordableRentRegulatoryProfile::factory()->create();
+        $program = $this->programReadyForPublication($profile);
+        $profile->forceFill(['status' => RegulatoryProfileStatus::Archived])->save();
+
+        $this->actingAs($actor)
+            ->withSession(['mfa.verified_at' => now()])
+            ->post(route('admin.programs.publish', $program))
+            ->assertRedirect()
+            ->assertSessionHasErrors('regulatory');
+
+        $this->assertSame(ProgramStatus::Draft, $program->fresh()->status);
+        $this->assertNull($program->fresh()->regulatory_snapshot_id);
+    }
+
+    public function test_snapshot_failure_rolls_back_publication_and_publish_audit(): void
+    {
+        $actor = $this->globalAdministrator();
+        $profile = AffordableRentRegulatoryProfile::factory()->create();
+        $program = $this->programReadyForPublication($profile);
+        $auditCount = AuditLog::query()->count();
+        $snapshots = Mockery::mock(RegulatorySnapshotService::class);
+        $snapshots->shouldReceive('attach')
+            ->once()
+            ->andThrow(new RuntimeException('Falha de snapshot simulada.'));
+        $this->app->instance(RegulatorySnapshotService::class, $snapshots);
+        $this->withoutExceptionHandling();
+
+        try {
+            $this->actingAs($actor)
+                ->withSession(['mfa.verified_at' => now()])
+                ->post(route('admin.programs.publish', $program));
+            $this->fail('A falha de snapshot deveria ter interrompido a publicação.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame('Falha de snapshot simulada.', $exception->getMessage());
+        }
+
+        $this->assertSame(ProgramStatus::Draft, $program->fresh()->status);
+        $this->assertNull($program->fresh()->regulatory_snapshot_id);
+        $this->assertSame($auditCount, AuditLog::query()->count());
     }
 
     public function test_incomplete_rsaa_contest_publication_is_rejected(): void
@@ -231,11 +296,12 @@ class RegulatoryPublicationReadinessTest extends TestCase
                 'contest_id' => null,
                 'regulatory_profile_id' => $profile->id,
             ]);
-            RentRuleSet::factory()->create([
+            $rentRuleSet = RentRuleSet::factory()->create([
                 'program_id' => $program->id,
                 'contest_id' => null,
                 'regulatory_profile_id' => $profile->id,
             ]);
+            $this->createRentManifest($profile, $rentRuleSet);
             TypologyAdequacyRule::factory()->create([
                 'program_id' => $program->id,
                 'contest_id' => null,
@@ -249,5 +315,32 @@ class RegulatoryPublicationReadinessTest extends TestCase
         }
 
         return $program;
+    }
+
+    private function createRentManifest(
+        AffordableRentRegulatoryProfile $profile,
+        RentRuleSet $ruleSet,
+    ): void {
+        $manifest = RentLimitTableManifest::factory()->create([
+            'regulatory_profile_id' => $profile->id,
+            'rent_rule_set_id' => $ruleSet->id,
+            'source_version' => $profile->source_version,
+            'effective_from' => '2026-01-01',
+            'effective_until' => '2026-12-31',
+            'row_count' => 1,
+            'municipality_coverage' => ['TESTE'],
+            'typology_coverage' => ['T1'],
+            'validated_by' => User::factory(),
+        ]);
+        $row = RentLimitTableRow::factory()->create([
+            'manifest_id' => $manifest->id,
+            'municipality_code' => 'TESTE',
+            'typology' => 'T1',
+            'minimum_rent' => $ruleSet->minimum_rent,
+            'maximum_rent' => $ruleSet->maximum_rent,
+        ]);
+        $manifest->forceFill([
+            'checksum' => app(RentLimitTableChecksumService::class)->calculate([$row]),
+        ])->save();
     }
 }

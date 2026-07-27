@@ -38,6 +38,7 @@ use App\Models\ScoringRule;
 use App\Models\ScoringRuleSet;
 use App\Models\TypologyAdequacyRule;
 use App\Models\User;
+use App\Services\Applications\HousingCompatibilityService;
 use App\Services\Documents\DocumentChecklistService;
 use App\Services\Eligibility\EligibilityDataProvider;
 use App\Services\Scoring\ScoringCriterionEvaluator;
@@ -249,6 +250,16 @@ class DemoAlcanenaAffordableRentSeederTest extends TestCase
         $this->assertTrue($eligibility['values']['typology_is_adequate']['value']);
         $this->assertTrue($eligibility['values']['rent_effort_within_35_percent']['value']);
         $this->assertSame(48632.0, $eligibility['snapshots']['income_records']['alcanena_annual_income_limit']);
+        $compatibilitySummary = app(HousingCompatibilityService::class)
+            ->summaryFor($application->fresh());
+        $this->assertSame(
+            '48632.00',
+            $compatibilitySummary['annual_income_limit'],
+        );
+        $this->assertSame(
+            $eligibility['snapshots']['income_records']['annual_income_limit_evidence'],
+            $compatibilitySummary['annual_income_limit_evidence'],
+        );
 
         $context = app(ScoringDataProvider::class)->forApplication($application->fresh());
         $this->assertSame(3, $context['values']['qualification_classification_points']['value']);

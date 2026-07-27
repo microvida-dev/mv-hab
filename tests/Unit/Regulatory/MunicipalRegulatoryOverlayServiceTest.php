@@ -24,6 +24,7 @@ class MunicipalRegulatoryOverlayServiceTest extends TestCase
             'annual_income_base_limit' => '38000.00',
             'second_person_increment' => '9000.00',
             'additional_person_increment' => '4500.00',
+            'sixth_irs_bracket_upper_limit' => '49000.00',
             'minimum_contract_months' => 60,
             'standard_contract_months' => 60,
         ]);
@@ -52,6 +53,21 @@ class MunicipalRegulatoryOverlayServiceTest extends TestCase
         app(MunicipalRegulatoryOverlayService::class)->assertValid($overlay);
     }
 
+    public function test_municipal_overlay_cannot_increase_national_fiscal_ceiling(): void
+    {
+        $parent = $this->nationalProfile();
+        $overlay = AffordableRentRegulatoryProfile::factory()->create([
+            'municipality_id' => Municipality::factory(),
+            'parent_profile_id' => $parent->id,
+            'sixth_irs_bracket_upper_limit' => '50000.01',
+        ]);
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('limite superior do 6.º escalão do IRS');
+
+        app(MunicipalRegulatoryOverlayService::class)->assertValid($overlay);
+    }
+
     private function nationalProfile(): AffordableRentRegulatoryProfile
     {
         return AffordableRentRegulatoryProfile::factory()->create([
@@ -60,6 +76,7 @@ class MunicipalRegulatoryOverlayServiceTest extends TestCase
             'annual_income_base_limit' => '40000.00',
             'second_person_increment' => '10000.00',
             'additional_person_increment' => '5000.00',
+            'sixth_irs_bracket_upper_limit' => '50000.00',
             'minimum_contract_months' => 36,
             'standard_contract_months' => 36,
         ]);
