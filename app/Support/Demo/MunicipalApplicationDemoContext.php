@@ -55,6 +55,28 @@ final class MunicipalApplicationDemoContext
                 .'MVHAB_MUNICIPAL_APPLICATION_DEMO=true.',
             );
         }
+
+        $this->userPassword();
+    }
+
+    public function userPassword(): string
+    {
+        $password = config(
+            'mvhab.municipal_application_demo.user_password',
+        );
+
+        if (
+            ! is_string($password)
+            || trim($password) === ''
+            || mb_strlen($password) < 12
+        ) {
+            throw new LogicException(
+                'O seeder municipal exige uma password demo '
+                .'com pelo menos 12 caracteres.',
+            );
+        }
+
+        return $password;
     }
 
     public function referenceDate(): CarbonImmutable

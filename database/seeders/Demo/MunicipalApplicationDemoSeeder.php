@@ -12,9 +12,8 @@ final class MunicipalApplicationDemoSeeder extends Seeder
         app(MunicipalApplicationDemoContext::class)
             ->assertSeederAllowed();
 
-        /*
-         * Os seeders especializados serão adicionados
-         * incrementalmente nas próximas fases da Sprint 51.
-         */
+        $this->call(
+            MunicipalApplicationDemoAccessSeeder::class,
+        );
     }
 }

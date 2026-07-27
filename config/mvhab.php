@@ -14,6 +14,10 @@ return [
         'reference_date' => env(
             'MVHAB_DEMO_REFERENCE_DATE',
         ),
+
+        'user_password' => env(
+            'MVHAB_DEMO_USER_PASSWORD',
+        ),
     ],
 
     'permissions' => [

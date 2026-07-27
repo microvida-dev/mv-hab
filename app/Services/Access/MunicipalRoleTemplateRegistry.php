@@ -76,6 +76,30 @@ class MunicipalRoleTemplateRegistry
                 'reports.audit',
             ],
         ],
+        'gestor-visitas' => [
+            'label' => 'Gestor de visitas',
+            'description' => 'Gestão operacional de disponibilidades, horários e visitas a habitações, sem acesso a candidaturas, documentos ou exportações.',
+            'permissions' => [
+                'dashboard.view',
+                'visits.view',
+                'visits.create',
+                'visits.update',
+                'visits.approve',
+                'visits.reject',
+                'visits.availabilities.view',
+                'visits.availabilities.create',
+                'visits.availabilities.update',
+                'visits.availabilities.delete',
+                'visits.availabilities.generate_slots',
+                'visits.slots.view',
+                'visits.slots.block',
+                'visits.slots.unblock',
+                'visits.confirm',
+                'visits.complete',
+                'visits.mark_no_show',
+                'visits.cancel',
+            ],
+        ],
     ];
 
     /**

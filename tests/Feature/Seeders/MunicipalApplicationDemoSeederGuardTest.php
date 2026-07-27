@@ -5,11 +5,14 @@ namespace Tests\Feature\Seeders;
 use App\Support\Demo\MunicipalApplicationDemoContext;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\MunicipalApplicationDemoSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use LogicException;
 use Tests\TestCase;
 
 class MunicipalApplicationDemoSeederGuardTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -23,6 +26,10 @@ class MunicipalApplicationDemoSeederGuardTest extends TestCase
         );
         config()->set(
             'mvhab.municipal_application_demo.reference_date',
+            null,
+        );
+        config()->set(
+            'mvhab.municipal_application_demo.user_password',
             null,
         );
     }
@@ -95,6 +102,20 @@ class MunicipalApplicationDemoSeederGuardTest extends TestCase
         }
     }
 
+    public function test_seeder_is_rejected_when_demo_password_is_missing(): void
+    {
+        config()->set('mvhab.regulatory_demo_mode', true);
+        config()->set(
+            'mvhab.municipal_application_demo.enabled',
+            true,
+        );
+
+        $this->assertSeederRejected(
+            'O seeder municipal exige uma password demo '
+            .'com pelo menos 12 caracteres.',
+        );
+    }
+
     public function test_configured_reference_date_is_respected(): void
     {
         config()->set(
@@ -147,6 +168,10 @@ class MunicipalApplicationDemoSeederGuardTest extends TestCase
             'reference_date',
             $demoConfiguration,
         );
+        $this->assertArrayHasKey(
+            'user_password',
+            $demoConfiguration,
+        );
     }
 
     private function enableDemoModes(): void
@@ -155,6 +180,10 @@ class MunicipalApplicationDemoSeederGuardTest extends TestCase
         config()->set(
             'mvhab.municipal_application_demo.enabled',
             true,
+        );
+        config()->set(
+            'mvhab.municipal_application_demo.user_password',
+            'MVHAB-Demo-2026!',
         );
     }
 
