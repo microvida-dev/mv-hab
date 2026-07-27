@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AffordableRentLegalRegime;
 use App\Enums\AllocationMethod;
 use App\Enums\AllocationOfferStatus;
 use App\Enums\AllocationStatus;
@@ -11,7 +12,9 @@ use App\Enums\DefinitiveListStatus;
 use App\Enums\HouseholdRelationship;
 use App\Enums\ListEntryStatus;
 use App\Enums\ListEntryType;
+use App\Enums\RegulatoryContext;
 use App\Models\AdhesionRegistration;
+use App\Models\AffordableRentRegulatoryProfile;
 use App\Models\Allocation;
 use App\Models\AllocationOffer;
 use App\Models\AllocationRuleSet;
@@ -24,9 +27,11 @@ use App\Models\DefinitiveListEntry;
 use App\Models\Household;
 use App\Models\HouseholdMember;
 use App\Models\HousingUnit;
+use App\Models\IncomeRecord;
 use App\Models\LotteryRun;
 use App\Models\Program;
 use App\Models\ProvisionalList;
+use App\Models\RegulatorySnapshot;
 use App\Models\TypologyAdequacyRule;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
@@ -106,7 +111,11 @@ class Sprint12AllocationTest extends TestCase
 
     public function test_candidate_can_store_own_housing_preferences_and_cannot_edit_another_candidate_application(): void
     {
-        [$administrator, $program, $contest, $list, $applications, $units] = $this->allocationContext(candidateCount: 1, unitCount: 2);
+        [$administrator, $program, $contest, $list, $applications, $units] = $this->allocationContext(
+            candidateCount: 1,
+            unitCount: 2,
+            editableApplications: true,
+        );
         $candidate = $applications[0]->user;
 
         $this->actingAs($candidate)
@@ -238,12 +247,19 @@ class Sprint12AllocationTest extends TestCase
             ->assertSee($lottery->audit_hash);
     }
 
-    private function allocationContext(int $candidateCount, int $unitCount, AllocationMethod $method = AllocationMethod::Ranking): array
-    {
+    private function allocationContext(
+        int $candidateCount,
+        int $unitCount,
+        AllocationMethod $method = AllocationMethod::Ranking,
+        bool $editableApplications = false,
+    ): array {
         $administrator = $this->userWithRole('administrator');
         $program = Program::factory()->published()->create();
         $contest = Contest::factory()->for($program)->open()->create();
         $municipality = $program->municipality()->firstOrFail();
+        $profile = AffordableRentRegulatoryProfile::factory()->create([
+            'municipality_id' => $municipality->id,
+        ]);
         $administrator->forceFill([
             'municipality_id' => $municipality->id,
         ])->save();
@@ -264,7 +280,8 @@ class Sprint12AllocationTest extends TestCase
             'published_at' => now(),
         ]);
 
-        AllocationRuleSet::factory()->create([
+        $ruleSet = AllocationRuleSet::factory()->create([
+            'regulatory_profile_id' => $profile->id,
             'program_id' => $program->id,
             'contest_id' => $contest->id,
             'allocation_method' => $method->value,
@@ -276,6 +293,7 @@ class Sprint12AllocationTest extends TestCase
         ]);
 
         TypologyAdequacyRule::factory()->create([
+            'regulatory_profile_id' => $profile->id,
             'program_id' => $program->id,
             'contest_id' => $contest->id,
             'typology' => 'T2',
@@ -284,14 +302,43 @@ class Sprint12AllocationTest extends TestCase
             'min_bedrooms' => 1,
             'max_bedrooms' => 3,
         ]);
+        $snapshot = RegulatorySnapshot::factory()->create([
+            'municipality_id' => $municipality->id,
+            'regulatory_profile_id' => $profile->id,
+            'legal_regime' => AffordableRentLegalRegime::PaaLegacy2019,
+            'context' => RegulatoryContext::ContestPublication,
+            'source_type' => $contest->getMorphClass(),
+            'source_id' => $contest->id,
+            'rule_sets' => [
+                'allocation_rule_set_id' => $ruleSet->id,
+            ],
+            'parameters' => [
+                'maximum_effort_rate_percentage' => '35.00',
+                'minimum_adult_monthly_income' => null,
+                'annual_income_base_limit' => '38632.00',
+                'second_person_increment' => '10000.00',
+                'additional_person_increment' => '5000.00',
+            ],
+        ]);
+        $program->forceFill([
+            'regulatory_profile_id' => $profile->id,
+            'legal_regime' => AffordableRentLegalRegime::PaaLegacy2019,
+        ])->save();
+        $contest->forceFill([
+            'regulatory_profile_id' => $profile->id,
+            'regulatory_snapshot_id' => $snapshot->id,
+            'legal_regime' => AffordableRentLegalRegime::PaaLegacy2019,
+        ])->save();
 
         $units = collect();
         for ($index = 0; $index < $unitCount; $index++) {
-            $housingUnit = HousingUnit::factory()->create([
+            $housingUnit = HousingUnit::factory()->publiclyVisible()->create([
                 'municipality_id' => $municipality->id,
                 'code' => 'HU-S12-'.($index + 1),
                 'typology' => 'T2',
                 'bedrooms' => 2,
+                'status' => 'available',
+                'monthly_rent' => '200.00',
             ]);
             $units->push(ContestHousingUnit::factory()->create([
                 'program_id' => $program->id,
@@ -302,6 +349,7 @@ class Sprint12AllocationTest extends TestCase
                 'bedrooms' => 2,
                 'min_occupants' => 1,
                 'max_occupants' => 4,
+                'monthly_rent' => '200.00',
             ]));
         }
 
@@ -315,21 +363,36 @@ class Sprint12AllocationTest extends TestCase
                 'nif' => 'TEST-S12-'.fake()->unique()->numerify('#####'),
             ]);
             $household = Household::factory()->candidate($registration)->create(['members_count' => 1]);
-            HouseholdMember::factory()->applicant()->create([
+            $member = HouseholdMember::factory()->applicant()->create([
                 'household_id' => $household->id,
                 'adhesion_registration_id' => $registration->id,
                 'birth_date' => today()->subYears(30),
                 'relationship' => HouseholdRelationship::Applicant->value,
             ]);
+            IncomeRecord::factory()->create([
+                'household_member_id' => $member->id,
+                'household_id' => $household->id,
+                'adhesion_registration_id' => $registration->id,
+                'monthly_amount' => '1000.00',
+                'annual_amount' => '12000.00',
+            ]);
             $housing = CurrentHousingSituation::factory()->create(['adhesion_registration_id' => $registration->id]);
-            $application = Application::factory()->submitted()->create([
+            $applicationFactory = Application::factory();
+
+            if (! $editableApplications) {
+                $applicationFactory = $applicationFactory->submitted();
+            }
+
+            $application = $applicationFactory->create([
                 'user_id' => $candidate->id,
                 'adhesion_registration_id' => $registration->id,
                 'program_id' => $program->id,
                 'contest_id' => $contest->id,
                 'household_id' => $household->id,
                 'current_housing_situation_id' => $housing->id,
-                'status' => ApplicationStatus::Submitted->value,
+                'status' => $editableApplications
+                    ? ApplicationStatus::Draft->value
+                    : ApplicationStatus::Submitted->value,
             ]);
             DefinitiveListEntry::factory()->create([
                 'definitive_list_id' => $list->id,
