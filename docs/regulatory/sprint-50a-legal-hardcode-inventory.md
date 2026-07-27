@@ -93,3 +93,50 @@ Prosseguir com uma migration incremental que cria perfis e snapshots, adiciona
 ligações opcionais aos domínios existentes e não executa backfill ambíguo.
 Dados demo de Alcanena serão ligados explicitamente ao perfil PAA; o perfil
 RSAA ficará incompleto até existir fonte oficial configurada.
+
+## Hardening 50A.1
+
+A revisão corretiva posterior demonstrou duas lacunas que o inventário inicial
+não fechava:
+
+1. os limites `38 632,00 + 10 000,00 + 5 000,00` representavam apenas a
+   fórmula por dimensão do agregado e não demonstravam o teto aplicável do
+   6.º escalão do IRS;
+2. `rent_limits_configured = true` não demonstrava a proveniência nem a
+   cobertura integral de uma tabela nacional PAA.
+
+### Correções aplicadas
+
+- parâmetros fiscais passaram para colunas tipadas e versionadas;
+- o cálculo anual foi centralizado e usa o menor valor entre fórmula e teto
+  fiscal;
+- a falta de fonte fiscal devolve `configuration_incomplete`;
+- tabelas de renda exigem manifesto, checksum, cobertura e validação;
+- providers PAA e RSAA validam a prova instalada em vez de confiar num
+  booleano;
+- publicação relê e bloqueia perfil e rule sets na mesma transação;
+- snapshots usam a identidade estrutural já existente e tratam inserções
+  concorrentes de forma idempotente;
+- contratos legacy dispõem de inventário read-only sem PII e sem modo de
+  aplicação.
+
+### Valores deliberadamente não instalados
+
+Não foram inventados nem tratados como oficiais:
+
+- valores da tabela nacional PAA;
+- limites de renda por concelho ou tipologia;
+- valor do limite superior do 6.º escalão do IRS;
+- ano fiscal ou vigência sem fonte instalada;
+- valores RSAA ainda não configurados oficialmente.
+
+Os valores existentes no cenário municipal de Alcanena são exclusivamente
+fictícios, marcados `demo_only` e dependem do modo demo explícito. Não podem
+desbloquear produção.
+
+### Estado do gate
+
+O repositório fica tecnicamente preparado, mas a operação regulamentar
+continua fechada até validação das fontes. A classificação corretiva é:
+
+`REPOSITORY_PASS_DEPLOYMENT_GATED`.

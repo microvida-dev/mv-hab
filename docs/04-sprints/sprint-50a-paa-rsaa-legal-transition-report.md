@@ -360,3 +360,30 @@ Antes de usar RSAA num ambiente de destino:
 O repositório cumpre os gates técnicos e preserva PAA/legacy. A utilização
 operacional do regime RSAA continua bloqueada, por desenho, até existir fonte
 oficial completa e validação jurídica.
+
+## 18. Correção posterior — Hardening 50A.1
+
+A Sprint 50A.1 não altera retroativamente o resultado histórico desta sprint.
+Regista que duas afirmações do relatório original eram demasiado fortes:
+
+- o perfil PAA base não pode ser considerado completo sem manifesto da tabela
+  nacional aplicável;
+- os valores da fórmula do Quadro I não substituem a fonte versionada do
+  limite superior do 6.º escalão do IRS.
+
+O hardening posterior introduz:
+
+- fonte fiscal tipada e cálculo anual comum fail-closed;
+- manifestos verificáveis de tabelas de renda;
+- auditoria read-only da configuração;
+- inventário read-only de contratos legacy;
+- publicação transacional com locks e rollback;
+- idempotência reforçada dos snapshots.
+
+O catálogo base deixa PAA e RSAA incompletos quando a fonte oficial não está
+instalada. O cenário Alcanena continua apenas em modo demo explícito, com
+metadados `demo_only` e sem efeitos administrativos reais.
+
+Consultar o relatório corretivo:
+
+- `docs/04-sprints/sprint-50a1-regulatory-hardening-report.md`.

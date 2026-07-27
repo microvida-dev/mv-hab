@@ -223,7 +223,98 @@ deve apagar prova administrativa.
 Rever esta ADR quando:
 
 - a fonte oficial de rendas RSAA estiver disponível;
+- a tabela nacional PAA aplicável e a fonte fiscal do limite superior do
+  6.º escalão do IRS forem instaladas e validadas;
 - existir integração IHRU;
 - forem adicionados novos regimes ou transições;
 - for necessário classificar contratos legacy com manifesto;
 - o catálogo regulamentar ganhar UI própria de gestão.
+
+## Hardening 50A.1
+
+A auditoria corretiva concluiu que o repositório não contém fonte oficial
+verificada suficiente para demonstrar:
+
+- o valor e ano fiscal aplicáveis ao limite superior do 6.º escalão do IRS;
+- a cobertura integral da tabela nacional de limites de renda PAA;
+- a tabela de limites de renda RSAA.
+
+Esta ausência não é colmatada por inferência. O contrato arquitetural passa a
+ser explicitamente fail-closed.
+
+### Limite anual de rendimento
+
+`AffordableRentRegulatoryProfile` conserva em colunas tipadas:
+
+- `tax_year`;
+- `sixth_irs_bracket_upper_limit`;
+- `irs_source_reference`;
+- `irs_source_version`;
+- `irs_effective_from`;
+- `irs_effective_until`.
+
+`AnnualHouseholdIncomeLimitCalculator` usa strings decimais e
+`DecimalMoney`. O limite efetivo é o menor entre a fórmula por dimensão do
+agregado e o teto fiscal versionado. A falta de qualquer elemento obrigatório,
+a ausência de vigência ou a utilização de uma fonte demo fora de modo demo
+devolve `configuration_incomplete`.
+
+Elegibilidade e compatibilidade habitacional consomem o mesmo calculador. A
+evidência utilizada é conservada nos respetivos payloads e no snapshot
+regulamentar, incluindo valor, ano fiscal, fonte, versão e vigência.
+
+### Manifestações de tabelas de renda
+
+Uma tabela de renda só é configurada quando existe um manifesto com:
+
+- documento, referência e versão da fonte;
+- vigência;
+- checksum SHA-256 determinístico;
+- número de linhas;
+- cobertura municipal e tipológica;
+- estado, data e responsável pela validação;
+- indicação explícita de dados exclusivamente demo.
+
+O estado é derivado por `RentLimitTableAuditService`; o booleano
+`rent_limits_configured` não constitui prova suficiente. O provider valida o
+manifesto, as linhas, a cobertura, o checksum, a vigência e a correspondência
+com o rule set.
+
+### Publicação e snapshots
+
+Publicação de programa/concurso, readiness, locks do perfil/rule sets, criação
+do snapshot, mudança de estado e auditoria decorrem na mesma transação. Os
+pedidos repetidos são idempotentes e um registo publicado sem snapshot é
+tratado como configuração inválida.
+
+A identidade estrutural já existente
+`(source_type, source_id, context)` continua a garantir um snapshot final por
+entidade e contexto. O service trata a corrida de inserção através dessa
+constraint, volta a associar o snapshot vencedor e só audita uma criação real.
+Snapshots bloqueados continuam imutáveis e não elimináveis.
+
+### Operação e deployment gate
+
+Existem comandos exclusivamente read-only:
+
+```bash
+php artisan regulatory:audit-rent-limit-tables \
+    --regime=paa_legacy_2019 \
+    --format=json \
+    --output=/tmp/paa-rent-limit-audit.json
+
+php artisan regulatory:inventory-legacy-contracts \
+    --format=json \
+    --output=/tmp/legacy-contracts.json
+```
+
+O primeiro valida fontes e cobertura; o segundo classifica apenas por IDs
+técnicos e pela cadeia autoritativa. Nenhum deles altera dados ou cria
+auditoria administrativa.
+
+Até serem instaladas e validadas as fontes oficiais:
+
+- PAA sem fonte verificada: `configuration_incomplete`;
+- RSAA sem fonte verificada: `configuration_incomplete`;
+- dados fictícios de demonstração: `demo_only`, utilizáveis apenas quando
+  `MVHAB_REGULATORY_DEMO_MODE=true`.
