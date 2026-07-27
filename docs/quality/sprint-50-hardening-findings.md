@@ -99,3 +99,45 @@ Por isso:
    validada e publicada.
 
 Classificação atual: **BLOCKED**.
+
+## 6. Decisão posterior e auditoria inicial 50E.1
+
+### 6.1. Decisão de continuação
+
+O bloqueio regulamentar acima foi reavaliado após decisão formal do titular
+do produto. A continuação foi autorizada exclusivamente em modo
+**fail-closed**, sem instalar, inferir ou tratar como oficiais valores PAA,
+RSAA ou fiscais não suportados por fonte verificada.
+
+A Sprint 50A.1 foi concluída e publicada na branch
+`sprint-50a1-regulatory-hardening`, commit
+`1dc512b3d45a0dfc8cbe36d30f45a76caa222a96`. Os gates regulamentares
+continuam fechados quando a fonte aplicável está ausente ou incompleta.
+
+### 6.2. Evidência 50E.1 antes das alterações
+
+A auditoria da 50E.1 foi executada na branch
+`sprint-50e1-preference-integrity-hardening`, criada diretamente a partir do
+commit remoto final da 50A.1.
+
+| Finding | Evidência | Estado | Risco | Decisão técnica |
+| --- | --- | --- | --- | --- |
+| SoftDeletes e índices únicos | `housing_preferences` mantém `SoftDeletes`, mas os índices únicos são `(application_id, preference_order)` e `(application_id, contest_housing_unit_id)`, sem `deleted_at`. O `replace()` elimina apenas linhas ativas desbloqueadas; linhas antigas já soft-deleted continuam a colidir. | `REQUIRES_CHANGE` | Edições repetidas de rascunho podem falhar com duplicate key em MySQL/MariaDB. | Eliminar definitivamente, sob lock e apenas em candidatura rascunho sem atribuição/snapshot final, todas as linhas desbloqueadas dessa candidatura antes da substituição. A história administrativa final permanece no snapshot e auditoria. |
+| Fonte oficial versus legacy | `HousingPreferenceSnapshotService`, `EligibilityDataProvider` e `ProcedureMinutePayloadBuilder` escolhem legacy quando a coleção oficial está vazia. | `REQUIRES_CHANGE` | Uma remoção oficial deliberada pode reativar preferências antigas. | Persistir estado estrutural `uninitialized`, `legacy`, `official`, `reconciled` ou `requires_manual_review` e centralizar todos os readers num resolver fail-closed. |
+| Ciclo de snapshots | Existe unique estrutural em `application_snapshots`, mas `ApplicationSnapshotService::create()` aceita rascunhos, não impõe transação própria nem lock da candidatura e usa `firstOrCreate()`. | `REQUIRES_CHANGE` para o service; `ALREADY_SAFE` para a constraint | Uma chamada fora da submissão pode cristalizar dados preliminares. | Exigir candidatura submetida/bloqueada, usar transação e `lockForUpdate`, criar apenas tipos em falta e devolver de forma idempotente o conjunto final já existente. |
+| Policy | `HousingPreferencePolicy::update()` repete `hasRole('candidate')`, embora `ApplicationPolicy::update()` já centralize ownership, estado editável e permission. | `REQUIRES_CHANGE` | Roles múltiplas e futuros fluxos assistidos ficam dependentes de uma string dispersa. | Delegar a fronteira da candidatura a `ApplicationPolicy`, mantendo ownership, permission, rascunho, ausência de lock e de atribuição. O middleware candidate continua inalterado. |
+| Invalidação transversal | Os quatro services do portal invalidam manualmente. `HouseholdController` no backoffice escreve diretamente e não invalida; não existe evento de domínio comum. | `REQUIRES_CHANGE` | Alterações válidas por outro writer podem deixar compatibilidade obsoleta. | Introduzir eventos de domínio síncronos e um listener único, disparados pelos writers validados. A invalidação continua idempotente, limitada a rascunhos e sem tocar em snapshots finais. |
+| Atribuição estrita | `PreferenceAllocationService` valida lock, submissão, compatibilidade, invalidação e `regulatory_snapshot_id`, e não faz fallback para unidade não escolhida. Não confirma ainda a fonte estrutural nem a existência do snapshot final. | `REQUIRES_CHANGE` | Linhas formalmente válidas, mas não oficiais ou sem snapshot final, podem ser consumidas. | Exigir fonte `official`/`reconciled`, snapshot final `housing_preferences`, ordem consecutiva e snapshot regulamentar coincidente antes da alocação. |
+
+### 6.3. Restrições da correção
+
+- não apagar `application_preferences`;
+- não efetuar backfill ambíguo;
+- não alterar snapshots administrativos já emitidos;
+- não introduzir um terceiro sistema de preferências;
+- não usar índices parciais ou expressões específicas de PostgreSQL;
+- suportar MySQL/MariaDB e SQLite;
+- manter atribuição estritamente pela 1.ª, 2.ª ou 3.ª escolha, caso contrário
+  reserva.
+
+Classificação da auditoria 50E.1: **REQUIRES_CHANGE**.
