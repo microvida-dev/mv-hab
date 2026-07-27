@@ -9,6 +9,7 @@ use App\Models\AdministrativeProcessNote;
 use App\Models\AdministrativeTask;
 use App\Models\AdministrativeWorkflowConfig;
 use App\Models\Allocation;
+use App\Models\AllocationRuleSet;
 use App\Models\AllocationRun;
 use App\Models\AnnualDocumentUpdateRequest;
 use App\Models\Application;
@@ -117,6 +118,7 @@ use App\Models\TenantInvoice;
 use App\Models\TenantPayment;
 use App\Models\TenantTransition;
 use App\Models\TieBreakerRule;
+use App\Models\TypologyAdequacyRule;
 use App\Models\User;
 use App\Models\VisitAvailability;
 use App\Models\VisitSlot;
@@ -1542,6 +1544,44 @@ class MunicipalRecordScopeService
     }
 
     /**
+     * @param  Builder<TypologyAdequacyRule>  $query
+     * @return Builder<TypologyAdequacyRule>
+     */
+    public function typologyAdequacyRules(Builder $query, User $user): Builder
+    {
+        return $this->ruleSetsThroughProgramOrContest($query, $user);
+    }
+
+    public function ownsTypologyAdequacyRule(
+        User $user,
+        TypologyAdequacyRule $rule,
+    ): bool {
+        return $this->typologyAdequacyRules(
+            TypologyAdequacyRule::query()->whereKey($rule),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<AllocationRuleSet>  $query
+     * @return Builder<AllocationRuleSet>
+     */
+    public function allocationRuleSets(Builder $query, User $user): Builder
+    {
+        return $this->ruleSetsThroughProgramOrContest($query, $user);
+    }
+
+    public function ownsAllocationRuleSet(
+        User $user,
+        AllocationRuleSet $ruleSet,
+    ): bool {
+        return $this->allocationRuleSets(
+            AllocationRuleSet::query()->whereKey($ruleSet),
+            $user,
+        )->exists();
+    }
+
+    /**
      * @param  Builder<RentRule>  $query
      * @return Builder<RentRule>
      */
@@ -2405,23 +2445,7 @@ class MunicipalRecordScopeService
      */
     public function eligibilityRuleSets(Builder $query, User $user): Builder
     {
-        if ($user->municipality_id === null) {
-            return $query->whereRaw('1 = 0');
-        }
-
-        return $query->where(function (Builder $ruleSets) use ($user): void {
-            $ruleSets
-                ->whereHas(
-                    'program',
-                    fn (Builder $program): Builder => $program
-                        ->where('municipality_id', $user->municipality_id),
-                )
-                ->orWhereHas(
-                    'contest.program',
-                    fn (Builder $program): Builder => $program
-                        ->where('municipality_id', $user->municipality_id),
-                );
-        });
+        return $this->ruleSetsThroughProgramOrContest($query, $user);
     }
 
     public function ownsEligibilityRuleSet(User $user, EligibilityRuleSet $ruleSet): bool
@@ -4051,6 +4075,39 @@ class MunicipalRecordScopeService
         }
 
         return $query->where('municipality_id', $user->municipality_id);
+    }
+
+    /**
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
+     */
+    private function ruleSetsThroughProgramOrContest(
+        Builder $query,
+        User $user,
+    ): Builder {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $ruleSets) use ($user): void {
+            $ruleSets
+                ->whereHas(
+                    'program',
+                    fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id),
+                )
+                ->orWhereHas(
+                    'contest.program',
+                    fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id),
+                );
+        });
     }
 
     /**

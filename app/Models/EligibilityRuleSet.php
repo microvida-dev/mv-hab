@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\EligibilityRuleSetStatus;
+use Carbon\CarbonInterface;
 use Database\Factories\EligibilityRuleSetFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property int|null $regulatory_profile_id
+ */
 class EligibilityRuleSet extends Model
 {
     /** @use HasFactory<EligibilityRuleSetFactory> */
@@ -19,6 +24,7 @@ class EligibilityRuleSet extends Model
     protected $fillable = [
         'program_id',
         'contest_id',
+        'regulatory_profile_id',
         'name',
         'description',
         'is_default',
@@ -50,6 +56,14 @@ class EligibilityRuleSet extends Model
     public function contest(): BelongsTo
     {
         return $this->belongsTo(Contest::class);
+    }
+
+    /**
+     * @return BelongsTo<AffordableRentRegulatoryProfile, $this>
+     */
+    public function regulatoryProfile(): BelongsTo
+    {
+        return $this->belongsTo(AffordableRentRegulatoryProfile::class);
     }
 
     /**
@@ -90,13 +104,22 @@ class EligibilityRuleSet extends Model
      */
     public function scopeActive(Builder $query): Builder
     {
+        return $query->activeAt(now());
+    }
+
+    /**
+     * @param  Builder<EligibilityRuleSet>  $query
+     * @return Builder<EligibilityRuleSet>
+     */
+    public function scopeActiveAt(Builder $query, CarbonInterface $referenceDate): Builder
+    {
         return $query
             ->where('status', EligibilityRuleSetStatus::Active->value)
             ->where(fn (Builder $builder) => $builder
                 ->whereNull('starts_at')
-                ->orWhere('starts_at', '<=', now()))
+                ->orWhere('starts_at', '<=', $referenceDate))
             ->where(fn (Builder $builder) => $builder
                 ->whereNull('ends_at')
-                ->orWhere('ends_at', '>=', now()));
+                ->orWhere('ends_at', '>=', $referenceDate));
     }
 }

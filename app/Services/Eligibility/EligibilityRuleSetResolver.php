@@ -5,15 +5,36 @@ namespace App\Services\Eligibility;
 use App\Models\Contest;
 use App\Models\EligibilityRuleSet;
 use App\Models\Program;
+use Carbon\CarbonInterface;
 use RuntimeException;
 
 class EligibilityRuleSetResolver
 {
     public function resolve(?Program $program = null, ?Contest $contest = null): ?EligibilityRuleSet
     {
+        return $this->resolveAt(now(), $program, $contest);
+    }
+
+    public function resolveAt(
+        CarbonInterface $referenceDate,
+        ?Program $program = null,
+        ?Contest $contest = null,
+    ): ?EligibilityRuleSet {
+        $regulatoryProfileId = null;
+
+        if ($contest instanceof Contest && $contest->regulatory_profile_id !== null) {
+            $regulatoryProfileId = $contest->regulatory_profile_id;
+        } elseif ($program instanceof Program) {
+            $regulatoryProfileId = $program->regulatory_profile_id;
+        }
+
         if ($contest) {
             $contestRuleSet = EligibilityRuleSet::query()
-                ->active()
+                ->activeAt($referenceDate)
+                ->when(
+                    $regulatoryProfileId !== null,
+                    fn ($query) => $query->where('regulatory_profile_id', $regulatoryProfileId),
+                )
                 ->where('contest_id', $contest->id)
                 ->latest('starts_at')
                 ->latest('id')
@@ -31,7 +52,11 @@ class EligibilityRuleSetResolver
         }
 
         return EligibilityRuleSet::query()
-            ->active()
+            ->activeAt($referenceDate)
+            ->when(
+                $regulatoryProfileId !== null,
+                fn ($query) => $query->where('regulatory_profile_id', $regulatoryProfileId),
+            )
             ->where('program_id', $program->id)
             ->whereNull('contest_id')
             ->orderByDesc('is_default')

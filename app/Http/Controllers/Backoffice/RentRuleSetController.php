@@ -13,6 +13,7 @@ use App\Models\RentRuleSet;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\Municipalities\MunicipalRecordScopeService;
+use App\Services\Regulatory\RegulatoryRuleSetLinkService;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,7 @@ class RentRuleSetController extends Controller
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly RegulatoryRuleSetLinkService $regulatoryLink,
     ) {}
 
     public function index(Request $request): View
@@ -55,7 +57,7 @@ class RentRuleSetController extends Controller
         Gate::authorize('createBackoffice', RentRuleSet::class);
         $data = $this->normalized($request->validated());
         $actor = $this->authenticatedUser($request);
-        $this->assertRelatedScope($data, $actor);
+        $data = $this->regulatoryLink->link($data, $actor);
         $status = $data['status'];
         unset($data['status']);
 
@@ -94,7 +96,7 @@ class RentRuleSetController extends Controller
         Gate::authorize('updateBackoffice', $rentRuleSet);
         $data = $this->normalized($request->validated());
         $actor = $this->authenticatedUser($request);
-        $this->assertRelatedScope($data, $actor);
+        $data = $this->regulatoryLink->link($data, $actor);
         $status = $data['status'];
         unset($data['status']);
         $rentRuleSet->update($data);
@@ -176,23 +178,5 @@ class RentRuleSetController extends Controller
         $data['allow_manual_override'] = (bool) ($data['allow_manual_override'] ?? false);
 
         return $data;
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    private function assertRelatedScope(array $data, User $actor): void
-    {
-        if (filled($data['program_id'] ?? null)) {
-            $this->municipalScope
-                ->programs(Program::query(), $actor)
-                ->findOrFail((int) $data['program_id']);
-        }
-
-        if (filled($data['contest_id'] ?? null)) {
-            $this->municipalScope
-                ->contests(Contest::query(), $actor)
-                ->findOrFail((int) $data['contest_id']);
-        }
     }
 }

@@ -4,9 +4,12 @@ namespace App\Services\Applications;
 
 use App\Enums\ApplicationDeclarationType;
 use App\Enums\ApplicationStatus;
+use App\Enums\RegulatoryContext;
 use App\Models\Application;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Regulatory\AffordableRentLegalRegimeResolver;
+use App\Services\Regulatory\RegulatorySnapshotService;
 use App\Support\AuditEvents;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +25,8 @@ class ApplicationSubmissionService
         private readonly ApplicationNumberService $numberService,
         private readonly ApplicationService $applicationService,
         private readonly AuditLogger $auditLogger,
+        private readonly AffordableRentLegalRegimeResolver $regimeResolver,
+        private readonly RegulatorySnapshotService $regulatorySnapshotService,
     ) {}
 
     public function submit(Application $application, User $actor): Application
@@ -53,6 +58,19 @@ class ApplicationSubmissionService
 
             $from = $application->status;
             $application->forceFill(['status' => ApplicationStatus::Submitted])->save();
+            $profile = $this->regimeResolver->profileForApplication($application);
+
+            if ($profile !== null) {
+                $this->regulatorySnapshotService->attach(
+                    $application,
+                    $profile,
+                    RegulatoryContext::ApplicationSubmission,
+                    $acceptedAt,
+                    $actor,
+                    'application_submission',
+                );
+            }
+
             $application->load([
                 'adhesionRegistration',
                 'household.members.incomeRecords.incomeSource',

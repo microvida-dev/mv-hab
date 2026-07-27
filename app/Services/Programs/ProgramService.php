@@ -3,10 +3,18 @@
 namespace App\Services\Programs;
 
 use App\Enums\ProgramStatus;
+use App\Enums\RegulatoryContext;
+use App\Models\AffordableRentRegulatoryProfile;
 use App\Models\Program;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Platform\PlatformOperatorScopeService;
+use App\Services\Regulatory\AffordableRentLegalRegimeResolver;
+use App\Services\Regulatory\MunicipalRegulatoryOverlayService;
+use App\Services\Regulatory\RegulatoryPublicationReadinessService;
+use App\Services\Regulatory\RegulatorySnapshotService;
 use App\Support\AuditEvents;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -14,7 +22,14 @@ use Illuminate\Validation\ValidationException;
 
 class ProgramService
 {
-    public function __construct(private readonly AuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly AffordableRentLegalRegimeResolver $regimeResolver,
+        private readonly MunicipalRegulatoryOverlayService $overlayService,
+        private readonly RegulatoryPublicationReadinessService $publicationReadiness,
+        private readonly RegulatorySnapshotService $snapshotService,
+        private readonly PlatformOperatorScopeService $platformScope,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -23,7 +38,19 @@ class ProgramService
     {
         return DB::transaction(function () use ($data, $actor) {
             $rules = Arr::pull($data, 'rules', []);
+            $this->assertActorCanManageMunicipality($actor, (int) $data['municipality_id']);
+            $profile = AffordableRentRegulatoryProfile::query()
+                ->with('parentProfile')
+                ->findOrFail((int) $data['regulatory_profile_id']);
+            $referenceDate = CarbonImmutable::parse((string) $data['starts_at'], 'Europe/Lisbon');
+            $this->regimeResolver->assertProfileMatches(
+                $profile,
+                $referenceDate,
+                (int) $data['municipality_id'],
+            );
+            $this->overlayService->assertValid($profile);
             $data['slug'] = $this->uniqueSlug($data['slug'] ?? null, $data['name']);
+            $data['legal_regime'] = $profile->legal_regime->value;
             $data['status'] = ProgramStatus::Draft->value;
             $data['created_by'] = $actor->id;
             $data['updated_by'] = $actor->id;
@@ -51,8 +78,31 @@ class ProgramService
     {
         return DB::transaction(function () use ($program, $data, $actor) {
             $rules = Arr::pull($data, 'rules', []);
+            $this->assertActorCanManageMunicipality($actor, $program->municipality_id);
+            $this->assertActorCanManageMunicipality($actor, (int) $data['municipality_id']);
+            $profile = AffordableRentRegulatoryProfile::query()
+                ->with('parentProfile')
+                ->findOrFail((int) $data['regulatory_profile_id']);
+            $referenceDate = CarbonImmutable::parse((string) $data['starts_at'], 'Europe/Lisbon');
+
+            if (
+                $program->regulatory_snapshot_id !== null
+                && $program->regulatory_profile_id !== $profile->id
+            ) {
+                throw ValidationException::withMessages([
+                    'regulatory_profile_id' => 'O perfil regulamentar de um programa publicado não pode ser alterado.',
+                ]);
+            }
+
+            $this->regimeResolver->assertProfileMatches(
+                $profile,
+                $referenceDate,
+                (int) $data['municipality_id'],
+            );
+            $this->overlayService->assertValid($profile);
             $before = $program->only(['municipality_id', 'name', 'slug', 'status', 'starts_at', 'ends_at']);
             $data['slug'] = $this->uniqueSlug($data['slug'] ?? null, $data['name'], $program);
+            $data['legal_regime'] = $profile->legal_regime->value;
             $data['updated_by'] = $actor->id;
 
             $program->update($data);
@@ -74,33 +124,55 @@ class ProgramService
 
     public function publish(Program $program, User $actor): Program
     {
-        if ($program->rules()->count() === 0) {
-            throw ValidationException::withMessages([
-                'program' => 'Adicione pelo menos uma regra pública antes de publicar o programa.',
-            ]);
-        }
+        return DB::transaction(function () use ($program, $actor): Program {
+            $locked = Program::query()
+                ->whereKey($program->getKey())
+                ->lockForUpdate()
+                ->with(['municipality', 'regulatoryProfile.parentProfile'])
+                ->firstOrFail();
+            $this->assertActorCanManageMunicipality($actor, $locked->municipality_id);
 
-        $before = $program->only(['status', 'published_at']);
+            if ($locked->rules()->count() === 0) {
+                throw ValidationException::withMessages([
+                    'program' => 'Adicione pelo menos uma regra pública antes de publicar o programa.',
+                ]);
+            }
 
-        $program->update([
-            'status' => ProgramStatus::Published->value,
-            'published_at' => now(),
-            'updated_by' => $actor->id,
-        ]);
+            if ($locked->starts_at === null) {
+                throw ValidationException::withMessages([
+                    'program' => 'Defina a data de início do programa antes da publicação.',
+                ]);
+            }
 
-        $this->auditLogger->record(
-            event: AuditEvents::PUBLISH,
-            auditable: $program,
-            module: 'programs',
-            action: 'publish',
-            description: 'Programa publicado no portal público.',
-            oldValues: $before,
-            newValues: $program->refresh()->only(['status', 'published_at']),
-        );
+            $referenceDate = CarbonImmutable::instance($locked->starts_at)->startOfDay();
+            $profile = $this->publicationReadiness->assertProgramReady($locked, $referenceDate);
+            $before = $locked->only(['status', 'published_at']);
+            $this->snapshotService->attach(
+                $locked,
+                $profile,
+                RegulatoryContext::ProgramPublication,
+                $referenceDate,
+                $actor,
+                'program_publication',
+            );
+            $locked->forceFill([
+                'status' => ProgramStatus::Published->value,
+                'published_at' => now(),
+                'updated_by' => $actor->id,
+            ])->save();
 
-        $program->refresh();
+            $this->auditLogger->record(
+                event: AuditEvents::PUBLISH,
+                auditable: $locked,
+                module: 'programs',
+                action: 'publish',
+                description: 'Programa publicado no portal público.',
+                oldValues: $before,
+                newValues: $locked->refresh()->only(['status', 'published_at', 'legal_regime', 'regulatory_snapshot_id']),
+            );
 
-        return $program;
+            return $locked->refresh();
+        });
     }
 
     public function delete(Program $program): void
@@ -162,5 +234,18 @@ class ProgramService
         }
 
         return $candidate;
+    }
+
+    private function assertActorCanManageMunicipality(User $actor, int $municipalityId): void
+    {
+        if ($this->platformScope->hasGlobalScope($actor)) {
+            return;
+        }
+
+        if ($actor->municipality_id === null || $actor->municipality_id !== $municipalityId) {
+            throw ValidationException::withMessages([
+                'municipality_id' => 'Não tem autorização para configurar programas deste Município.',
+            ]);
+        }
     }
 }

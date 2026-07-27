@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\AdministrativeProcessStatus;
+use App\Enums\AffordableRentLegalRegime;
 use App\Enums\ApplicationStatus;
 use Database\Factories\ApplicationFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,7 +16,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property int $program_id
+ * @property int $contest_id
+ * @property int|null $regulatory_snapshot_id
  * @property ApplicationStatus $status
+ * @property AffordableRentLegalRegime|null $legal_regime
  * @property User $user
  * @property AdhesionRegistration $adhesionRegistration
  * @property Program $program
@@ -37,6 +43,7 @@ class Application extends Model
     {
         return [
             'status' => ApplicationStatus::class,
+            'legal_regime' => AffordableRentLegalRegime::class,
             'submitted_at' => 'datetime',
             'withdrawn_at' => 'datetime',
             'cancelled_at' => 'datetime',
@@ -82,6 +89,12 @@ class Application extends Model
     public function contest(): BelongsTo
     {
         return $this->belongsTo(Contest::class);
+    }
+
+    /** @return BelongsTo<RegulatorySnapshot, $this> */
+    public function regulatorySnapshot(): BelongsTo
+    {
+        return $this->belongsTo(RegulatorySnapshot::class);
     }
 
     /** @return BelongsTo<Household, $this> */

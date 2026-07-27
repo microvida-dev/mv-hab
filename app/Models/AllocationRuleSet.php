@@ -49,6 +49,12 @@ class AllocationRuleSet extends Model
         return $this->belongsTo(Contest::class);
     }
 
+    /** @return BelongsTo<AffordableRentRegulatoryProfile, $this> */
+    public function regulatoryProfile(): BelongsTo
+    {
+        return $this->belongsTo(AffordableRentRegulatoryProfile::class);
+    }
+
     /**
      * @return BelongsTo<User, $this>
      */

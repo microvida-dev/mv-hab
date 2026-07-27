@@ -12,6 +12,7 @@ use App\Models\Program;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\Municipalities\MunicipalRecordScopeService;
+use App\Services\Regulatory\RegulatoryRuleSetLinkService;
 use App\Support\AuditEvents;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,7 @@ class EligibilityRuleSetController extends Controller
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly RegulatoryRuleSetLinkService $regulatoryLink,
     ) {}
 
     public function index(Request $request): View
@@ -52,13 +54,17 @@ class EligibilityRuleSetController extends Controller
     public function store(StoreEligibilityRuleSetRequest $request): RedirectResponse
     {
         $ruleSet = DB::transaction(function () use ($request) {
-            $data = $this->normalized($request->validated());
+            $actor = $this->authenticatedUser($request);
+            $data = $this->regulatoryLink->link(
+                $this->normalized($request->validated()),
+                $actor,
+            );
 
             $ruleSet = EligibilityRuleSet::query()->create($data);
             $ruleSet->forceFill([
                 'status' => EligibilityRuleSetStatus::Draft,
-                'created_by' => $this->authenticatedUser($request)->id,
-                'updated_by' => $this->authenticatedUser($request)->id,
+                'created_by' => $actor->id,
+                'updated_by' => $actor->id,
             ])->save();
 
             return $ruleSet;
@@ -93,7 +99,10 @@ class EligibilityRuleSetController extends Controller
         UpdateEligibilityRuleSetRequest $request,
         EligibilityRuleSet $eligibilityRuleSet,
     ): RedirectResponse {
-        $data = $this->normalized($request->validated());
+        $data = $this->regulatoryLink->link(
+            $this->normalized($request->validated()),
+            $this->authenticatedUser($request),
+        );
         $eligibilityRuleSet->update($data);
         $eligibilityRuleSet->forceFill([
             'updated_by' => $this->authenticatedUser($request)->id,

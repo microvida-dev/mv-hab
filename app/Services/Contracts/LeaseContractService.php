@@ -5,6 +5,8 @@ namespace App\Services\Contracts;
 use App\Enums\AllocationStatus;
 use App\Enums\ContractStatus;
 use App\Enums\ContractTemplateStatus;
+use App\Enums\RegulatoryClassificationStatus;
+use App\Enums\RegulatoryContext;
 use App\Enums\RentCalculationStatus;
 use App\Models\AdhesionRegistration;
 use App\Models\Allocation;
@@ -16,10 +18,14 @@ use App\Models\ContractTemplate;
 use App\Models\HousingUnit;
 use App\Models\Municipality;
 use App\Models\Program;
+use App\Models\RegulatorySnapshot;
 use App\Models\RentCalculation;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Regulatory\RegulatorySnapshotService;
 use App\Support\AuditEvents;
+use App\Support\DecimalMoney;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -32,6 +38,7 @@ class LeaseContractService
         private readonly LeaseContractStatusService $statusService,
         private readonly ContractNotificationService $notificationService,
         private readonly AuditLogger $auditLogger,
+        private readonly RegulatorySnapshotService $regulatorySnapshotService,
     ) {}
 
     /**
@@ -61,6 +68,7 @@ class LeaseContractService
             /** @var RentCalculation $calculation */
             $calculation = RentCalculation::query()
                 ->lockForUpdate()
+                ->with('regulatorySnapshot.profile')
                 ->findOrFail($calculationId);
             /** @var ContractTemplate $template */
             $template = ContractTemplate::query()
@@ -85,8 +93,8 @@ class LeaseContractService
             $candidate = $allocation->getRelationValue('candidate');
             /** @var ContestHousingUnit|null $contestHousingUnit */
             $contestHousingUnit = $allocation->getRelationValue('contestHousingUnit');
-            $monthlyRent = (float) $calculation->applicable_rent;
-            $depositAmount = (float) ($calculation->deposit_amount ?? 0);
+            $monthlyRent = DecimalMoney::normalize((string) $calculation->applicable_rent);
+            $depositAmount = DecimalMoney::normalize((string) ($calculation->deposit_amount ?? 0));
 
             $contract = new Contract([
                 'citizen_id' => null,
@@ -134,6 +142,23 @@ class LeaseContractService
             ])->save();
 
             $calculation->forceFill(['contract_id' => $contract->id])->save();
+            $sourceSnapshot = $calculation->getRelationValue('regulatorySnapshot');
+
+            if ($sourceSnapshot instanceof RegulatorySnapshot) {
+                $this->regulatorySnapshotService->attachFromSnapshot(
+                    $contract,
+                    $sourceSnapshot,
+                    RegulatoryContext::ContractExecution,
+                    CarbonImmutable::parse((string) $data['start_date'], 'Europe/Lisbon'),
+                    $actor,
+                    'rent_calculation_snapshot',
+                );
+            } elseif ($calculation->legal_regime !== null) {
+                $contract->forceFill([
+                    'legal_regime' => $calculation->legal_regime,
+                    'regulatory_classification_status' => RegulatoryClassificationStatus::RequiresManualReview,
+                ])->save();
+            }
 
             $contract->parties()->create([
                 'user_id' => $allocation->user_id,

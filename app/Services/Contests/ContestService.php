@@ -4,11 +4,17 @@ namespace App\Services\Contests;
 
 use App\Enums\ContestStatus;
 use App\Enums\ProgramStatus;
+use App\Enums\RegulatoryContext;
 use App\Models\Contest;
 use App\Models\Program;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
+use App\Services\Regulatory\AffordableRentLegalRegimeResolver;
+use App\Services\Regulatory\RegulatoryPublicationReadinessService;
+use App\Services\Regulatory\RegulatorySnapshotService;
 use App\Support\AuditEvents;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -16,7 +22,13 @@ use Illuminate\Validation\ValidationException;
 
 class ContestService
 {
-    public function __construct(private readonly AuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly AffordableRentLegalRegimeResolver $regimeResolver,
+        private readonly RegulatoryPublicationReadinessService $publicationReadiness,
+        private readonly RegulatorySnapshotService $snapshotService,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -26,6 +38,22 @@ class ContestService
         return DB::transaction(function () use ($data, $actor) {
             $deadlines = Arr::pull($data, 'deadlines', []);
             $juryMembers = Arr::pull($data, 'jury_members', []);
+            $program = Program::query()
+                ->with(['municipality', 'regulatoryProfile.parentProfile'])
+                ->findOrFail((int) $data['program_id']);
+            $this->assertActorCanManageProgram($actor, $program);
+            $profile = $program->regulatoryProfile;
+
+            if ($profile !== null) {
+                $this->regimeResolver->assertProfileMatches(
+                    $profile,
+                    CarbonImmutable::parse((string) $data['opens_at'], 'Europe/Lisbon'),
+                    $program->municipality_id,
+                );
+                $data['regulatory_profile_id'] = $profile->id;
+                $data['legal_regime'] = $profile->legal_regime->value;
+            }
+
             $data['slug'] = $this->uniqueSlug($data['slug'] ?? null, $data['title']);
             $data['status'] = ContestStatus::Draft->value;
             $data['created_by'] = $actor->id;
@@ -56,6 +84,32 @@ class ContestService
         return DB::transaction(function () use ($contest, $data, $actor) {
             $deadlines = Arr::pull($data, 'deadlines', []);
             $juryMembers = Arr::pull($data, 'jury_members', []);
+            $this->assertActorCanManageContest($actor, $contest);
+            $program = Program::query()
+                ->with(['municipality', 'regulatoryProfile.parentProfile'])
+                ->findOrFail((int) $data['program_id']);
+            $this->assertActorCanManageProgram($actor, $program);
+            $profile = $program->regulatoryProfile;
+
+            if (
+                $contest->regulatory_snapshot_id !== null
+                && $contest->regulatory_profile_id !== $profile?->id
+            ) {
+                throw ValidationException::withMessages([
+                    'program_id' => 'O perfil regulamentar de um concurso publicado não pode ser alterado.',
+                ]);
+            }
+
+            if ($profile !== null) {
+                $this->regimeResolver->assertProfileMatches(
+                    $profile,
+                    CarbonImmutable::parse((string) $data['opens_at'], 'Europe/Lisbon'),
+                    $program->municipality_id,
+                );
+                $data['regulatory_profile_id'] = $profile->id;
+                $data['legal_regime'] = $profile->legal_regime->value;
+            }
+
             $before = $contest->only(['program_id', 'code', 'slug', 'title', 'status', 'opens_at', 'closes_at']);
             $data['slug'] = $this->uniqueSlug($data['slug'] ?? null, $data['title'], $contest);
             $data['updated_by'] = $actor->id;
@@ -80,41 +134,65 @@ class ContestService
 
     public function publish(Contest $contest, User $actor): Contest
     {
-        $contest->loadMissing('program');
+        return DB::transaction(function () use ($contest, $actor): Contest {
+            $locked = Contest::query()
+                ->whereKey($contest->getKey())
+                ->lockForUpdate()
+                ->with([
+                    'program.municipality',
+                    'program.regulatoryProfile.parentProfile',
+                    'regulatoryProfile.parentProfile',
+                ])
+                ->firstOrFail();
+            $this->assertActorCanManageContest($actor, $locked);
 
-        if (! $contest->program instanceof Program || $contest->program->status !== ProgramStatus::Published) {
-            throw ValidationException::withMessages([
-                'contest' => 'O programa associado deve estar publicado antes de publicar o concurso.',
-            ]);
-        }
+            if (! $locked->program instanceof Program || $locked->program->status !== ProgramStatus::Published) {
+                throw ValidationException::withMessages([
+                    'contest' => 'O programa associado deve estar publicado antes de publicar o concurso.',
+                ]);
+            }
 
-        if ($contest->deadlines()->count() === 0) {
-            throw ValidationException::withMessages([
-                'contest' => 'Adicione pelo menos um prazo antes de publicar o concurso.',
-            ]);
-        }
+            if ($locked->deadlines()->count() === 0) {
+                throw ValidationException::withMessages([
+                    'contest' => 'Adicione pelo menos um prazo antes de publicar o concurso.',
+                ]);
+            }
 
-        $before = $contest->only(['status', 'published_at']);
+            if ($locked->opens_at === null) {
+                throw ValidationException::withMessages([
+                    'contest' => 'Defina a data de abertura antes de publicar o concurso.',
+                ]);
+            }
 
-        $contest->update([
-            'status' => ContestStatus::Published->value,
-            'published_at' => now(),
-            'updated_by' => $actor->id,
-        ]);
+            $referenceDate = CarbonImmutable::instance($locked->opens_at);
+            $profile = $this->publicationReadiness->assertContestReady($locked, $referenceDate);
+            $before = $locked->only(['status', 'published_at']);
+            $this->snapshotService->attach(
+                $locked,
+                $profile,
+                RegulatoryContext::ContestPublication,
+                $referenceDate,
+                $actor,
+                'contest_publication',
+            );
+            $locked->forceFill([
+                'status' => ContestStatus::Published->value,
+                'published_at' => now(),
+                'updated_by' => $actor->id,
+            ])->save();
 
-        $this->auditLogger->record(
-            event: AuditEvents::PUBLISH,
-            auditable: $contest,
-            module: 'contests',
-            action: 'publish',
-            description: 'Concurso publicado no portal público.',
-            oldValues: $before,
-            newValues: $contest->refresh()->only(['status', 'published_at']),
-        );
+            $this->auditLogger->record(
+                event: AuditEvents::PUBLISH,
+                auditable: $locked,
+                module: 'contests',
+                action: 'publish',
+                description: 'Concurso publicado no portal público.',
+                oldValues: $before,
+                newValues: $locked->refresh()->only(['status', 'published_at', 'legal_regime', 'regulatory_snapshot_id']),
+            );
 
-        $contest->refresh();
-
-        return $contest;
+            return $locked->refresh();
+        });
     }
 
     public function delete(Contest $contest): void
@@ -193,5 +271,23 @@ class ContestService
         }
 
         return $candidate;
+    }
+
+    private function assertActorCanManageProgram(User $actor, Program $program): void
+    {
+        if (! $this->municipalScope->ownsProgram($actor, $program)) {
+            throw ValidationException::withMessages([
+                'program_id' => 'Não tem autorização para configurar concursos deste Município.',
+            ]);
+        }
+    }
+
+    private function assertActorCanManageContest(User $actor, Contest $contest): void
+    {
+        if (! $this->municipalScope->ownsContest($actor, $contest)) {
+            throw ValidationException::withMessages([
+                'contest' => 'Não tem autorização para alterar este concurso.',
+            ]);
+        }
     }
 }

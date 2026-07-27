@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AffordableRentLegalRegime;
 use App\Enums\EligibilityCheckStatus;
 use App\Enums\EligibilityCheckType;
 use App\Enums\EligibilityResult;
@@ -13,6 +14,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
+ * @property int $id
+ * @property int|null $program_id
+ * @property int|null $contest_id
+ * @property int|null $application_id
+ * @property int|null $regulatory_snapshot_id
+ * @property AffordableRentLegalRegime|null $legal_regime
  * @property EligibilityResult|null $result
  */
 class EligibilityCheck extends Model
@@ -26,6 +33,7 @@ class EligibilityCheck extends Model
     {
         return [
             'check_type' => EligibilityCheckType::class,
+            'legal_regime' => AffordableRentLegalRegime::class,
             'status' => EligibilityCheckStatus::class,
             'result' => EligibilityResult::class,
             'missing_data' => 'array',
@@ -40,6 +48,12 @@ class EligibilityCheck extends Model
     public function ruleSet(): BelongsTo
     {
         return $this->belongsTo(EligibilityRuleSet::class, 'eligibility_rule_set_id');
+    }
+
+    /** @return BelongsTo<RegulatorySnapshot, $this> */
+    public function regulatorySnapshot(): BelongsTo
+    {
+        return $this->belongsTo(RegulatorySnapshot::class);
     }
 
     /**

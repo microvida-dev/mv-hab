@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Models\EligibilityRuleSet;
+use App\Models\User;
+use App\Services\Platform\PlatformOperatorScopeService;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
@@ -20,28 +22,43 @@ class StoreEligibilityRuleSetRequest extends FormRequest
      */
     public function rules(): array
     {
-        $municipalityId = $this->user()->municipality_id ?? 0;
+        $user = $this->user();
+        $municipalityId = $user instanceof User ? $user->municipality_id : null;
+        $hasGlobalScope = $user instanceof User
+            && app(PlatformOperatorScopeService::class)->hasGlobalScope($user);
+
+        $programExists = Rule::exists('programs', 'id');
+        $contestExists = Rule::exists('contests', 'id');
+
+        if (! $hasGlobalScope) {
+            $programExists->where(
+                fn (Builder $query): Builder => $municipalityId === null
+                    ? $query->whereRaw('1 = 0')
+                    : $query->where('municipality_id', $municipalityId),
+            );
+            $contestExists->where(
+                fn (Builder $query): Builder => $municipalityId === null
+                    ? $query->whereRaw('1 = 0')
+                    : $query->whereIn(
+                        'program_id',
+                        DB::table('programs')
+                            ->select('id')
+                            ->where('municipality_id', $municipalityId),
+                    ),
+            );
+        }
 
         return [
             'program_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('programs', 'id')
-                    ->where(fn (Builder $query): Builder => $query
-                        ->where('municipality_id', $municipalityId)),
+                $programExists,
                 'required_without:contest_id',
             ],
             'contest_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('contests', 'id')
-                    ->where(fn (Builder $query): Builder => $query
-                        ->whereIn(
-                            'program_id',
-                            DB::table('programs')
-                                ->select('id')
-                                ->where('municipality_id', $municipalityId),
-                        )),
+                $contestExists,
                 'required_without:program_id',
             ],
             'name' => ['required', 'string', 'max:255'],

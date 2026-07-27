@@ -5,14 +5,20 @@ namespace App\Services\Eligibility;
 use App\Enums\EligibilityCheckStatus;
 use App\Enums\EligibilityCheckType;
 use App\Enums\EligibilityResult;
+use App\Enums\RegulatoryContext;
+use App\Models\AffordableRentRegulatoryProfile;
 use App\Models\Application;
 use App\Models\Contest;
 use App\Models\EligibilityCheck;
 use App\Models\EligibilityCriterion;
+use App\Models\EligibilityRuleSet;
 use App\Models\Program;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Regulatory\AffordableRentLegalRegimeResolver;
+use App\Services\Regulatory\RegulatorySnapshotService;
 use App\Support\AuditEvents;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
 class EligibilityEngine
@@ -25,6 +31,8 @@ class EligibilityEngine
         private readonly EligibilitySnapshotService $snapshotService,
         private readonly EligibilityMessageService $messageService,
         private readonly AuditLogger $auditLogger,
+        private readonly AffordableRentLegalRegimeResolver $regimeResolver,
+        private readonly RegulatorySnapshotService $regulatorySnapshotService,
     ) {}
 
     public function run(
@@ -36,6 +44,7 @@ class EligibilityEngine
         ?User $actor = null,
     ): EligibilityCheck {
         return DB::transaction(function () use ($subject, $type, $program, $contest, $application, $actor) {
+            $executedAt = now();
             $contest?->loadMissing('program');
 
             if ($program === null && $application instanceof Application) {
@@ -53,8 +62,15 @@ class EligibilityEngine
             $registration = $application instanceof Application
                 ? $application->adhesionRegistration
                 : $subject->adhesionRegistration()->first();
-            $ruleSet = $this->resolver->resolve($program, $contest);
-            $context = $this->dataProvider->forCandidate($subject, $program, $contest, $application);
+            $ruleSet = $this->resolver->resolveAt($executedAt, $program, $contest);
+            $context = $this->dataProvider->forCandidate(
+                $subject,
+                $program,
+                $contest,
+                $application,
+                $ruleSet,
+                $executedAt,
+            );
             $executedBy = $actor instanceof User ? $actor->id : $subject->id;
 
             $check = new EligibilityCheck;
@@ -78,9 +94,10 @@ class EligibilityEngine
                     'summary' => $this->messageService->candidateSummary($result),
                     'missing_data' => [],
                     'warnings' => ['Não existe um conjunto de regras ativo para o contexto selecionado.'],
-                    'executed_at' => now(),
+                    'executed_at' => $executedAt,
                 ])->save();
                 $this->snapshotService->store($check, $context['snapshots']);
+                $this->attachRegulatorySnapshot($check, $ruleSet, $application, $executedAt, $actor ?? $subject);
 
                 return $this->audit($check, $type, $actor);
             }
@@ -116,12 +133,46 @@ class EligibilityEngine
                 'summary' => $this->messageService->candidateSummary($result),
                 'missing_data' => array_values(array_intersect($context['missing_data'], $activeCodes)),
                 'warnings' => $context['warnings'],
-                'executed_at' => now(),
+                'executed_at' => $executedAt,
             ])->save();
             $this->snapshotService->store($check, $context['snapshots']);
+            $this->attachRegulatorySnapshot($check, $ruleSet, $application, $executedAt, $actor ?? $subject);
 
             return $this->audit($check, $type, $actor);
         });
+    }
+
+    private function attachRegulatorySnapshot(
+        EligibilityCheck $check,
+        ?EligibilityRuleSet $ruleSet,
+        ?Application $application,
+        CarbonInterface $referenceDate,
+        User $actor,
+    ): void {
+        $profile = null;
+
+        if ($ruleSet !== null) {
+            $ruleSet->loadMissing('regulatoryProfile.parentProfile');
+            $candidate = $ruleSet->getRelationValue('regulatoryProfile');
+            $profile = $candidate instanceof AffordableRentRegulatoryProfile ? $candidate : null;
+        }
+
+        if (! $profile instanceof AffordableRentRegulatoryProfile && $application instanceof Application) {
+            $profile = $this->regimeResolver->profileForApplication($application);
+        }
+
+        if (! $profile instanceof AffordableRentRegulatoryProfile) {
+            return;
+        }
+
+        $this->regulatorySnapshotService->attach(
+            $check,
+            $profile,
+            RegulatoryContext::EligibilityCalculation,
+            $referenceDate,
+            $actor,
+            'eligibility_engine',
+        );
     }
 
     private function audit(EligibilityCheck $check, EligibilityCheckType $type, ?User $actor): EligibilityCheck

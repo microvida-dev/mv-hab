@@ -3,14 +3,20 @@
 namespace App\Services\Contracts;
 
 use App\Enums\AllocationStatus;
+use App\Enums\RegulatoryContext;
 use App\Enums\RentCalculationMethod;
 use App\Enums\RentCalculationResult;
 use App\Enums\RentCalculationStatus;
+use App\Models\AffordableRentRegulatoryProfile;
 use App\Models\Allocation;
+use App\Models\Application;
 use App\Models\RentCalculation;
 use App\Models\RentRuleSet;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Regulatory\AffordableRentLegalRegimeResolver;
+use App\Services\Regulatory\RegulatorySnapshotService;
+use App\Services\Regulatory\RentLimits\RentLimitProviderRegistry;
 use App\Support\AuditEvents;
 use App\Support\DecimalMoney;
 use Illuminate\Support\Facades\DB;
@@ -23,18 +29,45 @@ class RentCalculationService
         private readonly RentSnapshotService $snapshotService,
         private readonly RentEffortRateService $effortRateService,
         private readonly AuditLogger $auditLogger,
+        private readonly AffordableRentLegalRegimeResolver $regimeResolver,
+        private readonly RentLimitProviderRegistry $rentLimitProviders,
+        private readonly RegulatorySnapshotService $regulatorySnapshotService,
     ) {}
 
     public function calculate(Allocation $allocation, User $actor, ?RentRuleSet $ruleSet = null, ?string $notes = null): RentCalculation
     {
         return DB::transaction(function () use ($allocation, $actor, $ruleSet, $notes): RentCalculation {
+            $calculatedAt = now();
             $lockedAllocation = Allocation::query()
                 ->whereKey($allocation->getKey())
                 ->lockForUpdate()
                 ->firstOrFail();
-            $lockedAllocation->loadMissing(['application.household.incomeRecords', 'housingUnit', 'contestHousingUnit']);
+            $lockedAllocation->loadMissing([
+                'application.household.incomeRecords',
+                'application.regulatorySnapshot.profile',
+                'application.contest.regulatorySnapshot.profile',
+                'application.contest.regulatoryProfile',
+                'application.program.regulatorySnapshot.profile',
+                'application.program.regulatoryProfile',
+                'housingUnit',
+                'contestHousingUnit',
+            ]);
             $this->assertAllocationCanBeCalculated($lockedAllocation);
-            $resolvedRuleSet = $this->ruleSetResolver->resolve($lockedAllocation, $ruleSet);
+            $resolvedRuleSet = $this->ruleSetResolver->resolve($lockedAllocation, $ruleSet, $calculatedAt);
+            $profile = $this->regulatoryProfile($lockedAllocation, $resolvedRuleSet);
+
+            if ($profile instanceof AffordableRentRegulatoryProfile) {
+                $limits = $this->rentLimitProviders
+                    ->forProfile($profile)
+                    ->limitsFor($profile, $resolvedRuleSet, $calculatedAt);
+
+                if (! $limits->isConfigured()) {
+                    throw ValidationException::withMessages([
+                        'rent_rule_set_id' => $limits->message ?? 'A configuração regulamentar de renda está incompleta.',
+                    ]);
+                }
+            }
+
             $snapshot = $this->snapshotService->forAllocation($lockedAllocation, $resolvedRuleSet);
             $membersCount = max((int) data_get($snapshot, 'household.members_count', 0), 1);
             $monthlyIncome = DecimalMoney::normalize((string) data_get($snapshot, 'household.monthly_income', '0'));
@@ -78,13 +111,24 @@ class RentCalculationService
                 'maximum_rent' => $resolvedRuleSet->maximum_rent,
                 'applicable_rent' => $applicableRent,
                 'deposit_amount' => $depositAmount,
-                'calculated_at' => now(),
+                'calculated_at' => $calculatedAt,
                 'calculated_by' => $actor->id,
                 'summary' => $notes,
                 'technical_notes' => $technicalNotes ?: null,
                 'snapshot' => $snapshot,
             ]);
             $calculation->forceFill(['status' => $status])->save();
+
+            if ($profile instanceof AffordableRentRegulatoryProfile) {
+                $this->regulatorySnapshotService->attach(
+                    $calculation,
+                    $profile,
+                    RegulatoryContext::RentCalculation,
+                    $calculatedAt,
+                    $actor,
+                    'rent_calculation',
+                );
+            }
 
             $this->details($calculation, $resolvedRuleSet, $monthlyIncome, $baseRent, $applicableRent, $depositAmount, $effortRate);
 
@@ -156,6 +200,24 @@ class RentCalculationService
         if (! in_array($allocation->status, [AllocationStatus::Accepted, AllocationStatus::ReadyForContract], true)) {
             throw ValidationException::withMessages(['allocation_id' => 'A atribuição deve estar aceite ou pronta para contrato.']);
         }
+    }
+
+    private function regulatoryProfile(
+        Allocation $allocation,
+        RentRuleSet $ruleSet,
+    ): ?AffordableRentRegulatoryProfile {
+        $ruleSet->loadMissing('regulatoryProfile.parentProfile');
+        $candidate = $ruleSet->getRelationValue('regulatoryProfile');
+
+        if ($candidate instanceof AffordableRentRegulatoryProfile) {
+            return $candidate;
+        }
+
+        $application = $allocation->getRelationValue('application');
+
+        return $application instanceof Application
+            ? $this->regimeResolver->profileForApplication($application)
+            : null;
     }
 
     /**

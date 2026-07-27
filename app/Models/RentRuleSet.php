@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\RentCalculationMethod;
 use App\Enums\RentRuleSetStatus;
+use Carbon\CarbonInterface;
 use Database\Factories\RentRuleSetFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,8 +14,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
+ * @property int $id
+ * @property int|null $regulatory_profile_id
  * @property RentCalculationMethod $calculation_method
  * @property RentRuleSetStatus $status
+ * @property string|null $effort_rate_percentage
+ * @property string|null $minimum_rent
+ * @property string|null $maximum_rent
  */
 class RentRuleSet extends Model
 {
@@ -55,6 +61,12 @@ class RentRuleSet extends Model
         return $this->belongsTo(Contest::class);
     }
 
+    /** @return BelongsTo<AffordableRentRegulatoryProfile, $this> */
+    public function regulatoryProfile(): BelongsTo
+    {
+        return $this->belongsTo(AffordableRentRegulatoryProfile::class);
+    }
+
     /** @return BelongsTo<User, $this> */
     public function createdBy(): BelongsTo
     {
@@ -85,8 +97,17 @@ class RentRuleSet extends Model
      */
     public function scopeActive(Builder $query): Builder
     {
+        return $query->activeAt(today());
+    }
+
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeActiveAt(Builder $query, CarbonInterface $referenceDate): Builder
+    {
         return $query->where('status', RentRuleSetStatus::Active->value)
-            ->where(fn (Builder $builder) => $builder->whereNull('effective_from')->orWhere('effective_from', '<=', today()))
-            ->where(fn (Builder $builder) => $builder->whereNull('effective_until')->orWhere('effective_until', '>=', today()));
+            ->where(fn (Builder $builder) => $builder->whereNull('effective_from')->orWhereDate('effective_from', '<=', $referenceDate->toDateString()))
+            ->where(fn (Builder $builder) => $builder->whereNull('effective_until')->orWhereDate('effective_until', '>=', $referenceDate->toDateString()));
     }
 }

@@ -5,23 +5,33 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProgramRequest;
 use App\Http\Requests\UpdateProgramRequest;
+use App\Models\AffordableRentRegulatoryProfile;
 use App\Models\Municipality;
 use App\Models\Program;
+use App\Models\User;
+use App\Services\Municipalities\MunicipalRecordScopeService;
+use App\Services\Platform\PlatformOperatorScopeService;
 use App\Services\Programs\ProgramService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class ProgramController extends Controller
 {
-    public function __construct(private readonly ProgramService $programService) {}
+    public function __construct(
+        private readonly ProgramService $programService,
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly PlatformOperatorScopeService $platformScope,
+    ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
         Gate::authorize('viewAnyBackoffice', Program::class);
 
-        $programs = Program::query()
+        $programs = $this->municipalScope
+            ->programs(Program::query(), $this->authenticatedUser($request))
             ->with('municipality')
             ->withCount('contests')
             ->latest()
@@ -30,13 +40,15 @@ class ProgramController extends Controller
         return view('admin.programs.index', compact('programs'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         Gate::authorize('createBackoffice', Program::class);
 
-        $municipalities = Municipality::query()->where('active', true)->orderBy('name')->get();
+        $actor = $this->authenticatedUser($request);
+        $municipalities = $this->municipalities($actor);
+        $regulatoryProfiles = $this->regulatoryProfiles($actor);
 
-        return view('admin.programs.create', compact('municipalities'));
+        return view('admin.programs.create', compact('municipalities', 'regulatoryProfiles'));
     }
 
     public function store(StoreProgramRequest $request): RedirectResponse
@@ -51,19 +63,21 @@ class ProgramController extends Controller
     {
         Gate::authorize('viewBackoffice', $program);
 
-        $program->load(['municipality', 'rules', 'contests']);
+        $program->load(['municipality', 'regulatoryProfile', 'regulatorySnapshot', 'rules', 'contests']);
 
         return view('admin.programs.show', compact('program'));
     }
 
-    public function edit(Program $program): View
+    public function edit(Request $request, Program $program): View
     {
         Gate::authorize('updateBackoffice', $program);
 
         $program->load('rules');
-        $municipalities = Municipality::query()->where('active', true)->orderBy('name')->get();
+        $actor = $this->authenticatedUser($request);
+        $municipalities = $this->municipalities($actor);
+        $regulatoryProfiles = $this->regulatoryProfiles($actor);
 
-        return view('admin.programs.edit', compact('program', 'municipalities'));
+        return view('admin.programs.edit', compact('program', 'municipalities', 'regulatoryProfiles'));
     }
 
     public function update(UpdateProgramRequest $request, Program $program): RedirectResponse
@@ -91,5 +105,44 @@ class ProgramController extends Controller
 
         return to_route('admin.programs.index')
             ->with('success', 'Programa eliminado com sucesso.');
+    }
+
+    /**
+     * @return Collection<int, AffordableRentRegulatoryProfile>
+     */
+    private function regulatoryProfiles(User $actor): Collection
+    {
+        return AffordableRentRegulatoryProfile::query()
+            ->with('municipality')
+            ->where('status', 'active')
+            ->when(
+                ! $this->platformScope->hasGlobalScope($actor),
+                fn ($query) => $actor->municipality_id === null
+                    ? $query->whereRaw('1 = 0')
+                    : $query->where(fn ($profiles) => $profiles
+                        ->whereNull('municipality_id')
+                        ->orWhere('municipality_id', $actor->municipality_id)),
+            )
+            ->orderBy('legal_regime')
+            ->orderBy('municipality_id')
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, Municipality>
+     */
+    private function municipalities(User $actor): Collection
+    {
+        return Municipality::query()
+            ->where('active', true)
+            ->when(
+                ! $this->platformScope->hasGlobalScope($actor),
+                fn ($query) => $actor->municipality_id === null
+                    ? $query->whereRaw('1 = 0')
+                    : $query->whereKey($actor->municipality_id),
+            )
+            ->orderBy('name')
+            ->get();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AffordableRentLegalRegime;
 use App\Enums\ContestStatus;
 use App\Enums\ProgramStatus;
 use Database\Factories\ContestFactory;
@@ -14,7 +15,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property int $program_id
+ * @property int|null $regulatory_profile_id
+ * @property int|null $regulatory_snapshot_id
  * @property ContestStatus $status
+ * @property AffordableRentLegalRegime|null $legal_regime
  * @property Carbon|null $opens_at
  * @property Carbon|null $closes_at
  * @property Carbon|null $published_at
@@ -26,6 +32,8 @@ class Contest extends Model
 
     protected $fillable = [
         'program_id',
+        'regulatory_profile_id',
+        'legal_regime',
         'created_by',
         'updated_by',
         'code',
@@ -44,6 +52,7 @@ class Contest extends Model
     {
         return [
             'status' => ContestStatus::class,
+            'legal_regime' => AffordableRentLegalRegime::class,
             'opens_at' => 'datetime',
             'closes_at' => 'datetime',
             'published_at' => 'datetime',
@@ -54,6 +63,18 @@ class Contest extends Model
     public function program(): BelongsTo
     {
         return $this->belongsTo(Program::class);
+    }
+
+    /** @return BelongsTo<AffordableRentRegulatoryProfile, $this> */
+    public function regulatoryProfile(): BelongsTo
+    {
+        return $this->belongsTo(AffordableRentRegulatoryProfile::class);
+    }
+
+    /** @return BelongsTo<RegulatorySnapshot, $this> */
+    public function regulatorySnapshot(): BelongsTo
+    {
+        return $this->belongsTo(RegulatorySnapshot::class);
     }
 
     /** @return BelongsTo<User, $this> */

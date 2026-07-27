@@ -23,6 +23,7 @@ class UpdateProgramRequest extends FormRequest
     {
         return [
             'municipality_id' => ['required', 'exists:municipalities,id'],
+            'regulatory_profile_id' => ['required', 'integer', 'exists:affordable_rent_regulatory_profiles,id'],
             'name' => ['required', 'string', 'max:255'],
             'slug' => [
                 'nullable',
@@ -32,8 +33,8 @@ class UpdateProgramRequest extends FormRequest
             ],
             'summary' => ['required', 'string', 'max:500'],
             'description' => ['required', 'string'],
-            'legal_basis' => ['nullable', 'string'],
-            'starts_at' => ['nullable', 'date'],
+            'legal_basis' => ['required', 'string'],
+            'starts_at' => ['required', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'rules' => ['nullable', 'array', 'max:20'],
             'rules.*.title' => ['required_with:rules', 'string', 'max:255'],

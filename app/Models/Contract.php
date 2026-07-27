@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\AffordableRentLegalRegime;
 use App\Enums\ContractStatus;
+use App\Enums\RegulatoryClassificationStatus;
 use Database\Factories\ContractFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,7 +19,10 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int|null $user_id
  * @property int|null $housing_unit_id
+ * @property int|null $regulatory_snapshot_id
  * @property ContractStatus $status
+ * @property AffordableRentLegalRegime|null $legal_regime
+ * @property RegulatoryClassificationStatus|null $regulatory_classification_status
  * @property Carbon|null $start_date
  * @property Carbon|null $end_date
  */
@@ -61,6 +66,8 @@ class Contract extends Model
             'housing_area' => 'decimal:2',
             'renewal_allowed' => 'boolean',
             'status' => ContractStatus::class,
+            'legal_regime' => AffordableRentLegalRegime::class,
+            'regulatory_classification_status' => RegulatoryClassificationStatus::class,
             'issued_at' => 'datetime',
             'signed_at' => 'datetime',
             'activated_at' => 'datetime',
@@ -135,6 +142,12 @@ class Contract extends Model
     public function rentCalculation(): BelongsTo
     {
         return $this->belongsTo(RentCalculation::class);
+    }
+
+    /** @return BelongsTo<RegulatorySnapshot, $this> */
+    public function regulatorySnapshot(): BelongsTo
+    {
+        return $this->belongsTo(RegulatorySnapshot::class);
     }
 
     /** @return BelongsTo<ContractTemplate, $this> */

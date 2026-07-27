@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\AffordableRentLegalRegime;
 use App\Enums\AllocationMethod;
 use App\Enums\AllocationRuleSetStatus;
 use App\Enums\CommunicationChannel;
@@ -23,6 +24,9 @@ use App\Enums\IncomeSourceType;
 use App\Enums\NotificationPriority;
 use App\Enums\ProgramStatus;
 use App\Enums\PublicVisibilityStatus;
+use App\Enums\RegulatoryConfigurationStatus;
+use App\Enums\RegulatoryContext;
+use App\Enums\RegulatoryProfileStatus;
 use App\Enums\RentCalculationMethod;
 use App\Enums\RentRuleSetStatus;
 use App\Enums\RequiredDocumentConditionOperator;
@@ -33,6 +37,7 @@ use App\Enums\TemplateStatus;
 use App\Enums\TemplateType;
 use App\Enums\TieBreakerDirection;
 use App\Models\AdministrativeWorkflowConfig;
+use App\Models\AffordableRentRegulatoryProfile;
 use App\Models\AllocationRuleSet;
 use App\Models\Contest;
 use App\Models\ContestHousingUnit;
@@ -56,6 +61,8 @@ use App\Models\ScoringCriterion;
 use App\Models\ScoringRuleSet;
 use App\Models\TypologyAdequacyRule;
 use App\Models\User;
+use App\Services\Regulatory\MunicipalRegulatoryOverlayService;
+use App\Services\Regulatory\RegulatorySnapshotService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -70,10 +77,6 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
 
     public const CONTEST_CODE = 'ALC-RAA-01-2026';
 
-    public const RMMG_2026 = 920.00;
-
-    public const MAX_EFFORT_RATE = 35.00;
-
     public function run(): void
     {
         $requiredRoles = ['administrator', 'municipal_technician', 'jury', 'candidate'];
@@ -81,6 +84,8 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
         if (Role::query()->whereIn('name', $requiredRoles)->count() < count($requiredRoles)) {
             $this->call(SystemAccessSeeder::class);
         }
+
+        $this->call(AffordableRentRegulatoryProfileSeeder::class);
 
         DB::transaction(function (): void {
             $administrator = User::query()
@@ -103,10 +108,15 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
             );
 
             $this->seedDemoAccessUsers($municipality);
+            [$paaProfile] = $this->seedRegulatoryProfiles($municipality, $administrator);
+            $programStartsAt = new CarbonImmutable('2026-01-01 00:00:00', 'Europe/Lisbon');
+            $contestOpensAt = new CarbonImmutable('2026-06-01 09:00:00', 'Europe/Lisbon');
 
             $program = Program::withTrashed()->firstOrNew(['slug' => self::PROGRAM_SLUG]);
             $program->forceFill([
                 'municipality_id' => $municipality->id,
+                'regulatory_profile_id' => $paaProfile->id,
+                'legal_regime' => $paaProfile->legal_regime,
                 'created_by' => $administrator?->id,
                 'updated_by' => $administrator?->id,
                 'name' => 'Programa Municipal de Arrendamento Acessível de Alcanena',
@@ -114,7 +124,7 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
                 'description' => 'Programa municipal em regime de renda acessível, aplicável a habitações ou partes de habitação propriedade ou na posse do Município de Alcanena, destinadas ao arrendamento acessível no concelho.',
                 'legal_basis' => 'Regulamento Municipal de Arrendamento Acessível de Alcanena — Edital n.º 1820/2024; Decreto-Lei n.º 68/2019; Portaria n.º 175/2019, na redação da Portaria n.º 52/2024.',
                 'status' => ProgramStatus::Published,
-                'starts_at' => CarbonImmutable::create(2026, 1, 1),
+                'starts_at' => $programStartsAt,
                 'ends_at' => null,
                 'published_at' => CarbonImmutable::create(2026, 1, 2, 9),
                 'deleted_at' => null,
@@ -125,6 +135,8 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
             $contest = Contest::withTrashed()->firstOrNew(['code' => self::CONTEST_CODE]);
             $contest->forceFill([
                 'program_id' => $program->id,
+                'regulatory_profile_id' => $paaProfile->id,
+                'legal_regime' => $paaProfile->legal_regime,
                 'created_by' => $administrator?->id,
                 'updated_by' => $administrator?->id,
                 'slug' => 'concurso-01-2026-arrendamento-municipal-acessivel-alcanena',
@@ -133,7 +145,7 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
                 'description' => 'Configuração de demonstração baseada no Regulamento Municipal de Arrendamento Acessível de Alcanena. O edital de produção deve confirmar as características das habitações, rendas mínimas e máximas e o rendimento anual máximo aplicável.',
                 'application_instructions' => 'É obrigatório concluir previamente o Registo de Adesão. A candidatura pode indicar mais de uma habitação por ordem de preferência. Submissão pela plataforma eletrónica ou, quando necessário, por atendimento municipal. A seleção segue a matriz do Anexo I e os empates remanescentes seguem para sorteio público.',
                 'status' => ContestStatus::Published,
-                'opens_at' => CarbonImmutable::create(2026, 6, 1, 9),
+                'opens_at' => $contestOpensAt,
                 'closes_at' => CarbonImmutable::create(2026, 12, 31, 17),
                 'published_at' => CarbonImmutable::create(2026, 5, 20, 9),
                 'deleted_at' => null,
@@ -143,16 +155,135 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
             $this->seedJuryMembers($contest, $municipality);
             $this->seedAdministrativeWorkflowConfig($program, $contest);
 
-            $this->seedEligibility($program, $contest, $administrator);
+            $this->seedEligibility($program, $contest, $paaProfile, $administrator);
             $this->seedScoring($program, $contest, $administrator);
             $this->seedDocuments($program, $contest);
-            $this->seedHousingUnits($program, $contest, $administrator);
-            $this->seedAllocationRuleSet($program, $contest, $administrator);
-            $this->seedRentConfiguration($program, $contest, $administrator);
+            $this->seedHousingUnits($program, $contest, $paaProfile, $administrator);
+            $this->seedAllocationRuleSet($program, $contest, $paaProfile, $administrator);
+            $this->seedRentConfiguration($program, $contest, $paaProfile, $administrator);
             $this->seedContractConfiguration($program, $contest, $administrator);
             $this->seedCommunicationTemplates($municipality, $program, $contest, $administrator);
             $this->seedDocumentTemplates($municipality, $program, $contest, $administrator);
+
+            $snapshots = app(RegulatorySnapshotService::class);
+            $snapshots->attach(
+                $program,
+                $paaProfile,
+                RegulatoryContext::ProgramPublication,
+                $programStartsAt,
+                $administrator,
+                'demo_alcanena_seeder',
+            );
+            $snapshots->attach(
+                $contest,
+                $paaProfile,
+                RegulatoryContext::ContestPublication,
+                $contestOpensAt,
+                $administrator,
+                'demo_alcanena_seeder',
+            );
         });
+    }
+
+    /**
+     * @return array{0: AffordableRentRegulatoryProfile, 1: AffordableRentRegulatoryProfile}
+     */
+    private function seedRegulatoryProfiles(
+        Municipality $municipality,
+        ?User $administrator,
+    ): array {
+        $nationalPaa = AffordableRentRegulatoryProfile::query()
+            ->where('code', AffordableRentRegulatoryProfileSeeder::PAA_NATIONAL_CODE)
+            ->firstOrFail();
+        $nationalRsaa = AffordableRentRegulatoryProfile::query()
+            ->where('code', AffordableRentRegulatoryProfileSeeder::RSAA_NATIONAL_CODE)
+            ->firstOrFail();
+
+        $paa = AffordableRentRegulatoryProfile::withTrashed()->updateOrCreate(
+            [
+                'code' => 'ALCANENA-PAA-2026-DEMO',
+                'version' => '2026.1-demo',
+            ],
+            [
+                'municipality_id' => $municipality->id,
+                'parent_profile_id' => $nationalPaa->id,
+                'legal_regime' => AffordableRentLegalRegime::PaaLegacy2019,
+                'name' => 'Overlay municipal PAA — Alcanena (demonstração)',
+                'legal_basis' => 'Regulamento Municipal de Arrendamento Acessível de Alcanena — Edital n.º 1820/2024; aplicação PAA legacy.',
+                'effective_from' => CarbonImmutable::create(2026, 1, 1),
+                'effective_until' => CarbonImmutable::create(2026, 8, 31),
+                'status' => RegulatoryProfileStatus::Active,
+                'configuration_status' => RegulatoryConfigurationStatus::Complete,
+                'official_source' => 'Regulamento Municipal de Arrendamento Acessível de Alcanena e diplomas PAA do perfil nacional.',
+                'publication_reference' => 'Edital n.º 1820/2024',
+                'source_version' => 'alcanena-paa-2026-demo',
+                'maximum_effort_rate_percentage' => '35.00',
+                'minimum_adult_monthly_income' => '920.00',
+                'annual_income_base_limit' => null,
+                'second_person_increment' => null,
+                'additional_person_increment' => null,
+                'minimum_contract_months' => 60,
+                'standard_contract_months' => 60,
+                'rent_limits_configured' => true,
+                'eligibility_rules_configured' => true,
+                'typology_rules_configured' => true,
+                'contract_terms_configured' => true,
+                'metadata' => [
+                    'catalogue_type' => 'municipal_overlay',
+                    'demo' => true,
+                    'municipal_rule_set' => 'Alcanena 01/2026',
+                ],
+                'created_by' => $administrator?->id,
+                'updated_by' => $administrator?->id,
+                'deleted_at' => null,
+            ],
+        );
+
+        $rsaa = AffordableRentRegulatoryProfile::withTrashed()->updateOrCreate(
+            [
+                'code' => 'ALCANENA-RSAA-2026-DEMO-INCOMPLETE',
+                'version' => '2026.1-incomplete',
+            ],
+            [
+                'municipality_id' => $municipality->id,
+                'parent_profile_id' => $nationalRsaa->id,
+                'legal_regime' => AffordableRentLegalRegime::Rsaa2026,
+                'name' => 'Overlay municipal RSAA — Alcanena (configuração incompleta)',
+                'legal_basis' => 'Configuração RSAA municipal pendente de fonte oficial e validação jurídica.',
+                'effective_from' => CarbonImmutable::create(2026, 9, 1),
+                'effective_until' => null,
+                'status' => RegulatoryProfileStatus::Active,
+                'configuration_status' => RegulatoryConfigurationStatus::Incomplete,
+                'official_source' => null,
+                'publication_reference' => null,
+                'source_version' => null,
+                'maximum_effort_rate_percentage' => null,
+                'minimum_adult_monthly_income' => null,
+                'annual_income_base_limit' => null,
+                'second_person_increment' => null,
+                'additional_person_increment' => null,
+                'minimum_contract_months' => null,
+                'standard_contract_months' => null,
+                'rent_limits_configured' => false,
+                'eligibility_rules_configured' => false,
+                'typology_rules_configured' => false,
+                'contract_terms_configured' => false,
+                'metadata' => [
+                    'catalogue_type' => 'municipal_overlay',
+                    'demo' => true,
+                    'rent_table_status' => 'missing_official_source',
+                    'publication_blocked' => true,
+                ],
+                'created_by' => $administrator?->id,
+                'updated_by' => $administrator?->id,
+                'deleted_at' => null,
+            ],
+        );
+
+        app(MunicipalRegulatoryOverlayService::class)->assertValid($paa);
+        app(MunicipalRegulatoryOverlayService::class)->assertValid($rsaa);
+
+        return [$paa, $rsaa];
     }
 
     private function seedDemoAccessUsers(Municipality $municipality): void
@@ -331,14 +462,20 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
         ])->save();
     }
 
-    private function seedEligibility(Program $program, Contest $contest, ?User $administrator): void
-    {
+    private function seedEligibility(
+        Program $program,
+        Contest $contest,
+        AffordableRentRegulatoryProfile $profile,
+        ?User $administrator,
+    ): void {
+        $parameters = app(MunicipalRegulatoryOverlayService::class)->effectiveParameters($profile);
         $ruleSet = EligibilityRuleSet::withTrashed()->firstOrNew([
             'program_id' => $program->id,
             'contest_id' => $contest->id,
             'name' => 'Elegibilidade — Concurso Alcanena 01/2026',
         ]);
         $ruleSet->forceFill([
+            'regulatory_profile_id' => $profile->id,
             'description' => 'Requisitos dos artigos 8.º e 9.º do Regulamento de Alcanena. Os impedimentos sem campo estruturado exigem validação documental municipal.',
             'status' => EligibilityRuleSetStatus::Active,
             'is_default' => false,
@@ -357,13 +494,13 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
             $this->eligibilityCriterion('has_applicant_member', 'Requerente identificado no agregado', EligibilityCriterionCategory::Household, EligibilityOperator::IsTrue, 50, 'Identificação do candidato principal.'),
             $this->eligibilityCriterion('has_income_information', 'Informação de rendimentos completa', EligibilityCriterionCategory::Income, EligibilityOperator::IsTrue, 60, 'Artigos 8.º e 12.º.'),
             $this->eligibilityCriterion('annual_income_within_alcanena_limit', 'Rendimento anual dentro do limite legal', EligibilityCriterionCategory::Income, EligibilityOperator::IsTrue, 70, 'Portaria n.º 175/2019, quadro I, na redação da Portaria n.º 52/2024.', expected: [
-                'base_one_person' => 38632,
-                'second_person_increment' => 10000,
-                'additional_person_increment' => 5000,
+                'base_one_person' => $parameters['annual_income_base_limit'],
+                'second_person_increment' => $parameters['second_person_increment'],
+                'additional_person_increment' => $parameters['additional_person_increment'],
                 'currency' => 'EUR',
             ]),
             $this->eligibilityCriterion('all_non_dependent_adults_meet_rmmg', 'Rendimento mínimo dos adultos não dependentes', EligibilityCriterionCategory::Income, EligibilityOperator::IsTrue, 80, 'Artigo 8.º, alínea d). RMMG continental de 2026: 920 EUR.', expected: [
-                'monthly_minimum' => self::RMMG_2026,
+                'monthly_minimum' => $parameters['minimum_adult_monthly_income'],
                 'currency' => 'EUR',
                 'reference_year' => 2026,
             ]),
@@ -374,7 +511,7 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
             $this->eligibilityCriterion('no_duplicate_active_application', 'Sem candidatura ativa duplicada', EligibilityCriterionCategory::Application, EligibilityOperator::IsTrue, 130, 'Uma candidatura processual ativa por candidato e concurso.'),
             $this->eligibilityCriterion('typology_is_adequate', 'Composição adequada às tipologias escolhidas', EligibilityCriterionCategory::Typology, EligibilityOperator::IsTrue, 140, 'Artigo 8.º, alínea e), e Portaria n.º 175/2019.'),
             $this->eligibilityCriterion('rent_effort_within_35_percent', 'Taxa de esforço máxima de 35%', EligibilityCriterionCategory::Income, EligibilityOperator::IsTrue, 150, 'Artigos 5.º e 10.º do Regulamento.', expected: [
-                'maximum_percentage' => self::MAX_EFFORT_RATE,
+                'maximum_percentage' => $parameters['maximum_effort_rate_percentage'],
             ]),
             $this->manualImpediment('no_declared_property_impediment', 'Sem propriedade, usufruto ou detenção de habitação', 200, 'Artigo 9.º, n.º 1, alínea a).'),
             $this->manualImpediment('no_incompatible_housing_support', 'Sem apoio público habitacional ou habitação pública incompatível', 210, 'Artigo 9.º, n.º 1, alínea b).'),
@@ -575,8 +712,12 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
         }
     }
 
-    private function seedHousingUnits(Program $program, Contest $contest, ?User $administrator): void
-    {
+    private function seedHousingUnits(
+        Program $program,
+        Contest $contest,
+        AffordableRentRegulatoryProfile $profile,
+        ?User $administrator,
+    ): void {
         $units = [
             [
                 'code' => 'ALC-DEMO-T1-01',
@@ -758,6 +899,7 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
             ]);
             $rule->forceFill([
                 'program_id' => $program->id,
+                'regulatory_profile_id' => $profile->id,
                 'description' => "Regra de simulação para {$unit['public_title']}; validar limites finais com o edital e a Portaria aplicável.",
                 'is_active' => true,
                 'min_household_members' => $unit['min_occupants'],
@@ -804,14 +946,19 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
         }
     }
 
-    private function seedAllocationRuleSet(Program $program, Contest $contest, ?User $administrator): void
-    {
+    private function seedAllocationRuleSet(
+        Program $program,
+        Contest $contest,
+        AffordableRentRegulatoryProfile $profile,
+        ?User $administrator,
+    ): void {
         $ruleSet = AllocationRuleSet::withTrashed()->firstOrNew([
             'program_id' => $program->id,
             'contest_id' => $contest->id,
             'name' => 'Atribuição por classificação — Alcanena 01/2026',
         ]);
         $ruleSet->forceFill([
+            'regulatory_profile_id' => $profile->id,
             'description' => 'Atribuição pela classificação do Anexo I, respeitando preferências e recorrendo a sorteio público apenas para empates remanescentes.',
             'status' => AllocationRuleSetStatus::Active,
             'allocation_method' => AllocationMethod::RankingThenLottery,
@@ -829,24 +976,31 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
         ])->save();
     }
 
-    private function seedRentConfiguration(Program $program, Contest $contest, ?User $administrator): void
-    {
+    private function seedRentConfiguration(
+        Program $program,
+        Contest $contest,
+        AffordableRentRegulatoryProfile $profile,
+        ?User $administrator,
+    ): void {
+        $parameters = app(MunicipalRegulatoryOverlayService::class)->effectiveParameters($profile);
+        $maximumEffortRate = $parameters['maximum_effort_rate_percentage'];
         $ruleSet = RentRuleSet::withTrashed()->firstOrNew([
             'program_id' => $program->id,
             'contest_id' => $contest->id,
             'name' => 'Renda acessível e caução — Alcanena 01/2026',
         ]);
         $ruleSet->forceFill([
+            'regulatory_profile_id' => $profile->id,
             'description' => 'Configuração demo: renda limitada a 35% do RMM do agregado, com rendas de edital entre 320 EUR e 470 EUR e caução de uma mensalidade.',
             'status' => RentRuleSetStatus::Active,
             'calculation_method' => RentCalculationMethod::EffortRate,
             'income_period' => 'monthly',
             'income_basis' => 'declared_income',
-            'effort_rate_percentage' => self::MAX_EFFORT_RATE,
+            'effort_rate_percentage' => $maximumEffortRate,
             'minimum_rent' => 320.00,
             'maximum_rent' => 470.00,
             'minimum_effort_rate_percentage' => null,
-            'maximum_effort_rate_percentage' => self::MAX_EFFORT_RATE,
+            'maximum_effort_rate_percentage' => $maximumEffortRate,
             'deposit_months' => 1.00,
             'minimum_deposit' => 320.00,
             'maximum_deposit' => 470.00,
@@ -868,9 +1022,9 @@ class DemoAlcanenaAffordableRentSeeder extends Seeder
                 'effort_rate_cap',
                 'less_than_or_equal',
                 null,
-                self::MAX_EFFORT_RATE,
+                $maximumEffortRate,
                 null,
-                self::MAX_EFFORT_RATE,
+                $maximumEffortRate,
                 null,
                 null,
                 10,
