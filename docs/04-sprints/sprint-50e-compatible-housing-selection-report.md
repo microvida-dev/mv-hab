@@ -505,3 +505,50 @@ Antes de ativar a seleção num Município/ambiente de destino:
 O repositório cumpre os gates técnicos e funcionais da Sprint 50E. A ativação
 de concursos RSAA em ambiente de destino continua condicionada à fonte oficial
 de rendas e à configuração regulamentar completa, sem fallback PAA.
+
+## Hardening 50E.1
+
+A Sprint 50E.1 reforçou a implementação sem alterar o objetivo funcional desta
+sprint:
+
+- persistiu a origem estrutural `uninitialized`, `legacy`, `official`,
+  `reconciled` ou `requires_manual_review`;
+- centralizou todos os readers num resolver fail-closed;
+- impediu que uma origem oficial vazia reative preferências legacy;
+- tornou a substituição de rascunhos compatível com os índices únicos reais de
+  MySQL/MariaDB;
+- limitou snapshots finais à submissão e reforçou unicidade, imutabilidade,
+  idempotência e concorrência;
+- passou a exigir snapshot final oficial na atribuição;
+- centralizou autorização na candidatura e ownership;
+- cobriu writers candidate, backoffice, correções, renovações e atualização
+  anual com invalidação por evento de domínio;
+- reforçou teclado, foco, `aria-live` e estado vazio na página de seleção.
+
+Foi criada a migration incremental e reversível
+`2026_07_27_000044_add_application_preference_source_state.php`. Não foram
+apagados snapshots, `application_preferences` ou dados históricos.
+
+Validação final:
+
+- 48 testes focados e 218 asserções;
+- 4 testes MySQL de migration/índices e 23 asserções;
+- concorrência MySQL com uma única linha final;
+- 1 356 testes integrais e 20 276 asserções;
+- 130 testes UX e 645 asserções;
+- PHPStan com 0 erros;
+- Pint integral e incremental;
+- build Vite;
+- 1 167 rotas antes e depois, com diff estrutural vazio;
+- browser real em desktop/tablet sem overflow ou erros de consola.
+
+O relatório detalhado está em:
+
+- `docs/04-sprints/sprint-50e1-preference-integrity-hardening-report.md`.
+
+As fontes PAA, RSAA e do limite superior do 6.º escalão do IRS continuam
+fechadas quando não estão oficialmente instaladas e validadas. Dados demo
+permanecem `demo_only`.
+
+Classificação do hardening:
+`REPOSITORY_PASS_DEPLOYMENT_GATED`.
