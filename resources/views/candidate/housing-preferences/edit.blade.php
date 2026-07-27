@@ -138,6 +138,7 @@
                     maximum: {{ $selectionConfiguration['maximum'] }},
                     dragged: null,
                     selectionError: '',
+                    statusMessage: '',
                     selectedCount() {
                         return Object.values(this.selected).filter(Boolean).length;
                     },
@@ -152,6 +153,7 @@
                         if (this.selected[id] && this.selectedCount() > this.maximum) {
                             this.selected[id] = false;
                             this.selectionError = `Pode selecionar no máximo ${this.maximum} habitações.`;
+                            this.statusMessage = this.selectionError;
                             return;
                         }
                         if (this.selected[id]) {
@@ -163,6 +165,9 @@
                             this.orders[id] = order;
                         }
                         this.normalizeOrders();
+                        this.statusMessage = this.selected[id]
+                            ? `Habitação selecionada como preferência ${this.orders[id]}.`
+                            : 'Habitação removida da seleção.';
                     },
                     move(id, delta) {
                         if (!this.selected[id]) return;
@@ -174,6 +179,7 @@
                         );
                         if (other) this.orders[other] = current;
                         this.orders[id] = target;
+                        this.statusMessage = `Ordem atualizada: preferência ${target}.`;
                     },
                     startDrag(id) {
                         if (this.selected[id]) this.dragged = id;
@@ -183,6 +189,7 @@
                         const draggedOrder = Number(this.orders[this.dragged]);
                         this.orders[this.dragged] = Number(this.orders[id]);
                         this.orders[id] = draggedOrder;
+                        this.statusMessage = `Ordem atualizada: preferência ${this.orders[id]}.`;
                         this.dragged = null;
                     }
                 }"
@@ -192,9 +199,8 @@
 
                 <p
                     class="sr-only"
-                    role="alert"
                     aria-live="polite"
-                    x-text="selectionError"
+                    x-text="statusMessage"
                 ></p>
 
                 <x-mv.section
@@ -318,7 +324,7 @@
                                                 value="{{ $unit->id }}"
                                                 class="mv-checkbox mt-0.5"
                                                 x-model="selected['{{ $key }}']"
-                                                @change="toggle('{{ $key }}')"
+                                                @change="toggle('{{ $key }}'); $nextTick(() => $el.focus())"
                                             >
                                             <span>Selecionar esta habitação</span>
                                         </label>
@@ -334,7 +340,13 @@
                                                     class="mv-input mt-1 w-full"
                                                     x-model.number="orders['{{ $key }}']"
                                                     :disabled="!selected['{{ $key }}']"
+                                                    aria-describedby="preference-order-help-{{ $unit->id }}"
+                                                    @keydown.alt.arrow-up.prevent="move('{{ $key }}', -1)"
+                                                    @keydown.alt.arrow-down.prevent="move('{{ $key }}', 1)"
                                                 >
+                                                <span id="preference-order-help-{{ $unit->id }}" class="sr-only">
+                                                    Use Alt e seta para cima ou para baixo para alterar a ordem.
+                                                </span>
                                             </label>
                                             <div class="flex gap-2" aria-label="Alterar ordem de {{ $housingUnit?->displayTitle() }}">
                                                 <button
