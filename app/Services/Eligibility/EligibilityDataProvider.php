@@ -14,10 +14,12 @@ use App\Models\EligibilityCriterion;
 use App\Models\EligibilityRuleSet;
 use App\Models\Household;
 use App\Models\HouseholdMember;
+use App\Models\HousingPreference;
 use App\Models\IncomeRecord;
 use App\Models\Program;
 use App\Models\User;
 use App\Services\Allocation\TypologyAdequacyService;
+use App\Services\Applications\ApplicationHousingPreferenceSourceResolver;
 use App\Services\Documents\DocumentChecklistService;
 use App\Services\Regulatory\AnnualHouseholdIncomeLimitCalculator;
 use App\Services\Regulatory\MunicipalRegulatoryOverlayService;
@@ -42,6 +44,7 @@ class EligibilityDataProvider
         private readonly MunicipalRegulatoryOverlayService $overlayService,
         private readonly EligibilityRuleSetResolver $ruleSetResolver,
         private readonly AnnualHouseholdIncomeLimitCalculator $annualIncomeLimits,
+        private readonly ApplicationHousingPreferenceSourceResolver $preferenceSource,
     ) {}
 
     /**
@@ -534,15 +537,22 @@ class EligibilityDataProvider
             return collect();
         }
 
-        $currentPreferences = $application->housingPreferences
-            ->pluck('contestHousingUnit')
-            ->filter();
+        $preferences = $this->preferenceSource->preferencesFor($application);
+        $source = $this->preferenceSource->source($application);
 
-        if ($currentPreferences->isNotEmpty()) {
-            return $currentPreferences->values();
+        if ($source->isOfficial()) {
+            return $preferences
+                ->filter(
+                    fn (mixed $preference): bool => $preference instanceof HousingPreference,
+                )
+                ->map(
+                    fn (HousingPreference $preference) => $preference->contestHousingUnit,
+                )
+                ->filter()
+                ->values();
         }
 
-        $preferenceOrder = $application->preferences
+        $preferenceOrder = $preferences
             ->pluck('preference_order', 'housing_unit_id');
 
         return ContestHousingUnit::query()

@@ -5,6 +5,7 @@ namespace App\Services\ProcedureMinutes;
 use App\Models\Application;
 use App\Models\Contest;
 use App\Models\User;
+use App\Services\Applications\HousingPreferenceSnapshotService;
 use BackedEnum;
 use Carbon\CarbonInterface;
 use DateTimeInterface;
@@ -13,6 +14,10 @@ use Illuminate\Support\Str;
 
 class ProcedureMinutePayloadBuilder
 {
+    public function __construct(
+        private readonly HousingPreferenceSnapshotService $housingPreferences,
+    ) {}
+
     /**
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
@@ -98,6 +103,7 @@ class ProcedureMinutePayloadBuilder
                 'contest',
                 'housingPreferences.housingUnit',
                 'preferences.housingUnit',
+                'snapshots',
                 'applicationScores.details',
                 'provisionalListEntries',
                 'definitiveListEntries',
@@ -135,6 +141,7 @@ class ProcedureMinutePayloadBuilder
             'applications.contest',
             'applications.housingPreferences.housingUnit',
             'applications.preferences.housingUnit',
+            'applications.snapshots',
             'applications.applicationScores.details',
             'applications.provisionalListEntries',
             'applications.definitiveListEntries',
@@ -173,6 +180,7 @@ class ProcedureMinutePayloadBuilder
             'contest',
             'housingPreferences.housingUnit',
             'preferences.housingUnit',
+            'snapshots',
             'applicationScores.details',
             'provisionalListEntries',
             'definitiveListEntries',
@@ -440,17 +448,17 @@ class ProcedureMinutePayloadBuilder
                             'label' => $this->enumLabel($latestScore->status ?? null),
                         ],
                     ] : null,
-                    'preferences' => ($application->housingPreferences->isNotEmpty()
-                        ? $application->housingPreferences
-                        : $application->preferences)
-                        ->map(fn ($preference): array => [
-                            'preference_order' => $preference->preference_order,
+                    'preferences' => collect(
+                        $this->housingPreferences->forApplication($application),
+                    )
+                        ->map(fn (array $preference): array => [
+                            'preference_order' => $preference['preference_order'] ?? null,
                             'housing_unit' => [
-                                'id' => $preference->housingUnit?->id,
-                                'code' => $preference->housingUnit?->code,
-                                'public_reference' => $preference->housingUnit?->public_reference,
-                                'title' => $preference->housingUnit?->public_title,
-                                'typology' => $preference->housingUnit?->typology,
+                                'id' => $preference['housing_unit_id'] ?? null,
+                                'code' => $preference['code'] ?? null,
+                                'public_reference' => $preference['public_reference'] ?? null,
+                                'title' => $preference['public_title'] ?? null,
+                                'typology' => $preference['typology'] ?? null,
                             ],
                         ])
                         ->values()

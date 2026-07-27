@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\AdministrativeProcessStatus;
 use App\Enums\AffordableRentLegalRegime;
+use App\Enums\ApplicationPreferenceSource;
 use App\Enums\ApplicationStatus;
 use Database\Factories\ApplicationFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property int $contest_id
  * @property int|null $regulatory_snapshot_id
  * @property ApplicationStatus $status
+ * @property ApplicationPreferenceSource $preference_source
  * @property AffordableRentLegalRegime|null $legal_regime
  * @property User $user
  * @property AdhesionRegistration $adhesionRegistration
@@ -43,7 +45,10 @@ class Application extends Model
     {
         return [
             'status' => ApplicationStatus::class,
+            'preference_source' => ApplicationPreferenceSource::class,
             'legal_regime' => AffordableRentLegalRegime::class,
+            'official_preferences_initialized_at' => 'datetime',
+            'legacy_preferences_reconciled_at' => 'datetime',
             'submitted_at' => 'datetime',
             'withdrawn_at' => 'datetime',
             'cancelled_at' => 'datetime',

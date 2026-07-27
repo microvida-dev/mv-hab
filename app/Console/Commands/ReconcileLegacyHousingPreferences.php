@@ -2,10 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\ApplicationPreferenceSource;
 use App\Enums\HousingCompatibilityStatus;
+use App\Models\Application;
 use App\Models\ApplicationPreference;
 use App\Models\ContestHousingUnit;
 use App\Models\HousingPreference;
+use App\Services\Applications\ApplicationHousingPreferenceSourceResolver;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
 use Illuminate\Console\Command;
@@ -18,8 +21,10 @@ class ReconcileLegacyHousingPreferences extends Command
 
     protected $description = 'Reconcilia preferências legacy sem inventar correspondências ambíguas.';
 
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly ApplicationHousingPreferenceSourceResolver $source,
+    ) {
         parent::__construct();
     }
 
@@ -42,7 +47,11 @@ class ReconcileLegacyHousingPreferences extends Command
                 'preference_order',
                 'notes',
             ])
-            ->with('application:id,user_id,program_id,contest_id,submitted_at')
+            ->with(
+                'application:id,user_id,program_id,contest_id,submitted_at,'.
+                'preference_source,official_preferences_initialized_at,'.
+                'legacy_preferences_reconciled_at',
+            )
             ->orderBy('id')
             ->chunkById(200, function ($preferences) use ($apply, &$summary): void {
                 foreach ($preferences as $legacy) {
@@ -63,6 +72,11 @@ class ReconcileLegacyHousingPreferences extends Command
 
                     if ($matches->count() !== 1) {
                         $summary['ambiguous']++;
+
+                        if ($apply) {
+                            $this->source
+                                ->markRequiresManualReview($application);
+                        }
 
                         continue;
                     }
@@ -94,8 +108,16 @@ class ReconcileLegacyHousingPreferences extends Command
                             && $existing->preference_order === $legacy->preference_order
                         ) {
                             $summary['already_reconciled']++;
+
+                            if ($apply) {
+                                $this->refreshSourceState($application);
+                            }
                         } else {
                             $summary['conflict']++;
+
+                            if ($apply) {
+                                $this->source->markRequiresManualReview($application);
+                            }
                         }
 
                         continue;
@@ -145,6 +167,7 @@ class ReconcileLegacyHousingPreferences extends Command
                                 'legacy_preference_id' => $legacy->id,
                             ],
                         );
+                        $this->refreshSourceState($application);
                         $summary['applied']++;
                     });
                 }
@@ -162,5 +185,42 @@ class ReconcileLegacyHousingPreferences extends Command
             : 'Dry-run concluído. Use --apply para aplicar as correspondências inequívocas.');
 
         return self::SUCCESS;
+    }
+
+    private function refreshSourceState(Application $application): void
+    {
+        $legacyTotal = $application->preferences()->count();
+        $officialTotal = HousingPreference::withTrashed()
+            ->where('application_id', $application->id)
+            ->count();
+        $linkedTotal = HousingPreference::withTrashed()
+            ->where('application_id', $application->id)
+            ->whereNotNull('legacy_application_preference_id')
+            ->count();
+
+        if (
+            $legacyTotal > 0
+            && $officialTotal === $legacyTotal
+            && $linkedTotal === $legacyTotal
+        ) {
+            $this->source->markReconciled($application);
+
+            return;
+        }
+
+        if ($legacyTotal > 0 && $officialTotal > 0) {
+            $this->source->markRequiresManualReview($application);
+
+            return;
+        }
+
+        if (
+            $this->source->source($application)
+            === ApplicationPreferenceSource::Uninitialized
+        ) {
+            $application->forceFill([
+                'preference_source' => ApplicationPreferenceSource::Legacy,
+            ])->save();
+        }
     }
 }

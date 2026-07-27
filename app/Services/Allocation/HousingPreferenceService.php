@@ -3,6 +3,8 @@
 namespace App\Services\Allocation;
 
 use App\Data\Applications\CompatibleHousingOptionData;
+use App\Enums\ApplicationPreferenceSource;
+use App\Enums\ApplicationSnapshotType;
 use App\Enums\ApplicationStatus;
 use App\Enums\HousingCompatibilityStatus;
 use App\Models\AllocationRuleSet;
@@ -10,6 +12,7 @@ use App\Models\Application;
 use App\Models\ContestHousingUnit;
 use App\Models\HousingPreference;
 use App\Models\User;
+use App\Services\Applications\ApplicationHousingPreferenceSourceResolver;
 use App\Services\Applications\HousingCompatibilityService;
 use App\Services\Audit\AuditLogger;
 use App\Support\AuditEvents;
@@ -25,6 +28,7 @@ class HousingPreferenceService
         private readonly AuditLogger $auditLogger,
         private readonly HousingCompatibilityService $compatibility,
         private readonly AllocationRuleSetResolver $allocationRules,
+        private readonly ApplicationHousingPreferenceSourceResolver $preferenceSource,
     ) {}
 
     /**
@@ -112,16 +116,14 @@ class HousingPreferenceService
             throw ValidationException::withMessages(['application' => 'Só pode alterar preferências da sua candidatura.']);
         }
 
-        if ($application->allocations()->exists()) {
-            throw ValidationException::withMessages(['preferences' => 'As preferências ficam bloqueadas após existir execução de atribuição.']);
-        }
-
         DB::transaction(function () use ($application, $preferences, $candidate, $submit): void {
             $lockedApplication = Application::query()
                 ->lockForUpdate()
                 ->findOrFail($application->id);
             $this->assertEditable($lockedApplication);
+            $this->assertNoAllocations($lockedApplication);
             $this->assertNoLockedPreferences($lockedApplication);
+            $this->assertNoFinalPreferenceSnapshot($lockedApplication);
             $ruleSet = $this->allocationRules->forApplication($lockedApplication);
             $this->assertSelectionStructure($preferences, $ruleSet, $submit);
             $options = $this->optionsFor($lockedApplication)
@@ -133,7 +135,8 @@ class HousingPreferenceService
                 ->map(fn ($order): int => (int) $order)
                 ->all();
 
-            $lockedApplication->housingPreferences()
+            HousingPreference::withTrashed()
+                ->where('application_id', $lockedApplication->id)
                 ->whereNull('locked_at')
                 ->forceDelete();
 
@@ -167,6 +170,8 @@ class HousingPreferenceService
                     'locked_at' => null,
                 ])->save();
             }
+
+            $this->preferenceSource->markOfficial($lockedApplication);
 
             $newOrders = collect($preferences)
                 ->mapWithKeys(fn (array $preference): array => [
@@ -256,6 +261,24 @@ class HousingPreferenceService
         Carbon $submittedAt,
     ): void {
         $ruleSet = $this->allocationRules->forApplication($application);
+
+        if (
+            $ruleSet?->allow_preferences === true
+            && $this->preferenceSource->source($application)
+                === ApplicationPreferenceSource::Uninitialized
+        ) {
+            $this->preferenceSource->markOfficial($application, $submittedAt);
+        }
+
+        if (
+            $ruleSet?->allow_preferences === true
+            && ! $this->preferenceSource->source($application)->isOfficial()
+        ) {
+            throw ValidationException::withMessages([
+                'preferences' => 'As preferências habitacionais não têm uma fonte oficial confirmada.',
+            ]);
+        }
+
         $preferences = $application->housingPreferences()
             ->lockForUpdate()
             ->orderBy('preference_order')
@@ -340,9 +363,35 @@ class HousingPreferenceService
 
     private function assertNoLockedPreferences(Application $application): void
     {
-        if ($application->housingPreferences()->whereNotNull('locked_at')->exists()) {
+        if (HousingPreference::withTrashed()
+            ->where('application_id', $application->id)
+            ->whereNotNull('locked_at')
+            ->exists()) {
             throw ValidationException::withMessages([
                 'preferences' => 'As preferências submetidas estão bloqueadas.',
+            ]);
+        }
+    }
+
+    private function assertNoAllocations(Application $application): void
+    {
+        if ($application->allocations()->exists()) {
+            throw ValidationException::withMessages([
+                'preferences' => 'As preferências ficam bloqueadas após existir execução de atribuição.',
+            ]);
+        }
+    }
+
+    private function assertNoFinalPreferenceSnapshot(Application $application): void
+    {
+        if ($application->snapshots()
+            ->where(
+                'snapshot_type',
+                ApplicationSnapshotType::HousingPreferences->value,
+            )
+            ->exists()) {
+            throw ValidationException::withMessages([
+                'preferences' => 'As preferências finais da candidatura já se encontram fixadas.',
             ]);
         }
     }
