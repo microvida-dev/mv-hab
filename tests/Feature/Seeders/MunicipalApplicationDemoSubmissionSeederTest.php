@@ -25,8 +25,8 @@ use App\Services\Documents\DocumentChecklistService;
 use BackedEnum;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\MunicipalApplicationDemoAccessSeeder;
+use Database\Seeders\Demo\MunicipalApplicationDemoCandidateSeeder;
 use Database\Seeders\Demo\MunicipalApplicationDemoCatalogSeeder;
-use Database\Seeders\Demo\MunicipalApplicationDemoSeeder;
 use Database\Seeders\Demo\MunicipalApplicationDemoSubmissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
@@ -762,7 +762,18 @@ class MunicipalApplicationDemoSubmissionSeederTest extends TestCase
             'Falta implementar MunicipalApplicationDemoSubmissionSeeder.',
         );
 
-        $this->seed(MunicipalApplicationDemoSeeder::class);
+        $this->seed(
+            MunicipalApplicationDemoAccessSeeder::class,
+        );
+        $this->seed(
+            MunicipalApplicationDemoCatalogSeeder::class,
+        );
+        $this->seed(
+            MunicipalApplicationDemoCandidateSeeder::class,
+        );
+        $this->seed(
+            MunicipalApplicationDemoSubmissionSeeder::class,
+        );
     }
 
     private function application(): Application
