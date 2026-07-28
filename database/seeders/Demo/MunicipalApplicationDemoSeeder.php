@@ -15,6 +15,7 @@ final class MunicipalApplicationDemoSeeder extends Seeder
         $this->call([
             MunicipalApplicationDemoAccessSeeder::class,
             MunicipalApplicationDemoCatalogSeeder::class,
+            MunicipalApplicationDemoCandidateSeeder::class,
         ]);
     }
 }
