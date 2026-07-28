@@ -32,7 +32,6 @@ use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\MunicipalApplicationDemoAccessSeeder;
 use Database\Seeders\Demo\MunicipalApplicationDemoCandidateSeeder;
 use Database\Seeders\Demo\MunicipalApplicationDemoCatalogSeeder;
-use Database\Seeders\Demo\MunicipalApplicationDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -674,7 +673,15 @@ class MunicipalApplicationDemoCandidateSeederTest extends TestCase
 
     private function seedDemo(): void
     {
-        $this->seed(MunicipalApplicationDemoSeeder::class);
+        $this->seed(
+            MunicipalApplicationDemoAccessSeeder::class,
+        );
+        $this->seed(
+            MunicipalApplicationDemoCatalogSeeder::class,
+        );
+        $this->seed(
+            MunicipalApplicationDemoCandidateSeeder::class,
+        );
     }
 
     private function referenceDate(): CarbonImmutable

@@ -783,9 +783,16 @@ final class MunicipalApplicationDemoCandidateSeeder extends Seeder
                 );
         }
 
-        if ($application->status !== ApplicationStatus::Draft) {
+        if (! in_array(
+            $application->status,
+            [
+                ApplicationStatus::Draft,
+                ApplicationStatus::Submitted,
+            ],
+            true,
+        )) {
             throw new LogicException(
-                'A Sprint 51D.1 exige uma candidatura demo em rascunho.',
+                'A candidatura demo existente possui um estado incompatível.',
             );
         }
 
@@ -802,6 +809,19 @@ final class MunicipalApplicationDemoCandidateSeeder extends Seeder
             throw new LogicException(
                 'A candidatura demo existente possui associações incompatíveis.',
             );
+        }
+
+        if ($application->status === ApplicationStatus::Submitted) {
+            if (
+                $application->candidate_notes
+                !== self::APPLICATION_NOTE
+            ) {
+                throw new LogicException(
+                    'A candidatura demo submetida possui notas incompatíveis.',
+                );
+            }
+
+            return $application;
         }
 
         if (
@@ -875,6 +895,45 @@ final class MunicipalApplicationDemoCandidateSeeder extends Seeder
         $source = $freshApplication instanceof Application
             ? $freshApplication->preference_source
             : null;
+        $status = $freshApplication instanceof Application
+            ? $freshApplication->status
+            : $application->status;
+
+        if ($status === ApplicationStatus::Submitted) {
+            $submittedConfigurationIsValid =
+                $existing->count() === 3
+                && $existing->whereNotNull('deleted_at')->isEmpty()
+                && $existingUnitIds === $expectedUnitIds
+                && $existingOrders === [1, 2, 3]
+                && $existing->every(
+                    static fn (
+                        HousingPreference $preference,
+                    ): bool => $preference->compatibility_status
+                        === HousingCompatibilityStatus::Compatible
+                        && $preference->invalidated_at === null
+                        && $preference->submitted_at !== null
+                        && $preference->locked_at !== null,
+                )
+                && $source instanceof ApplicationPreferenceSource
+                && $source->isOfficial();
+
+            if (! $submittedConfigurationIsValid) {
+                throw new LogicException(
+                    'As preferências submetidas da candidatura demo '
+                    .'não correspondem ao cenário esperado.',
+                );
+            }
+
+            return;
+        }
+
+        if ($status !== ApplicationStatus::Draft) {
+            throw new LogicException(
+                'As preferências demo não podem ser preparadas '
+                .'no estado atual da candidatura.',
+            );
+        }
+
         $alreadyConfigured = $existing->count() === 3
             && $existing->whereNotNull('deleted_at')->isEmpty()
             && $existingUnitIds === $expectedUnitIds

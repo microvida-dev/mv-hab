@@ -40,7 +40,6 @@ use Carbon\CarbonImmutable;
 use Database\Seeders\AffordableRentRegulatoryProfileSeeder;
 use Database\Seeders\Demo\MunicipalApplicationDemoAccessSeeder;
 use Database\Seeders\Demo\MunicipalApplicationDemoCatalogSeeder;
-use Database\Seeders\Demo\MunicipalApplicationDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -877,7 +876,12 @@ class MunicipalApplicationDemoCatalogSeederTest extends TestCase
 
     private function seedDemo(): void
     {
-        $this->seed(MunicipalApplicationDemoSeeder::class);
+        $this->seed(
+            MunicipalApplicationDemoAccessSeeder::class,
+        );
+        $this->seed(
+            MunicipalApplicationDemoCatalogSeeder::class,
+        );
     }
 
     private function referenceDate(): CarbonImmutable
