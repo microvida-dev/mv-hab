@@ -25,9 +25,10 @@ use App\Models\OfficialNotification;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\MunicipalApplicationDemoAccessSeeder;
+use Database\Seeders\Demo\MunicipalApplicationDemoCandidateSeeder;
 use Database\Seeders\Demo\MunicipalApplicationDemoCatalogSeeder;
 use Database\Seeders\Demo\MunicipalApplicationDemoReviewCorrectionSeeder;
-use Database\Seeders\Demo\MunicipalApplicationDemoSeeder;
+use Database\Seeders\Demo\MunicipalApplicationDemoSubmissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -499,7 +500,21 @@ class MunicipalApplicationDemoReviewCorrectionSeederTest extends TestCase
             'Falta implementar o seeder combinado 51E.',
         );
 
-        $this->seed(MunicipalApplicationDemoSeeder::class);
+        $this->seed(
+            MunicipalApplicationDemoAccessSeeder::class,
+        );
+        $this->seed(
+            MunicipalApplicationDemoCatalogSeeder::class,
+        );
+        $this->seed(
+            MunicipalApplicationDemoCandidateSeeder::class,
+        );
+        $this->seed(
+            MunicipalApplicationDemoSubmissionSeeder::class,
+        );
+        $this->seed(
+            MunicipalApplicationDemoReviewCorrectionSeeder::class,
+        );
     }
 
     private function application(): Application

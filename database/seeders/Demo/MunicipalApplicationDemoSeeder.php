@@ -18,6 +18,7 @@ final class MunicipalApplicationDemoSeeder extends Seeder
             MunicipalApplicationDemoCandidateSeeder::class,
             MunicipalApplicationDemoSubmissionSeeder::class,
             MunicipalApplicationDemoReviewCorrectionSeeder::class,
+            MunicipalApplicationDemoVisitsExportSeeder::class,
         ]);
     }
 }
