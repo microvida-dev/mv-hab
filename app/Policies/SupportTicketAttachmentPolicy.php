@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\SupportTicketAttachment;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\CandidateExperience\TenantSupportEligibilityService;
 use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class SupportTicketAttachmentPolicy
@@ -13,6 +14,7 @@ class SupportTicketAttachmentPolicy
 
     public function __construct(
         private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly TenantSupportEligibilityService $tenantSupport,
     ) {}
 
     public function view(User $user, SupportTicketAttachment $attachment): bool
@@ -25,7 +27,8 @@ class SupportTicketAttachmentPolicy
         }
 
         if ($user->hasRole('candidate')) {
-            return $ticket->belongsToUser($user)
+            return $this->tenantSupport->isAvailableFor($user)
+                && $ticket->belongsToUser($user)
                 && ($message === null || $message->isCandidateVisible())
                 && $this->canAccess($user, 'support', 'view');
         }
@@ -35,7 +38,16 @@ class SupportTicketAttachmentPolicy
 
     public function create(User $user): bool
     {
-        return $this->canAccess($user, 'support', 'create') || $this->canAccess($user, 'support', 'update');
+        if ($user->hasRole('candidate')) {
+            return $this->tenantSupport->isAvailableFor($user)
+                && (
+                    $this->canAccess($user, 'support', 'create')
+                    || $this->canAccess($user, 'support', 'update')
+                );
+        }
+
+        return $this->canAccess($user, 'support', 'create')
+            || $this->canAccess($user, 'support', 'update');
     }
 
     public function downloadBackoffice(

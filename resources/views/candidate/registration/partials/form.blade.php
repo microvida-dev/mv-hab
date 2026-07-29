@@ -113,20 +113,17 @@
     </section>
 
     <section class="border-t border-ink-100 pt-7">
-        <h2 class="text-base font-semibold text-ink-900">Preferências de notificação</h2>
-        <div class="mt-4 grid gap-3">
-            @foreach ([
-                'wants_email_notifications' => ['Email', true],
-                'wants_sms_notifications' => ['SMS', false],
-                'wants_postal_notifications' => ['Via postal', false],
-            ] as $field => [$label, $default])
-                <x-mv.checkbox-card
-                    :name="$field"
-                    :label="'Pretendo receber notificações por '.$label.'.'"
-                    :checked="old($field, $registration?->{$field} ?? $default)"
-                />
-            @endforeach
-        </div>
+        <h2 class="text-base font-semibold text-ink-900">Comunicações oficiais</h2>
+        <x-mv.alert
+            class="mt-4"
+            tone="info"
+            title="O email é o canal obrigatório do procedimento"
+        >
+            As notificações processuais e oficiais são enviadas para o email
+            associado à sua conta e ficam igualmente disponíveis no centro de
+            notificações da plataforma. Confirme que o endereço está correto e
+            verificado antes de submeter uma candidatura.
+        </x-mv.alert>
     </section>
 
     <section class="border-t border-ink-100 pt-7">

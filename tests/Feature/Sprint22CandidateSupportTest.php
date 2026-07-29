@@ -28,11 +28,21 @@ use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\InteractsWithMunicipalFeatures;
+use Tests\Support\CreatesTenantSupportEligibility;
 use Tests\TestCase;
 
 class Sprint22CandidateSupportTest extends TestCase
 {
-    use InteractsWithMunicipalFeatures, RefreshDatabase;
+    use CreatesTenantSupportEligibility, InteractsWithMunicipalFeatures, RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config([
+            'mvhab.candidate_experience_runtime.legacy_visits' => true,
+        ]);
+    }
 
     public function test_candidate_books_reschedules_and_cancels_visit_with_ownership_protection(): void
     {
@@ -314,6 +324,10 @@ class Sprint22CandidateSupportTest extends TestCase
     {
         $user = User::factory()->create();
         $user->assignRole($role);
+
+        if ($role === 'candidate') {
+            $this->enableTenantSupportFor($user);
+        }
 
         return $user;
     }

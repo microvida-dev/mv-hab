@@ -11,6 +11,7 @@ use App\Models\SupportTicketMessage;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\CandidateExperience\CandidateInteractionService;
+use App\Services\CandidateExperience\TenantSupportEligibilityService;
 use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Notifications\OfficialNotificationService;
 use App\Support\AuditEvents;
@@ -25,6 +26,7 @@ class SupportTicketMessageService
         private readonly AuditLogger $auditLogger,
         private readonly OfficialNotificationService $notifications,
         private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly TenantSupportEligibilityService $tenantSupport,
     ) {}
 
     public function addMessage(
@@ -34,6 +36,13 @@ class SupportTicketMessageService
         MessageVisibility $visibility,
         bool $backoffice = false,
     ): SupportTicketMessage {
+        if (! $backoffice) {
+            abort_unless(
+                $this->tenantSupport->isAvailableFor($sender),
+                403,
+            );
+        }
+
         abort_unless(
             $backoffice
                 ? (
@@ -64,6 +73,18 @@ class SupportTicketMessageService
                 throw ValidationException::withMessages(['visibility' => 'O candidato não pode criar mensagens internas.']);
             }
 
+            $candidate = User::query()->findOrFail($ticket->user_id);
+
+            if (
+                $backoffice
+                && $visibility !== MessageVisibility::InternalOnly
+                && ! $this->tenantSupport->isAvailableFor($candidate)
+            ) {
+                throw ValidationException::withMessages([
+                    'visibility' => 'O apoio ao inquilino só pode comunicar com o candidato após contrato ativo, entrega concluída e portal do inquilino ativo.',
+                ]);
+            }
+
             $entry = new SupportTicketMessage([
                 'message' => trim(strip_tags($message)),
                 'visibility' => $visibility,
@@ -79,8 +100,6 @@ class SupportTicketMessageService
                     : TicketStatus::PendingStaff,
                 'last_message_at' => now(),
             ])->save();
-
-            $candidate = User::query()->findOrFail($ticket->user_id);
 
             if ($visibility !== MessageVisibility::InternalOnly) {
                 $this->interactions->record(

@@ -61,6 +61,22 @@ enum OfficialNotificationType: string
     case ApplicationInconsistencyDetected = 'application_inconsistency_detected';
     case Other = 'other';
 
+    public function requiresMandatoryEmail(): bool
+    {
+        return ! in_array($this, [
+            self::VisitScheduled,
+            self::VisitConfirmed,
+            self::VisitRescheduled,
+            self::VisitCancelled,
+            self::VisitCompleted,
+            self::VisitNoShow,
+            self::SupportTicketCreated,
+            self::SupportTicketReply,
+            self::SupportTicketResolved,
+            self::SupportTicketReopened,
+        ], true);
+    }
+
     public function label(): string
     {
         return match ($this) {

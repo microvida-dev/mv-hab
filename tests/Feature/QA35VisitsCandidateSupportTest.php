@@ -18,11 +18,21 @@ use App\Models\WorkTask;
 use Database\Seeders\MunicipalTeamSeeder;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesTenantSupportEligibility;
 use Tests\TestCase;
 
 class QA35VisitsCandidateSupportTest extends TestCase
 {
-    use RefreshDatabase;
+    use CreatesTenantSupportEligibility, RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config([
+            'mvhab.candidate_experience_runtime.legacy_visits' => true,
+        ]);
+    }
 
     public function test_candidate_visit_flow_creates_idempotent_work_task_and_preserves_history(): void
     {
@@ -195,6 +205,9 @@ class QA35VisitsCandidateSupportTest extends TestCase
             ]);
         $user->assignRole($role);
 
+        if ($role === 'candidate') {
+            $this->enableTenantSupportFor($user);
+        }
         if ($teamName !== null) {
             $team = MunicipalTeam::query()
                 ->where('name', $teamName)

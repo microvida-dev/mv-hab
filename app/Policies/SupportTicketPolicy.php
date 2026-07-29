@@ -6,6 +6,7 @@ use App\Enums\TicketCategory;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\CandidateExperience\TenantSupportEligibilityService;
 use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class SupportTicketPolicy
@@ -14,6 +15,7 @@ class SupportTicketPolicy
 
     public function __construct(
         private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly TenantSupportEligibilityService $tenantSupport,
     ) {}
 
     public function viewAny(User $user): bool
@@ -24,19 +26,26 @@ class SupportTicketPolicy
     public function view(User $user, SupportTicket $ticket): bool
     {
         return $user->hasRole('candidate')
-            ? $ticket->belongsToUser($user) && $this->canAccess($user, 'support', 'view')
+            ? $this->tenantSupport->isAvailableFor($user)
+                && $ticket->belongsToUser($user)
+                && $this->canAccess($user, 'support', 'view')
             : $this->canAccess($user, 'support', 'view') && $this->canAccessCategory($user, $ticket);
     }
 
     public function create(User $user): bool
     {
-        return $user->hasRole('candidate') && $this->canAccess($user, 'support', 'create');
+        return $user->hasRole('candidate')
+            && $this->tenantSupport->isAvailableFor($user)
+            && $this->canAccess($user, 'support', 'create');
     }
 
     public function update(User $user, SupportTicket $ticket): bool
     {
         return $user->hasRole('candidate')
-            ? $ticket->belongsToUser($user) && $ticket->acceptsCandidateReply() && $this->canAccess($user, 'support', 'update')
+            ? $this->tenantSupport->isAvailableFor($user)
+                && $ticket->belongsToUser($user)
+                && $ticket->acceptsCandidateReply()
+                && $this->canAccess($user, 'support', 'update')
             : $this->canAccess($user, 'support', 'update') && $this->canAccessCategory($user, $ticket);
     }
 

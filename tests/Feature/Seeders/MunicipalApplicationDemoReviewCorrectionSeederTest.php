@@ -8,6 +8,8 @@ use App\Enums\ApplicationReviewStatus;
 use App\Enums\ApplicationReviewType;
 use App\Enums\ApplicationSnapshotType;
 use App\Enums\ApplicationStatus;
+use App\Enums\CommunicationChannel;
+use App\Enums\CommunicationDeliveryStatus;
 use App\Enums\CorrectionRequestItemStatus;
 use App\Enums\CorrectionRequestStatus;
 use App\Enums\CorrectionResponseReviewResult;
@@ -418,7 +420,34 @@ class MunicipalApplicationDemoReviewCorrectionSeederTest extends TestCase
         }
 
         $this->assertDatabaseCount('communication_logs', 2);
-        $this->assertDatabaseCount('communication_deliveries', 2);
+        $this->assertDatabaseCount('communication_deliveries', 4);
+        $this->assertSame(
+            2,
+            DB::table('communication_deliveries')
+                ->where(
+                    'channel',
+                    CommunicationChannel::InApp->value,
+                )
+                ->where(
+                    'status',
+                    CommunicationDeliveryStatus::Delivered->value,
+                )
+                ->count(),
+        );
+        $this->assertSame(
+            2,
+            DB::table('communication_deliveries')
+                ->where(
+                    'channel',
+                    CommunicationChannel::Email->value,
+                )
+                ->where(
+                    'status',
+                    CommunicationDeliveryStatus::Simulated->value,
+                )
+                ->count(),
+        );
+        Queue::assertNothingPushed();
     }
 
     public function test_formal_submission_snapshots_remain_immutable_after_correction(): void

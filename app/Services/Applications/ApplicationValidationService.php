@@ -109,6 +109,7 @@ class ApplicationValidationService
             'adhesionRegistration.household.members.incomeRecords',
             'adhesionRegistration.household.incomeRecords',
             'adhesionRegistration.currentHousingSituation',
+            'user',
         ]);
 
         $registration = $application->adhesionRegistration;
@@ -129,6 +130,13 @@ class ApplicationValidationService
         $registrationMembers = $registration->household?->members;
 
         $checks = [
+            $this->check(
+                'email',
+                filter_var($application->user->email, FILTER_VALIDATE_EMAIL) !== false
+                    && $application->user->hasVerifiedEmail(),
+                'Confirme um endereço de email válido e verificado antes de submeter a candidatura.',
+                'verification.notice',
+            ),
             $this->check('draft', $application->status === ApplicationStatus::Draft, 'A candidatura já não está em rascunho.'),
             $this->check('contest', $application->contest->isOpenForApplications(), 'O período de candidatura terminou.'),
             $this->check('registration', $registration->status === AdhesionRegistrationStatus::Registered, 'O Registo de Adesão não está finalizado.'),
@@ -247,6 +255,7 @@ class ApplicationValidationService
             'income' => 'A informação de rendimentos está completa.',
             'housing' => 'A situação habitacional está preenchida.',
             'duplicate' => 'Não existe outra candidatura ativa para este concurso.',
+            'email' => 'O email da conta está válido e verificado.',
             'draft' => 'A candidatura está em rascunho e pode ser submetida.',
             'documents' => 'A documentação obrigatória está submetida ou validada.',
             'preferences' => 'As habitações pretendidas estão selecionadas e validadas.',

@@ -9,6 +9,7 @@ use App\Enums\CommunicationReceiptType;
 use App\Enums\DocumentGenerationStatus;
 use App\Enums\OfficialNotificationType;
 use App\Enums\TemplateStatus;
+use App\Jobs\DeliverProceduralEmail;
 use App\Models\CommunicationReceipt;
 use App\Models\DocumentTemplate;
 use App\Models\DocumentTemplateVersion;
@@ -29,6 +30,7 @@ use Database\Seeders\NotificationTemplateSeeder;
 use Database\Seeders\SystemAccessSeeder;
 use Database\Seeders\TemplateVariableSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
@@ -176,7 +178,15 @@ class Sprint16CommunicationsTest extends TestCase
 
     public function test_event_dispatch_creates_snapshots_delivery_attempt_and_receipt(): void
     {
+        Queue::fake();
         $candidate = $this->userWithRole('candidate');
+        $candidate->notificationPreference()->create([
+            'allow_in_app' => true,
+            'allow_email' => false,
+            'allow_sms' => false,
+            'allow_postal' => false,
+            'email_for_notifications' => 'alternativo@example.test',
+        ]);
         $admin = $this->userWithRole('administrator');
         $this->createVariable('recipient_name');
         $this->createVariable('event_reference');
@@ -204,12 +214,23 @@ class Sprint16CommunicationsTest extends TestCase
         $this->assertCount(1, $created);
         $communication = $created->first();
         $this->assertStringContainsString('CAN-TEST-001', $communication->body_snapshot);
-        $this->assertSame(1, $communication->deliveries()->count());
-        $delivery = $communication->deliveries()->firstOrFail();
+        $this->assertSame(2, $communication->deliveries()->count());
+        $delivery = $communication->deliveries()
+            ->where('channel', CommunicationChannel::InApp->value)
+            ->firstOrFail();
         $this->assertSame(CommunicationDeliveryStatus::Delivered, $delivery->status);
         $this->assertSame(CommunicationAttemptStatus::Success, $delivery->attempts()->firstOrFail()->status);
         $this->assertTrue($communication->receipts()->where('receipt_type', CommunicationReceiptType::SendProof)->exists());
         $this->assertSame(1, $candidate->officialNotifications()->count());
+        $emailDelivery = $communication->deliveries()
+            ->where('channel', CommunicationChannel::Email->value)
+            ->firstOrFail();
+        $this->assertSame($candidate->email, $emailDelivery->destination);
+        Queue::assertPushed(
+            DeliverProceduralEmail::class,
+            fn (DeliverProceduralEmail $job): bool => $job->communicationDeliveryId
+                === $emailDelivery->id,
+        );
     }
 
     public function test_template_renderer_rejects_missing_unknown_and_sensitive_sms_variables(): void
@@ -306,8 +327,11 @@ class Sprint16CommunicationsTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_candidate_preferences_keep_in_app_channel_mandatory(): void
+    public function test_candidate_preferences_keep_official_email_and_in_app_channels_mandatory(): void
     {
+        config([
+            'mvhab.candidate_experience_runtime.notification_preferences' => true,
+        ]);
         $candidate = $this->userWithRole('candidate');
 
         $this->actingAs($candidate)
@@ -323,7 +347,8 @@ class Sprint16CommunicationsTest extends TestCase
 
         $preference = $candidate->notificationPreference()->firstOrFail();
         $this->assertTrue($preference->allow_in_app);
-        $this->assertFalse($preference->allow_email);
+        $this->assertTrue($preference->allow_email);
+        $this->assertSame($candidate->email, $preference->email_for_notifications);
         $this->assertTrue($preference->allow_sms);
     }
 
@@ -340,6 +365,10 @@ class Sprint16CommunicationsTest extends TestCase
         ]);
         $this->assertDatabaseHas('notification_templates', [
             'code' => 'payment_overdue_email',
+            'channel' => CommunicationChannel::Email->value,
+        ]);
+        $this->assertDatabaseHas('notification_templates', [
+            'code' => 'provisional_list_published_email',
             'channel' => CommunicationChannel::Email->value,
         ]);
         $this->assertDatabaseHas('notification_event_rules', [

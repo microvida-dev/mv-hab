@@ -452,33 +452,39 @@ Route::middleware('auth')->group(function () {
             Route::get('/candidaturas/{application}/imprimir', [CandidateApplicationReceiptController::class, 'print'])
                 ->name('applications.print');
 
-            Route::get('/visitas', [CandidateVisitController::class, 'index'])
-                ->name('visits.index');
-            Route::get('/visitas/agendar', [CandidateVisitController::class, 'create'])
-                ->name('visits.create');
-            Route::post('/visitas', [CandidateVisitController::class, 'store'])
-                ->name('visits.store');
-            Route::get('/visitas/{housingVisit}', [CandidateVisitController::class, 'show'])
-                ->name('visits.show');
-            Route::get('/visitas/{housingVisit}/reagendar', [CandidateVisitController::class, 'edit'])
-                ->name('visits.reschedule');
-            Route::post('/visitas/{housingVisit}/reagendar', [CandidateVisitController::class, 'reschedule'])
-                ->name('visits.reschedule.store');
-            Route::post('/visitas/{housingVisit}/cancelar', [CandidateVisitController::class, 'cancel'])
-                ->name('visits.cancel');
+            Route::middleware(
+                'candidate.feature:legacy_visits',
+            )->group(function (): void {
+                Route::get('/visitas', [CandidateVisitController::class, 'index'])
+                    ->name('visits.index');
+                Route::get('/visitas/agendar', [CandidateVisitController::class, 'create'])
+                    ->name('visits.create');
+                Route::post('/visitas', [CandidateVisitController::class, 'store'])
+                    ->name('visits.store');
+                Route::get('/visitas/{housingVisit}', [CandidateVisitController::class, 'show'])
+                    ->name('visits.show');
+                Route::get('/visitas/{housingVisit}/reagendar', [CandidateVisitController::class, 'edit'])
+                    ->name('visits.reschedule');
+                Route::post('/visitas/{housingVisit}/reagendar', [CandidateVisitController::class, 'reschedule'])
+                    ->name('visits.reschedule.store');
+                Route::post('/visitas/{housingVisit}/cancelar', [CandidateVisitController::class, 'cancel'])
+                    ->name('visits.cancel');
+            });
 
-            Route::get('/apoio', [CandidateSupportTicketController::class, 'index'])
-                ->name('support-tickets.index');
-            Route::get('/apoio/criar', [CandidateSupportTicketController::class, 'create'])
-                ->name('support-tickets.create');
-            Route::post('/apoio', [CandidateSupportTicketController::class, 'store'])
-                ->name('support-tickets.store');
-            Route::get('/apoio/{supportTicket}', [CandidateSupportTicketController::class, 'show'])
-                ->name('support-tickets.show');
-            Route::post('/apoio/{supportTicket}/mensagens', [CandidateSupportTicketMessageController::class, 'store'])
-                ->name('support-ticket-messages.store');
-            Route::get('/apoio/anexos/{supportTicketAttachment}/download', [CandidateSupportTicketAttachmentController::class, 'download'])
-                ->name('support-ticket-attachments.download');
+            Route::middleware('tenant.support')->group(function (): void {
+                Route::get('/apoio', [CandidateSupportTicketController::class, 'index'])
+                    ->name('support-tickets.index');
+                Route::get('/apoio/criar', [CandidateSupportTicketController::class, 'create'])
+                    ->name('support-tickets.create');
+                Route::post('/apoio', [CandidateSupportTicketController::class, 'store'])
+                    ->name('support-tickets.store');
+                Route::get('/apoio/{supportTicket}', [CandidateSupportTicketController::class, 'show'])
+                    ->name('support-tickets.show');
+                Route::post('/apoio/{supportTicket}/mensagens', [CandidateSupportTicketMessageController::class, 'store'])
+                    ->name('support-ticket-messages.store');
+                Route::get('/apoio/anexos/{supportTicketAttachment}/download', [CandidateSupportTicketAttachmentController::class, 'download'])
+                    ->name('support-ticket-attachments.download');
+            });
 
             Route::get('/interacoes', [CandidateInteractionController::class, 'index'])
                 ->name('interactions.index');
@@ -727,10 +733,14 @@ Route::middleware('auth')->group(function () {
                 Route::post('consentimentos/{userConsent}/retirar', [CandidatePrivacyController::class, 'withdrawConsent'])->name('consents.withdraw');
             });
 
-            Route::get('/preferencias-notificacoes', [CandidateNotificationPreferenceController::class, 'edit'])
-                ->name('notification-preferences.edit');
-            Route::match(['put', 'patch'], '/preferencias-notificacoes', [CandidateNotificationPreferenceController::class, 'update'])
-                ->name('notification-preferences.update');
+            Route::middleware(
+                'candidate.feature:notification_preferences',
+            )->group(function (): void {
+                Route::get('/preferencias-notificacoes', [CandidateNotificationPreferenceController::class, 'edit'])
+                    ->name('notification-preferences.edit');
+                Route::match(['put', 'patch'], '/preferencias-notificacoes', [CandidateNotificationPreferenceController::class, 'update'])
+                    ->name('notification-preferences.update');
+            });
         });
 
     Route::prefix('area-inquilino')->name('tenant.')->middleware('role:candidate')->group(function () {

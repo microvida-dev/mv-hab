@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $subject
  * @property string|null $title
  * @property string|null $body_snapshot
+ * @property bool $is_official
  * @property bool $requires_acknowledgement
  * @property Carbon|null $sent_at
  * @property Carbon|null $failed_at

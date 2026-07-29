@@ -12,6 +12,10 @@ use App\Models\User;
 
 class CandidateNavigationService
 {
+    public function __construct(
+        private readonly TenantSupportEligibilityService $tenantSupport,
+    ) {}
+
     /**
      * @return array{
      *     home_route: string,
@@ -24,7 +28,7 @@ class CandidateNavigationService
         if ($this->hasTenantAccess($candidate)) {
             return [
                 'home_route' => 'tenant.dashboard',
-                'groups' => $this->tenantGroups(),
+                'groups' => $this->tenantGroups($candidate),
                 'footer' => $this->footerLinks(),
             ];
         }
@@ -66,7 +70,6 @@ class CandidateNavigationService
                 $this->link('Habitações pretendidas', 'candidate.housing-preferences.index', 'candidate.housing-preferences.*', 'housing'),
                 $this->link('Documentos', 'candidate.documents.index', 'candidate.documents.*', 'document'),
                 $this->link('FAQ', 'candidate.contextual-faq.index', 'candidate.contextual-faq.*', 'faq'),
-                $this->link('Apoio', 'candidate.support-tickets.index', 'candidate.support-tickets.*', 'user-message'),
             ];
         }
 
@@ -77,9 +80,7 @@ class CandidateNavigationService
                 $this->link('Documentos', 'candidate.documents.index', 'candidate.documents.*', 'document'),
                 $this->link('Interações', 'candidate.interactions.index', 'candidate.interactions.*', 'interactions'),
                 $this->link('Aperfeiçoamentos', 'candidate.correction-requests.index', 'candidate.correction-requests.*', 'edit'),
-                $this->link('Visitas', 'candidate.visits.index', 'candidate.visits.*', 'user-inspection'),
                 $this->link('FAQ', 'candidate.contextual-faq.index', 'candidate.contextual-faq.*', 'faq'),
-                $this->link('Apoio', 'candidate.support-tickets.index', 'candidate.support-tickets.*', 'ticket'),
             ];
         }
 
@@ -107,18 +108,27 @@ class CandidateNavigationService
     /**
      * @return array<string, list<array{label: string, route: string, active: string, icon: string}>>
      */
-    private function tenantGroups(): array
+    private function tenantGroups(User $candidate): array
     {
-        return [
-            'Área do inquilino' => [
-                $this->link('Área do Inquilino', 'tenant.dashboard', 'tenant.dashboard', 'home'),
-                $this->link('Contratos', 'tenant.contracts.index', 'tenant.contracts.*', 'document'),
-                $this->link('Pagamentos', 'tenant.payments.index', 'tenant.payments.*', 'payment'),
-                $this->link('Vistorias', 'tenant.inspections.index', 'tenant.inspections.*', 'check'),
-                $this->link('Manutenção', 'tenant.maintenance.index', 'tenant.maintenance.*', 'maintenance'),
-                $this->link('Comunicações', 'tenant.communications.index', 'tenant.communications.*', 'document'),
-            ],
+        $links = [
+            $this->link('Área do Inquilino', 'tenant.dashboard', 'tenant.dashboard', 'home'),
+            $this->link('Contratos', 'tenant.contracts.index', 'tenant.contracts.*', 'document'),
+            $this->link('Pagamentos', 'tenant.payments.index', 'tenant.payments.*', 'payment'),
+            $this->link('Vistorias', 'tenant.inspections.index', 'tenant.inspections.*', 'check'),
+            $this->link('Manutenção', 'tenant.maintenance.index', 'tenant.maintenance.*', 'maintenance'),
+            $this->link('Comunicações', 'tenant.communications.index', 'tenant.communications.*', 'document'),
         ];
+
+        if ($this->tenantSupport->isAvailableFor($candidate)) {
+            $links[] = $this->link(
+                'Apoio',
+                'candidate.support-tickets.index',
+                'candidate.support-tickets.*',
+                'ticket',
+            );
+        }
+
+        return ['Área do inquilino' => $links];
     }
 
     /**

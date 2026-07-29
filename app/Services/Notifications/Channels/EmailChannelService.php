@@ -53,12 +53,17 @@ class EmailChannelService
             $this->attempts->finish($attempt, CommunicationAttemptStatus::Success, 'Aceite pelo mailer Laravel.');
             $this->receipts->generate($communication, CommunicationReceiptType::SendProof, $delivery, $actor);
         } catch (Throwable $exception) {
+            report($exception);
             $delivery->forceFill([
                 'status' => CommunicationDeliveryStatus::Failed,
                 'failed_at' => now(),
-                'failure_reason' => mb_substr($exception->getMessage(), 0, 2000),
+                'failure_reason' => 'Falha técnica no envio através do fornecedor de email.',
             ])->save();
-            $this->attempts->finish($attempt, CommunicationAttemptStatus::Failed, error: $exception->getMessage());
+            $this->attempts->finish(
+                $attempt,
+                CommunicationAttemptStatus::Failed,
+                error: $exception::class,
+            );
         }
 
         return $delivery->refresh();

@@ -29,6 +29,8 @@
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="MVHAB_REGULATORY_DEMO_MODE" value="true"/>
+        <env name="MVHAB_MUNICIPAL_APPLICATION_DEMO" value="false" force="true"/>
+        <env name="MVHAB_PROCEDURAL_EMAIL_SIMULATE" value="false" force="true"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>

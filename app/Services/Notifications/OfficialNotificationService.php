@@ -27,6 +27,8 @@ class OfficialNotificationService
         private readonly CommunicationDeliveryService $deliveries,
         private readonly CommunicationReceiptService $receipts,
         private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly ProceduralEmailDeliveryService $proceduralEmails,
+        private readonly ProceduralNotificationPolicy $proceduralPolicy,
     ) {}
 
     public function createInternal(
@@ -40,6 +42,7 @@ class OfficialNotificationService
         OfficialNotificationChannel $channel = OfficialNotificationChannel::CandidateArea,
         bool $requiresAcknowledgement = false,
         ?string $actionUrl = null,
+        bool $enforceMandatoryEmail = true,
     ): OfficialNotification {
         $communication = $this->communications->create(
             eventCode: $type->value,
@@ -60,6 +63,7 @@ class OfficialNotificationService
             notifiable: $notifiable,
             actor: $actor,
             actionUrl: $actionUrl,
+            enforceMandatoryEmail: $enforceMandatoryEmail,
         );
     }
 
@@ -72,6 +76,7 @@ class OfficialNotificationService
         ?Model $notifiable = null,
         ?User $actor = null,
         ?string $actionUrl = null,
+        bool $enforceMandatoryEmail = true,
     ): OfficialNotification {
         $notification = new OfficialNotification([
             'notification_type' => $type,
@@ -105,13 +110,38 @@ class OfficialNotificationService
             metadata: ['notification_type' => $type->value, 'channel' => $channel->value, 'communication_id' => $communication->id],
         );
 
-        $delivery = $this->deliveries->create(
-            $communication,
-            $this->communicationChannel($channel),
-            $user->email,
-            $notification,
-        );
-        $this->deliveries->execute($delivery, $actor);
+        $communicationChannel = $this->communicationChannel($channel);
+
+        if ($communicationChannel === CommunicationChannel::Email) {
+            $this->proceduralEmails->ensureQueued(
+                $communication,
+                $user,
+                $notification,
+            );
+        } else {
+            $delivery = $this->deliveries->create(
+                $communication,
+                $communicationChannel,
+                $user->email,
+                $notification,
+            );
+            $this->deliveries->execute($delivery, $actor);
+        }
+
+        if (
+            $enforceMandatoryEmail
+            && $communicationChannel !== CommunicationChannel::Email
+            && $this->proceduralPolicy->requiresMandatoryEmail(
+                $communication->event_code,
+                (bool) $communication->is_official,
+            )
+        ) {
+            $this->proceduralEmails->ensureQueued(
+                $communication,
+                $user,
+                $notification,
+            );
+        }
 
         return $notification->refresh();
     }

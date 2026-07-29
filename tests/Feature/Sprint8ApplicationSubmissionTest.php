@@ -151,6 +151,26 @@ class Sprint8ApplicationSubmissionTest extends TestCase
         $this->assertSame(ApplicationStatus::Draft, $application->fresh()->status);
     }
 
+    public function test_submission_requires_a_valid_verified_account_email(): void
+    {
+        [$candidate, , , , $contest] = $this->completeCandidateContext();
+        $candidate->forceFill(['email_verified_at' => null])->save();
+        $application = $this->createDraft($candidate, $contest);
+        $this->satisfyDocumentChecklist($application);
+
+        $this->actingAs($candidate)
+            ->post(
+                route('candidate.applications.submit', $application),
+                $this->acceptedDeclarations(),
+            )
+            ->assertSessionHasErrors('application');
+
+        $this->assertSame(
+            ApplicationStatus::Draft,
+            $application->fresh()->status,
+        );
+    }
+
     public function test_rejected_required_document_blocks_submission(): void
     {
         [$candidate, , , , $contest] = $this->completeCandidateContext();

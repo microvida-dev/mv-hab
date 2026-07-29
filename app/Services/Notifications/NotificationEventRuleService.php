@@ -18,6 +18,7 @@ class NotificationEventRuleService
         private readonly AuditLogger $audit,
         private readonly MunicipalRecordScopeService $municipalScope,
         private readonly CommunicationMunicipalContextService $context,
+        private readonly ProceduralNotificationRuleGuard $proceduralGuard,
     ) {}
 
     /**
@@ -53,6 +54,7 @@ class NotificationEventRuleService
             403,
         );
         $data = $this->normalizeContext($data, $actor, $rule);
+        $this->proceduralGuard->assertUpdateAllowed($rule, $data);
 
         $rule->fill($data);
         $rule->forceFill(['updated_by' => $actor->id])->save();
@@ -74,6 +76,10 @@ class NotificationEventRuleService
                 ),
             403,
         );
+
+        if (! $active) {
+            $this->proceduralGuard->assertCanDeactivate($rule);
+        }
 
         $rule->forceFill(['is_active' => $active, 'updated_by' => $actor->id])->save();
         $this->audit->record(

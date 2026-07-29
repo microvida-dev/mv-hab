@@ -308,12 +308,6 @@
                                         >
                                             Ver ficha pública
                                         </a>
-                                        <a
-                                            href="{{ route('candidate.visits.create', ['housing_unit' => $housingUnit?->id]) }}"
-                                            class="text-sm font-semibold text-mvhab-primary hover:underline"
-                                        >
-                                            Consultar visitas
-                                        </a>
                                     </div>
 
                                     <div class="rounded-2xl bg-ink-50 p-4">
@@ -379,7 +373,6 @@
                                         <a href="{{ route('candidate.household.show') }}" class="mv-button-secondary">Rever agregado</a>
                                         <a href="{{ route('candidate.income-records.index') }}" class="mv-button-secondary">Rever rendimentos</a>
                                         <a href="{{ route('public.contests.show', $application->contest?->slug) }}" class="mv-button-secondary">Consultar regras</a>
-                                        <a href="{{ route('candidate.support-tickets.index') }}" class="mv-button-secondary">Contactar apoio</a>
                                     </div>
                                 </x-mv.alert>
                             </div>

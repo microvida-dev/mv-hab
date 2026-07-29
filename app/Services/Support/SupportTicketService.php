@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\WorkTask;
 use App\Services\Audit\AuditLogger;
 use App\Services\CandidateExperience\CandidateInteractionService;
+use App\Services\CandidateExperience\TenantSupportEligibilityService;
 use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Notifications\OfficialNotificationService;
 use App\Services\Workflows\WorkTaskCreationService;
@@ -34,6 +35,7 @@ class SupportTicketService
         private readonly OfficialNotificationService $notifications,
         private readonly WorkTaskCreationService $tasks,
         private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly TenantSupportEligibilityService $tenantSupport,
     ) {}
 
     /**
@@ -41,6 +43,11 @@ class SupportTicketService
      */
     public function create(User $candidate, array $data): SupportTicket
     {
+        abort_unless(
+            $this->tenantSupport->isAvailableFor($candidate),
+            403,
+        );
+
         return DB::transaction(function () use ($candidate, $data): SupportTicket {
             $application = $this->applicationForCandidate($candidate, $data);
             $contest = $this->contestFromData($data, $application);

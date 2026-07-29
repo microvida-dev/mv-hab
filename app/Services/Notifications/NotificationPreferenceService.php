@@ -31,8 +31,10 @@ class NotificationPreferenceService
         $preference->fill($data);
         $preference->forceFill([
             'allow_in_app' => true,
+            'allow_email' => true,
+            'email_for_notifications' => $user->email,
             'consented_at' => now(),
-            'revoked_at' => empty($data['allow_email']) && empty($data['allow_sms']) ? now() : null,
+            'revoked_at' => null,
         ])->save();
         $audit->record(AuditEvents::UPDATE, $preference, 'notifications', 'notification_preferences_updated', 'Preferências de notificação atualizadas.');
 

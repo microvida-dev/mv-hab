@@ -266,7 +266,7 @@ class CommunicationDeliveryService
         return $result;
     }
 
-    private function refreshCommunicationStatus(CommunicationLog $communication): void
+    public function refreshCommunicationStatus(CommunicationLog $communication): void
     {
         $statuses = $communication->deliveries()->pluck('status');
 

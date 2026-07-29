@@ -8,9 +8,6 @@ trait ValidatesAdhesionRegistration
     {
         $this->merge([
             'email' => $this->filled('email') ? mb_strtolower(trim((string) $this->input('email'))) : null,
-            'wants_email_notifications' => $this->boolean('wants_email_notifications'),
-            'wants_sms_notifications' => $this->boolean('wants_sms_notifications'),
-            'wants_postal_notifications' => $this->boolean('wants_postal_notifications'),
             'accepts_terms' => $this->boolean('accepts_terms'),
             'accepts_data_processing' => $this->boolean('accepts_data_processing'),
         ]);
@@ -37,9 +34,6 @@ trait ValidatesAdhesionRegistration
             'city' => ['nullable', 'string', 'max:100'],
             'parish' => ['nullable', 'string', 'max:100'],
             'municipality' => ['nullable', 'string', 'max:100'],
-            'wants_email_notifications' => ['boolean'],
-            'wants_sms_notifications' => ['boolean'],
-            'wants_postal_notifications' => ['boolean'],
             'accepts_terms' => ['boolean'],
             'accepts_data_processing' => ['boolean'],
         ];

@@ -37,7 +37,9 @@ class NotificationCenterController extends Controller
             'totals' => [
                 'communications' => (clone $communications)->count(),
                 'queued' => (clone $communications)->where('status', 'queued')->count(),
-                'failed' => (clone $communications)->where('status', 'failed')->count(),
+                'failed' => (clone $communications)
+                    ->whereIn('status', ['failed', 'partially_sent'])
+                    ->count(),
                 'pending_configuration' => (clone $deliveries)->where('status', 'pending_configuration')->count(),
                 'templates' => (clone $templates)->count(),
                 'documents' => (clone $documents)->count(),

@@ -479,6 +479,42 @@ return [
         'support_attachment_max_kb' => 10240,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Candidate experience runtime controls
+    |--------------------------------------------------------------------------
+    |
+    | Legacy modules remain in the repository for historical compatibility,
+    | but are disabled by default. Tenant support is available only after the
+    | full post-award lifecycle has been completed.
+    |
+    */
+    'candidate_experience_runtime' => [
+        'notification_preferences' => env(
+            'MVHAB_CANDIDATE_NOTIFICATION_PREFERENCES_ENABLED',
+            false,
+        ),
+        'legacy_visits' => env(
+            'MVHAB_LEGACY_CANDIDATE_VISITS_ENABLED',
+            false,
+        ),
+        'tenant_support' => env(
+            'MVHAB_TENANT_SUPPORT_ENABLED',
+            true,
+        ),
+    ],
+
+    'procedural_notifications' => [
+        'queue' => env('MVHAB_PROCEDURAL_EMAIL_QUEUE', 'communications'),
+        'simulate' => env(
+            'MVHAB_PROCEDURAL_EMAIL_SIMULATE',
+            false,
+        ),
+        'tries' => 5,
+        'retry_hours' => 12,
+        'backoff' => [60, 300, 900, 3600],
+    ],
+
     'roles' => [
         'administrator' => [
             'label' => 'Administrator',

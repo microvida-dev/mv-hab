@@ -3,7 +3,9 @@
 use App\Http\Middleware\BlockInactiveBackofficeUsers;
 use App\Http\Middleware\EnforcePasswordPolicyOnChange;
 use App\Http\Middleware\EnsureBackofficeMfaVerified;
+use App\Http\Middleware\EnsureCandidateExperienceFeatureIsEnabled;
 use App\Http\Middleware\EnsureMunicipalityFeatureIsEnabled;
+use App\Http\Middleware\EnsureTenantSupportIsAvailable;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\LogBackofficeAccess;
 use App\Http\Middleware\LogSensitiveResourceAccess;
@@ -29,7 +31,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'active.backoffice' => BlockInactiveBackofficeUsers::class,
+            'candidate.feature' => EnsureCandidateExperienceFeatureIsEnabled::class,
             'mfa.backoffice' => EnsureBackofficeMfaVerified::class,
+            'tenant.support' => EnsureTenantSupportIsAvailable::class,
             'municipality.feature' => EnsureMunicipalityFeatureIsEnabled::class,
             'password.policy' => EnforcePasswordPolicyOnChange::class,
             'role' => EnsureUserHasRole::class,
