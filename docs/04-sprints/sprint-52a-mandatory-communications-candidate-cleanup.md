@@ -531,4 +531,3 @@ Esta fronteira preserva simultaneamente:
 - a segurança da demonstração com dados fictícios;
 - a idempotência dos seeders;
 - a ausência de efeitos administrativos e contactos externos.
-
