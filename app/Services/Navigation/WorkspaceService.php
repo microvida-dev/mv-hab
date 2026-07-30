@@ -108,6 +108,7 @@ class WorkspaceService
         $actions = [
             $this->item('Nova candidatura', 'backoffice.application-intake.index', 'backoffice.application-intake.*', 'administrative_processes.create', feature: FeatureKey::ApplicationIntake),
             $this->item('Rever documentos', 'admin.document-reviews.index', 'admin.document-reviews.*', 'documents.view', feature: FeatureKey::ApplicationReview),
+            $this->item('Análise em bloco', 'backoffice.application-review-workspace.index', 'backoffice.application-review-workspace.*', 'administrative_processes.view', feature: FeatureKey::ApplicationReview),
             $this->item('Tarefas da minha equipa', 'backoffice.work-tasks.team', 'backoffice.work-tasks.team', 'work_tasks.view_team'),
             $this->item('Relatórios municipais', 'backoffice.reports.index', 'backoffice.reports.*', 'reports.view'),
             $this->item('Segurança e RGPD', 'backoffice.security.dashboard', 'backoffice.security.*', null, ['administrator', 'auditor']),
@@ -216,6 +217,7 @@ class WorkspaceService
                         $this->item('Candidaturas', 'backoffice.applications.index', 'backoffice.applications.*', 'applications.view', null, Application::class, FeatureKey::ApplicationReview),
                         $this->item('Receção administrativa', 'backoffice.application-intake.index', 'backoffice.application-intake.*', 'administrative_processes.create', feature: FeatureKey::ApplicationIntake),
                         $this->item('Processos administrativos', 'backoffice.administrative-processes.index', 'backoffice.administrative-processes.*', 'administrative_processes.view', feature: FeatureKey::ApplicationReview),
+                        $this->item('Análise em bloco', 'backoffice.application-review-workspace.index', 'backoffice.application-review-workspace.*', 'administrative_processes.view', feature: FeatureKey::ApplicationReview),
                     ]),
                     $this->group('Contacto e suporte', [
                         $this->item('Revisão documental', 'admin.document-reviews.index', 'admin.document-reviews.*', 'documents.view', null, DocumentSubmission::class, FeatureKey::ApplicationReview),
@@ -390,6 +392,7 @@ class WorkspaceService
             'backoffice.applications.index' => 'application',
             'backoffice.application-intake.index' => 'application-intake',
             'backoffice.administrative-processes.index' => 'process',
+            'backoffice.application-review-workspace.index' => 'application',
             'admin.document-reviews.index' => 'candidate-document',
             'backoffice.visit-availabilities.index' => 'calendar',
             'backoffice.visit-slots.index' => 'schedule',

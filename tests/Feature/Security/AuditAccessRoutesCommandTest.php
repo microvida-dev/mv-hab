@@ -49,7 +49,7 @@ class AuditAccessRoutesCommandTest extends TestCase
         );
 
         $this->assertSame(
-            911,
+            915,
             $payload['summary']['permission_middleware_routes'],
         );
 
@@ -215,6 +215,65 @@ class AuditAccessRoutesCommandTest extends TestCase
             $this->assertContains('mfa.backoffice', $route['middleware']);
             $this->assertContains('log.backoffice', $route['middleware']);
             $this->assertContains('municipality.feature:applications.review', $route['middleware']);
+            $this->assertSame([], $route['missing_backoffice_guards']);
+        }
+
+        $applicationReviewWorkspaceRoutes = collect($payload['routes'])
+            ->whereIn('name', [
+                'backoffice.application-review-workspace.index',
+                'backoffice.application-review-workspace.show',
+                'backoffice.application-review-workspace.preview',
+                'backoffice.application-review-workspace.apply',
+            ])
+            ->keyBy('name');
+
+        $this->assertCount(4, $applicationReviewWorkspaceRoutes);
+
+        $workspacePermissions = [
+            'backoffice.application-review-workspace.index' => [
+                'permission:administrative_processes.view',
+            ],
+            'backoffice.application-review-workspace.show' => [
+                'permission:administrative_processes.view',
+                'permission:documents.view',
+            ],
+            'backoffice.application-review-workspace.preview' => [
+                'permission:administrative_processes.update',
+            ],
+            'backoffice.application-review-workspace.apply' => [
+                'permission:administrative_processes.update',
+            ],
+        ];
+
+        foreach ($workspacePermissions as $routeName => $permissionMiddleware) {
+            $route = $applicationReviewWorkspaceRoutes->get($routeName);
+
+            $this->assertNotNull($route);
+            $this->assertFalse($route['uses_fixed_role_middleware']);
+            $this->assertFalse($route['is_backoffice_role_route']);
+            $this->assertSame([], $route['roles']);
+
+            foreach ($permissionMiddleware as $permission) {
+                $this->assertContains(
+                    $permission,
+                    $route['permission_middleware'],
+                );
+            }
+
+            $this->assertSame(
+                [
+                    'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor',
+                ],
+                $route['excluded_middleware'],
+            );
+
+            $this->assertContains('active.backoffice', $route['middleware']);
+            $this->assertContains('mfa.backoffice', $route['middleware']);
+            $this->assertContains('log.backoffice', $route['middleware']);
+            $this->assertContains(
+                'municipality.feature:applications.review',
+                $route['middleware'],
+            );
             $this->assertSame([], $route['missing_backoffice_guards']);
         }
 
