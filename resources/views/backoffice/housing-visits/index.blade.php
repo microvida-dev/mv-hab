@@ -10,7 +10,15 @@
     <div class="py-8">
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
-            <x-mv.section title="Marcações" padding="p-0" class="overflow-hidden">
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ route('backoffice.public-visit-bookings.index') }}" class="mv-button-primary">
+                    Marcações públicas
+                </a>
+                <a href="{{ route('backoffice.visit-slots.index') }}" class="mv-button-secondary">
+                    Gerir horários
+                </a>
+            </div>
+            <x-mv.section title="Marcações legacy" padding="p-0" class="overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-ink-100 text-sm">
                         <thead class="bg-ink-50 text-left text-xs font-semibold uppercase text-ink-500">

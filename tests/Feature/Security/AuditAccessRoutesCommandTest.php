@@ -49,7 +49,7 @@ class AuditAccessRoutesCommandTest extends TestCase
         );
 
         $this->assertSame(
-            906,
+            911,
             $payload['summary']['permission_middleware_routes'],
         );
 

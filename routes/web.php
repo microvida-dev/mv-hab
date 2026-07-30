@@ -129,6 +129,7 @@ use App\Http\Controllers\Backoffice\PublicPortal\HousingUnitPublicDocumentContro
 use App\Http\Controllers\Backoffice\PublicPortal\HousingUnitPublicProfileController as BackofficePublicHousingUnitProfileController;
 use App\Http\Controllers\Backoffice\PublicPortal\PublicPortalLinkController as BackofficePublicPortalLinkController;
 use App\Http\Controllers\Backoffice\PublicPortal\PublicPortalSettingController as BackofficePublicPortalSettingController;
+use App\Http\Controllers\Backoffice\PublicVisitBookingController as BackofficePublicVisitBookingController;
 use App\Http\Controllers\Backoffice\RankingSnapshotController as BackofficeRankingSnapshotController;
 use App\Http\Controllers\Backoffice\RankingUpdateRunController as BackofficeRankingUpdateRunController;
 use App\Http\Controllers\Backoffice\RentCalculationController as BackofficeRentCalculationController;
@@ -263,6 +264,7 @@ use App\Http\Controllers\PublicPortal\PublicHousingDocumentController;
 use App\Http\Controllers\PublicPortal\PublicHousingMapController;
 use App\Http\Controllers\PublicPortal\PublicHousingUnitController;
 use App\Http\Controllers\PublicPortal\PublicSitemapController;
+use App\Http\Controllers\PublicPortal\PublicVisitBookingController;
 use App\Http\Controllers\PublicPortalController;
 use App\Http\Controllers\PublicProgramController;
 use App\Http\Controllers\Search\UniversalSearchController;
@@ -287,6 +289,23 @@ Route::get('/oferta-habitacional/concursos/{slug}', [PublicPortalContestControll
 Route::get('/oferta-habitacional/imoveis', [PublicHousingUnitController::class, 'index'])->name('public.housing-units.index');
 Route::get('/oferta-habitacional/imoveis/{slug}/brochura', [PublicHousingUnitController::class, 'brochure'])->name('public.housing-units.brochure');
 Route::get('/oferta-habitacional/imoveis/{slug}', [PublicHousingUnitController::class, 'show'])->name('public.housing-units.show');
+Route::post('/oferta-habitacional/imoveis/{slug}/visitas', [PublicVisitBookingController::class, 'store'])
+    ->middleware('throttle:60,1')
+    ->name('public.visit-bookings.store');
+Route::get('/visitas/confirmacao', [PublicVisitBookingController::class, 'confirmed'])
+    ->middleware('throttle:30,1')
+    ->name('public.visit-bookings.confirmed');
+Route::get('/visitas/cancelar/{token}', [PublicVisitBookingController::class, 'cancel'])
+    ->middleware('throttle:30,1')
+    ->where('token', '[A-Fa-f0-9]{64}')
+    ->name('public.visit-bookings.cancel');
+Route::post('/visitas/cancelar/{token}', [PublicVisitBookingController::class, 'destroy'])
+    ->middleware('throttle:10,1')
+    ->where('token', '[A-Fa-f0-9]{64}')
+    ->name('public.visit-bookings.destroy');
+Route::get('/visitas/cancelada', [PublicVisitBookingController::class, 'cancelled'])
+    ->middleware('throttle:30,1')
+    ->name('public.visit-bookings.cancelled');
 Route::get('/oferta-habitacional/mapa', [PublicHousingMapController::class, 'index'])->name('public.housing-map.index');
 Route::get('/oferta-habitacional/documentos/{document}/download', [PublicHousingDocumentController::class, 'download'])->name('public.housing-documents.download');
 Route::get('/empreendimentos', [PublicHousingUnitController::class, 'index'])->name('public.developments.index');
@@ -922,6 +941,27 @@ Route::middleware('auth')->group(function () {
                     $legacyBackofficeRoleMiddleware,
                 )
                 ->name('housing-visits.reject');
+
+            Route::get('public-visit-bookings', [BackofficePublicVisitBookingController::class, 'index'])
+                ->middleware('permission:visits.view')
+                ->withoutMiddleware($legacyBackofficeRoleMiddleware)
+                ->name('public-visit-bookings.index');
+            Route::get('public-visit-bookings/{publicVisitBooking}', [BackofficePublicVisitBookingController::class, 'show'])
+                ->middleware('permission:visits.view')
+                ->withoutMiddleware($legacyBackofficeRoleMiddleware)
+                ->name('public-visit-bookings.show');
+            Route::post('public-visit-bookings/{publicVisitBooking}/cancel', [BackofficePublicVisitBookingController::class, 'cancel'])
+                ->middleware('permission:visits.cancel')
+                ->withoutMiddleware($legacyBackofficeRoleMiddleware)
+                ->name('public-visit-bookings.cancel');
+            Route::post('public-visit-bookings/{publicVisitBooking}/attended', [BackofficePublicVisitBookingController::class, 'attended'])
+                ->middleware('permission:visits.complete')
+                ->withoutMiddleware($legacyBackofficeRoleMiddleware)
+                ->name('public-visit-bookings.attended');
+            Route::post('public-visit-bookings/{publicVisitBooking}/no-show', [BackofficePublicVisitBookingController::class, 'noShow'])
+                ->middleware('permission:visits.mark_no_show')
+                ->withoutMiddleware($legacyBackofficeRoleMiddleware)
+                ->name('public-visit-bookings.no-show');
 
             Route::get('support-tickets', [BackofficeSupportTicketController::class, 'index'])
                 ->middleware('permission:support.view')

@@ -92,6 +92,14 @@ class VisitSlot extends Model
     }
 
     /**
+     * @return HasMany<PublicVisitBooking, $this>
+     */
+    public function publicBookings(): HasMany
+    {
+        return $this->hasMany(PublicVisitBooking::class);
+    }
+
+    /**
      * @param  Builder<self>  $query
      * @return Builder<self>
      */

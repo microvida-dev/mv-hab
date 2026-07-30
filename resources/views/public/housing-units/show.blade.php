@@ -7,6 +7,9 @@
     :json-ld="$jsonLd ?? null"
 >
     @php
+        $publicVisitSlots = $publicVisitSlots ?? collect();
+        $publicVisitTurnstileEnabled = $publicVisitTurnstileEnabled ?? false;
+        $publicVisitTurnstileSiteKey = $publicVisitTurnstileSiteKey ?? null;
         $cover = $housingUnit->coverImage ?: $housingUnit->publicImages->first();
         $coverUrl = $cover ? \Illuminate\Support\Facades\Storage::disk($cover->disk)->url($cover->path) : null;
         $coordinateDecimals = match ($housingUnit->public_location_precision) {
@@ -151,6 +154,86 @@
                         @endforeach
                     </div>
                 </section>
+            @endif
+
+
+            @if ($publicVisitSlots->isNotEmpty())
+                <section id="visitas" class="scroll-mt-24">
+                    <h2 class="mv-section-title text-xl">Visitar este fogo</h2>
+                    <p class="mv-section-description mt-2">
+                        A marcação é pública e não exige registo nem candidatura.
+                    </p>
+
+                    @if ($errors->any())
+                        <div class="mt-5 rounded-2xl border border-red-200 bg-red-50 p-5" role="alert" aria-live="assertive">
+                            <p class="font-semibold text-red-900">Não foi possível concluir a marcação.</p>
+                            <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-red-800">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('public.visit-bookings.store', $housingUnit->public_slug) }}" class="mv-card mt-5 space-y-5 p-6">
+                        @csrf
+
+                        <div>
+                            <label for="visit_slot_id" class="mv-data-label">Horário</label>
+                            <select id="visit_slot_id" name="visit_slot_id" class="mv-input mt-2" required>
+                                <option value="">Selecione um horário</option>
+                                @foreach ($publicVisitSlots as $slot)
+                                    <option value="{{ $slot->id }}" @selected((int) old('visit_slot_id') === (int) $slot->id)>
+                                        {{ $slot->starts_at?->format('d/m/Y H:i') }} · {{ $slot->remainingCapacity() }} lugar(es)
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="grid gap-5 sm:grid-cols-2">
+                            <div>
+                                <label for="name" class="mv-data-label">Nome</label>
+                                <input id="name" name="name" type="text" value="{{ old('name') }}" class="mv-input mt-2" maxlength="150" autocomplete="name" required>
+                            </div>
+                            <div>
+                                <label for="email" class="mv-data-label">Email</label>
+                                <input id="email" name="email" type="email" value="{{ old('email') }}" class="mv-input mt-2" maxlength="254" autocomplete="email" required>
+                            </div>
+                            <div>
+                                <label for="phone" class="mv-data-label">Telefone <span class="font-normal text-ink-500">(opcional)</span></label>
+                                <input id="phone" name="phone" type="tel" value="{{ old('phone') }}" class="mv-input mt-2" maxlength="40" autocomplete="tel">
+                            </div>
+                            <div>
+                                <label for="guest_count" class="mv-data-label">Número de participantes</label>
+                                <input id="guest_count" name="guest_count" type="number" value="{{ old('guest_count', 1) }}" class="mv-input mt-2" min="1" max="{{ config('public_visits.max_guests_per_booking', 6) }}" required>
+                            </div>
+                        </div>
+
+                        <div class="sr-only" aria-hidden="true">
+                            <label for="website">Website</label>
+                            <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+                        </div>
+
+                        <label class="flex items-start gap-3 rounded-2xl bg-mvhab-surface p-4 text-sm text-ink-700">
+                            <input name="privacy_accepted" type="checkbox" value="1" class="mt-1" required @checked(old('privacy_accepted'))>
+                            <span>
+                                Declaro que tomei conhecimento de que os dados indicados serão tratados apenas para gerir esta visita. Os dados são privados, cifrados e anonimizados após o prazo de retenção aplicável.
+                            </span>
+                        </label>
+
+                        @if ($publicVisitTurnstileEnabled && $publicVisitTurnstileSiteKey)
+                            <div class="cf-turnstile" data-sitekey="{{ $publicVisitTurnstileSiteKey }}"></div>
+                        @endif
+
+                        <button type="submit" class="mv-button-primary">
+                            Marcar visita
+                        </button>
+                    </form>
+                </section>
+
+                @if ($publicVisitTurnstileEnabled && $publicVisitTurnstileSiteKey)
+                    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+                @endif
             @endif
 
             @if ($housingUnit->publicDocuments->isNotEmpty())

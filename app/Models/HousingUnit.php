@@ -186,6 +186,14 @@ class HousingUnit extends Model
         return $this->hasMany(HousingVisit::class);
     }
 
+    /**
+     * @return HasMany<PublicVisitBooking, $this>
+     */
+    public function publicVisitBookings(): HasMany
+    {
+        return $this->hasMany(PublicVisitBooking::class);
+    }
+
     /** @return HasMany<Allocation, $this> */
     public function allocations(): HasMany
     {
