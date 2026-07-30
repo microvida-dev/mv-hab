@@ -10,6 +10,7 @@ enum ApplicationReviewStatus: string
 
     case Draft = 'draft';
     case InProgress = 'in_progress';
+    case ReadyForClosure = 'ready_for_closure';
     case Completed = 'completed';
     case Cancelled = 'cancelled';
 
@@ -18,6 +19,7 @@ enum ApplicationReviewStatus: string
         return match ($this) {
             self::Draft => 'Rascunho',
             self::InProgress => 'Em curso',
+            self::ReadyForClosure => 'Pronta para fecho',
             self::Completed => 'Concluída',
             self::Cancelled => 'Cancelada',
         };

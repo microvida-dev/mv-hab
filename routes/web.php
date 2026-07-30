@@ -29,6 +29,7 @@ use App\Http\Controllers\Backoffice\ApplicationIntakeController as BackofficeApp
 use App\Http\Controllers\Backoffice\ApplicationPublicStatusController as BackofficeApplicationPublicStatusController;
 use App\Http\Controllers\Backoffice\ApplicationReportController as BackofficeApplicationReportController;
 use App\Http\Controllers\Backoffice\ApplicationReviewController as BackofficeApplicationReviewController;
+use App\Http\Controllers\Backoffice\ApplicationReviewWorkspaceController as BackofficeApplicationReviewWorkspaceController;
 use App\Http\Controllers\Backoffice\ApplicationScoreController as BackofficeApplicationScoreController;
 use App\Http\Controllers\Backoffice\ApplicationSimulationInconsistencyController as BackofficeApplicationSimulationInconsistencyController;
 use App\Http\Controllers\Backoffice\CaseWorkspaceController as BackofficeCaseWorkspaceController;
@@ -3073,6 +3074,48 @@ Route::middleware('auth')->group(function () {
                             'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
                         )
                         ->name('administrative-processes.timeline');
+
+                    Route::middleware([
+                        'active.backoffice',
+                        'mfa.backoffice',
+                        'log.backoffice',
+                        'municipality.feature:applications.review',
+                    ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->group(function (): void {
+                            Route::get(
+                                'application-review-workspace',
+                                [BackofficeApplicationReviewWorkspaceController::class, 'index'],
+                            )
+                                ->middleware('permission:administrative_processes.view')
+                                ->name('application-review-workspace.index');
+
+                            Route::get(
+                                'contests/{contest}/application-review-workspace',
+                                [BackofficeApplicationReviewWorkspaceController::class, 'show'],
+                            )
+                                ->middleware([
+                                    'permission:administrative_processes.view',
+                                    'permission:documents.view',
+                                ])
+                                ->name('application-review-workspace.show');
+
+                            Route::post(
+                                'contests/{contest}/application-review-workspace/preview',
+                                [BackofficeApplicationReviewWorkspaceController::class, 'preview'],
+                            )
+                                ->middleware('permission:administrative_processes.update')
+                                ->name('application-review-workspace.preview');
+
+                            Route::post(
+                                'contests/{contest}/application-review-workspace/apply',
+                                [BackofficeApplicationReviewWorkspaceController::class, 'apply'],
+                            )
+                                ->middleware('permission:administrative_processes.update')
+                                ->name('application-review-workspace.apply');
+                        });
 
                     Route::middleware([
                         'active.backoffice',

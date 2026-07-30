@@ -11,11 +11,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property int $administrative_process_id
+ * @property int $application_id
  * @property ApplicationReviewResult|null $result
  * @property ApplicationReviewStatus $status
  * @property ApplicationReviewType $review_type
+ * @property int|null $reviewed_by
+ * @property Carbon|null $started_at
+ * @property Carbon|null $completed_at
+ * @property Carbon|null $ready_for_closure_at
+ * @property int|null $ready_for_closure_by
+ * @property Carbon|null $last_activity_at
+ * @property int $lock_version
  */
 class ApplicationReview extends Model
 {
@@ -36,6 +47,9 @@ class ApplicationReview extends Model
             'result' => ApplicationReviewResult::class,
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
+            'ready_for_closure_at' => 'datetime',
+            'last_activity_at' => 'datetime',
+            'lock_version' => 'integer',
         ];
     }
 
@@ -61,6 +75,19 @@ class ApplicationReview extends Model
     public function reviewedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function readyForClosureBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'ready_for_closure_by');
+    }
+
+    public function isReadyForClosure(): bool
+    {
+        return $this->status === ApplicationReviewStatus::ReadyForClosure;
     }
 
     /**

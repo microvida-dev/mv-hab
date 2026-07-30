@@ -3,14 +3,29 @@
 namespace App\Models;
 
 use App\Enums\AdministrativeProcessStatus;
+use App\Enums\ApplicationReviewStatus;
+use App\Enums\ApplicationReviewType;
 use Database\Factories\AdministrativeProcessFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $application_id
+ * @property int|null $contest_id
+ * @property int|null $assigned_to
+ * @property AdministrativeProcessStatus $status
+ * @property Carbon|null $updated_at
+ * @property-read Application|null $application
+ * @property-read Contest|null $contest
+ * @property-read ApplicationReview|null $latestDocumentalReview
+ */
 class AdministrativeProcess extends Model
 {
     /** @use HasFactory<AdministrativeProcessFactory> */
@@ -128,6 +143,17 @@ class AdministrativeProcess extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(ApplicationReview::class);
+    }
+
+    /**
+     * @return HasOne<ApplicationReview, $this>
+     */
+    public function latestDocumentalReview(): HasOne
+    {
+        return $this->hasOne(ApplicationReview::class)
+            ->where('review_type', ApplicationReviewType::Documental->value)
+            ->where('status', '!=', ApplicationReviewStatus::Cancelled->value)
+            ->latestOfMany();
     }
 
     /**
