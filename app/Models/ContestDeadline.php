@@ -7,7 +7,18 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $contest_id
+ * @property ContestDeadlineType $type
+ * @property string $label
+ * @property Carbon|null $starts_at
+ * @property Carbon $ends_at
+ * @property string|null $description
+ * @property int $sort_order
+ */
 class ContestDeadline extends Model
 {
     /** @use HasFactory<Factory<self>> */

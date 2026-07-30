@@ -39,7 +39,7 @@
                         @foreach ($contest->deadlines as $deadline)
                             <div class="py-4">
                                 <p class="font-semibold text-ink-900">{{ $deadline->label }}</p>
-                                <p class="mt-1 text-sm text-ink-500">{{ $deadline->ends_at->format('d/m/Y H:i') }} · {{ $deadline->type->label() }}</p>
+                                <p class="mt-1 text-sm text-ink-500">{{ $deadline->starts_at?->format('d/m/Y H:i') ?? 'Início não definido' }} — {{ $deadline->ends_at->format('d/m/Y H:i') }} · {{ $deadline->type->label() }}</p>
                             </div>
                         @endforeach
                     </div>
@@ -58,6 +58,25 @@
                 </section>
 
                 <aside class="space-y-4">
+                    <section class="mv-surface p-5">
+                        <h2 class="font-semibold text-ink-900">Fase processual</h2>
+                        <p class="mt-3 text-lg font-semibold text-civic-700">{{ $phaseContext['current']->label() }}</p>
+
+                        @if ($phaseContext['next_deadline'] !== null)
+                            <p class="mt-2 text-sm text-ink-500">
+                                Próxima fase: {{ $phaseContext['next_phase']?->label() ?? $phaseContext['next_deadline']->type->label() }}
+                                · {{ $phaseContext['next_deadline']->starts_at?->format('d/m/Y H:i') }}
+                            </p>
+                        @endif
+
+                        @unless ($phaseContext['readiness']['complete'])
+                            <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                                Calendário processual incompleto. Faltam:
+                                {{ collect($phaseContext['readiness']['missing'])->map->label()->join(', ') }}.
+                            </div>
+                        @endunless
+                    </section>
+
                     <section class="mv-surface p-5">
                         <h2 class="font-semibold text-ink-900">Período</h2>
                         <dl class="mt-4 space-y-3 text-sm">

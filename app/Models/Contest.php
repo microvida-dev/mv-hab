@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Enums\AffordableRentLegalRegime;
+use App\Enums\ContestApplicationPhase;
 use App\Enums\ContestStatus;
 use App\Enums\ProgramStatus;
+use App\Services\Contests\ContestApplicationPhaseService;
 use Database\Factories\ContestFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -343,31 +345,19 @@ class Contest extends Model
 
     public function isOpenForApplications(): bool
     {
-        return $this->status === ContestStatus::Published
-            && $this->published_at?->isPast() === true
-            && ($this->opens_at && $this->closes_at
-                ? now()->between($this->opens_at, $this->closes_at)
-                : false);
+        return app(ContestApplicationPhaseService::class)
+            ->isOpenForApplications($this);
     }
 
     public function publicPhase(): string
     {
-        if ($this->status === ContestStatus::Cancelled) {
-            return 'cancelled';
-        }
+        return app(ContestApplicationPhaseService::class)
+            ->publicPhase($this);
+    }
 
-        if ($this->opens_at === null || $this->closes_at === null) {
-            return 'upcoming';
-        }
-
-        if (now()->lt($this->opens_at)) {
-            return 'upcoming';
-        }
-
-        if (now()->gt($this->closes_at)) {
-            return 'closed';
-        }
-
-        return 'open';
+    public function applicationPhase(): ContestApplicationPhase
+    {
+        return app(ContestApplicationPhaseService::class)
+            ->current($this);
     }
 }

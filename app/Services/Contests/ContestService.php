@@ -24,6 +24,7 @@ class ContestService
 {
     public function __construct(
         private readonly AuditLogger $auditLogger,
+        private readonly ContestApplicationTimelineService $timeline,
         private readonly AffordableRentLegalRegimeResolver $regimeResolver,
         private readonly RegulatoryPublicationReadinessService $publicationReadiness,
         private readonly RegulatorySnapshotService $snapshotService,
@@ -36,7 +37,11 @@ class ContestService
     public function create(array $data, User $actor): Contest
     {
         return DB::transaction(function () use ($data, $actor) {
-            $deadlines = Arr::pull($data, 'deadlines', []);
+            $deadlines = $this->timeline->normalize(
+                $data['opens_at'],
+                $data['closes_at'],
+                Arr::pull($data, 'deadlines', []),
+            );
             $juryMembers = Arr::pull($data, 'jury_members', []);
             $program = Program::query()
                 ->with(['municipality', 'regulatoryProfile.parentProfile'])
@@ -69,7 +74,10 @@ class ContestService
                 module: 'contests',
                 action: 'create',
                 description: 'Concurso criado.',
-                newValues: $contest->only(['program_id', 'code', 'slug', 'title', 'status', 'opens_at', 'closes_at']),
+                newValues: [
+                    ...$contest->only(['program_id', 'code', 'slug', 'title', 'status', 'opens_at', 'closes_at']),
+                    'deadlines' => $this->deadlineSnapshot($contest),
+                ],
             );
 
             return $contest->load(['deadlines', 'juryMembers.user']);
@@ -82,7 +90,11 @@ class ContestService
     public function update(Contest $contest, array $data, User $actor): Contest
     {
         return DB::transaction(function () use ($contest, $data, $actor) {
-            $deadlines = Arr::pull($data, 'deadlines', []);
+            $deadlines = $this->timeline->normalize(
+                $data['opens_at'],
+                $data['closes_at'],
+                Arr::pull($data, 'deadlines', []),
+            );
             $juryMembers = Arr::pull($data, 'jury_members', []);
             $this->assertActorCanManageContest($actor, $contest);
             $program = Program::query()
@@ -110,7 +122,10 @@ class ContestService
                 $data['legal_regime'] = $profile->legal_regime->value;
             }
 
-            $before = $contest->only(['program_id', 'code', 'slug', 'title', 'status', 'opens_at', 'closes_at']);
+            $before = [
+                ...$contest->only(['program_id', 'code', 'slug', 'title', 'status', 'opens_at', 'closes_at']),
+                'deadlines' => $this->deadlineSnapshot($contest),
+            ];
             $data['slug'] = $this->uniqueSlug($data['slug'] ?? null, $data['title'], $contest);
             $data['updated_by'] = $actor->id;
 
@@ -125,7 +140,10 @@ class ContestService
                 action: 'update',
                 description: 'Concurso atualizado.',
                 oldValues: $before,
-                newValues: $contest->refresh()->only(['program_id', 'code', 'slug', 'title', 'status', 'opens_at', 'closes_at']),
+                newValues: [
+                    ...$contest->refresh()->only(['program_id', 'code', 'slug', 'title', 'status', 'opens_at', 'closes_at']),
+                    'deadlines' => $this->deadlineSnapshot($contest),
+                ],
             );
 
             return $contest->load(['deadlines', 'juryMembers.user']);
@@ -162,6 +180,8 @@ class ContestService
                     'contest' => 'O programa associado deve estar publicado antes de publicar o concurso.',
                 ]);
             }
+
+            $this->timeline->assertConfigured($locked);
 
             if ($locked->deadlines()->count() === 0) {
                 throw ValidationException::withMessages([
@@ -260,6 +280,26 @@ class ContestService
                 'role_in_jury' => $member['role_in_jury'],
                 'appointed_at' => now(),
             ]));
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function deadlineSnapshot(Contest $contest): array
+    {
+        $snapshot = [];
+
+        foreach ($contest->deadlines()->orderBy('sort_order')->get() as $deadline) {
+            $snapshot[] = [
+                'type' => $deadline->type->value,
+                'label' => $deadline->label,
+                'starts_at' => $deadline->starts_at?->toIso8601String(),
+                'ends_at' => $deadline->ends_at->toIso8601String(),
+                'sort_order' => $deadline->sort_order,
+            ];
+        }
+
+        return $snapshot;
     }
 
     private function uniqueSlug(?string $slug, string $title, ?Contest $ignore = null): string

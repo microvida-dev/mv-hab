@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateContestRequest;
 use App\Models\Contest;
 use App\Models\Program;
 use App\Models\User;
+use App\Services\Contests\ContestApplicationPhaseService;
 use App\Services\Contests\ContestService;
 use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\View\View;
@@ -20,6 +21,7 @@ class ContestController extends Controller
 {
     public function __construct(
         private readonly ContestService $contestService,
+        private readonly ContestApplicationPhaseService $phaseService,
         private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
@@ -60,7 +62,9 @@ class ContestController extends Controller
 
         $contest->load(['program.municipality', 'deadlines', 'juryMembers.user']);
 
-        return view('admin.contests.show', compact('contest'));
+        $phaseContext = $this->phaseService->context($contest);
+
+        return view('admin.contests.show', compact('contest', 'phaseContext'));
     }
 
     public function edit(Request $request, Contest $contest): View

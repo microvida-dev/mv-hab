@@ -3,12 +3,15 @@
 namespace App\Http\Requests;
 
 use App\Enums\ContestDeadlineType;
+use App\Http\Requests\Concerns\ValidatesContestApplicationTimeline;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class UpdateContestRequest extends FormRequest
 {
+    use ValidatesContestApplicationTimeline;
+
     public function authorize(): bool
     {
         return Gate::allows(
@@ -43,10 +46,10 @@ class UpdateContestRequest extends FormRequest
             'opens_at' => ['required', 'date'],
             'closes_at' => ['required', 'date', 'after:opens_at'],
             'deadlines' => ['nullable', 'array', 'max:20'],
-            'deadlines.*.type' => ['required_with:deadlines', Rule::enum(ContestDeadlineType::class)],
-            'deadlines.*.label' => ['required_with:deadlines', 'string', 'max:255'],
+            'deadlines.*.type' => ['nullable', 'distinct', Rule::enum(ContestDeadlineType::class)],
+            'deadlines.*.label' => ['nullable', 'string', 'max:255'],
             'deadlines.*.starts_at' => ['nullable', 'date'],
-            'deadlines.*.ends_at' => ['required_with:deadlines', 'date'],
+            'deadlines.*.ends_at' => ['nullable', 'date'],
             'deadlines.*.description' => ['nullable', 'string'],
             'jury_members' => ['nullable', 'array', 'max:20'],
             'jury_members.*.user_id' => ['required_with:jury_members', 'distinct', 'exists:users,id'],
