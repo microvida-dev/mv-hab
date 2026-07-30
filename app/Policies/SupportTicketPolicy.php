@@ -20,7 +20,10 @@ class SupportTicketPolicy
 
     public function viewAny(User $user): bool
     {
-        return $this->canAccess($user, 'support', 'view');
+        return $user->hasRole('candidate')
+            ? $this->tenantSupport->isAvailableFor($user)
+                && $this->canAccess($user, 'support', 'view')
+            : $this->canAccess($user, 'support', 'view');
     }
 
     public function view(User $user, SupportTicket $ticket): bool
