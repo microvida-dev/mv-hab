@@ -241,7 +241,6 @@ use App\Http\Controllers\Candidate\SimulationController as CandidateSimulationCo
 use App\Http\Controllers\Candidate\SupportTicketAttachmentController as CandidateSupportTicketAttachmentController;
 use App\Http\Controllers\Candidate\SupportTicketController as CandidateSupportTicketController;
 use App\Http\Controllers\Candidate\SupportTicketMessageController as CandidateSupportTicketMessageController;
-use App\Http\Controllers\Candidate\VisitController as CandidateVisitController;
 use App\Http\Controllers\CitizenController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
@@ -470,25 +469,6 @@ Route::middleware('auth')->group(function () {
                 ->name('applications.receipt');
             Route::get('/candidaturas/{application}/imprimir', [CandidateApplicationReceiptController::class, 'print'])
                 ->name('applications.print');
-
-            Route::middleware(
-                'candidate.feature:legacy_visits',
-            )->group(function (): void {
-                Route::get('/visitas', [CandidateVisitController::class, 'index'])
-                    ->name('visits.index');
-                Route::get('/visitas/agendar', [CandidateVisitController::class, 'create'])
-                    ->name('visits.create');
-                Route::post('/visitas', [CandidateVisitController::class, 'store'])
-                    ->name('visits.store');
-                Route::get('/visitas/{housingVisit}', [CandidateVisitController::class, 'show'])
-                    ->name('visits.show');
-                Route::get('/visitas/{housingVisit}/reagendar', [CandidateVisitController::class, 'edit'])
-                    ->name('visits.reschedule');
-                Route::post('/visitas/{housingVisit}/reagendar', [CandidateVisitController::class, 'reschedule'])
-                    ->name('visits.reschedule.store');
-                Route::post('/visitas/{housingVisit}/cancelar', [CandidateVisitController::class, 'cancel'])
-                    ->name('visits.cancel');
-            });
 
             Route::middleware('tenant.support')->group(function (): void {
                 Route::get('/apoio', [CandidateSupportTicketController::class, 'index'])

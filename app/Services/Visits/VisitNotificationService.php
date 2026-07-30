@@ -67,12 +67,7 @@ class VisitNotificationService
                 application: $visit->application,
                 actor: $actor,
                 channel: OfficialNotificationChannel::CandidateArea,
-                actionUrl: (bool) config(
-                    'mvhab.candidate_experience_runtime.legacy_visits',
-                    false,
-                )
-                    ? route('candidate.visits.show', $visit, false)
-                    : null,
+                actionUrl: null,
             );
         } catch (Throwable) {
             // Notificações não devem bloquear o fluxo operacional de visitas.

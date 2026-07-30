@@ -69,7 +69,6 @@ class MunicipalSmokeReadinessTest extends TestCase
     public function test_operational_routes_for_visits_tickets_faq_and_work_tasks_exist(): void
     {
         foreach ([
-            'candidate.visits.index',
             'candidate.support-tickets.index',
             'candidate.contextual-faq.index',
             'backoffice.housing-visits.index',
@@ -80,5 +79,7 @@ class MunicipalSmokeReadinessTest extends TestCase
         ] as $routeName) {
             $this->assertTrue(Route::has($routeName), "A rota {$routeName} deve existir.");
         }
+
+        $this->assertFalse(Route::has('candidate.visits.index'));
     }
 }

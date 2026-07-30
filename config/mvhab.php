@@ -494,10 +494,6 @@ return [
             'MVHAB_CANDIDATE_NOTIFICATION_PREFERENCES_ENABLED',
             false,
         ),
-        'legacy_visits' => env(
-            'MVHAB_LEGACY_CANDIDATE_VISITS_ENABLED',
-            false,
-        ),
         'tenant_support' => env(
             'MVHAB_TENANT_SUPPORT_ENABLED',
             true,
@@ -1518,9 +1514,6 @@ return [
                 'simulator.view',
                 'simulator.create',
                 'simulator.update',
-                'visits.view',
-                'visits.create',
-                'visits.update',
                 'support.view',
                 'support.create',
                 'support.update',

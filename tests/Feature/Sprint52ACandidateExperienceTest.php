@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\Support\CreatesTenantSupportEligibility;
 use Tests\TestCase;
 
@@ -21,10 +22,22 @@ class Sprint52ACandidateExperienceTest extends TestCase
 
     public function test_legacy_candidate_visits_and_notification_preferences_are_disabled_by_default(): void
     {
+        foreach ([
+            'candidate.visits.index',
+            'candidate.visits.create',
+            'candidate.visits.store',
+            'candidate.visits.show',
+            'candidate.visits.reschedule',
+            'candidate.visits.reschedule.store',
+            'candidate.visits.cancel',
+        ] as $routeName) {
+            $this->assertFalse(Route::has($routeName));
+        }
+
         $candidate = $this->candidate();
 
         $this->actingAs($candidate)
-            ->get(route('candidate.visits.index'))
+            ->get('/area-candidato/visitas')
             ->assertNotFound();
 
         $this->actingAs($candidate)
