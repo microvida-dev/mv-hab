@@ -67,7 +67,7 @@ class CandidateNavigationService
         if ($hasDraftApplication) {
             $groups['Candidatura'] = [
                 $this->link('Candidaturas', 'candidate.applications.index', 'candidate.applications.*', 'user-application'),
-                $this->link('Habitações pretendidas', 'candidate.housing-preferences.index', 'candidate.housing-preferences.*', 'housing'),
+                $this->link('Fogos', 'candidate.housing-preferences.index', 'candidate.housing-preferences.*', 'housing'),
                 $this->link('Documentos', 'candidate.documents.index', 'candidate.documents.*', 'document'),
                 $this->link('FAQ', 'candidate.contextual-faq.index', 'candidate.contextual-faq.*', 'faq'),
             ];

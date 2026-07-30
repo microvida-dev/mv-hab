@@ -24,7 +24,7 @@ class CompatibleHousingPreferenceTest extends TestCase
         $this->seed(SystemAccessSeeder::class);
     }
 
-    public function test_candidate_sees_only_compatible_units_with_accessible_order_controls(): void
+    public function test_candidate_sees_only_compatible_units_with_accessible_complete_order_controls(): void
     {
         $context = $this->compatibleHousingContext();
         $compatible = $this->compatibleContestHousingUnit($context);
@@ -41,19 +41,16 @@ class CompatibleHousingPreferenceTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('Habitações pretendidas')
+            ->assertSee('Fogos')
             ->assertSee($compatible->housingUnit->public_reference)
             ->assertDontSee($incompatible->housingUnit->public_reference)
-            ->assertSee('Selecionar esta habitação')
-            ->assertSee('Ordem de preferência')
-            ->assertSee('Subir')
-            ->assertSee('Descer')
-            ->assertSee('A seleção não reserva a habitação')
+            ->assertSee('Posição 1')
+            ->assertSee('Guardar ordem dos fogos')
+            ->assertSee('Mover o fogo da posição 1 para cima')
+            ->assertSee('Mover o fogo da posição 1 para baixo')
+            ->assertSee('Guardar a ordem não reserva nenhum fogo')
             ->assertSee('aria-live="polite"', false)
-            ->assertSee(':draggable=', false)
-            ->assertSee('@keydown.alt.arrow-up.prevent=', false)
-            ->assertSee('@keydown.alt.arrow-down.prevent=', false)
-            ->assertSee('$nextTick(() => $el.focus())', false)
+            ->assertSee('x-model="orderedIds[0]"', false)
             ->assertDontSee($compatible->housingUnit->code);
     }
 
@@ -77,7 +74,7 @@ class CompatibleHousingPreferenceTest extends TestCase
             ))
             ->assertOk()
             ->assertSee(
-                'Não existem habitações compatíveis disponíveis neste momento.',
+                'Não existem fogos compatíveis disponíveis neste momento.',
             )
             ->assertSee('Rever agregado')
             ->assertSee('Rever rendimentos')
@@ -142,7 +139,7 @@ class CompatibleHousingPreferenceTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_server_rejects_limits_duplicates_and_non_consecutive_orders(): void
+    public function test_server_rejects_omissions_duplicates_and_non_consecutive_orders(): void
     {
         $context = $this->compatibleHousingContext();
         $units = collect(range(1, 4))
@@ -155,6 +152,7 @@ class CompatibleHousingPreferenceTest extends TestCase
         $this->actingAs($context['candidate'])
             ->patch($route, [
                 'preferences' => $units
+                    ->take(3)
                     ->values()
                     ->map(fn ($unit, int $index): array => [
                         'contest_housing_unit_id' => $unit->id,
@@ -175,6 +173,14 @@ class CompatibleHousingPreferenceTest extends TestCase
                         'contest_housing_unit_id' => $units[0]->id,
                         'preference_order' => 2,
                     ],
+                    [
+                        'contest_housing_unit_id' => $units[2]->id,
+                        'preference_order' => 3,
+                    ],
+                    [
+                        'contest_housing_unit_id' => $units[3]->id,
+                        'preference_order' => 4,
+                    ],
                 ],
             ])
             ->assertSessionHasErrors(
@@ -190,7 +196,15 @@ class CompatibleHousingPreferenceTest extends TestCase
                     ],
                     [
                         'contest_housing_unit_id' => $units[1]->id,
-                        'preference_order' => 3,
+                        'preference_order' => 2,
+                    ],
+                    [
+                        'contest_housing_unit_id' => $units[2]->id,
+                        'preference_order' => 4,
+                    ],
+                    [
+                        'contest_housing_unit_id' => $units[3]->id,
+                        'preference_order' => 5,
                     ],
                 ],
             ])

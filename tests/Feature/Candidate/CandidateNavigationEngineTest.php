@@ -118,7 +118,7 @@ class CandidateNavigationEngineTest extends TestCase
 
         $labels = $this->labels($candidate);
 
-        foreach (['Candidaturas', 'Documentos', 'FAQ'] as $expected) {
+        foreach (['Candidaturas', 'Fogos', 'Documentos', 'FAQ'] as $expected) {
             self::assertContains($expected, $labels);
         }
 

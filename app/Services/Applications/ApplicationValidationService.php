@@ -184,9 +184,26 @@ class ApplicationValidationService
         $readiness = $this->readinessForSubmission($application);
 
         if (! $readiness['ready']) {
-            throw ValidationException::withMessages([
-                'application' => $this->failedMessages($readiness['checks']),
-            ]);
+            /** @var list<array{key: string, passed: bool, message: string}> $checks */
+            $checks = $readiness['checks'];
+            $errors = [
+                'application' => $this->failedMessages($checks),
+            ];
+
+            foreach ($checks as $check) {
+                if (
+                    $check['key'] === 'preferences'
+                    && ! $check['passed']
+                ) {
+                    $errors['preferences'] = [
+                        $check['message'],
+                    ];
+
+                    break;
+                }
+            }
+
+            throw ValidationException::withMessages($errors);
         }
 
         return $readiness;
@@ -258,7 +275,7 @@ class ApplicationValidationService
             'email' => 'O email da conta está válido e verificado.',
             'draft' => 'A candidatura está em rascunho e pode ser submetida.',
             'documents' => 'A documentação obrigatória está submetida ou validada.',
-            'preferences' => 'As habitações pretendidas estão selecionadas e validadas.',
+            'preferences' => 'Todos os fogos compatíveis estão ordenados e validados.',
             default => 'Verificação concluída.',
         };
 

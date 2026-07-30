@@ -2,8 +2,8 @@
     <x-slot name="header">
         <x-mv.page-header
             eyebrow="Área do candidato"
-            title="Habitações pretendidas"
-            description="Escolha e ordene as habitações compatíveis com cada candidatura em rascunho."
+            title="Fogos"
+            description="Ordene todos os fogos compatíveis de cada candidatura em rascunho."
         />
     </x-slot>
 
@@ -17,15 +17,15 @@
                         <div class="flex items-center justify-between gap-4 py-4">
                             <div>
                                 <p class="font-semibold">{{ $application->contest?->title }}</p>
-                                <x-mv.badge class="mt-2">{{ $application->housingPreferences->count() }} preferência(s) registada(s)</x-mv.badge>
+                                <x-mv.badge class="mt-2">{{ $application->housingPreferences->count() }} fogo(s) ordenado(s)</x-mv.badge>
                             </div>
                             <a class="mv-button-secondary" href="{{ route('candidate.housing-preferences.edit', $application) }}">
-                                Escolher habitações
+                                Ordenar fogos
                             </a>
                         </div>
                     @empty
                         <x-mv.alert>
-                            Não existem candidaturas em rascunho para selecionar habitações.
+                            Não existem candidaturas em rascunho para ordenar fogos.
                         </x-mv.alert>
                     @endforelse
                 </div>

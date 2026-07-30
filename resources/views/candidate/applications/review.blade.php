@@ -11,6 +11,10 @@
         <div class="mx-auto max-w-5xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
 
+            @include('candidate.applications.partials.navigation', [
+                'application' => $application,
+            ])
+
             <x-mv.alert tone="warning">
                 Antes de submeter, confirme cuidadosamente todos os dados. Após a submissão, a candidatura ficará bloqueada para edição direta e será analisada pelos serviços municipais.
             </x-mv.alert>
@@ -46,9 +50,9 @@
             </section>
 
             <x-mv.section
-                title="Habitações pretendidas"
+                title="Fogos"
                 :description="$readiness['housing_preferences']['passed']
-                    ? 'A seleção será novamente validada no momento da submissão.'
+                    ? 'A ordem completa será novamente validada no momento da submissão.'
                     : $readiness['housing_preferences']['message']"
             >
                 @if ($application->housingPreferences->isNotEmpty())
@@ -78,7 +82,7 @@
                     </ol>
                 @else
                     <x-mv.alert tone="warning">
-                        Ainda não selecionou habitações para esta candidatura.
+                        Ainda não ordenou todos os fogos compatíveis para esta candidatura.
                     </x-mv.alert>
                 @endif
 
@@ -86,7 +90,7 @@
                     href="{{ route('candidate.housing-preferences.edit', $application) }}"
                     class="mv-button-secondary mt-5"
                 >
-                    Rever habitações pretendidas
+                    Rever ordem dos fogos
                 </a>
             </x-mv.section>
 

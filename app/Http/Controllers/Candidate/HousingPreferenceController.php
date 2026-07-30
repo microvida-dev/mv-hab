@@ -41,7 +41,10 @@ class HousingPreferenceController extends Controller
             'compatibleOptions' => $compatibleOptions,
             'compatibilitySummary' => $this->service
                 ->compatibilitySummary($application),
-            'selectionConfiguration' => $this->service->selectionConfiguration($application),
+            'selectionConfiguration' => $this->service->selectionConfiguration(
+                $application,
+                $compatibleOptions,
+            ),
             'preferenceReadiness' => $this->service->readinessForSubmission($application),
         ]);
     }
@@ -51,7 +54,7 @@ class HousingPreferenceController extends Controller
         Gate::authorize('update', [HousingPreference::class, $application]);
         $this->service->replace($application, $request->validated('preferences'), $this->authenticatedUser($request), false);
 
-        return to_route('candidate.housing-preferences.edit', $application)->with('success', 'Preferências guardadas.');
+        return to_route('candidate.housing-preferences.edit', $application)->with('success', 'Ordem dos fogos guardada.');
     }
 
     public function submit(StoreHousingPreferenceRequest $request, Application $application): RedirectResponse
@@ -59,6 +62,6 @@ class HousingPreferenceController extends Controller
         Gate::authorize('update', [HousingPreference::class, $application]);
         $this->service->replace($application, $request->validated('preferences'), $this->authenticatedUser($request), true);
 
-        return to_route('candidate.housing-preferences.index')->with('success', 'Preferências submetidas.');
+        return to_route('candidate.housing-preferences.index')->with('success', 'Ordem dos fogos confirmada.');
     }
 }

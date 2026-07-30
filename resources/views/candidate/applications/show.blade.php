@@ -17,6 +17,10 @@
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
 
+            @include('candidate.applications.partials.navigation', [
+                'application' => $application,
+            ])
+
             <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <x-mv.stat-card
                     label="Programa"
@@ -93,7 +97,7 @@
                             </a>
 
                             <a href="{{ route('candidate.housing-preferences.edit', $application) }}" class="mv-button-secondary">
-                                Habitações pretendidas
+                                Fogos
                             </a>
 
                             <a href="{{ route('candidate.documents.checklist') }}" class="mv-button-secondary">
@@ -126,8 +130,8 @@
             </x-mv.section>
 
             <x-mv.section
-                title="Habitações pretendidas"
-                description="A ordem apresentada corresponde às suas preferências para este concurso."
+                title="Fogos"
+                description="A ordem apresentada inclui todos os fogos compatíveis para este concurso."
             >
                 @if ($application->housingPreferences->isNotEmpty())
                     <ol class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -153,7 +157,7 @@
                     </ol>
                 @else
                     <x-mv.alert>
-                        Ainda não existem habitações pretendidas registadas.
+                        Ainda não existe uma ordem completa de fogos registada.
                     </x-mv.alert>
                 @endif
 
@@ -162,7 +166,7 @@
                         href="{{ route('candidate.housing-preferences.edit', $application) }}"
                         class="mv-button-secondary mt-5"
                     >
-                        Escolher habitações
+                        Ordenar fogos
                     </a>
                 @endif
             </x-mv.section>

@@ -11,6 +11,7 @@ use App\Models\AllocationRuleSet;
 use App\Models\Application;
 use App\Models\ContestHousingUnit;
 use App\Models\HousingPreference;
+use App\Models\HousingUnit;
 use App\Models\User;
 use App\Services\Applications\ApplicationHousingPreferenceSourceResolver;
 use App\Services\Applications\HousingCompatibilityService;
@@ -75,33 +76,49 @@ class HousingPreferenceService
     }
 
     /**
+     * @param  SupportCollection<int, CompatibleHousingOptionData>|null  $compatibleOptions
      * @return array{
      *     enabled: bool,
      *     required: bool,
+     *     complete_ordering: bool,
+     *     required_count: int,
      *     minimum: int,
      *     maximum: int,
+     *     configured_minimum: int,
+     *     configured_maximum: int,
      *     starts_at: Carbon|null,
      *     ends_at: Carbon|null
      * }
      */
-    public function selectionConfiguration(Application $application): array
-    {
+    public function selectionConfiguration(
+        Application $application,
+        ?SupportCollection $compatibleOptions = null,
+    ): array {
         $ruleSet = $this->allocationRules->forApplication($application);
         $enabled = $ruleSet instanceof AllocationRuleSet
             && $ruleSet->allow_preferences;
-        $minimum = $enabled && $ruleSet->preferences_required_before_submission
-            ? max(1, (int) $ruleSet->minimum_preferences)
-            : 0;
-        $maximum = $enabled
-            ? max($minimum, (int) $ruleSet->maximum_preferences)
+        $required = $enabled
+            && $ruleSet->preferences_required_before_submission;
+        $compatibleOptions ??= $enabled
+            ? $this->optionsFor($application)
+            : collect();
+        $requiredCount = $enabled
+            ? $compatibleOptions->count()
             : 0;
 
         return [
             'enabled' => $enabled,
-            'required' => $enabled
-                && $ruleSet->preferences_required_before_submission,
-            'minimum' => $minimum,
-            'maximum' => $maximum,
+            'required' => $required,
+            'complete_ordering' => $enabled,
+            'required_count' => $requiredCount,
+            'minimum' => $required ? $requiredCount : 0,
+            'maximum' => $requiredCount,
+            'configured_minimum' => $enabled
+                ? max(0, (int) $ruleSet->minimum_preferences)
+                : 0,
+            'configured_maximum' => $enabled
+                ? max(0, (int) $ruleSet->maximum_preferences)
+                : 0,
             'starts_at' => $ruleSet?->preference_selection_starts_at,
             'ends_at' => $ruleSet?->preference_selection_ends_at,
         ];
@@ -125,8 +142,15 @@ class HousingPreferenceService
             $this->assertNoLockedPreferences($lockedApplication);
             $this->assertNoFinalPreferenceSnapshot($lockedApplication);
             $ruleSet = $this->allocationRules->forApplication($lockedApplication);
-            $this->assertSelectionStructure($preferences, $ruleSet, $submit);
-            $options = $this->optionsFor($lockedApplication)
+            $this->lockSelectionInventory($lockedApplication);
+            $compatibleOptions = $this->optionsFor($lockedApplication);
+            $this->assertSelectionStructure(
+                $preferences,
+                $ruleSet,
+                $compatibleOptions,
+                $submit || $preferences !== [],
+            );
+            $options = $compatibleOptions
                 ->keyBy(fn (CompatibleHousingOptionData $option): int => $option->unit->id);
             $previousOrders = $lockedApplication->housingPreferences()
                 ->whereNull('locked_at')
@@ -201,6 +225,8 @@ class HousingPreferenceService
                 metadata: [
                     'application_id' => $lockedApplication->id,
                     'preferences_count' => count($preferences),
+                    'compatible_units_count' => $compatibleOptions->count(),
+                    'complete_ordering' => true,
                     'orders' => collect($preferences)
                         ->pluck('preference_order')
                         ->map(fn ($order): int => (int) $order)
@@ -211,7 +237,17 @@ class HousingPreferenceService
     }
 
     /**
-     * @return array{passed: bool, message: string, route: string, routeParameters: array<string, string>, count: int, minimum: int, maximum: int}
+     * @return array{
+     *     passed: bool,
+     *     message: string,
+     *     route: string,
+     *     routeParameters: array<string, string>,
+     *     count: int,
+     *     required_count: int,
+     *     minimum: int,
+     *     maximum: int,
+     *     complete_ordering: bool
+     * }
      */
     public function readinessForSubmission(Application $application): array
     {
@@ -221,37 +257,52 @@ class HousingPreferenceService
         if (! $ruleSet instanceof AllocationRuleSet || ! $ruleSet->allow_preferences) {
             return [
                 'passed' => true,
-                'message' => 'Este concurso não exige seleção de habitações antes da submissão.',
+                'message' => 'Este concurso não exige ordenação de fogos antes da submissão.',
                 'route' => 'candidate.housing-preferences.edit',
                 'routeParameters' => ['application' => (string) $application->getRouteKey()],
                 'count' => $preferences->count(),
+                'required_count' => 0,
                 'minimum' => 0,
                 'maximum' => 0,
+                'complete_ordering' => false,
             ];
         }
 
-        $minimum = $ruleSet->preferences_required_before_submission
-            ? max(1, (int) $ruleSet->minimum_preferences)
-            : 0;
-        $maximum = max($minimum, (int) $ruleSet->maximum_preferences);
+        $compatibleOptions = $this->optionsFor($application);
+        $expectedUnitIds = $this->compatibleUnitIds($compatibleOptions);
+        $selectedUnitIds = $preferences
+            ->pluck('contest_housing_unit_id')
+            ->map(fn ($id): int => (int) $id)
+            ->sort()
+            ->values();
         $count = $preferences->count();
+        $requiredCount = $expectedUnitIds->count();
+        $required = $ruleSet->preferences_required_before_submission;
         $valid = $preferences->every(
             fn (HousingPreference $preference): bool => $preference->compatibility_status === HousingCompatibilityStatus::Compatible
                 && $preference->invalidated_at === null
                 && $preference->locked_at === null,
         );
-        $passed = $count >= $minimum && $count <= $maximum && $valid;
+        $complete = $requiredCount > 0
+            && $selectedUnitIds->all() === $expectedUnitIds->all();
+        $noSelectionAllowed = ! $required && $count === 0;
+        $passed = $noSelectionAllowed || ($complete && $valid);
 
         return [
             'passed' => $passed,
-            'message' => $passed
-                ? 'As habitações pretendidas estão selecionadas e validadas.'
-                : 'Selecione pelo menos uma habitação compatível e confirme novamente as escolhas.',
+            'message' => match (true) {
+                $noSelectionAllowed => 'Este concurso permite submeter sem ordenar fogos.',
+                $requiredCount === 0 => 'Não existem fogos compatíveis e ativos para ordenar. Reveja os dados ou contacte os serviços municipais.',
+                $passed => 'Todos os fogos compatíveis estão ordenados e validados.',
+                default => "Ordene todos os {$requiredCount} fogos compatíveis, sem repetições nem omissões.",
+            },
             'route' => 'candidate.housing-preferences.edit',
             'routeParameters' => ['application' => (string) $application->getRouteKey()],
             'count' => $count,
-            'minimum' => $minimum,
-            'maximum' => $maximum,
+            'required_count' => $requiredCount,
+            'minimum' => $required ? $requiredCount : 0,
+            'maximum' => $requiredCount,
+            'complete_ordering' => true,
         ];
     }
 
@@ -279,6 +330,10 @@ class HousingPreferenceService
             ]);
         }
 
+        $this->lockSelectionInventory($application);
+        $compatibleOptions = $this->optionsFor($application);
+        $optionsByUnit = $compatibleOptions
+            ->keyBy(fn (CompatibleHousingOptionData $option): int => $option->unit->id);
         $preferences = $application->housingPreferences()
             ->lockForUpdate()
             ->orderBy('preference_order')
@@ -289,29 +344,25 @@ class HousingPreferenceService
                 'preference_order' => $preference->preference_order,
             ])
             ->all());
-        $this->assertSelectionStructure($payload, $ruleSet, true);
+        $this->assertSelectionStructure(
+            $payload,
+            $ruleSet,
+            $compatibleOptions,
+            true,
+        );
 
         foreach ($preferences as $preference) {
-            $unit = ContestHousingUnit::query()
-                ->whereKey($preference->contest_housing_unit_id)
-                ->lockForUpdate()
-                ->with('housingUnit')
-                ->first();
+            $option = $optionsByUnit->get(
+                $preference->contest_housing_unit_id,
+            );
 
-            if (! $unit instanceof ContestHousingUnit) {
+            if (! $option instanceof CompatibleHousingOptionData) {
                 throw ValidationException::withMessages([
-                    'preferences' => 'Uma habitação selecionada deixou de estar disponível.',
+                    'preferences' => 'Um fogo ordenado deixou de estar disponível ou compatível. Reveja a ordem completa dos fogos.',
                 ]);
             }
 
-            $result = $this->compatibility->evaluate($application, $unit);
-
-            if (! $result->compatible) {
-                throw ValidationException::withMessages([
-                    'preferences' => 'Uma habitação selecionada deixou de estar disponível ou compatível. Reveja as habitações pretendidas.',
-                ]);
-            }
-
+            $result = $option->compatibility;
             $preference->forceFill([
                 'compatibility_status' => $result->status,
                 'compatibility_snapshot' => $result->snapshot,
@@ -334,6 +385,8 @@ class HousingPreferenceService
                 metadata: [
                     'application_id' => $application->id,
                     'preferences_count' => $preferences->count(),
+                    'compatible_units_count' => $compatibleOptions->count(),
+                    'complete_ordering' => true,
                     'actor_id' => $actor->id,
                 ],
             );
@@ -346,10 +399,56 @@ class HousingPreferenceService
                 metadata: [
                     'application_id' => $application->id,
                     'preferences_count' => $preferences->count(),
+                    'compatible_units_count' => $compatibleOptions->count(),
+                    'complete_ordering' => true,
                     'actor_id' => $actor->id,
                 ],
             );
         }
+    }
+
+    private function lockSelectionInventory(Application $application): void
+    {
+        $inventory = ContestHousingUnit::query()
+            ->select(['id', 'housing_unit_id'])
+            ->where('contest_id', $application->contest_id)
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
+
+        $housingUnitIds = $inventory
+            ->pluck('housing_unit_id')
+            ->map(fn ($id): int => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($housingUnitIds->isEmpty()) {
+            return;
+        }
+
+        HousingUnit::query()
+            ->select(['id'])
+            ->whereKey($housingUnitIds->all())
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
+    }
+
+    /**
+     * @param  SupportCollection<int, CompatibleHousingOptionData>  $compatibleOptions
+     * @return SupportCollection<int, int>
+     */
+    private function compatibleUnitIds(
+        SupportCollection $compatibleOptions,
+    ): SupportCollection {
+        return $compatibleOptions
+            ->map(
+                fn (CompatibleHousingOptionData $option): int => $option
+                    ->unit
+                    ->id,
+            )
+            ->sort()
+            ->values();
     }
 
     private function assertEditable(Application $application): void
@@ -398,31 +497,36 @@ class HousingPreferenceService
 
     /**
      * @param  list<array<string, mixed>>  $preferences
+     * @param  SupportCollection<int, CompatibleHousingOptionData>  $compatibleOptions
      */
     private function assertSelectionStructure(
         array $preferences,
         ?AllocationRuleSet $ruleSet,
-        bool $enforceMinimum,
+        SupportCollection $compatibleOptions,
+        bool $completeOrderRequired,
     ): void {
         if (! $ruleSet instanceof AllocationRuleSet || ! $ruleSet->allow_preferences) {
             if ($preferences !== []) {
                 throw ValidationException::withMessages([
-                    'preferences' => 'Este concurso não permite preferências habitacionais.',
+                    'preferences' => 'Este concurso não permite ordenar fogos.',
                 ]);
             }
 
             return;
         }
 
-        $minimum = $enforceMinimum && $ruleSet->preferences_required_before_submission
-            ? max(1, (int) $ruleSet->minimum_preferences)
-            : 0;
-        $maximum = max($minimum, (int) $ruleSet->maximum_preferences);
+        $expectedUnitIds = $this->compatibleUnitIds($compatibleOptions);
+        $requiredCount = $expectedUnitIds->count();
         $count = count($preferences);
-
-        if ($count < $minimum || $count > $maximum) {
+        if ($completeOrderRequired && $requiredCount === 0) {
             throw ValidationException::withMessages([
-                'preferences' => "Selecione entre {$minimum} e {$maximum} habitações.",
+                'preferences' => 'Não existem fogos compatíveis e ativos para ordenar.',
+            ]);
+        }
+
+        if ($completeOrderRequired && $count !== $requiredCount) {
+            throw ValidationException::withMessages([
+                'preferences' => "Ordene todos os {$requiredCount} fogos compatíveis, sem omissões.",
             ]);
         }
 
@@ -437,7 +541,7 @@ class HousingPreferenceService
 
         if ($orders->duplicates()->isNotEmpty() || $unitIds->duplicates()->isNotEmpty()) {
             throw ValidationException::withMessages([
-                'preferences' => 'Cada habitação e posição só pode ser selecionada uma vez.',
+                'preferences' => 'Cada fogo e cada posição só podem ser usados uma vez.',
             ]);
         }
 
@@ -445,7 +549,17 @@ class HousingPreferenceService
 
         if ($orders->all() !== $expectedOrders) {
             throw ValidationException::withMessages([
-                'preferences' => 'A ordem das preferências deve ser consecutiva, começando em 1.',
+                'preferences' => 'A ordem dos fogos deve ser consecutiva, começando na posição 1.',
+            ]);
+        }
+
+        if ($count === 0) {
+            return;
+        }
+
+        if ($unitIds->sort()->values()->all() !== $expectedUnitIds->all()) {
+            throw ValidationException::withMessages([
+                'preferences' => 'A ordem deve incluir exatamente todos os fogos compatíveis e ativos.',
             ]);
         }
     }

@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Application;
 use App\Models\HousingPreference;
 use App\Services\Allocation\AllocationRuleSetResolver;
+use App\Services\Allocation\HousingPreferenceService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateHousingPreferenceRequest extends FormRequest
@@ -34,21 +35,24 @@ class UpdateHousingPreferenceRequest extends FormRequest
             ? app(AllocationRuleSetResolver::class)->forApplication($application)
             : null;
         $enabled = $ruleSet?->allow_preferences === true;
-        $minimum = $enabled
-            && $this->requiresMinimum()
-            && $ruleSet->preferences_required_before_submission
-                ? max(1, (int) $ruleSet->minimum_preferences)
-                : 0;
-        $maximum = $enabled
-            ? max($minimum, $ruleSet->maximum_preferences)
+        $compatibleCount = $enabled
+            ? app(HousingPreferenceService::class)
+                ->optionsFor($application)
+                ->count()
             : 0;
+        $required = $enabled && $this->requiresMinimum();
+        $preferences = $this->input('preferences');
+        $hasPreferences = is_array($preferences)
+            && $preferences !== [];
+        $completeOrderRequired = $required || $hasPreferences;
 
         return [
             'preferences' => [
-                $this->requiresMinimum() ? 'required' : 'present',
+                $required ? 'required' : 'present',
                 'array',
-                'min:'.$minimum,
-                'max:'.$maximum,
+                $completeOrderRequired
+                    ? 'size:'.$compatibleCount
+                    : 'max:0',
             ],
             'preferences.*.contest_housing_unit_id' => [
                 'required',
@@ -60,7 +64,6 @@ class UpdateHousingPreferenceRequest extends FormRequest
                 'integer',
                 'distinct',
                 'min:1',
-                'max:'.max(1, $maximum),
             ],
             'preferences.*.notes' => ['nullable', 'string', 'max:1000'],
         ];
@@ -72,10 +75,10 @@ class UpdateHousingPreferenceRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'preferences.required' => 'Selecione pelo menos uma habitação compatível.',
-            'preferences.min' => 'Selecione o número mínimo de habitações indicado.',
-            'preferences.max' => 'Não pode selecionar mais habitações do que o limite indicado.',
-            'preferences.*.contest_housing_unit_id.distinct' => 'A mesma habitação não pode ocupar duas posições.',
+            'preferences.required' => 'Ordene todos os fogos compatíveis antes de continuar.',
+            'preferences.size' => 'A ordem deve incluir todos os fogos compatíveis, sem omissões.',
+            'preferences.max' => 'A ordem contém mais fogos do que os atualmente compatíveis.',
+            'preferences.*.contest_housing_unit_id.distinct' => 'O mesmo fogo não pode ocupar duas posições.',
             'preferences.*.preference_order.distinct' => 'Cada posição da ordem só pode ser usada uma vez.',
         ];
     }
