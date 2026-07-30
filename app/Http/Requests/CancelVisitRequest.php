@@ -17,12 +17,7 @@ class CancelVisitRequest extends FormRequest
 
         return $actor instanceof User
             && $visit instanceof HousingVisit
-            && $actor->can(
-                $this->routeIs('backoffice.*')
-                    ? 'cancelBackoffice'
-                    : 'cancel',
-                $visit,
-            );
+            && $actor->can('cancelBackoffice', $visit);
     }
 
     /**

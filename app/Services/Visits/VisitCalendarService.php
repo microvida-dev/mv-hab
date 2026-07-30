@@ -18,21 +18,6 @@ class VisitCalendarService
     /**
      * @return Collection<int, HousingVisit>
      */
-    public function candidateCalendar(User $candidate, ?CarbonInterface $from = null, ?CarbonInterface $to = null): Collection
-    {
-        return $this->municipalScope
-            ->structurallyValidHousingVisits(
-                $this->baseQuery($from, $to),
-            )
-            ->forCandidate($candidate)
-            ->with(['application', 'contest', 'housingUnit', 'slot'])
-            ->orderBy('starts_at')
-            ->get();
-    }
-
-    /**
-     * @return Collection<int, HousingVisit>
-     */
     public function backofficeCalendar(
         User $actor,
         ?CarbonInterface $from = null,

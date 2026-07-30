@@ -9,7 +9,6 @@ use App\Enums\InteractionType;
 use App\Enums\MessageVisibility;
 use App\Enums\TicketCategory;
 use App\Enums\TicketStatus;
-use App\Enums\VisitCancellationReason;
 use App\Enums\VisitStatus;
 use App\Models\Application;
 use App\Models\ApplicationSimulationInconsistency;
@@ -26,6 +25,7 @@ use App\Models\VisitAvailability;
 use App\Models\VisitSlot;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\InteractsWithMunicipalFeatures;
 use Tests\Support\CreatesTenantSupportEligibility;
@@ -35,75 +35,26 @@ class Sprint22CandidateSupportTest extends TestCase
 {
     use CreatesTenantSupportEligibility, InteractsWithMunicipalFeatures, RefreshDatabase;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        config([
-            'mvhab.candidate_experience_runtime.legacy_visits' => true,
-        ]);
-    }
-
     public function test_candidate_books_reschedules_and_cancels_visit_with_ownership_protection(): void
     {
         $this->seed(SystemAccessSeeder::class);
         $candidate = $this->userWithRole('candidate');
-        $otherCandidate = $this->userWithRole('candidate');
-        $program = Program::factory()->published()->create();
-        $contest = Contest::factory()->for($program)->open()->create();
-        $municipality = $program->municipality()->firstOrFail();
-        $this->assignMunicipality($candidate, $municipality);
-        $this->assignMunicipality($otherCandidate, $municipality);
-        $staff = User::factory()->create([
-            'municipality_id' => $program->municipality_id,
+
+        config([
+            'mvhab.candidate_experience_runtime.legacy_visits' => true,
         ]);
-        $staff->assignRole('municipal_technician');
-        $availability = VisitAvailability::factory()->create(['contest_id' => $contest->id, 'staff_user_id' => $staff->id]);
-        $firstSlot = VisitSlot::factory()->create(['visit_availability_id' => $availability->id, 'contest_id' => $contest->id, 'staff_user_id' => $staff->id]);
-        $secondSlot = VisitSlot::factory()->create(['visit_availability_id' => $availability->id, 'contest_id' => $contest->id, 'staff_user_id' => $staff->id]);
+
+        $this->assertFalse(Route::has('candidate.visits.store'));
+        $this->assertFalse(Route::has('candidate.visits.reschedule.store'));
+        $this->assertFalse(Route::has('candidate.visits.cancel'));
 
         $this->actingAs($candidate)
-            ->post(route('candidate.visits.store'), [
-                'visit_slot_id' => $firstSlot->id,
-                'contest_id' => $contest->id,
-                'candidate_notes' => 'Visita fictícia para teste.',
+            ->post('/area-candidato/visitas', [
+                'visit_slot_id' => 1,
             ])
-            ->assertRedirect();
+            ->assertNotFound();
 
-        $visit = HousingVisit::query()->firstOrFail();
-        $this->assertSame($candidate->id, $visit->candidate_user_id);
-        $this->assertSame(VisitStatus::PendingConfirmation, $visit->status);
-        $this->assertSame(1, $firstSlot->refresh()->booked_count);
-
-        $this->actingAs($otherCandidate)
-            ->get(route('candidate.visits.show', $visit))
-            ->assertForbidden();
-
-        $this->actingAs($candidate)
-            ->post(route('candidate.visits.reschedule.store', $visit), [
-                'new_visit_slot_id' => $secondSlot->id,
-                'reason' => 'Preferência horária fictícia.',
-            ])
-            ->assertRedirect();
-
-        $visit->refresh();
-        $this->assertSame(VisitStatus::Rescheduled, $visit->status);
-        $this->assertSame(0, $firstSlot->refresh()->booked_count);
-        $this->assertSame(1, $secondSlot->refresh()->booked_count);
-
-        $this->actingAs($candidate)
-            ->post(route('candidate.visits.cancel', $visit), [
-                'cancellation_reason' => VisitCancellationReason::CandidateUnavailable->value,
-                'cancellation_notes' => 'Cancelamento fictício.',
-            ])
-            ->assertRedirect();
-
-        $this->assertSame(VisitStatus::CancelledByCandidate, $visit->refresh()->status);
-        $this->assertSame(0, $secondSlot->refresh()->booked_count);
-        $this->assertDatabaseHas('candidate_interactions', [
-            'user_id' => $candidate->id,
-            'interaction_type' => InteractionType::VisitCancelled->value,
-        ]);
+        $this->assertDatabaseCount('housing_visits', 0);
     }
 
     public function test_candidate_interactions_index_renders_recorded_interactions(): void
@@ -128,18 +79,12 @@ class Sprint22CandidateSupportTest extends TestCase
     {
         $this->seed(SystemAccessSeeder::class);
         $candidate = $this->userWithRole('candidate');
-        $visit = HousingVisit::factory()->create([
-            'candidate_user_id' => $candidate->id,
-            'status' => VisitStatus::Confirmed->value,
-        ]);
+
+        $this->assertFalse(Route::has('candidate.visits.index'));
 
         $this->actingAs($candidate)
-            ->get(route('candidate.visits.index'))
-            ->assertOk()
-            ->assertSee('As minhas visitas')
-            ->assertSee('Total')
-            ->assertSee('Confirmadas')
-            ->assertSee($visit->visit_number);
+            ->get('/area-candidato/visitas')
+            ->assertNotFound();
     }
 
     public function test_backoffice_generates_visit_slots_and_updates_visit_status(): void
