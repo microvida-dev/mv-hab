@@ -9,7 +9,6 @@ use App\Enums\ApplicationReviewBatchStatus;
 use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationDeliveryStatus;
 use App\Enums\FeatureKey;
-use App\Jobs\DeliverProceduralEmail;
 use App\Models\AdministrativeProcess;
 use App\Models\ApplicationReviewBatch;
 use App\Models\ApplicationReviewBatchItem;
@@ -84,7 +83,7 @@ class Sprint53DReviewPublicationTest extends TestCase
         ));
     }
 
-    public function test_publish_is_atomic_idempotent_and_queues_email_after_commit(): void
+    public function test_publish_is_atomic_idempotent_and_creates_durable_email_delivery(): void
     {
         Queue::fake();
         [$batch, $actor] = $this->sealedBatch();
@@ -113,11 +112,20 @@ class Sprint53DReviewPublicationTest extends TestCase
             CommunicationDeliveryStatus::Delivered,
             $result->inAppDelivery()->firstOrFail()->status,
         );
+        $emailDelivery = $result->emailDelivery()->firstOrFail();
         $this->assertSame(
             CommunicationChannel::Email,
-            $result->emailDelivery()->firstOrFail()->channel,
+            $emailDelivery->channel,
         );
-        Queue::assertPushed(DeliverProceduralEmail::class, 1);
+        $this->assertSame(
+            CommunicationDeliveryStatus::Queued,
+            $emailDelivery->status,
+        );
+        $this->assertNotNull($emailDelivery->queued_at);
+        $this->assertSame(
+            $result->user->email,
+            $emailDelivery->destination,
+        );
     }
 
     public function test_candidate_payload_does_not_expose_internal_snapshot_content(): void
