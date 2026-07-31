@@ -49,7 +49,7 @@ class AuditAccessRoutesCommandTest extends TestCase
         );
 
         $this->assertSame(
-            915,
+            920,
             $payload['summary']['permission_middleware_routes'],
         );
 
@@ -267,6 +267,68 @@ class AuditAccessRoutesCommandTest extends TestCase
                 $route['excluded_middleware'],
             );
 
+            $this->assertContains('active.backoffice', $route['middleware']);
+            $this->assertContains('mfa.backoffice', $route['middleware']);
+            $this->assertContains('log.backoffice', $route['middleware']);
+            $this->assertContains(
+                'municipality.feature:applications.review',
+                $route['middleware'],
+            );
+            $this->assertSame([], $route['missing_backoffice_guards']);
+        }
+
+        $applicationReviewBatchRoutes = collect($payload['routes'])
+            ->whereIn('name', [
+                'backoffice.application-review-batches.index',
+                'backoffice.application-review-batches.contest',
+                'backoffice.application-review-batches.preview',
+                'backoffice.application-review-batches.seal',
+                'backoffice.application-review-batches.show',
+            ])
+            ->keyBy('name');
+
+        $this->assertCount(5, $applicationReviewBatchRoutes);
+
+        $batchPermissions = [
+            'backoffice.application-review-batches.index' => [
+                'permission:administrative_processes.view',
+            ],
+            'backoffice.application-review-batches.contest' => [
+                'permission:administrative_processes.view',
+                'permission:documents.view',
+            ],
+            'backoffice.application-review-batches.preview' => [
+                'permission:administrative_processes.update',
+            ],
+            'backoffice.application-review-batches.seal' => [
+                'permission:administrative_processes.update',
+            ],
+            'backoffice.application-review-batches.show' => [
+                'permission:administrative_processes.view',
+            ],
+        ];
+
+        foreach ($batchPermissions as $routeName => $permissionMiddleware) {
+            $route = $applicationReviewBatchRoutes->get($routeName);
+
+            $this->assertNotNull($route);
+            $this->assertFalse($route['uses_fixed_role_middleware']);
+            $this->assertFalse($route['is_backoffice_role_route']);
+            $this->assertSame([], $route['roles']);
+
+            foreach ($permissionMiddleware as $permission) {
+                $this->assertContains(
+                    $permission,
+                    $route['permission_middleware'],
+                );
+            }
+
+            $this->assertSame(
+                [
+                    'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor',
+                ],
+                $route['excluded_middleware'],
+            );
             $this->assertContains('active.backoffice', $route['middleware']);
             $this->assertContains('mfa.backoffice', $route['middleware']);
             $this->assertContains('log.backoffice', $route['middleware']);

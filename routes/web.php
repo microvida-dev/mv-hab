@@ -28,6 +28,7 @@ use App\Http\Controllers\Backoffice\ApplicationController as BackofficeApplicati
 use App\Http\Controllers\Backoffice\ApplicationIntakeController as BackofficeApplicationIntakeController;
 use App\Http\Controllers\Backoffice\ApplicationPublicStatusController as BackofficeApplicationPublicStatusController;
 use App\Http\Controllers\Backoffice\ApplicationReportController as BackofficeApplicationReportController;
+use App\Http\Controllers\Backoffice\ApplicationReviewBatchController as BackofficeApplicationReviewBatchController;
 use App\Http\Controllers\Backoffice\ApplicationReviewController as BackofficeApplicationReviewController;
 use App\Http\Controllers\Backoffice\ApplicationReviewWorkspaceController as BackofficeApplicationReviewWorkspaceController;
 use App\Http\Controllers\Backoffice\ApplicationScoreController as BackofficeApplicationScoreController;
@@ -3115,6 +3116,44 @@ Route::middleware('auth')->group(function () {
                             )
                                 ->middleware('permission:administrative_processes.update')
                                 ->name('application-review-workspace.apply');
+
+                            Route::get(
+                                'application-review-batches',
+                                [BackofficeApplicationReviewBatchController::class, 'index'],
+                            )
+                                ->middleware('permission:administrative_processes.view')
+                                ->name('application-review-batches.index');
+
+                            Route::get(
+                                'contests/{contest}/application-review-batches',
+                                [BackofficeApplicationReviewBatchController::class, 'contest'],
+                            )
+                                ->middleware([
+                                    'permission:administrative_processes.view',
+                                    'permission:documents.view',
+                                ])
+                                ->name('application-review-batches.contest');
+
+                            Route::post(
+                                'contests/{contest}/application-review-batches/preview',
+                                [BackofficeApplicationReviewBatchController::class, 'preview'],
+                            )
+                                ->middleware('permission:administrative_processes.update')
+                                ->name('application-review-batches.preview');
+
+                            Route::post(
+                                'contests/{contest}/application-review-batches/seal',
+                                [BackofficeApplicationReviewBatchController::class, 'seal'],
+                            )
+                                ->middleware('permission:administrative_processes.update')
+                                ->name('application-review-batches.seal');
+
+                            Route::get(
+                                'application-review-batches/{applicationReviewBatch}',
+                                [BackofficeApplicationReviewBatchController::class, 'show'],
+                            )
+                                ->middleware('permission:administrative_processes.view')
+                                ->name('application-review-batches.show');
                         });
 
                     Route::middleware([
