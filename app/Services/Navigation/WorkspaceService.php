@@ -110,7 +110,7 @@ class WorkspaceService
             $this->item('Rever documentos', 'admin.document-reviews.index', 'admin.document-reviews.*', 'documents.view', feature: FeatureKey::ApplicationReview),
             $this->item('Análise em bloco', 'backoffice.application-review-workspace.index', 'backoffice.application-review-workspace.*', 'administrative_processes.view', feature: FeatureKey::ApplicationReview),
             $this->item('Lotes de fecho', 'backoffice.application-review-batches.index', 'backoffice.application-review-batches.*', 'administrative_processes.view', feature: FeatureKey::ApplicationReview),
-            $this->item('Lotes de fecho', 'backoffice.application-review-batches.index', 'backoffice.application-review-batches.*', 'administrative_processes.view', feature: FeatureKey::ApplicationReview),
+            $this->item('Publicações da revisão', 'backoffice.application-review-publications.index', 'backoffice.application-review-publications.*', 'administrative_processes.view', feature: FeatureKey::ApplicationReview),
             $this->item('Tarefas da minha equipa', 'backoffice.work-tasks.team', 'backoffice.work-tasks.team', 'work_tasks.view_team'),
             $this->item('Relatórios municipais', 'backoffice.reports.index', 'backoffice.reports.*', 'reports.view'),
             $this->item('Segurança e RGPD', 'backoffice.security.dashboard', 'backoffice.security.*', null, ['administrator', 'auditor']),

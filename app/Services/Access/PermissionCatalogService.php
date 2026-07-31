@@ -378,6 +378,7 @@ class PermissionCatalogService
         'administrative_processes.decide',
         'administrative_processes.issue',
         'administrative_processes.mark_overdue',
+        'administrative_processes.publish',
         'administrative_processes.reject',
         'administrative_processes.update',
         'administrative_decisions.approve',

@@ -59,6 +59,7 @@ enum OfficialNotificationType: string
     case SupportTicketResolved = 'support_ticket_resolved';
     case SupportTicketReopened = 'support_ticket_reopened';
     case ApplicationInconsistencyDetected = 'application_inconsistency_detected';
+    case ApplicationReviewResultPublished = 'application_review_result_published';
     case Other = 'other';
 
     public function requiresMandatoryEmail(): bool
@@ -131,6 +132,7 @@ enum OfficialNotificationType: string
             self::SupportTicketResolved => 'Pedido de apoio resolvido',
             self::SupportTicketReopened => 'Pedido de apoio reaberto',
             self::ApplicationInconsistencyDetected => 'Inconsistência de candidatura detetada',
+            self::ApplicationReviewResultPublished => 'Resultado da revisão documental publicado',
             self::Other => 'Outra',
         };
     }
