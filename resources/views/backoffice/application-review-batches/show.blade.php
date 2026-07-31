@@ -30,6 +30,12 @@
                 <x-mv.stat-card label="Referência" :value="substr($batch->public_id, 0, 12).'…'" />
             </section>
 
+            @can('publishForBatch', [\App\Models\ApplicationReviewPublication::class, $batch])
+                <div class="flex justify-end">
+                    <a href="{{ route('backoffice.application-review-publications.create', $batch) }}" class="mv-button-primary">Preparar publicação coletiva</a>
+                </div>
+            @endcan
+
             <x-mv.alert tone="info" title="Integridade verificada por hash">
                 <p class="break-all font-mono text-xs">{{ $batch->snapshot_hash }}</p>
             </x-mv.alert>

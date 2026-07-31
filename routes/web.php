@@ -30,6 +30,7 @@ use App\Http\Controllers\Backoffice\ApplicationPublicStatusController as Backoff
 use App\Http\Controllers\Backoffice\ApplicationReportController as BackofficeApplicationReportController;
 use App\Http\Controllers\Backoffice\ApplicationReviewBatchController as BackofficeApplicationReviewBatchController;
 use App\Http\Controllers\Backoffice\ApplicationReviewController as BackofficeApplicationReviewController;
+use App\Http\Controllers\Backoffice\ApplicationReviewPublicationController as BackofficeApplicationReviewPublicationController;
 use App\Http\Controllers\Backoffice\ApplicationReviewWorkspaceController as BackofficeApplicationReviewWorkspaceController;
 use App\Http\Controllers\Backoffice\ApplicationScoreController as BackofficeApplicationScoreController;
 use App\Http\Controllers\Backoffice\ApplicationSimulationInconsistencyController as BackofficeApplicationSimulationInconsistencyController;
@@ -190,6 +191,7 @@ use App\Http\Controllers\Candidate\AllocationResponseController as CandidateAllo
 use App\Http\Controllers\Candidate\ApplicationController as CandidateApplicationController;
 use App\Http\Controllers\Candidate\ApplicationPrefillController as CandidateApplicationPrefillController;
 use App\Http\Controllers\Candidate\ApplicationReceiptController as CandidateApplicationReceiptController;
+use App\Http\Controllers\Candidate\ApplicationReviewResultController as CandidateApplicationReviewResultController;
 use App\Http\Controllers\Candidate\ApplicationSubmissionController as CandidateApplicationSubmissionController;
 use App\Http\Controllers\Candidate\CandidateInteractionController;
 use App\Http\Controllers\Candidate\CandidateNotificationCenterController;
@@ -685,6 +687,11 @@ Route::middleware('auth')->group(function () {
                 ->name('notifications.acknowledge');
             Route::post('/notificacoes/{officialNotification}/arquivar', [CandidateNotificationCenterController::class, 'archive'])
                 ->name('notifications.archive');
+
+            Route::get('/resultados-revisao-documental', [CandidateApplicationReviewResultController::class, 'index'])
+                ->name('application-review-results.index');
+            Route::get('/resultados-revisao-documental/{reviewResult}', [CandidateApplicationReviewResultController::class, 'show'])
+                ->name('application-review-results.show');
 
             Route::get('/candidaturas/{application}/documentos-adicionais/criar', [CandidateAdditionalDocumentSubmissionController::class, 'create'])
                 ->name('additional-documents.create');
@@ -3154,6 +3161,41 @@ Route::middleware('auth')->group(function () {
                             )
                                 ->middleware('permission:administrative_processes.view')
                                 ->name('application-review-batches.show');
+
+                            Route::get(
+                                'application-review-publications',
+                                [BackofficeApplicationReviewPublicationController::class, 'index'],
+                            )
+                                ->middleware('permission:administrative_processes.view')
+                                ->name('application-review-publications.index');
+
+                            Route::get(
+                                'application-review-batches/{applicationReviewBatch}/publication',
+                                [BackofficeApplicationReviewPublicationController::class, 'create'],
+                            )
+                                ->middleware('permission:administrative_processes.publish')
+                                ->name('application-review-publications.create');
+
+                            Route::post(
+                                'application-review-batches/{applicationReviewBatch}/publication/preview',
+                                [BackofficeApplicationReviewPublicationController::class, 'preview'],
+                            )
+                                ->middleware('permission:administrative_processes.publish')
+                                ->name('application-review-publications.preview');
+
+                            Route::post(
+                                'application-review-batches/{applicationReviewBatch}/publication/publish',
+                                [BackofficeApplicationReviewPublicationController::class, 'publish'],
+                            )
+                                ->middleware('permission:administrative_processes.publish')
+                                ->name('application-review-publications.publish');
+
+                            Route::get(
+                                'application-review-publications/{applicationReviewPublication}',
+                                [BackofficeApplicationReviewPublicationController::class, 'show'],
+                            )
+                                ->middleware('permission:administrative_processes.view')
+                                ->name('application-review-publications.show');
                         });
 
                     Route::middleware([
