@@ -83,3 +83,25 @@ Ficam reservados aos blocos seguintes:
 - prorrogações e expiração operacional;
 - métricas agregadas;
 - revalidação diferencial, segundo lote e segunda publicação.
+
+## Bloco 53E-B — workspace único do candidato
+
+O pedido publicado possui agora uma área única e restrita aos elementos
+solicitados. Cada elemento pode ser preparado individualmente sem gerar uma
+notificação municipal isolada.
+
+Regras implementadas:
+
+- apenas itens pertencentes ao pedido autenticado podem ser alterados;
+- elementos documentais aceitam novo ficheiro ou justificação fundamentada;
+- elementos não documentais aceitam apenas esclarecimento textual;
+- documentos validados não voltam a ser solicitados;
+- documentos substituídos preservam todas as versões;
+- cada nova versão referencia explicitamente a versão que substitui;
+- os ficheiros permanecem no disco privado `local`;
+- respostas por item permanecem em rascunho até à submissão formal do Bloco C;
+- o progresso agregado é apresentado no workspace;
+- o fluxo legacy continua isolado e compatível.
+
+A gravação de um item não executa revisão técnica, segunda publicação,
+notificação municipal, exportação ou submissão formal.

@@ -28,6 +28,8 @@ class PublishedCorrectionFindingMapper
      *     is_required: bool,
      *     document_type_id: int|null,
      *     required_document_id: int|null,
+     *     requirement_instance: int,
+     *     source_document_submission_id: int|null,
      *     sort_order: int
      * }>
      */
@@ -48,7 +50,9 @@ class PublishedCorrectionFindingMapper
                 continue;
             }
 
-            $status = DocumentStatus::tryFrom((string) ($finding['document_status'] ?? ''));
+            $status = DocumentStatus::tryFrom(
+                (string) ($finding['document_status'] ?? ''),
+            );
 
             if (! in_array($status, [
                 DocumentStatus::Missing,
@@ -58,13 +62,21 @@ class PublishedCorrectionFindingMapper
                 continue;
             }
 
-            $targetType = trim((string) ($finding['target_type'] ?? ''));
+            $targetType = trim(
+                (string) ($finding['target_type'] ?? ''),
+            );
             $targetId = (int) ($finding['target_id'] ?? 0);
             $title = trim((string) ($finding['title'] ?? ''));
 
-            if (! in_array($targetType, $this->allowedTargetTypes(), true)
+            if (
+                ! in_array(
+                    $targetType,
+                    $this->allowedTargetTypes(),
+                    true,
+                )
                 || $targetId <= 0
-                || $title === '') {
+                || $title === ''
+            ) {
                 throw ValidationException::withMessages([
                     'correction_request' => 'Um achado publicado não possui alvo e título suficientes para gerar o pedido.',
                 ]);
@@ -90,16 +102,30 @@ class PublishedCorrectionFindingMapper
                 'target_id' => $targetId,
                 'issue_type' => $issueType,
                 'title' => $title,
-                'description' => $this->nullableString($finding['description'] ?? null),
+                'description' => $this->nullableString(
+                    $finding['description'] ?? null,
+                ),
                 'required_action' => $requiredAction,
-                'is_required' => (bool) ($finding['is_required'] ?? true),
+                'is_required' => (bool) (
+                    $finding['is_required'] ?? true
+                ),
                 'document_type_id' => $this->nullablePositiveInt(
                     $finding['document_type_id'] ?? null,
                 ),
                 'required_document_id' => $this->nullablePositiveInt(
                     $finding['required_document_id'] ?? null,
                 ),
-                'sort_order' => (int) ($finding['sort_order'] ?? $index + 1),
+                'requirement_instance' => max(
+                    1,
+                    (int) ($finding['requirement_instance'] ?? 1),
+                ),
+                'source_document_submission_id' => $this->nullablePositiveInt(
+                    $finding['source_document_submission_id']
+                        ?? null,
+                ),
+                'sort_order' => (int) (
+                    $finding['sort_order'] ?? $index + 1
+                ),
             ];
         }
 

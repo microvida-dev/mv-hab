@@ -23,7 +23,9 @@ class CorrectionResponseFactory extends Factory
             'application_id' => $request->application_id,
             'user_id' => $request->user_id,
             'response_text' => 'Resposta fictícia de aperfeiçoamento.',
+            'response_kind' => 'explanation',
             'status' => CorrectionResponseStatus::Submitted->value,
+            'prepared_at' => now(),
             'submitted_at' => now(),
         ];
     }

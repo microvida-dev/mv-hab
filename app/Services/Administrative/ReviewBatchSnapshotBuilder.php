@@ -262,6 +262,10 @@ class ReviewBatchSnapshotBuilder
                 $requiredDocument = $requiredDocumentCandidate instanceof RequiredDocument
                     ? $requiredDocumentCandidate
                     : null;
+                $submissionCandidate = $item['submission'] ?? null;
+                $submission = $submissionCandidate instanceof DocumentSubmission
+                    ? $submissionCandidate
+                    : null;
                 $requiredFor = $item['required_for'] ?? null;
                 $requiredFor = $requiredFor instanceof DocumentAppliesTo
                     ? $requiredFor
@@ -285,6 +289,7 @@ class ReviewBatchSnapshotBuilder
                     'required_document_id' => isset($item['required_document_id'])
                         ? (int) $item['required_document_id']
                         : null,
+                    'source_document_submission_id' => $submission?->id,
                     'requirement_instance' => (int) ($item['requirement_instance'] ?? 1),
                     'title' => $this->documentTypeName($documentTypeCandidate),
                     'description' => (string) (
