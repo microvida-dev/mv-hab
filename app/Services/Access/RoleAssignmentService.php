@@ -15,6 +15,7 @@ class RoleAssignmentService
         private readonly AccessChangeLogger $logger,
         private readonly RoleAssignmentPolicy $policy,
         private readonly AccessMunicipalScopeService $municipalScope,
+        private readonly MunicipalRoleTemplateRegistry $templates,
     ) {}
 
     public function assign(User $actor, User $target, Role $role, string $justification): void
@@ -93,6 +94,18 @@ class RoleAssignmentService
             throw new DomainException('Não é possível atribuir um perfil inativo.');
         }
 
+        if ($target->status !== 'active') {
+            throw new DomainException('Não é possível atribuir um perfil a uma conta inativa.');
+        }
+
+        if ($target->hasRole('candidate') && $role->isMunicipalCustom()) {
+            throw new AuthorizationException('Uma conta de candidato não pode receber perfis municipais internos.');
+        }
+
+        if ($this->createsAuditorMutationConflict($target, $role)) {
+            throw new AuthorizationException('O perfil de auditor não pode ser combinado com um perfil mutável do Programa 53.');
+        }
+
         if (! $this->municipalScope->ownsUser($actor, $target)) {
             throw new AuthorizationException('Atribuição entre municípios bloqueada.');
         }
@@ -126,6 +139,43 @@ class RoleAssignmentService
         return $role->permissions()
             ->pluck('name')
             ->every(fn (string $permission): bool => $actor->hasPermission($permission));
+    }
+
+    private function createsAuditorMutationConflict(User $target, Role $role): bool
+    {
+        if ($target->hasRole('auditor') && $this->isProgram53MutableRole($role)) {
+            return true;
+        }
+
+        if ($role->name !== 'auditor') {
+            return false;
+        }
+
+        return $target->roles()
+            ->active()
+            ->whereNotNull('template_key')
+            ->get([
+                'roles.id',
+                'roles.template_key',
+                'roles.template_version',
+                'roles.template_fingerprint',
+                'roles.scope',
+                'roles.is_system',
+            ])
+            ->contains(fn (Role $assignedRole): bool => $this->isProgram53MutableRole($assignedRole));
+    }
+
+    private function isProgram53MutableRole(Role $role): bool
+    {
+        if (! $role->isTemplateBased() || ! is_string($role->template_key)) {
+            return false;
+        }
+
+        try {
+            return $this->templates->isProgram53Mutable($role->template_key);
+        } catch (DomainException) {
+            return false;
+        }
     }
 
     private function isLastActiveAdministrator(User $target): bool

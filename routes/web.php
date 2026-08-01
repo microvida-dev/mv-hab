@@ -2175,6 +2175,7 @@ Route::middleware('auth')->group(function () {
                                     'municipality.feature:applications.export',
                                     'permission:reports.export',
                                     'permission:applications.export',
+                                    'throttle:program53.export-preview',
                                 ])
                                 ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                                 ->name('temporal-exports.preview');
@@ -2186,6 +2187,7 @@ Route::middleware('auth')->group(function () {
                                     'municipality.feature:applications.export',
                                     'permission:reports.export',
                                     'permission:applications.export',
+                                    'throttle:program53.export-request',
                                 ])
                                 ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                                 ->name('temporal-exports.store');
@@ -2207,6 +2209,7 @@ Route::middleware('auth')->group(function () {
                                     'municipality.feature:applications.export',
                                     'permission:reports.export',
                                     'permission:applications.export',
+                                    'throttle:program53.export-download',
                                 ])
                                 ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                                 ->name('temporal-exports.download');
@@ -3222,7 +3225,10 @@ Route::middleware('auth')->group(function () {
                                 'contests/{contest}/application-review-batches/seal',
                                 [BackofficeApplicationReviewBatchController::class, 'seal'],
                             )
-                                ->middleware('permission:administrative_processes.update')
+                                ->middleware([
+                                    'permission:administrative_processes.update',
+                                    'throttle:program53.batch-seal',
+                                ])
                                 ->name('application-review-batches.seal');
 
                             Route::get(
@@ -3257,7 +3263,10 @@ Route::middleware('auth')->group(function () {
                                 'application-review-batches/{applicationReviewBatch}/publication/publish',
                                 [BackofficeApplicationReviewPublicationController::class, 'publish'],
                             )
-                                ->middleware('permission:administrative_processes.publish')
+                                ->middleware([
+                                    'permission:administrative_processes.publish',
+                                    'throttle:program53.batch-publish',
+                                ])
                                 ->name('application-review-publications.publish');
 
                             Route::get(
@@ -3299,7 +3308,10 @@ Route::middleware('auth')->group(function () {
                                 'correction-requests/{correctionRequest}/revalidation/seal',
                                 [BackofficeCorrectionRevalidationController::class, 'seal'],
                             )
-                                ->middleware('permission:administrative_processes.update')
+                                ->middleware([
+                                    'permission:administrative_processes.update',
+                                    'throttle:program53.revalidation-seal',
+                                ])
                                 ->name('correction-revalidations.seal');
                         });
 

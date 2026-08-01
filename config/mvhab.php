@@ -5,6 +5,60 @@ return [
     'seed_state_of_art_demo' => env('MVHAB_SEED_STATE_OF_ART_DEMO', false),
     'regulatory_demo_mode' => env('MVHAB_REGULATORY_DEMO_MODE', false),
 
+    // Limites técnicos conservadores; não representam prazos regulamentares.
+    'rate_limits' => [
+        'program53' => [
+            'export_preview' => [
+                'normal' => [
+                    'user' => ['max_attempts' => 20, 'decay_seconds' => 60],
+                    'municipality' => ['max_attempts' => 100, 'decay_seconds' => 60],
+                ],
+                'sensitive' => [
+                    'user' => ['max_attempts' => 5, 'decay_seconds' => 60],
+                    'municipality' => ['max_attempts' => 20, 'decay_seconds' => 60],
+                ],
+            ],
+            'export_request' => [
+                'normal' => [
+                    'user' => ['max_attempts' => 5, 'decay_seconds' => 300],
+                    'municipality' => ['max_attempts' => 25, 'decay_seconds' => 300],
+                ],
+                'sensitive' => [
+                    'user' => ['max_attempts' => 2, 'decay_seconds' => 300],
+                    'municipality' => ['max_attempts' => 8, 'decay_seconds' => 300],
+                ],
+            ],
+            'export_download' => [
+                'normal' => [
+                    'user' => ['max_attempts' => 20, 'decay_seconds' => 60],
+                    'municipality' => ['max_attempts' => 100, 'decay_seconds' => 60],
+                ],
+                'sensitive' => [
+                    'user' => ['max_attempts' => 5, 'decay_seconds' => 60],
+                    'municipality' => ['max_attempts' => 20, 'decay_seconds' => 60],
+                ],
+            ],
+            'batch_seal' => [
+                'normal' => [
+                    'user' => ['max_attempts' => 5, 'decay_seconds' => 300],
+                    'municipality' => ['max_attempts' => 20, 'decay_seconds' => 300],
+                ],
+            ],
+            'batch_publish' => [
+                'normal' => [
+                    'user' => ['max_attempts' => 3, 'decay_seconds' => 300],
+                    'municipality' => ['max_attempts' => 10, 'decay_seconds' => 300],
+                ],
+            ],
+            'revalidation_seal' => [
+                'normal' => [
+                    'user' => ['max_attempts' => 5, 'decay_seconds' => 300],
+                    'municipality' => ['max_attempts' => 20, 'decay_seconds' => 300],
+                ],
+            ],
+        ],
+    ],
+
     'municipal_application_demo' => [
         'enabled' => env(
             'MVHAB_MUNICIPAL_APPLICATION_DEMO',
