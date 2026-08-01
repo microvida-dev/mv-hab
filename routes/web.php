@@ -50,6 +50,7 @@ use App\Http\Controllers\Backoffice\ContractTemplateController as BackofficeCont
 use App\Http\Controllers\Backoffice\ControlledWithdrawalController as BackofficeControlledWithdrawalController;
 use App\Http\Controllers\Backoffice\CorrectionRequestController as BackofficeCorrectionRequestController;
 use App\Http\Controllers\Backoffice\CorrectionResponseReviewController as BackofficeCorrectionResponseReviewController;
+use App\Http\Controllers\Backoffice\CorrectionRevalidationController as BackofficeCorrectionRevalidationController;
 use App\Http\Controllers\Backoffice\DefinitiveListController as BackofficeDefinitiveListController;
 use App\Http\Controllers\Backoffice\DocumentAiAssistantController as BackofficeDocumentAiAssistantController;
 use App\Http\Controllers\Backoffice\DocumentAiClassificationController as BackofficeDocumentAiClassificationController;
@@ -3199,6 +3200,41 @@ Route::middleware('auth')->group(function () {
                             )
                                 ->middleware('permission:administrative_processes.view')
                                 ->name('application-review-publications.show');
+
+                            Route::get(
+                                'correction-revalidations',
+                                [BackofficeCorrectionRevalidationController::class, 'index'],
+                            )
+                                ->middleware('permission:administrative_processes.view')
+                                ->name('correction-revalidations.index');
+
+                            Route::post(
+                                'correction-requests/{correctionRequest}/revalidation/start',
+                                [BackofficeCorrectionRevalidationController::class, 'start'],
+                            )
+                                ->middleware('permission:administrative_processes.update')
+                                ->name('correction-revalidations.start');
+
+                            Route::post(
+                                'correction-requests/{correctionRequest}/revalidation/responses/{correctionResponse}/decision',
+                                [BackofficeCorrectionRevalidationController::class, 'decide'],
+                            )
+                                ->middleware('permission:administrative_processes.decide')
+                                ->name('correction-revalidations.decide');
+
+                            Route::post(
+                                'correction-requests/{correctionRequest}/revalidation/preview',
+                                [BackofficeCorrectionRevalidationController::class, 'preview'],
+                            )
+                                ->middleware('permission:administrative_processes.update')
+                                ->name('correction-revalidations.preview');
+
+                            Route::post(
+                                'correction-requests/{correctionRequest}/revalidation/seal',
+                                [BackofficeCorrectionRevalidationController::class, 'seal'],
+                            )
+                                ->middleware('permission:administrative_processes.update')
+                                ->name('correction-revalidations.seal');
                         });
 
                     Route::middleware([

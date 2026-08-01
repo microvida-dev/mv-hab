@@ -277,11 +277,85 @@ autoritativa falha fechado.
 - Gates: Composer, PHPStan, Pint, PHPUnit integral, UX canonica, Vite,
   migrations SQLite/MySQL, route diff e `git diff --check`.
 
+## Implementacao do Bloco 53F-B
+
+O motor diferencial e a persistencia minima foram entregues no commit
+`cc3e2ee9`:
+
+- enums tipados para classificacao diferencial e resultado agregado;
+- novo outcome documental `correction_rejected`, sem semantica automatica de
+  exclusao;
+- `CorrectionDifferentialResolver` com o recibo formal como fronteira
+  temporal, carry-forward explicito e deteccao de fontes stale;
+- `CorrectionRevalidationSnapshotBuilder` com schema versionado,
+  canonicalizacao, fingerprint e hash SHA-256 deterministico;
+- DTOs tipados do resultado e dos itens diferenciais;
+- migration incremental `2026_08_01_000053`, com ligacao unica do lote ao
+  pedido, chave coletiva para lotes historicos e campos de controlo da
+  revalidacao/projecao;
+- backfill limitado a lotes coletivos autoritativos; nenhum pedido historico
+  foi inferido;
+- rollback fail-closed quando existirem dados 53F que nao possam regressar ao
+  contrato anterior sem perda.
+
+A migration passou num ciclo isolado SQLite `up/down/up`. A validacao
+MySQL/MariaDB temporaria e a concorrencia real ficam registadas apenas nos
+gates finais.
+
+## Implementacao do Bloco 53F-C
+
+O workspace municipal foi integrado no detalhe canonico do pedido e numa fila
+operacional dedicada. Foram implementados:
+
+- `CorrectionRevalidationService` para fila paginada, inicio idempotente,
+  decisoes por item, optimistic token, progresso e resultado agregado;
+- `CorrectionResolutionService` para preview, validacao integral, locks,
+  snapshot final e selagem idempotente;
+- controller fino e Form Requests dedicados para fila, inicio, decisao,
+  preview e selagem;
+- abilities em `CorrectionRequestPolicy` e `CorrectionResponsePolicy`, sem
+  bypass de administrador e com auditor/candidato excluidos das mutacoes;
+- scope canonico de pedidos e respostas derivado da publicacao original, com
+  acesso global apenas por assignment estrutural explicito; o fallback de
+  processo/candidatura fica restrito a respostas legacy;
+- cinco rotas permission-first com `auth`, conta ativa, MFA, logging,
+  entitlement `applications.review`, permission exata e sem role fixa;
+- fila com filtros por concurso, submissao, SLA, tecnico, estado, resultado,
+  processo e candidatura, aplicando o scope antes da paginacao;
+- detalhe com resultado original, recibo, carry-forward bloqueado, comparacao
+  por links documentais protegidos, decisoes, progresso e estado de selagem;
+- confirmacao explicita no preview antes de criar o lote imutavel;
+- separacao entre selagem e publicacao: o pedido permanece `submitted` e o
+  processo permanece `correction_under_review` ate ao Bloco D;
+- bloqueio do atalho de revisao legacy para pedidos canonicos.
+
+Evidencia dirigida observada antes do commit do Bloco C:
+
+- regressao inicial 53E/legacy: 22 testes, 158 assercoes;
+- testes funcionais e de seguranca 53F-C: 12 testes, 95 assercoes;
+- conjunto dirigido consolidado A-C/53E/legacy: 34 testes, 249 assercoes;
+- PHPStan dirigido: zero erros;
+- Pint dirigido: PASS;
+- `git diff --check`: PASS.
+
+## Rotas 53F
+
+| Rota | Metodo | Permission |
+| --- | --- | --- |
+| `backoffice.correction-revalidations.index` | GET | `administrative_processes.view` |
+| `backoffice.correction-revalidations.start` | POST | `administrative_processes.update` |
+| `backoffice.correction-revalidations.decide` | POST | `administrative_processes.decide` |
+| `backoffice.correction-revalidations.preview` | POST | `administrative_processes.update` |
+| `backoffice.correction-revalidations.seal` | POST | `administrative_processes.update` |
+
+Nao foram criadas permissions novas. A publicacao continua a usar
+`administrative_processes.publish` e as rotas oficiais preexistentes.
+
 ## Estado dos blocos
 
-- 53F-A: auditoria concluida; commit pendente.
-- 53F-B: pendente.
-- 53F-C: pendente.
+- 53F-A: concluido no commit `ba8f139f`.
+- 53F-B: concluido no commit `cc3e2ee9`.
+- 53F-C: implementado e validado de forma dirigida; commit em preparacao.
 - 53F-D: pendente.
 
 ## Classificacao provisoria

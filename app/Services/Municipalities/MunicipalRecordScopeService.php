@@ -1129,6 +1129,10 @@ class MunicipalRecordScopeService
      */
     public function correctionRequests(Builder $query, User $user): Builder
     {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
         if ($user->municipality_id === null) {
             return $query->whereRaw('1 = 0');
         }
@@ -1154,16 +1158,48 @@ class MunicipalRecordScopeService
      */
     public function correctionResponses(Builder $query, User $user): Builder
     {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
         if ($user->municipality_id === null) {
             return $query->whereRaw('1 = 0');
         }
 
         return $query->where(function (Builder $responses) use ($user): void {
-            $responses
-                ->whereHas('correctionRequest.administrativeProcess.program', fn (Builder $program): Builder => $program
-                    ->where('municipality_id', $user->municipality_id))
-                ->orWhereHas('application.program', fn (Builder $program): Builder => $program
-                    ->where('municipality_id', $user->municipality_id));
+            $responses->whereHas(
+                'correctionRequest.publicationResult',
+                fn (Builder $result): Builder => $result
+                    ->where('municipality_id', $user->municipality_id),
+            )->orWhere(function (Builder $legacy) use ($user): void {
+                $legacy
+                    ->whereHas(
+                        'correctionRequest',
+                        fn (Builder $requests): Builder => $requests
+                            ->whereNull(
+                                'application_review_publication_result_id',
+                            ),
+                    )
+                    ->where(function (Builder $legacyScope) use ($user): void {
+                        $legacyScope
+                            ->whereHas(
+                                'correctionRequest.administrativeProcess.program',
+                                fn (Builder $program): Builder => $program
+                                    ->where(
+                                        'municipality_id',
+                                        $user->municipality_id,
+                                    ),
+                            )
+                            ->orWhereHas(
+                                'application.program',
+                                fn (Builder $program): Builder => $program
+                                    ->where(
+                                        'municipality_id',
+                                        $user->municipality_id,
+                                    ),
+                            );
+                    });
+            });
         });
     }
 

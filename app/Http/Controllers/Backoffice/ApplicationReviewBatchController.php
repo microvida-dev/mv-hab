@@ -105,6 +105,8 @@ class ApplicationReviewBatchController extends Controller
         );
         $applicationReviewBatch->load([
             'contest.program',
+            'correctionRequest',
+            'publication',
             'sealedBy',
             'items',
         ]);

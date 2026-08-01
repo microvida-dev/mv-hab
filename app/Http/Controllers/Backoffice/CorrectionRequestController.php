@@ -16,6 +16,7 @@ use App\Models\RequiredDocument;
 use App\Services\Administrative\CorrectionDeadlineExtensionService;
 use App\Services\Administrative\CorrectionProgressMetricsService;
 use App\Services\Administrative\CorrectionRequestService;
+use App\Services\Administrative\CorrectionRevalidationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -28,6 +29,7 @@ class CorrectionRequestController extends Controller
         private readonly CorrectionRequestService $correctionRequestService,
         private readonly CorrectionDeadlineExtensionService $deadlineExtensions,
         private readonly CorrectionProgressMetricsService $progress,
+        private readonly CorrectionRevalidationService $revalidation,
     ) {}
 
     public function index(
@@ -119,6 +121,17 @@ class CorrectionRequestController extends Controller
             'deadlineExtensions.authorizedBy',
             'submissionReceipt',
         ]);
+        $revalidationWorkspace = ! $correctionRequest->isLegacy()
+            && (
+                $correctionRequest->submitted_at !== null
+                || $correctionRequest->revalidation_started_at !== null
+                || $correctionRequest->revalidationBatch()->exists()
+            )
+                ? $this->revalidation->workspace(
+                    $correctionRequest,
+                    $this->authenticatedUser($request),
+                )
+                : null;
 
         return view(
             'backoffice.correction-requests.show',
@@ -127,6 +140,7 @@ class CorrectionRequestController extends Controller
                 'requestProgress' => $this->progress->progress(
                     $correctionRequest,
                 ),
+                'revalidationWorkspace' => $revalidationWorkspace,
             ],
         );
     }

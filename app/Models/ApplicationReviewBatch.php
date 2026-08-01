@@ -7,6 +7,7 @@ use App\Enums\ApplicationReviewBatchStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use LogicException;
@@ -135,5 +136,14 @@ class ApplicationReviewBatch extends Model
         return $this->hasMany(ApplicationReviewBatchItem::class)
             ->orderBy('process_number')
             ->orderBy('id');
+    }
+
+    /** @return HasOne<ApplicationReviewPublication, $this> */
+    public function publication(): HasOne
+    {
+        return $this->hasOne(
+            ApplicationReviewPublication::class,
+            'application_review_batch_id',
+        );
     }
 }

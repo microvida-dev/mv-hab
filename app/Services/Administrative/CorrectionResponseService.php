@@ -32,6 +32,8 @@ class CorrectionResponseService
      */
     public function submit(CorrectionRequest $request, array $data, User $candidate): CorrectionResponse
     {
+        $this->assertLegacyFlow($request);
+
         if ($request->user_id !== $candidate->id || ! $request->isOpenForCandidateResponse()) {
             throw ValidationException::withMessages(['correction_request' => 'Este pedido não aceita resposta neste momento.']);
         }
@@ -132,6 +134,10 @@ class CorrectionResponseService
         ?string $notes,
         User $actor,
     ): CorrectionResponse {
+        $this->assertLegacyFlow(
+            $this->requiredCorrectionRequest($response),
+        );
+
         return DB::transaction(function () use ($response, $result, $notes, $actor) {
             $status = $result === CorrectionResponseReviewResult::Accepted
                 ? CorrectionResponseStatus::Accepted
@@ -281,6 +287,15 @@ class CorrectionResponseService
         }
 
         return is_string($status) ? AdministrativeProcessStatus::tryFrom($status) : null;
+    }
+
+    private function assertLegacyFlow(CorrectionRequest $request): void
+    {
+        if (! $request->isLegacy()) {
+            throw ValidationException::withMessages([
+                'correction_request' => 'Este pedido utiliza a segunda análise diferencial e não pode ser decidido pelo fluxo legado.',
+            ]);
+        }
     }
 
     private function requiredApplication(CorrectionRequest $request): Application

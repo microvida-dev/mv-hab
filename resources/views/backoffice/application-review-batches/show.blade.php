@@ -11,10 +11,12 @@
                 </p>
             </div>
             <a
-                href="{{ route('backoffice.application-review-batches.contest', $batch->contest) }}"
+                href="{{ $batch->correctionRequest
+                    ? route('backoffice.correction-requests.show', $batch->correctionRequest)
+                    : route('backoffice.application-review-batches.contest', $batch->contest) }}"
                 class="mv-button-secondary"
             >
-                Voltar ao concurso
+                {{ $batch->correctionRequest ? 'Voltar ao pedido' : 'Voltar ao concurso' }}
             </a>
         </div>
     </x-slot>
@@ -32,7 +34,9 @@
 
             @can('publishForBatch', [\App\Models\ApplicationReviewPublication::class, $batch])
                 <div class="flex justify-end">
-                    <a href="{{ route('backoffice.application-review-publications.create', $batch) }}" class="mv-button-primary">Preparar publicação coletiva</a>
+                    <a href="{{ route('backoffice.application-review-publications.create', $batch) }}" class="mv-button-primary">
+                        {{ $batch->publication ? 'Ver publicação' : ($batch->correctionRequest ? 'Preparar publicação da segunda análise' : 'Preparar publicação coletiva') }}
+                    </a>
                 </div>
             @endcan
 
