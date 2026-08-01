@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/** @property AdministrativeDecisionResult|null $decision_result */
 class AdministrativeDecision extends Model
 {
     /** @use HasFactory<AdministrativeDecisionFactory> */

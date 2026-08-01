@@ -186,6 +186,12 @@ class Application extends Model
         return $this->hasMany(CorrectionRequest::class);
     }
 
+    /** @return HasOne<CorrectionRequest, $this> */
+    public function latestCorrectionRequest(): HasOne
+    {
+        return $this->hasOne(CorrectionRequest::class)->latestOfMany();
+    }
+
     /** @return HasMany<CorrectionResponse, $this> */
     public function correctionResponses(): HasMany
     {
@@ -196,6 +202,14 @@ class Application extends Model
     public function administrativeDecisions(): HasMany
     {
         return $this->hasMany(AdministrativeDecision::class);
+    }
+
+    /** @return HasOne<AdministrativeDecision, $this> */
+    public function latestApprovedAdministrativeDecision(): HasOne
+    {
+        return $this->hasOne(AdministrativeDecision::class)
+            ->where('status', 'approved')
+            ->latestOfMany();
     }
 
     /** @return HasMany<AdministrativeTask, $this> */
