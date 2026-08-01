@@ -248,10 +248,14 @@ class CorrectionResponseService
 
     private function requiredCorrectionRequest(CorrectionResponse $response): CorrectionRequest
     {
-        $request = $response->correctionRequest;
+        $request = $response->getRelationValue(
+            'correctionRequest',
+        );
 
         if (! $request instanceof CorrectionRequest) {
-            throw ValidationException::withMessages(['correction_request' => 'Resposta sem pedido de aperfeiçoamento associado.']);
+            throw ValidationException::withMessages([
+                'correction_request' => 'Resposta sem pedido de aperfeiçoamento associado.',
+            ]);
         }
 
         return $request;

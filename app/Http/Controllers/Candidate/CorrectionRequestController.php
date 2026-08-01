@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Candidate;
 use App\Enums\CorrectionRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Models\CorrectionRequest;
-use App\Services\Administrative\CandidateCorrectionWorkspaceService;
+use App\Services\Administrative\CorrectionProgressMetricsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Gate;
 class CorrectionRequestController extends Controller
 {
     public function __construct(
-        private readonly CandidateCorrectionWorkspaceService $workspace,
+        private readonly CorrectionProgressMetricsService $progress,
     ) {}
 
     public function index(Request $request): View
@@ -23,17 +23,28 @@ class CorrectionRequestController extends Controller
                 'application',
                 'administrativeProcess',
                 'items',
-                'responses',
                 'publicationResult',
             ])
-            ->where('user_id', $this->authenticatedUser($request)->id)
+            ->where(
+                'user_id',
+                $this->authenticatedUser($request)->id,
+            )
             ->where('candidate_visible', true)
             ->where(function ($query): void {
-                $query->whereHas('publicationResult', fn ($result) => $result
-                    ->where('published_at', '<=', now()))
+                $query
+                    ->whereHas(
+                        'publicationResult',
+                        fn ($result) => $result->where(
+                            'published_at',
+                            '<=',
+                            now(),
+                        ),
+                    )
                     ->orWhere(function ($legacy): void {
                         $legacy
-                            ->whereNull('application_review_publication_result_id')
+                            ->whereNull(
+                                'application_review_publication_result_id',
+                            )
                             ->whereNotNull('issued_at')
                             ->whereNotNull('notified_at')
                             ->whereNotNull('opened_at')
@@ -42,20 +53,26 @@ class CorrectionRequestController extends Controller
                                 '!=',
                                 CorrectionRequestStatus::Cancelled->value,
                             )
-                            ->whereHas('application', fn ($application) => $application
-                                ->whereColumn(
-                                    'applications.user_id',
-                                    'correction_requests.user_id',
-                                ))
-                            ->whereHas('administrativeProcess', fn ($process) => $process
-                                ->whereColumn(
-                                    'administrative_processes.application_id',
-                                    'correction_requests.application_id',
-                                )
-                                ->whereColumn(
-                                    'administrative_processes.user_id',
-                                    'correction_requests.user_id',
-                                ));
+                            ->whereHas(
+                                'application',
+                                fn ($application) => $application
+                                    ->whereColumn(
+                                        'applications.user_id',
+                                        'correction_requests.user_id',
+                                    ),
+                            )
+                            ->whereHas(
+                                'administrativeProcess',
+                                fn ($process) => $process
+                                    ->whereColumn(
+                                        'administrative_processes.application_id',
+                                        'correction_requests.application_id',
+                                    )
+                                    ->whereColumn(
+                                        'administrative_processes.user_id',
+                                        'correction_requests.user_id',
+                                    ),
+                            );
                     });
             })
             ->latest()
@@ -63,12 +80,17 @@ class CorrectionRequestController extends Controller
 
         return view(
             'candidate.correction-requests.index',
-            compact('requests'),
+            [
+                'requests' => $requests,
+                'progressByRequest' => $this->progress
+                    ->forRequests($requests->getCollection()),
+            ],
         );
     }
 
-    public function show(CorrectionRequest $correctionRequest): View
-    {
+    public function show(
+        CorrectionRequest $correctionRequest,
+    ): View {
         Gate::authorize('view', $correctionRequest);
 
         $correctionRequest->load([
@@ -87,7 +109,7 @@ class CorrectionRequestController extends Controller
 
         return view('candidate.correction-requests.show', [
             'correctionRequest' => $correctionRequest,
-            'workspaceProgress' => $this->workspace->progress(
+            'workspaceProgress' => $this->progress->progress(
                 $correctionRequest,
             ),
         ]);

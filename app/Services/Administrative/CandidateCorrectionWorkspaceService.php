@@ -33,6 +33,7 @@ class CandidateCorrectionWorkspaceService
     public function __construct(
         private readonly DocumentUploadService $documents,
         private readonly AuditLogger $audit,
+        private readonly CorrectionProgressMetricsService $progressMetrics,
     ) {}
 
     /**
@@ -182,36 +183,15 @@ class CandidateCorrectionWorkspaceService
      *     completed: int,
      *     pending: int,
      *     percentage: int,
-     *     ready_for_submission: bool
+     *     ready_for_submission: bool,
+     *     formal_submitted: bool,
+     *     overdue: bool,
+     *     due_soon: bool
      * }
      */
     public function progress(CorrectionRequest $request): array
     {
-        $query = $request->items()
-            ->where('is_required', true)
-            ->whereNotIn('status', [
-                CorrectionRequestItemStatus::Cancelled->value,
-            ]);
-
-        $total = (clone $query)->count();
-        $completed = (clone $query)
-            ->whereIn('status', [
-                CorrectionRequestItemStatus::Responded->value,
-                CorrectionRequestItemStatus::Accepted->value,
-                CorrectionRequestItemStatus::Waived->value,
-            ])
-            ->count();
-        $pending = max(0, $total - $completed);
-
-        return [
-            'total' => $total,
-            'completed' => $completed,
-            'pending' => $pending,
-            'percentage' => $total === 0
-                ? 100
-                : (int) round(($completed / $total) * 100),
-            'ready_for_submission' => $total > 0 && $pending === 0,
-        ];
+        return $this->progressMetrics->progress($request);
     }
 
     /**

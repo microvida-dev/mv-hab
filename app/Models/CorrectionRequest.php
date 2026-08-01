@@ -37,6 +37,9 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $resolved_at
  * @property Carbon|null $closed_at
  * @property Carbon|null $cancelled_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  * @property-read ApplicationReviewPublicationResult|null $publicationResult
  * @property-read AdministrativeProcess $administrativeProcess
  * @property-read Application $application

@@ -30,6 +30,49 @@ class AgendaServiceTest extends TestCase
         $this->assertArrayHasKey('events', $agenda);
     }
 
+    public function test_today_includes_events_created_earlier_on_the_same_day(): void
+    {
+        Carbon::setTestNow('2026-07-03 12:00:00');
+
+        try {
+            $service = $this->serviceWithEvents([
+                new TimelineEvent(
+                    id: 'earlier-today',
+                    title: 'Submissão formal recebida',
+                    workspace: TimelineWorkspace::Applications,
+                    type: TimelineType::CorrectionResponse,
+                    priority: TimelinePriority::High,
+                    status: TimelineStatus::Completed,
+                    datetime: Carbon::parse(
+                        '2026-07-03 09:30:00',
+                    ),
+                ),
+                new TimelineEvent(
+                    id: 'tomorrow',
+                    title: 'Evento de amanhã',
+                    workspace: TimelineWorkspace::Applications,
+                    type: TimelineType::CorrectionRequest,
+                    priority: TimelinePriority::Medium,
+                    status: TimelineStatus::Pending,
+                    datetime: Carbon::parse(
+                        '2026-07-04 09:30:00',
+                    ),
+                ),
+            ]);
+
+            $agenda = $service->today(new User);
+            $events = $agenda['events'] ?? [];
+
+            $this->assertIsArray($events);
+            $this->assertSame(
+                ['earlier-today'],
+                array_column($events, 'id'),
+            );
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
     public function test_week_returns_week_structure(): void
     {
         $service = $this->serviceWithEvents($this->events());

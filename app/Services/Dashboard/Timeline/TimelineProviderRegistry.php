@@ -34,7 +34,7 @@ final class TimelineProviderRegistry
             new WorkTaskTimelineProvider,
             app(VisitTimelineProvider::class),
             app(InspectionTimelineProvider::class),
-            new CorrectionRequestTimelineProvider,
+            app(CorrectionRequestTimelineProvider::class),
             new HearingTimelineProvider,
             new ComplaintTimelineProvider,
             new DeadlineTimelineProvider,

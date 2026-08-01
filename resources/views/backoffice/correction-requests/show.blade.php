@@ -153,6 +153,52 @@
             @endif
 
             <section class="mv-surface p-6">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-ink-900">
+                            Progresso agregado
+                        </h2>
+                        <p class="mt-1 text-sm text-ink-600">
+                            {{ $requestProgress['completed'] }}
+                            de
+                            {{ $requestProgress['total'] }}
+                            elementos preparados pelo candidato.
+                        </p>
+                    </div>
+                    <span class="text-2xl font-semibold text-civic-700">
+                        {{ $requestProgress['percentage'] }}%
+                    </span>
+                </div>
+
+                <div class="mt-4 h-2 overflow-hidden rounded-full bg-ink-100">
+                    <div
+                        class="h-full rounded-full bg-civic-700"
+                        style="width: {{ $requestProgress['percentage'] }}%"
+                    ></div>
+                </div>
+
+                <div class="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+                    <span class="rounded-full bg-ink-100 px-3 py-1 text-ink-700">
+                        {{ $requestProgress['pending'] }}
+                        pendente(s)
+                    </span>
+                    @if ($requestProgress['formal_submitted'])
+                        <span class="rounded-full bg-emerald-50 px-3 py-1 text-emerald-800">
+                            Submissão formal recebida
+                        </span>
+                    @elseif ($requestProgress['overdue'])
+                        <span class="rounded-full bg-red-50 px-3 py-1 text-red-700">
+                            Prazo vencido
+                        </span>
+                    @elseif ($requestProgress['due_soon'])
+                        <span class="rounded-full bg-amber-50 px-3 py-1 text-amber-800">
+                            Termina em menos de 48 horas
+                        </span>
+                    @endif
+                </div>
+            </section>
+
+            <section class="mv-surface p-6">
                 <h2 class="text-lg font-semibold text-ink-900">Itens solicitados</h2>
                 <div class="mt-4 divide-y divide-ink-100">
                     @foreach ($correctionRequest->items as $item)

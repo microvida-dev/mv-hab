@@ -24,11 +24,19 @@ class CorrectionRequestResponseService
      */
     public function submit(CorrectionRequest $request, array $data, User $candidate): CorrectionResponse
     {
-        $response = $this->responses->submit($request, $data, $candidate);
-        $application = $request->application;
+        $response = $this->responses->submit(
+            $request,
+            $data,
+            $candidate,
+        );
+        $application = $request->getRelationValue(
+            'application',
+        );
 
         if (! $application instanceof Application) {
-            throw ValidationException::withMessages(['application' => 'Pedido sem candidatura associada.']);
+            throw ValidationException::withMessages([
+                'application' => 'Pedido sem candidatura associada.',
+            ]);
         }
 
         $this->timeline->record(

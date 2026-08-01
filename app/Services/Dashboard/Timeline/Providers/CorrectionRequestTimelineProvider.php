@@ -4,116 +4,232 @@ namespace App\Services\Dashboard\Timeline\Providers;
 
 use App\Data\Dashboard\TimelineEvent;
 use App\Enums\CorrectionRequestStatus;
-use App\Enums\CorrectionResponseStatus;
 use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
 use App\Models\CorrectionRequest;
-use App\Models\CorrectionResponse;
 use App\Models\User;
+use App\Services\Administrative\CorrectionProgressMetricsService;
 use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class CorrectionRequestTimelineProvider extends BaseTimelineProvider
 {
     public function __construct(
-        private readonly TimelineEventFactory $factory = new TimelineEventFactory,
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly CorrectionProgressMetricsService $progress,
+        private readonly TimelineEventFactory $factory,
     ) {}
 
-    public function forUser(User $user, array $dashboard = []): array
-    {
-        if (! $user->hasPermission('correction_requests.view')) {
+    public function forUser(
+        User $user,
+        array $dashboard = [],
+    ): array {
+        if (
+            $user->hasRole('candidate')
+            || ! $user->hasPermission(
+                'administrative_processes.view',
+            )
+        ) {
             return [];
         }
 
-        return collect()
-            ->merge($this->openCorrectionRequests())
-            ->merge($this->submittedResponses())
-            ->values()
-            ->all();
+        return array_values(
+            $this->municipalScope
+                ->correctionRequests(
+                    CorrectionRequest::query(),
+                    $user,
+                )
+                ->with('items:id,correction_request_id,status,is_required,sort_order')
+                ->whereIn('status', [
+                    CorrectionRequestStatus::Notified->value,
+                    CorrectionRequestStatus::Open->value,
+                    CorrectionRequestStatus::PartiallyCompleted->value,
+                    CorrectionRequestStatus::Submitted->value,
+                    CorrectionRequestStatus::Expired->value,
+                ])
+                ->orderByRaw(
+                    'CASE status '
+                    .'WHEN ? THEN 0 '
+                    .'WHEN ? THEN 1 '
+                    .'WHEN ? THEN 2 '
+                    .'WHEN ? THEN 3 '
+                    .'WHEN ? THEN 4 '
+                    .'ELSE 9 END',
+                    [
+                        CorrectionRequestStatus::Expired->value,
+                        CorrectionRequestStatus::Submitted->value,
+                        CorrectionRequestStatus::PartiallyCompleted->value,
+                        CorrectionRequestStatus::Open->value,
+                        CorrectionRequestStatus::Notified->value,
+                    ],
+                )
+                ->orderBy('response_deadline_at')
+                ->limit(40)
+                ->get()
+                ->map(
+                    fn (CorrectionRequest $request): TimelineEvent => $this->event($request),
+                )
+                ->values()
+                ->all(),
+        );
     }
 
-    /** @return list<TimelineEvent> */
-    private function openCorrectionRequests(): array
-    {
-        return array_values(CorrectionRequest::query()
-            ->whereNotNull('response_deadline_at')
-            ->whereIn('status', [
-                CorrectionRequestStatus::Notified->value,
-                CorrectionRequestStatus::Open->value,
-                CorrectionRequestStatus::PartiallyCompleted->value,
-                CorrectionRequestStatus::Expired->value,
-            ])
-            ->orderBy('response_deadline_at')
-            ->limit(20)
-            ->get()
-            ->map(fn (CorrectionRequest $request): TimelineEvent => $this->factory->make(
-                id: 'correction-request-'.$request->getKey(),
-                type: TimelineType::CorrectionRequest,
-                title: 'Pedido de aperfeiçoamento pendente',
-                description: trim(($request->request_number ?? 'Pedido').' · prazo de resposta'),
-                route: route('backoffice.applications.index'),
-                datetime: $request->response_deadline_at,
-                priority: $request->response_deadline_at?->isPast()
-                    ? TimelinePriority::Critical
-                    : TimelinePriority::High,
-                icon: 'document-warning',
-                tone: $request->response_deadline_at?->isPast() ? 'danger' : 'warning',
-                workspace: TimelineWorkspace::Applications,
-                metadata: [
-                    'correction_request_id' => $request->getKey(),
-                    'request_number' => $request->request_number,
-                    'status' => $request->status->value,
-                ],
-            ))
-            ->values()
-            ->all());
+    private function event(
+        CorrectionRequest $request,
+    ): TimelineEvent {
+        $progress = $this->progress->progress($request);
+        $submitted =
+            $request->status
+                === CorrectionRequestStatus::Submitted;
+
+        return $this->factory->make(
+            id: 'correction-request-'.$request->getKey(),
+            type: $submitted
+                ? TimelineType::CorrectionResponse
+                : TimelineType::CorrectionRequest,
+            title: $this->title($request),
+            description: $this->description(
+                $request,
+                $progress,
+            ),
+            route: route(
+                'backoffice.correction-requests.show',
+                $request,
+            ),
+            datetime: $submitted
+                ? $request->submitted_at
+                : (
+                    $request->expired_at
+                    ?? $request->response_deadline_at
+                ),
+            priority: $this->priority($request, $progress),
+            icon: $submitted
+                ? 'document-check'
+                : 'document-warning',
+            tone: $this->eventTone($request, $progress),
+            workspace: TimelineWorkspace::Applications,
+            metadata: [
+                'correction_request_id' => $request->getKey(),
+                'request_number' => $request->request_number,
+                'status' => $request->status->value,
+                'completed_items' => $progress['completed'],
+                'total_items' => $progress['total'],
+                'pending_items' => $progress['pending'],
+                'progress_percentage' => $progress['percentage'],
+                'formal_submitted' => $progress['formal_submitted'],
+                'overdue' => $progress['overdue'],
+                'due_soon' => $progress['due_soon'],
+            ],
+        );
     }
 
-    /** @return list<TimelineEvent> */
-    private function submittedResponses(): array
-    {
-        return array_values(CorrectionResponse::query()
-            ->with('correctionRequest')
-            ->whereNotNull('submitted_at')
-            ->whereIn('status', [
-                CorrectionResponseStatus::Submitted->value,
-                CorrectionResponseStatus::UnderReview->value,
-            ])
-            ->orderBy('submitted_at')
-            ->limit(20)
-            ->get()
-            ->map(fn (CorrectionResponse $response): TimelineEvent => $this->factory->make(
-                id: 'correction-response-'.$response->getKey(),
-                type: TimelineType::CorrectionResponse,
-                title: 'Resposta a aperfeiçoamento recebida',
-                description: trim('Resposta ao pedido '.$this->requestNumber($response).' · aguarda validação'),
-                route: route('backoffice.correction-responses.show', [
-                    'correctionResponse' => $response,
-                ]),
-                datetime: $response->submitted_at,
-                priority: TimelinePriority::Medium,
-                icon: 'document-check',
-                tone: 'info',
-                workspace: TimelineWorkspace::Applications,
-                metadata: [
-                    'correction_response_id' => $response->getKey(),
-                    'request_number' => $this->requestNumber($response),
-                    'status' => $response->status->value,
-                ],
-            ))
-            ->values()
-            ->all());
+    private function title(
+        CorrectionRequest $request,
+    ): string {
+        return match ($request->status) {
+            CorrectionRequestStatus::Submitted => 'Aperfeiçoamento formalmente submetido',
+            CorrectionRequestStatus::Expired => 'Prazo de aperfeiçoamento expirado',
+            CorrectionRequestStatus::PartiallyCompleted => 'Aperfeiçoamento parcialmente preparado',
+            CorrectionRequestStatus::Open,
+            CorrectionRequestStatus::Notified => 'Pedido de aperfeiçoamento pendente',
+            default => 'Pedido de aperfeiçoamento',
+        };
     }
 
-    private function requestNumber(CorrectionResponse $response): string
-    {
-        $relation = $response->relationLoaded('correctionRequest')
-            ? $response->getRelation('correctionRequest')
-            : null;
+    /**
+     * @param  array{
+     *     total: int,
+     *     completed: int,
+     *     pending: int,
+     *     percentage: int,
+     *     ready_for_submission: bool,
+     *     formal_submitted: bool,
+     *     overdue: bool,
+     *     due_soon: bool
+     * }  $progress
+     */
+    private function description(
+        CorrectionRequest $request,
+        array $progress,
+    ): string {
+        return $this->concat(
+            $request->request_number,
+            $progress['completed'].'/'.$progress['total']
+                .' elementos preparados',
+            $request->status->label(),
+        );
+    }
 
-        return $relation instanceof CorrectionRequest
-            ? $relation->request_number
-            : 'não identificado';
+    /**
+     * @param  array{
+     *     overdue: bool,
+     *     due_soon: bool,
+     *     total: int,
+     *     completed: int,
+     *     pending: int,
+     *     percentage: int,
+     *     ready_for_submission: bool,
+     *     formal_submitted: bool
+     * }  $progress
+     */
+    private function priority(
+        CorrectionRequest $request,
+        array $progress,
+    ): TimelinePriority {
+        if (
+            $request->status === CorrectionRequestStatus::Expired
+            || $progress['overdue']
+            || $progress['due_soon']
+        ) {
+            return TimelinePriority::Critical;
+        }
+
+        if (
+            $request->status
+                === CorrectionRequestStatus::Submitted
+            || $request->status
+                === CorrectionRequestStatus::PartiallyCompleted
+        ) {
+            return TimelinePriority::High;
+        }
+
+        return TimelinePriority::Medium;
+    }
+
+    /**
+     * @param  array{
+     *     overdue: bool,
+     *     due_soon: bool,
+     *     total: int,
+     *     completed: int,
+     *     pending: int,
+     *     percentage: int,
+     *     ready_for_submission: bool,
+     *     formal_submitted: bool
+     * }  $progress
+     */
+    private function eventTone(
+        CorrectionRequest $request,
+        array $progress,
+    ): string {
+        if (
+            $request->status === CorrectionRequestStatus::Expired
+            || $progress['overdue']
+        ) {
+            return 'danger';
+        }
+
+        if (
+            $request->status
+                === CorrectionRequestStatus::Submitted
+        ) {
+            return 'info';
+        }
+
+        return $progress['due_soon']
+            ? 'warning'
+            : 'neutral';
     }
 }

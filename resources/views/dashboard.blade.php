@@ -24,6 +24,11 @@
                         :queue="$dashboard['priority_queue'] ?? []"
                     />
 
+                    {{-- Aperfeiçoamentos --}}
+                    <x-dashboard.operations.corrections
+                        :metrics="$correctionOperations ?? []"
+                    />
+
                     {{-- Indicadores principais --}}
                     <x-dashboard.operations.summary
                         :summary="$operationsSummary"

@@ -14,6 +14,7 @@ use App\Models\CorrectionRequest;
 use App\Models\DocumentType;
 use App\Models\RequiredDocument;
 use App\Services\Administrative\CorrectionDeadlineExtensionService;
+use App\Services\Administrative\CorrectionProgressMetricsService;
 use App\Services\Administrative\CorrectionRequestService;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
@@ -26,40 +27,84 @@ class CorrectionRequestController extends Controller
     public function __construct(
         private readonly CorrectionRequestService $correctionRequestService,
         private readonly CorrectionDeadlineExtensionService $deadlineExtensions,
+        private readonly CorrectionProgressMetricsService $progress,
     ) {}
 
-    public function index(Request $request, AdministrativeProcess $administrativeProcess): View
-    {
+    public function index(
+        Request $request,
+        AdministrativeProcess $administrativeProcess,
+    ): View {
         Gate::authorize('viewBackoffice', $administrativeProcess);
-        $requests = $administrativeProcess->correctionRequests()->with(['items', 'responses'])->latest()->paginate(20);
 
-        return view('backoffice.correction-requests.index', compact('administrativeProcess', 'requests'));
+        $summaryRequests = $administrativeProcess
+            ->correctionRequests()
+            ->with('items')
+            ->get();
+
+        $requests = $administrativeProcess
+            ->correctionRequests()
+            ->with('items')
+            ->latest()
+            ->paginate(20);
+
+        return view(
+            'backoffice.correction-requests.index',
+            [
+                'administrativeProcess' => $administrativeProcess,
+                'requests' => $requests,
+                'progressByRequest' => $this->progress
+                    ->forRequests($requests->getCollection()),
+                'requestSummary' => $this->progress
+                    ->summarize($summaryRequests),
+            ],
+        );
     }
 
-    public function create(Request $request, AdministrativeProcess $administrativeProcess): View
-    {
+    public function create(
+        Request $request,
+        AdministrativeProcess $administrativeProcess,
+    ): View {
         Gate::authorize('createBackoffice', $administrativeProcess);
 
         return view('backoffice.correction-requests.create', [
             'process' => $administrativeProcess,
             'issueTypes' => CorrectionIssueType::options(),
             'actions' => CorrectionRequiredAction::options(),
-            'documentTypes' => DocumentType::query()->orderBy('name')->get(['id', 'name']),
-            'requiredDocuments' => RequiredDocument::query()->with('documentType')->orderBy('id')->get(),
+            'documentTypes' => DocumentType::query()
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'requiredDocuments' => RequiredDocument::query()
+                ->with('documentType')
+                ->orderBy('id')
+                ->get(),
         ]);
     }
 
-    public function store(StoreCorrectionRequestRequest $request, AdministrativeProcess $administrativeProcess): RedirectResponse
-    {
+    public function store(
+        StoreCorrectionRequestRequest $request,
+        AdministrativeProcess $administrativeProcess,
+    ): RedirectResponse {
         Gate::authorize('createBackoffice', $administrativeProcess);
-        $correctionRequest = $this->correctionRequestService->create($administrativeProcess, $request->validated(), $this->authenticatedUser($request));
+        $correctionRequest = $this->correctionRequestService
+            ->create(
+                $administrativeProcess,
+                $request->validated(),
+                $this->authenticatedUser($request),
+            );
 
-        return to_route('backoffice.correction-requests.show', $correctionRequest)
-            ->with('success', 'Pedido de aperfeiçoamento criado.');
+        return to_route(
+            'backoffice.correction-requests.show',
+            $correctionRequest,
+        )->with(
+            'success',
+            'Pedido de aperfeiçoamento criado.',
+        );
     }
 
-    public function show(Request $request, CorrectionRequest $correctionRequest): View
-    {
+    public function show(
+        Request $request,
+        CorrectionRequest $correctionRequest,
+    ): View {
         Gate::authorize('viewBackoffice', $correctionRequest);
         $correctionRequest->load([
             'administrativeProcess',
@@ -75,45 +120,84 @@ class CorrectionRequestController extends Controller
             'submissionReceipt',
         ]);
 
-        return view('backoffice.correction-requests.show', ['correctionRequest' => $correctionRequest]);
+        return view(
+            'backoffice.correction-requests.show',
+            [
+                'correctionRequest' => $correctionRequest,
+                'requestProgress' => $this->progress->progress(
+                    $correctionRequest,
+                ),
+            ],
+        );
     }
 
-    public function edit(Request $request, CorrectionRequest $correctionRequest): View
-    {
+    public function edit(
+        Request $request,
+        CorrectionRequest $correctionRequest,
+    ): View {
         Gate::authorize('updateBackoffice', $correctionRequest);
 
-        return view('backoffice.correction-requests.edit', ['correctionRequest' => $correctionRequest]);
+        return view(
+            'backoffice.correction-requests.edit',
+            ['correctionRequest' => $correctionRequest],
+        );
     }
 
-    public function update(UpdateCorrectionRequestRequest $request, CorrectionRequest $correctionRequest): RedirectResponse
-    {
+    public function update(
+        UpdateCorrectionRequestRequest $request,
+        CorrectionRequest $correctionRequest,
+    ): RedirectResponse {
         Gate::authorize('updateBackoffice', $correctionRequest);
-        $this->correctionRequestService->update($correctionRequest, $request->validated(), $this->authenticatedUser($request));
+        $this->correctionRequestService->update(
+            $correctionRequest,
+            $request->validated(),
+            $this->authenticatedUser($request),
+        );
 
-        return to_route('backoffice.correction-requests.show', $correctionRequest)
-            ->with('success', 'Pedido atualizado.');
+        return to_route(
+            'backoffice.correction-requests.show',
+            $correctionRequest,
+        )->with('success', 'Pedido atualizado.');
     }
 
-    public function issue(IssueCorrectionRequestRequest $request, CorrectionRequest $correctionRequest): RedirectResponse
-    {
+    public function issue(
+        IssueCorrectionRequestRequest $request,
+        CorrectionRequest $correctionRequest,
+    ): RedirectResponse {
         Gate::authorize('issueBackoffice', $correctionRequest);
-        $this->correctionRequestService->issue($correctionRequest, $this->authenticatedUser($request));
+        $this->correctionRequestService->issue(
+            $correctionRequest,
+            $this->authenticatedUser($request),
+        );
 
-        return back()->with('success', 'Pedido emitido ao candidato.');
+        return back()->with(
+            'success',
+            'Pedido emitido ao candidato.',
+        );
     }
 
-    public function cancel(Request $request, CorrectionRequest $correctionRequest): RedirectResponse
-    {
+    public function cancel(
+        Request $request,
+        CorrectionRequest $correctionRequest,
+    ): RedirectResponse {
         Gate::authorize('cancelBackoffice', $correctionRequest);
-        $this->correctionRequestService->cancel($correctionRequest, $this->authenticatedUser($request));
+        $this->correctionRequestService->cancel(
+            $correctionRequest,
+            $this->authenticatedUser($request),
+        );
 
         return back()->with('success', 'Pedido cancelado.');
     }
 
-    public function close(Request $request, CorrectionRequest $correctionRequest): RedirectResponse
-    {
+    public function close(
+        Request $request,
+        CorrectionRequest $correctionRequest,
+    ): RedirectResponse {
         Gate::authorize('completeBackoffice', $correctionRequest);
-        $this->correctionRequestService->close($correctionRequest, $this->authenticatedUser($request));
+        $this->correctionRequestService->close(
+            $correctionRequest,
+            $this->authenticatedUser($request),
+        );
 
         return back()->with('success', 'Pedido fechado.');
     }
@@ -143,11 +227,22 @@ class CorrectionRequestController extends Controller
         );
     }
 
-    public function markOverdue(Request $request, CorrectionRequest $correctionRequest): RedirectResponse
-    {
-        Gate::authorize('markOverdueBackoffice', $correctionRequest);
-        $this->correctionRequestService->markOverdue($correctionRequest, $this->authenticatedUser($request));
+    public function markOverdue(
+        Request $request,
+        CorrectionRequest $correctionRequest,
+    ): RedirectResponse {
+        Gate::authorize(
+            'markOverdueBackoffice',
+            $correctionRequest,
+        );
+        $this->correctionRequestService->markOverdue(
+            $correctionRequest,
+            $this->authenticatedUser($request),
+        );
 
-        return back()->with('success', 'Pedido marcado como vencido.');
+        return back()->with(
+            'success',
+            'Pedido marcado como vencido.',
+        );
     }
 }

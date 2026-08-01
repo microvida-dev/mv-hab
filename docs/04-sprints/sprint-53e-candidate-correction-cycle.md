@@ -120,3 +120,19 @@ notificação municipal, exportação ou submissão formal.
 - agendamento de cinco em cinco minutos com prevenção de sobreposição;
 - compatibilidade do ciclo de migrations com SQLite e MySQL a validar;
 - revisão técnica das respostas continua reservada ao Bloco 53E-F.
+
+
+## Bloco 53E-D — métricas agregadas e integração operacional
+
+- serviço único para progresso por pedido, por processo e por Município;
+- métricas agregadas sem conteúdo documental ou dados pessoais desnecessários;
+- isolamento municipal fail-closed em dashboard, timeline e agenda;
+- autorização alinhada com `administrative_processes.view`;
+- um único evento operacional por pedido, mesmo quando existem várias respostas;
+- pedidos submetidos representados ao nível da submissão formal agregada;
+- navegação direta para o pedido autorizado;
+- progresso visível nos índices candidate e backoffice;
+- painel municipal com ativos, submetidos, vencidos e checklist concluída;
+- integração automática com Agenda através do `TimelineProviderRegistry`;
+- nenhuma migration, nova permission, role, exportação ou decisão de revisão;
+- revalidação diferencial e decisão técnica permanecem reservadas à Sprint 53F.

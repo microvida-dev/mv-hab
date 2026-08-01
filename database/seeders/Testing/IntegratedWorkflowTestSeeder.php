@@ -10,6 +10,7 @@ use App\Enums\ApplicationStatus;
 use App\Enums\ArrearStatus;
 use App\Enums\ComplaintStatus;
 use App\Enums\ContractStatus;
+use App\Enums\CorrectionRequestStatus;
 use App\Enums\DefinitiveListStatus;
 use App\Enums\DocumentStatus;
 use App\Enums\EligibilityCheckType;
@@ -121,7 +122,7 @@ class IntegratedWorkflowTestSeeder extends Seeder
             'administrative_process_id' => $correction['process']->id,
             'application_id' => $correction['application']->id,
             'user_id' => $correction['user']->id,
-            'status' => 'issued',
+            'status' => CorrectionRequestStatus::Notified,
             'candidate_visible' => true,
         ]);
 
