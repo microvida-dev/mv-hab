@@ -32,9 +32,14 @@
                     <dl class="grid gap-4 text-sm md:grid-cols-2">
                         <div><dt class="text-ink-500">Designação</dt><dd class="mt-1 font-medium text-ink-900">{{ $role->label }}</dd></div>
                         <div><dt class="text-ink-500">Identificador</dt><dd class="mt-1 font-medium text-ink-900">{{ $role->name }}</dd></div>
-                        <div><dt class="text-ink-500">Tipo</dt><dd class="mt-1"><x-mv.badge>{{ $role->is_system ? 'Sistema' : 'Municipal personalizada' }}</x-mv.badge></dd></div>
+                        <div><dt class="text-ink-500">Tipo</dt><dd class="mt-1"><x-mv.badge>{{ $role->is_system ? 'Sistema' : ($role->isTemplateBased() ? 'Municipal por template' : 'Municipal personalizada') }}</x-mv.badge></dd></div>
                         <div><dt class="text-ink-500">Estado</dt><dd class="mt-1"><x-mv.badge :tone="$role->is_active ? 'success' : 'warning'">{{ $role->is_active ? 'Ativa' : 'Inativa' }}</x-mv.badge></dd></div>
                         <div class="md:col-span-2"><dt class="text-ink-500">Descrição</dt><dd class="mt-1 text-ink-900">{{ $role->description ?: 'Sem descrição.' }}</dd></div>
+                        @if ($role->isTemplateBased())
+                            <div><dt class="text-ink-500">Template</dt><dd class="mt-1 font-mono text-xs text-ink-900">{{ $role->template_key }}</dd></div>
+                            <div><dt class="text-ink-500">Versão</dt><dd class="mt-1 font-medium text-ink-900">{{ $role->template_version }}</dd></div>
+                            <div class="md:col-span-2"><dt class="text-ink-500">Fingerprint</dt><dd class="mt-1 break-all font-mono text-xs text-ink-900">{{ $role->template_fingerprint }}</dd></div>
+                        @endif
                     </dl>
                 </x-mv.section>
 

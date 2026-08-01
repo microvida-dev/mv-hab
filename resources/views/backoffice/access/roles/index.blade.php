@@ -72,7 +72,7 @@
                                     </td>
                                     <td>
                                         <x-mv.badge :tone="$role->is_system ? 'neutral' : 'success'">
-                                            {{ $role->is_system ? 'Sistema' : 'Municipal personalizada' }}
+                                            {{ $role->is_system ? 'Sistema' : ($role->isTemplateBased() ? 'Municipal por template' : 'Municipal personalizada') }}
                                         </x-mv.badge>
                                     </td>
                                     <td>

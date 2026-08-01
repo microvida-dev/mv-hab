@@ -16,6 +16,9 @@ class Role extends Model
 
     protected $fillable = [
         'municipality_id',
+        'template_key',
+        'template_version',
+        'template_fingerprint',
         'name',
         'label',
         'description',
@@ -51,6 +54,14 @@ class Role extends Model
     public function isMunicipalCustom(): bool
     {
         return ! $this->is_system && $this->scope === 'municipal';
+    }
+
+    public function isTemplateBased(): bool
+    {
+        return $this->isMunicipalCustom()
+            && $this->template_key !== null
+            && $this->template_version !== null
+            && $this->template_fingerprint !== null;
     }
 
     /** @return BelongsTo<Municipality, $this> */

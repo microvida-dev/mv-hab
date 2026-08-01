@@ -17,15 +17,41 @@
                 <x-mv.alert tone="danger">{{ $message }}</x-mv.alert>
             @enderror
 
-            <div class="grid gap-5 lg:grid-cols-3">
+            <div class="grid gap-5 lg:grid-cols-2">
                 @foreach ($templates as $template)
                     <x-mv.section :title="$template['label']" :description="$template['description']" padding="p-5">
-                        <div class="flex items-center justify-between gap-3">
-                            <x-mv.badge>{{ count($template['permissions']) }} permissões recomendadas</x-mv.badge>
+                        <div class="space-y-4">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <x-mv.badge>{{ count($template['permissions']) }} permissões exatas</x-mv.badge>
+                                <x-mv.badge>Versão {{ $template['version'] }}</x-mv.badge>
+                                @if (in_array('reports.export_sensitive', $template['excluded_permissions'], true))
+                                    <x-mv.badge tone="warning">Sem exportação sensível</x-mv.badge>
+                                @endif
+                            </div>
+
+                            <ul class="space-y-1 text-sm text-ink-700">
+                                @foreach ($template['capabilities'] as $capability)
+                                    <li class="flex gap-2"><span aria-hidden="true">•</span><span>{{ $capability }}</span></li>
+                                @endforeach
+                            </ul>
+
+                            @if ($template['entitlement_dependencies'] !== [])
+                                <p class="text-xs text-ink-500">
+                                    Funcionalidades necessárias:
+                                    <span class="font-mono">{{ implode(', ', $template['entitlement_dependencies']) }}</span>
+                                </p>
+                            @endif
+
+                            <p class="break-all font-mono text-xs text-ink-500">
+                                Fingerprint: {{ $template['fingerprint'] }}
+                            </p>
+
                             @can('create', App\Models\Role::class)
-                                <a href="{{ route('backoffice.role-templates.create', $template['key']) }}" class="mv-button-primary">
-                                    Rever matriz
-                                </a>
+                                <div class="flex justify-end">
+                                    <a href="{{ route('backoffice.role-templates.create', $template['key']) }}" class="mv-button-primary">
+                                        Rever aplicação
+                                    </a>
+                                </div>
                             @endcan
                         </div>
                     </x-mv.section>

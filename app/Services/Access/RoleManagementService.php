@@ -2,23 +2,240 @@
 
 namespace App\Services\Access;
 
+use App\Enums\FeatureKey;
+use App\Models\Municipality;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use App\Policies\RolePolicy;
+use App\Services\Entitlements\MunicipalityEntitlementService;
 use DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
+/** @phpstan-import-type ResolvedMunicipalTemplate from MunicipalRoleTemplateRegistry */
 class RoleManagementService
 {
     public function __construct(
         private readonly AccessChangeLogger $logger,
         private readonly RolePolicy $policy,
         private readonly SystemRoleDefinitionRegistry $systemRoles,
+        private readonly MunicipalRoleTemplateRegistry $templates,
+        private readonly PermissionCatalogService $permissionCatalog,
+        private readonly MunicipalityEntitlementService $entitlements,
     ) {}
+
+    /**
+     * @return array{
+     *     municipality: array{id: int, name: string},
+     *     template: array<string, mixed>,
+     *     role: Role|null,
+     *     permissions_to_add: list<string>,
+     *     permissions_to_keep: list<string>,
+     *     permissions_to_remove: list<string>,
+     *     missing_entitlements: list<array{key: string, label: string}>,
+     *     mfa_required: bool,
+     *     conflicts: list<string>,
+     *     permissions_drift: bool,
+     *     metadata_drift: bool,
+     *     presentation_drift: bool,
+     *     drift: bool
+     * }
+     */
+    public function previewTemplate(User $actor, string $templateKey): array
+    {
+        $municipality = $this->templateMunicipality($actor);
+        $template = $this->templates->resolve($templateKey);
+        $role = Role::query()
+            ->with('permissions:id,name')
+            ->where('municipality_id', $municipality->id)
+            ->where('template_key', $templateKey)
+            ->first();
+        $diff = $this->templateDiff($template, $role);
+        $missingEntitlements = $this->missingEntitlements($actor, $template);
+        $mfaRequired = $this->templateRequiresMfa($template);
+
+        $this->logger->record(
+            'municipal_role_template_previewed',
+            $actor,
+            'Pré-visualização da matriz de um template municipal.',
+            role: $role,
+            newValues: [
+                'municipality_id' => (int) $municipality->id,
+                'template_key' => $template['key'],
+                'template_version' => $template['version'],
+                'template_fingerprint' => $template['fingerprint'],
+                'permissions_to_add' => $diff['permissions_to_add'],
+                'permissions_to_keep_count' => count($diff['permissions_to_keep']),
+                'permissions_to_remove' => $diff['permissions_to_remove'],
+                'entitlement_dependencies' => $template['entitlement_dependencies'],
+                'missing_entitlement_count' => count($missingEntitlements),
+                'mfa_required' => $mfaRequired,
+                'drift' => $diff['drift'],
+            ],
+        );
+
+        return [
+            'municipality' => [
+                'id' => (int) $municipality->id,
+                'name' => $municipality->name,
+            ],
+            'template' => $template,
+            'role' => $role,
+            ...$diff,
+            'missing_entitlements' => $missingEntitlements,
+            'mfa_required' => $mfaRequired,
+            'conflicts' => [],
+        ];
+    }
+
+    public function applyTemplate(
+        User $actor,
+        string $templateKey,
+        string $justification,
+        bool $confirmReconcile = false,
+    ): Role {
+        $municipality = $this->templateMunicipality($actor);
+        $template = $this->templates->resolve($templateKey);
+        $permissions = $this->authorizedPermissions($actor, $template['permission_ids']);
+
+        /** @var array{role: Role, blocked: bool} $result */
+        $result = DB::transaction(function () use (
+            $actor,
+            $municipality,
+            $template,
+            $permissions,
+            $justification,
+            $confirmReconcile,
+        ): array {
+            $lockedMunicipality = Municipality::query()
+                ->whereKey($municipality->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $role = Role::query()
+                ->with('permissions:id,name')
+                ->where('municipality_id', $lockedMunicipality->id)
+                ->where('template_key', $template['key'])
+                ->lockForUpdate()
+                ->first();
+
+            if (! $role instanceof Role) {
+                $identifier = $this->templateIdentifier(
+                    (int) $lockedMunicipality->id,
+                    $template['key'],
+                );
+
+                if (Role::query()->where('name', $identifier)->exists()) {
+                    throw new DomainException(
+                        'Já existe um perfil municipal com o identificador reservado para este template.'
+                    );
+                }
+
+                $role = Role::query()->create([
+                    'municipality_id' => $lockedMunicipality->id,
+                    'template_key' => $template['key'],
+                    'template_version' => $template['version'],
+                    'template_fingerprint' => $template['fingerprint'],
+                    'name' => $identifier,
+                    'label' => $template['label'],
+                    'description' => $template['description'],
+                    'scope' => 'municipal',
+                    'is_system' => false,
+                    'is_active' => true,
+                ]);
+                $role->permissions()->sync($permissions->modelKeys());
+
+                $this->logger->record(
+                    'municipal_role_template_created',
+                    $actor,
+                    $justification,
+                    role: $role,
+                    newValues: [
+                        'municipality_id' => (int) $lockedMunicipality->id,
+                        'template_key' => $template['key'],
+                        'template_version' => $template['version'],
+                        'template_fingerprint' => $template['fingerprint'],
+                        'permissions_added' => $template['permissions'],
+                        'permissions_removed' => [],
+                        'permission_count' => count($template['permissions']),
+                        'entitlement_dependencies' => $template['entitlement_dependencies'],
+                        'affected_user_count' => 0,
+                    ],
+                );
+
+                return ['role' => $role->load('permissions'), 'blocked' => false];
+            }
+
+            $this->assertMutable($role);
+            $diff = $this->templateDiff($template, $role);
+
+            if ($diff['drift'] && ! $confirmReconcile) {
+                $this->logger->record(
+                    'municipal_role_template_drift_detected',
+                    $actor,
+                    $justification,
+                    role: $role,
+                    oldValues: [
+                        'template_version' => $role->template_version,
+                        'template_fingerprint' => $role->template_fingerprint,
+                        'permission_count' => $role->permissions->count(),
+                    ],
+                    newValues: [
+                        'template_key' => $template['key'],
+                        'template_version' => $template['version'],
+                        'template_fingerprint' => $template['fingerprint'],
+                        'permissions_to_add' => $diff['permissions_to_add'],
+                        'permissions_to_remove' => $diff['permissions_to_remove'],
+                    ],
+                );
+
+                return ['role' => $role, 'blocked' => true];
+            }
+
+            if (! $diff['drift']) {
+                return ['role' => $role, 'blocked' => false];
+            }
+
+            $before = $this->snapshot($role);
+            $role->forceFill([
+                'label' => $template['label'],
+                'description' => $template['description'],
+                'template_version' => $template['version'],
+                'template_fingerprint' => $template['fingerprint'],
+            ])->save();
+            $role->permissions()->sync($permissions->modelKeys());
+
+            $this->logger->record(
+                'municipal_role_template_reconciled',
+                $actor,
+                $justification,
+                role: $role,
+                oldValues: [
+                    'role' => $before,
+                    'permissions' => $diff['current_permissions'],
+                ],
+                newValues: [
+                    'role' => $this->snapshot($role),
+                    'permissions' => $template['permissions'],
+                    'permissions_added' => $diff['permissions_to_add'],
+                    'permissions_removed' => $diff['permissions_to_remove'],
+                    'affected_user_count' => $role->users()->count(),
+                ],
+            );
+
+            return ['role' => $role->load('permissions'), 'blocked' => false];
+        });
+
+        if ($result['blocked']) {
+            throw new DomainException(
+                'A matriz atual diverge do template. Reveja o preview e confirme explicitamente a reconciliação.'
+            );
+        }
+
+        return $result['role'];
+    }
 
     /**
      * @param  array<string, mixed>  $data
@@ -339,6 +556,117 @@ class RoleManagementService
         return $value === '' ? null : $value;
     }
 
+    private function templateMunicipality(User $actor): Municipality
+    {
+        if (! $this->policy->create($actor)) {
+            throw new AuthorizationException('Sem permissão para aplicar templates municipais.');
+        }
+
+        if ($actor->municipality_id === null) {
+            throw new AuthorizationException('A aplicação de templates exige um Município autenticado.');
+        }
+
+        $municipality = Municipality::query()->find($actor->municipality_id);
+
+        if (! $municipality instanceof Municipality) {
+            throw new AuthorizationException('O Município autenticado deixou de estar disponível.');
+        }
+
+        return $municipality;
+    }
+
+    /**
+     * @param  ResolvedMunicipalTemplate  $template
+     * @return array{
+     *     current_permissions: list<string>,
+     *     permissions_to_add: list<string>,
+     *     permissions_to_keep: list<string>,
+     *     permissions_to_remove: list<string>,
+     *     permissions_drift: bool,
+     *     metadata_drift: bool,
+     *     presentation_drift: bool,
+     *     drift: bool
+     * }
+     */
+    private function templateDiff(array $template, ?Role $role): array
+    {
+        $current = $role instanceof Role
+            ? array_values($role->permissions->pluck('name')->map(fn (mixed $name): string => (string) $name)->sort()->values()->all())
+            : [];
+        $expected = $template['permissions'];
+        sort($expected, SORT_STRING);
+        $toAdd = array_values(array_diff($expected, $current));
+        $toKeep = array_values(array_intersect($expected, $current));
+        $toRemove = array_values(array_diff($current, $expected));
+        $permissionsDrift = $role instanceof Role && ($toAdd !== [] || $toRemove !== []);
+        $metadataDrift = $role instanceof Role && (
+            $role->template_version !== $template['version']
+            || $role->template_fingerprint !== $template['fingerprint']
+        );
+        $presentationDrift = $role instanceof Role && (
+            $role->label !== $template['label']
+            || $role->description !== $template['description']
+        );
+
+        return [
+            'current_permissions' => $current,
+            'permissions_to_add' => $toAdd,
+            'permissions_to_keep' => $toKeep,
+            'permissions_to_remove' => $toRemove,
+            'permissions_drift' => $permissionsDrift,
+            'metadata_drift' => $metadataDrift,
+            'presentation_drift' => $presentationDrift,
+            'drift' => $permissionsDrift || $metadataDrift || $presentationDrift,
+        ];
+    }
+
+    /**
+     * @param  ResolvedMunicipalTemplate  $template
+     * @return list<array{key: string, label: string}>
+     */
+    private function missingEntitlements(User $actor, array $template): array
+    {
+        $missing = [];
+
+        foreach ($template['entitlement_dependencies'] as $dependency) {
+            $feature = FeatureKey::tryFrom((string) $dependency);
+
+            if (! $feature instanceof FeatureKey) {
+                throw new DomainException('O template declara um entitlement desconhecido: '.$dependency.'.');
+            }
+
+            if (! $this->entitlements->enabledForUser($actor, $feature)) {
+                $missing[] = [
+                    'key' => $feature->value,
+                    'label' => $feature->label(),
+                ];
+            }
+        }
+
+        return $missing;
+    }
+
+    /** @param ResolvedMunicipalTemplate $template */
+    private function templateRequiresMfa(array $template): bool
+    {
+        foreach ($template['permissions'] as $permission) {
+            if ($this->permissionCatalog->isSensitive($permission)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function templateIdentifier(int $municipalityId, string $templateKey): string
+    {
+        return Str::limit(
+            'municipal_'.$municipalityId.'_'.Str::slug($templateKey, '_'),
+            180,
+            '',
+        );
+    }
+
     /** @return array<string, bool|int|string|null> */
     private function snapshot(Role $role): array
     {
@@ -350,6 +678,9 @@ class RoleManagementService
             'scope' => $role->scope,
             'is_system' => $role->isSystem(),
             'is_active' => $role->isActive(),
+            'template_key' => $role->template_key,
+            'template_version' => $role->template_version,
+            'template_fingerprint' => $role->template_fingerprint,
         ];
     }
 }
