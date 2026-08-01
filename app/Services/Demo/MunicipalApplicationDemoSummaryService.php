@@ -148,7 +148,7 @@ final class MunicipalApplicationDemoSummaryService
         $this->assertRawStatus(
             $correctionRequest,
             'status',
-            CorrectionRequestStatus::Accepted->value,
+            CorrectionRequestStatus::Resolved->value,
             'O pedido de aperfeiçoamento demo não está aceite.',
         );
         $this->assertRawStatus(

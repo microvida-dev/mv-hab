@@ -39,10 +39,10 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
         return array_values(CorrectionRequest::query()
             ->whereNotNull('response_deadline_at')
             ->whereIn('status', [
-                CorrectionRequestStatus::Issued->value,
+                CorrectionRequestStatus::Notified->value,
                 CorrectionRequestStatus::Open->value,
-                CorrectionRequestStatus::PartiallyResponded->value,
-                CorrectionRequestStatus::Overdue->value,
+                CorrectionRequestStatus::PartiallyCompleted->value,
+                CorrectionRequestStatus::Expired->value,
             ])
             ->orderBy('response_deadline_at')
             ->limit(20)

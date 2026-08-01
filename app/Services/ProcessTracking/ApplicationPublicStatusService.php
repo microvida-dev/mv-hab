@@ -58,9 +58,9 @@ class ApplicationPublicStatusService
 
         $openCorrection = $application->correctionRequests
             ->first(fn ($request) => $request->candidate_visible && in_array($request->status, [
-                CorrectionRequestStatus::Issued,
+                CorrectionRequestStatus::Notified,
                 CorrectionRequestStatus::Open,
-                CorrectionRequestStatus::PartiallyResponded,
+                CorrectionRequestStatus::PartiallyCompleted,
             ], true));
 
         if ($openCorrection !== null) {

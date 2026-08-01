@@ -15,6 +15,7 @@ use App\Models\AnnualDocumentUpdateRequest;
 use App\Models\Application;
 use App\Models\ApplicationReport;
 use App\Models\ApplicationReview;
+use App\Models\ApplicationReviewPublicationResult;
 use App\Models\ApplicationScore;
 use App\Models\ApplicationSimulationInconsistency;
 use App\Models\Arrear;
@@ -1098,6 +1099,31 @@ class MunicipalRecordScopeService
     }
 
     /**
+     * @param  Builder<ApplicationReviewPublicationResult>  $query
+     * @return Builder<ApplicationReviewPublicationResult>
+     */
+    public function applicationReviewPublicationResults(
+        Builder $query,
+        User $user,
+    ): Builder {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where('municipality_id', $user->municipality_id);
+    }
+
+    public function ownsApplicationReviewPublicationResult(
+        User $user,
+        ApplicationReviewPublicationResult $result,
+    ): bool {
+        return $this->applicationReviewPublicationResults(
+            ApplicationReviewPublicationResult::query()->whereKey($result),
+            $user,
+        )->exists();
+    }
+
+    /**
      * @param  Builder<CorrectionRequest>  $query
      * @return Builder<CorrectionRequest>
      */
@@ -1107,13 +1133,11 @@ class MunicipalRecordScopeService
             return $query->whereRaw('1 = 0');
         }
 
-        return $query->where(function (Builder $requests) use ($user): void {
-            $requests
-                ->whereHas('administrativeProcess.program', fn (Builder $program): Builder => $program
-                    ->where('municipality_id', $user->municipality_id))
-                ->orWhereHas('application.program', fn (Builder $program): Builder => $program
-                    ->where('municipality_id', $user->municipality_id));
-        });
+        return $query->whereHas(
+            'publicationResult',
+            fn (Builder $result): Builder => $result
+                ->where('municipality_id', $user->municipality_id),
+        );
     }
 
     public function ownsCorrectionRequest(User $user, CorrectionRequest $request): bool

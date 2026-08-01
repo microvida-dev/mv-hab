@@ -5,11 +5,22 @@ namespace App\Services\Administrative;
 use App\Enums\ApplicationReviewBatchOutcome;
 use App\Enums\ApplicationReviewResult;
 use App\Enums\ApplicationReviewStatus;
+use App\Enums\DocumentAppliesTo;
+use App\Enums\DocumentStatus;
+use App\Models\AdhesionRegistration;
 use App\Models\AdministrativeProcess;
 use App\Models\Application;
 use App\Models\ApplicationReview;
+use App\Models\Contract;
+use App\Models\CurrentHousingSituation;
 use App\Models\DocumentReview;
 use App\Models\DocumentSubmission;
+use App\Models\DocumentType;
+use App\Models\Household;
+use App\Models\HouseholdMember;
+use App\Models\IncomeRecord;
+use App\Models\RequiredDocument;
+use App\Services\Documents\DocumentChecklistService;
 use App\Services\Support\CanonicalJsonHasher;
 use BackedEnum;
 use Carbon\CarbonInterface;
@@ -19,6 +30,7 @@ class ReviewBatchSnapshotBuilder
 {
     public function __construct(
         private readonly CanonicalJsonHasher $hasher,
+        private readonly DocumentChecklistService $checklist,
     ) {}
 
     /**
@@ -80,8 +92,10 @@ class ReviewBatchSnapshotBuilder
             ]
             : null;
 
+        $findings = $this->correctionFindings($application);
+
         $payload = [
-            'schema_version' => 1,
+            'schema_version' => 2,
             'process' => [
                 'id' => (int) $process->id,
                 'number' => (string) $process->process_number,
@@ -110,6 +124,7 @@ class ReviewBatchSnapshotBuilder
             'review' => $reviewPayload,
             'readiness' => $readiness,
             'documents' => $documentSnapshot,
+            'findings' => $findings,
         ];
 
         $sourceState = [
@@ -203,6 +218,114 @@ class ReviewBatchSnapshotBuilder
                 ]
                 : null,
         ];
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function correctionFindings(Application $application): array
+    {
+        $checklist = $this->checklist->forApplication($application);
+        $items = $checklist['items'] ?? null;
+
+        if (! $items instanceof Collection) {
+            return [];
+        }
+
+        $findings = $items
+            ->filter(function (mixed $item): bool {
+                if (! is_array($item) || ($item['is_required'] ?? false) !== true) {
+                    return false;
+                }
+
+                $status = $item['status'] ?? DocumentStatus::Missing;
+                $status = $status instanceof DocumentStatus
+                    ? $status
+                    : DocumentStatus::tryFrom((string) $status);
+
+                return in_array($status, [
+                    DocumentStatus::Missing,
+                    DocumentStatus::Rejected,
+                    DocumentStatus::Expired,
+                ], true);
+            })
+            ->values()
+            ->map(function (array $item, int $index): array {
+                $status = $item['status'] ?? DocumentStatus::Missing;
+                $status = $status instanceof DocumentStatus
+                    ? $status
+                    : DocumentStatus::tryFrom((string) $status)
+                        ?? DocumentStatus::Missing;
+                $documentTypeCandidate = $item['document_type'] ?? null;
+                $documentType = $documentTypeCandidate instanceof DocumentType
+                    ? $documentTypeCandidate
+                    : null;
+                $requiredDocumentCandidate = $item['required_document'] ?? null;
+                $requiredDocument = $requiredDocumentCandidate instanceof RequiredDocument
+                    ? $requiredDocumentCandidate
+                    : null;
+                $requiredFor = $item['required_for'] ?? null;
+                $requiredFor = $requiredFor instanceof DocumentAppliesTo
+                    ? $requiredFor
+                    : DocumentAppliesTo::tryFrom((string) $requiredFor)
+                        ?? DocumentAppliesTo::Application;
+
+                return [
+                    'finding_status' => match ($status) {
+                        DocumentStatus::Missing => 'missing',
+                        DocumentStatus::Rejected => 'invalid',
+                        DocumentStatus::Expired => 'expired',
+                        default => 'requires_clarification',
+                    },
+                    'document_status' => $status->value,
+                    'target_type' => $this->targetMorphClass($requiredFor),
+                    'target_id' => (int) ($item['target_id'] ?? 0),
+                    'target_label' => (string) ($item['target_label'] ?? ''),
+                    'document_type_id' => isset($item['document_type_id'])
+                        ? (int) $item['document_type_id']
+                        : null,
+                    'required_document_id' => isset($item['required_document_id'])
+                        ? (int) $item['required_document_id']
+                        : null,
+                    'requirement_instance' => (int) ($item['requirement_instance'] ?? 1),
+                    'title' => $this->documentTypeName($documentTypeCandidate),
+                    'description' => (string) (
+                        $requiredDocument?->instructions
+                        ?: $documentType?->description
+                        ?: $status->label()
+                    ),
+                    'is_required' => true,
+                    'sort_order' => $index + 1,
+                ];
+            })
+            ->all();
+
+        return array_values($findings);
+    }
+
+    private function documentTypeName(mixed $candidate): string
+    {
+        if (! $candidate instanceof DocumentType) {
+            return 'Documento obrigatório';
+        }
+
+        $name = trim((string) $candidate->name);
+
+        return $name === '' ? 'Documento obrigatório' : $name;
+    }
+
+    private function targetMorphClass(DocumentAppliesTo $appliesTo): string
+    {
+        $model = match ($appliesTo) {
+            DocumentAppliesTo::AdhesionRegistration,
+            DocumentAppliesTo::General => new AdhesionRegistration,
+            DocumentAppliesTo::Household => new Household,
+            DocumentAppliesTo::HouseholdMember => new HouseholdMember,
+            DocumentAppliesTo::IncomeRecord => new IncomeRecord,
+            DocumentAppliesTo::CurrentHousingSituation => new CurrentHousingSituation,
+            DocumentAppliesTo::Application => new Application,
+            DocumentAppliesTo::Contract => new Contract,
+        };
+
+        return $model->getMorphClass();
     }
 
     private function technicalResult(

@@ -32,15 +32,18 @@ class AdministrativeDeadlineService
         return CorrectionRequest::query()
             ->with('administrativeProcess')
             ->whereIn('status', [
-                CorrectionRequestStatus::Issued->value,
+                CorrectionRequestStatus::Notified->value,
                 CorrectionRequestStatus::Open->value,
-                CorrectionRequestStatus::PartiallyResponded->value,
+                CorrectionRequestStatus::PartiallyCompleted->value,
             ])
             ->whereNotNull('response_deadline_at')
             ->where('response_deadline_at', '<', now())
             ->get()
             ->map(function (CorrectionRequest $request) use ($actor) {
-                $request->forceFill(['status' => CorrectionRequestStatus::Overdue])->save();
+                $request->forceFill([
+                    'status' => CorrectionRequestStatus::Expired,
+                    'expired_at' => now(),
+                ])->save();
 
                 $process = $this->requiredAdministrativeProcess($request);
 
@@ -59,7 +62,7 @@ class AdministrativeDeadlineService
 
     private function requiredAdministrativeProcess(CorrectionRequest $request): AdministrativeProcess
     {
-        $process = $request->administrativeProcess;
+        $process = $request->getRelationValue('administrativeProcess');
 
         if (! $process instanceof AdministrativeProcess) {
             throw ValidationException::withMessages(['process' => 'Pedido sem processo administrativo associado.']);

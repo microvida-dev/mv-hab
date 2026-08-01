@@ -153,11 +153,12 @@ class CorrectionResponseService
             $request = $this->requiredCorrectionRequest($response);
             if ($this->allRequiredItemsAccepted($request)) {
                 $request->forceFill([
-                    'status' => CorrectionRequestStatus::Accepted,
+                    'status' => CorrectionRequestStatus::Resolved,
+                    'resolved_at' => now(),
                     'closed_at' => now(),
                 ])->save();
             } else {
-                $request->forceFill(['status' => CorrectionRequestStatus::UnderReview])->save();
+                $request->forceFill(['status' => CorrectionRequestStatus::Submitted])->save();
             }
 
             $process = $this->requiredAdministrativeProcess($request);
@@ -197,7 +198,7 @@ class CorrectionResponseService
             ->count();
 
         $request->forceFill([
-            'status' => $responded >= $required ? CorrectionRequestStatus::Responded : CorrectionRequestStatus::PartiallyResponded,
+            'status' => $responded >= $required ? CorrectionRequestStatus::Submitted : CorrectionRequestStatus::PartiallyCompleted,
             'responded_at' => $responded >= $required ? now() : null,
         ])->save();
     }
@@ -258,7 +259,7 @@ class CorrectionResponseService
 
     private function requiredAdministrativeProcess(CorrectionRequest $request): AdministrativeProcess
     {
-        $process = $request->administrativeProcess;
+        $process = $request->getRelationValue('administrativeProcess');
 
         if (! $process instanceof AdministrativeProcess) {
             throw ValidationException::withMessages(['process' => 'Pedido sem processo administrativo associado.']);
@@ -280,7 +281,7 @@ class CorrectionResponseService
 
     private function requiredApplication(CorrectionRequest $request): Application
     {
-        $application = $request->application;
+        $application = $request->getRelationValue('application');
 
         if (! $application instanceof Application) {
             throw ValidationException::withMessages(['application' => 'Pedido sem candidatura associada.']);

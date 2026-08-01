@@ -20,6 +20,7 @@ class CorrectionRequestService
     public function __construct(
         private readonly AdministrativeDeadlineService $deadlineService,
         private readonly AdministrativeWorkflowTransitionService $transitionService,
+        private readonly CorrectionRequestNumberService $numbers,
         private readonly AuditLogger $auditLogger,
     ) {}
 
@@ -51,13 +52,15 @@ class CorrectionRequestService
                 'administrative_process_id' => $process->id,
                 'application_id' => $process->application_id,
                 'user_id' => $process->user_id,
-                'request_number' => $this->generateRequestNumber(),
-                'status' => CorrectionRequestStatus::Draft,
+                'request_number' => $this->generateRequestNumber($process),
+                'status' => CorrectionRequestStatus::Notified,
             ]);
             $request->save();
 
             foreach ($this->itemsData($data) as $index => $item) {
                 $requestItem = $request->items()->make([
+                    'target_type' => $item['target_type'] ?? null,
+                    'target_id' => $item['target_id'] ?? null,
                     'issue_type' => $item['issue_type'],
                     'title' => $item['title'],
                     'description' => $item['description'] ?? null,
@@ -89,7 +92,7 @@ class CorrectionRequestService
      */
     public function update(CorrectionRequest $request, array $data, User $actor): CorrectionRequest
     {
-        if ($this->requestStatus($request) !== CorrectionRequestStatus::Draft) {
+        if ($this->requestStatus($request) !== CorrectionRequestStatus::Notified) {
             throw ValidationException::withMessages(['correction_request' => 'Apenas rascunhos podem ser editados.']);
         }
 
@@ -121,10 +124,12 @@ class CorrectionRequestService
 
         return DB::transaction(function () use ($request, $actor) {
             $request->forceFill([
-                'status' => CorrectionRequestStatus::Issued,
+                'status' => CorrectionRequestStatus::Open,
                 'candidate_visible' => true,
                 'issued_by' => $actor->id,
                 'issued_at' => now(),
+                'notified_at' => now(),
+                'opened_at' => now(),
             ])->save();
 
             $process = $this->requiredAdministrativeProcess($request);
@@ -160,7 +165,8 @@ class CorrectionRequestService
     public function close(CorrectionRequest $request, User $actor): CorrectionRequest
     {
         $request->forceFill([
-            'status' => CorrectionRequestStatus::Closed,
+            'status' => CorrectionRequestStatus::Resolved,
+            'resolved_at' => now(),
             'closed_at' => now(),
         ])->save();
 
@@ -184,7 +190,10 @@ class CorrectionRequestService
 
     public function markOverdue(CorrectionRequest $request, User $actor): CorrectionRequest
     {
-        $request->forceFill(['status' => CorrectionRequestStatus::Overdue])->save();
+        $request->forceFill([
+            'status' => CorrectionRequestStatus::Expired,
+            'expired_at' => now(),
+        ])->save();
 
         $process = $this->requiredAdministrativeProcess($request);
 
@@ -207,26 +216,26 @@ class CorrectionRequestService
     {
         return $process->correctionRequests()
             ->whereIn('status', [
-                CorrectionRequestStatus::Draft->value,
-                CorrectionRequestStatus::Issued->value,
+                CorrectionRequestStatus::Notified->value,
                 CorrectionRequestStatus::Open->value,
-                CorrectionRequestStatus::PartiallyResponded->value,
-                CorrectionRequestStatus::Responded->value,
-                CorrectionRequestStatus::UnderReview->value,
+                CorrectionRequestStatus::PartiallyCompleted->value,
+                CorrectionRequestStatus::Submitted->value,
             ])
             ->exists();
     }
 
-    private function generateRequestNumber(): string
+    private function generateRequestNumber(AdministrativeProcess $process): string
     {
-        $next = CorrectionRequest::withTrashed()->count() + 1;
+        $application = $this->requiredApplication($process);
+        $program = $application->program()->first();
 
-        do {
-            $number = 'APR-'.now()->format('Y').'-'.str_pad((string) $next, 6, '0', STR_PAD_LEFT);
-            $next++;
-        } while (CorrectionRequest::withTrashed()->where('request_number', $number)->exists());
+        if ($program === null || (int) $program->municipality_id <= 0) {
+            throw ValidationException::withMessages([
+                'correction_request' => 'Não foi possível resolver o Município do pedido de aperfeiçoamento.',
+            ]);
+        }
 
-        return $number;
+        return $this->numbers->next((int) $program->municipality_id);
     }
 
     /**
@@ -242,7 +251,7 @@ class CorrectionRequestService
 
     private function requiredApplication(AdministrativeProcess $process): Application
     {
-        $application = $process->application;
+        $application = $process->getRelationValue('application');
 
         if (! $application instanceof Application) {
             throw ValidationException::withMessages(['application' => 'Processo sem candidatura associada.']);
@@ -253,7 +262,7 @@ class CorrectionRequestService
 
     private function requiredAdministrativeProcess(CorrectionRequest $request): AdministrativeProcess
     {
-        $process = $request->administrativeProcess;
+        $process = $request->getRelationValue('administrativeProcess');
 
         if (! $process instanceof AdministrativeProcess) {
             throw ValidationException::withMessages(['process' => 'Pedido sem processo administrativo associado.']);

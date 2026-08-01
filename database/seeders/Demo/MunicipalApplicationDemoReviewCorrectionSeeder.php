@@ -625,7 +625,7 @@ final class MunicipalApplicationDemoReviewCorrectionSeeder extends Seeder
             );
         }
 
-        if ($request->status === CorrectionRequestStatus::Draft) {
+        if ($request->status === CorrectionRequestStatus::Notified) {
             $request = $service->issue(
                 $request,
                 $analyst,
@@ -1131,7 +1131,7 @@ final class MunicipalApplicationDemoReviewCorrectionSeeder extends Seeder
 
         return $this->processStatus($process)
                 === AdministrativeProcessStatus::EligibilityReview
-            && $request->status === CorrectionRequestStatus::Accepted
+            && $request->status === CorrectionRequestStatus::Resolved
             && $target->status === DocumentStatus::Validated
             && $target->versions()->count() === 2
             && DocumentSubmission::query()
@@ -1267,7 +1267,7 @@ final class MunicipalApplicationDemoReviewCorrectionSeeder extends Seeder
 
         if (
             $requestStatus
-                !== CorrectionRequestStatus::Accepted->value
+                !== CorrectionRequestStatus::Resolved->value
             || ! $candidateVisible
             || $closedAt === null
             || $itemStatus

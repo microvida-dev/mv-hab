@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ApplicationReviewBatchOutcome;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use LogicException;
@@ -81,7 +82,10 @@ class ApplicationReviewPublicationResult extends Model
     /** @return BelongsTo<ApplicationReviewPublication, $this> */
     public function publication(): BelongsTo
     {
-        return $this->belongsTo(ApplicationReviewPublication::class);
+        return $this->belongsTo(
+            ApplicationReviewPublication::class,
+            'application_review_publication_id',
+        );
     }
 
     /** @return BelongsTo<ApplicationReviewBatchItem, $this> */
@@ -145,5 +149,14 @@ class ApplicationReviewPublicationResult extends Model
     public function emailDelivery(): BelongsTo
     {
         return $this->belongsTo(CommunicationDelivery::class, 'email_delivery_id');
+    }
+
+    /** @return HasOne<CorrectionRequest, $this> */
+    public function correctionRequest(): HasOne
+    {
+        return $this->hasOne(
+            CorrectionRequest::class,
+            'application_review_publication_result_id',
+        );
     }
 }

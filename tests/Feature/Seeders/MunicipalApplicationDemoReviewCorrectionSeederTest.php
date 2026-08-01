@@ -336,7 +336,7 @@ class MunicipalApplicationDemoReviewCorrectionSeederTest extends TestCase
             ->sole();
 
         $this->assertSame(
-            CorrectionRequestStatus::Accepted,
+            CorrectionRequestStatus::Resolved,
             $request->status,
         );
         $this->assertTrue($request->candidate_visible);

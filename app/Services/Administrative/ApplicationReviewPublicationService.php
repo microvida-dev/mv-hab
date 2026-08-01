@@ -47,6 +47,7 @@ class ApplicationReviewPublicationService
         private readonly CommunicationNumberService $numbers,
         private readonly CommunicationDeliveryService $deliveries,
         private readonly ProceduralEmailDeliveryService $proceduralEmails,
+        private readonly PublishedCorrectionRequestProjector $correctionRequests,
         private readonly AuditLogger $audit,
     ) {}
 
@@ -300,7 +301,7 @@ class ApplicationReviewPublicationService
                     $notification,
                 );
 
-                ApplicationReviewPublicationResult::query()->create([
+                $publishedResult = ApplicationReviewPublicationResult::query()->create([
                     'public_id' => $resultPublicId,
                     'application_review_publication_id' => $publication->id,
                     'application_review_batch_item_id' => $batchItem->id,
@@ -324,6 +325,10 @@ class ApplicationReviewPublicationService
                     'email_delivery_id' => $emailDelivery->id,
                     'published_at' => $publishedAt,
                 ]);
+
+                if ($publishedResult->outcome === ApplicationReviewBatchOutcome::CorrectionRequired) {
+                    $this->correctionRequests->project($publishedResult, $actor);
+                }
             }
 
             $this->audit->record(

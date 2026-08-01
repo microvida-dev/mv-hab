@@ -24,7 +24,7 @@ class CorrectionRequestPolicy
     {
         if ($user->hasRole('candidate')) {
             return $correctionRequest->user_id === $user->id
-                && $correctionRequest->candidate_visible
+                && $correctionRequest->isVisibleToCandidate()
                 && $this->canAccess($user, self::MODULE, 'view');
         }
 
