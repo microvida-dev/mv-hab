@@ -226,11 +226,17 @@
                     title="Revalidação diferencial"
                     description="Apenas os elementos alterados ou afetados são revistos; validações anteriores não afetadas permanecem bloqueadas por carry-forward."
                 >
-                    <div class="grid gap-4 md:grid-cols-3">
+                    <div class="grid gap-4 md:grid-cols-4">
                         <div>
                             <p class="text-xs font-semibold uppercase text-ink-500">Resultado original</p>
                             <p class="mt-1 text-sm font-semibold text-ink-900">
                                 {{ $revalidationRequest->publicationResult?->outcome?->label() ?? 'Indisponível' }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-ink-500">Resultado da segunda análise</p>
+                            <p class="mt-1 text-sm font-semibold text-ink-900">
+                                {{ $revalidationRequest->revalidation_result?->label() ?? 'Ainda não publicado' }}
                             </p>
                         </div>
                         <div>

@@ -5,7 +5,7 @@
 - Branch: `sprint-53f-differential-revalidation-second-closure`
 - Commit-base: `d49c28b7ce504dde29e695db5de4117208769da2`
 - Branch de origem: `sprint-53e-candidate-correction-cycle`
-- Estado deste documento: auditoria inicial do Bloco 53F-A
+- Estado deste documento: relatorio final de implementacao e validacao
 
 ## Resumo executivo
 
@@ -355,9 +355,395 @@ Nao foram criadas permissions novas. A publicacao continua a usar
 
 - 53F-A: concluido no commit `ba8f139f`.
 - 53F-B: concluido no commit `cc3e2ee9`.
-- 53F-C: implementado e validado de forma dirigida; commit em preparacao.
-- 53F-D: pendente.
+- 53F-C: concluido no commit `313fe2fe`.
+- 53F-D: implementado e validado de forma dirigida; commit em preparacao.
 
-## Classificacao provisoria
+## Implementacao do Bloco 53F-D
 
-Nao atribuida antes da implementacao e dos gates finais.
+### Publicacao e projecao
+
+O motor oficial de `ApplicationReviewPublication` continua a ser a unica via
+de publicacao e notificacao. O ciclo `revalidation` passa a encaminhar o
+resultado publicado para `PublishedCorrectionRevalidationProjector`, dentro da
+mesma transacao atomica.
+
+O projector:
+
+- volta a carregar e bloquear lote, publicacao, item, resultado, pedido,
+  processo e candidatura;
+- aplica o scope municipal antes da projecao;
+- verifica ciclo, outcome, relacoes, snapshot, fingerprint, hashes e recibo;
+- aceita apenas `complete_pending_decision` ou `correction_rejected`;
+- projeta `accepted` ou `rejected` no pedido sem alterar a candidatura;
+- transita o processo por servico oficial de `correction_under_review` para
+  `eligibility_review`;
+- marca o pedido `resolved` apenas depois da publicacao bem-sucedida;
+- recupera idempotentemente uma publicacao completa ja existente;
+- falha fechado perante projecao parcial ou incoerente;
+- emite `CorrectionRevalidationProjected` apenas depois do commit.
+
+O outcome rejeitado significa apenas que um elemento documental nao foi
+aceite. Nao exclui a candidatura, nao decide elegibilidade e nao abre um
+terceiro aperfeicoamento.
+
+### Notificacao e auditoria
+
+A notificacao formal, comunicacao e entregas continuam a ser criadas pelo
+pipeline atomico de publicacao existente. Nao foi criado um segundo motor de
+notificacoes nem uma notificacao por item.
+
+Foram consolidados os eventos de auditoria:
+
+- `correction_revalidation_started`;
+- `correction_item_reviewed`;
+- `correction_revalidation_previewed`;
+- `correction_revalidation_sealed`;
+- `correction_revalidation_published`;
+- `correction_revalidation_rejected`, quando aplicavel;
+- `correction_request_resolved`;
+- `correction_revalidation_projected`.
+
+Os metadados operacionais usam IDs, resultados e hashes. Nao incluem ficheiros,
+paths, OCR, texto da justificacao, NIF, morada, rendimentos ou dados bancarios.
+
+### Dashboard, Timeline e Agenda
+
+`CorrectionProgressMetricsService` passou a produzir agregados municipais para
+pedidos submetidos, parcialmente revistos, prontos para fecho, selados,
+publicados, resolvidos e rejeitados, incluindo duracao media da segunda
+analise. As queries aplicam o scope antes das agregacoes e nao carregam
+conteudo documental.
+
+Nao foi encontrada uma regra autoritativa de SLA especifica para a segunda
+analise. A apresentacao falha fechado com `revalidation_sla_configured=false`
+e valor vencido indisponivel, sem inventar um prazo.
+
+`CorrectionRequestTimelineProvider` produz um unico evento atual por pedido,
+com marcos de submissao, inicio, prontidao, selagem, publicacao e resolucao ou
+rejeicao. A Agenda reutiliza estes eventos pelo agregador existente. Nao e
+gerado um evento global por documento ou por decisao individual.
+
+### Seeder integrado e compatibilidade
+
+`IntegratedWorkflowTestSeeder` passa pelo circuito canonico completo: resultado
+inicial publicado, pedido, resposta, recibo formal, inicio, decisao, selagem,
+publicacao final, projecao e resolucao. O cenario usa apenas dados ficticios
+`example.test` e valida internamente o estado final.
+
+As views de lote, preview, publicacao, pedido e resultado do candidato foram
+ajustadas para distinguir `correction_rejected` de sucesso. O candidato recebe
+uma mensagem explicita de que o resultado documental nao constitui exclusao
+automatica.
+
+### Evidencia dirigida do Bloco D
+
+- regressao 53B-53F, resolver diferencial e fluxo integrado: 58 testes,
+  580 assercoes, PASS; em SQLite o teste concorrente valida apenas o contrato
+  de ambiente e a execucao real ocorre no gate MySQL/MariaDB;
+- Dashboard e Agenda: 81 testes, 372 assercoes;
+- processos, publicacao, documentos e rotas relacionadas: 34 testes,
+  181 assercoes;
+- concorrencia real MySQL com processos independentes: 1 teste,
+  26 assercoes, PASS;
+- migration SQLite `up/down/up`: PASS;
+- migration MySQL `up/down/up`: PASS;
+- backfill legacy, foreign key e indices unicos MySQL: PASS;
+- rotas `--except-vendor`: 1188 antes, 1193 depois, cinco adicoes legitimas,
+  zero remocoes e zero nomes duplicados;
+- novas rotas backoffice com role fixa: zero;
+- Pint incremental: PASS;
+- PHPStan dirigido: zero erros;
+- `git diff --check`: PASS.
+
+## Relatorio final
+
+### Resumo executivo
+
+A Sprint 53F fecha o ciclo canonico de aperfeicoamento sem criar um sistema
+paralelo. O recibo formal da 53E define a fronteira temporal; o motor compara
+as fontes, transporta resultados validos, revê apenas alteracoes e produz um
+snapshot deterministico. A selagem, publicacao, notificacao e projecao usam os
+agregados oficiais existentes.
+
+O fecho documental nunca decide elegibilidade. Tanto a aceitacao como a
+rejeicao regressam o processo a `eligibility_review`, onde permanece obrigatoria
+uma decisao administrativa humana. Um resultado manual pendente bloqueia a
+selagem e nenhuma regra cria um terceiro aperfeicoamento automaticamente.
+
+### Git e commits
+
+- Commit-base: `d49c28b7ce504dde29e695db5de4117208769da2`.
+- Branch: `sprint-53f-differential-revalidation-second-closure`.
+- `ba8f139f` - auditoria de dominio do Bloco A.
+- `cc3e2ee9` - motor diferencial, snapshots e migration do Bloco B.
+- `313fe2fe` - workspace municipal, decisoes e fecho do Bloco C.
+- `HEAD` - publicacao, projecao, operacao, testes e relatorio do Bloco D,
+  com o subject `feat(corrections): publish and project final revalidation results`.
+- Nao houve merge em `main` nem force push.
+
+### Decisoes regulamentares
+
+- Documento aceite nao equivale a candidatura elegivel.
+- Documento rejeitado nao equivale a exclusao da candidatura.
+- `requires_manual_decision` nao constitui resultado publicavel final.
+- Nao foi encontrada autorizacao para abrir automaticamente um terceiro ciclo.
+- O estado comprovado seguinte e `eligibility_review`, por transicao oficial.
+- Nao existe SLA autoritativo especifico para segunda analise; a plataforma
+  apresenta configuracao incompleta em vez de inventar um prazo.
+
+### Arquitetura final
+
+O fluxo implementado e:
+
+```text
+CorrectionSubmissionReceipt
+    -> CorrectionDifferentialResolver
+    -> CorrectionRevalidationService
+    -> CorrectionResolutionService
+    -> ApplicationReviewBatch(revalidation)
+    -> ApplicationReviewPublicationService
+    -> PublishedCorrectionRevalidationProjector
+    -> CorrectionRequest(resolved)
+    -> AdministrativeProcess(eligibility_review)
+```
+
+DTOs tipados separam o resultado diferencial e os seus itens. O snapshot usa
+`schema_version=1`, ordenacao canonica, SHA-256, IDs estaveis, hashes da origem
+e do recibo, carry-forward explicito e decisoes finais. Nao inclui objetos
+serializados, URLs temporarios, binarios ou `now()` no conteudo sujeito a hash.
+
+### Migration e persistencia
+
+Foi criada uma unica migration incremental e reversivel:
+
+`database/migrations/2026_08_01_000053_add_correction_revalidation_controls.php`
+
+Alteracoes:
+
+- ligacao unica entre lote final e pedido de aperfeicoamento;
+- `collective_scope_key` para preservar a unicidade dos lotes coletivos;
+- backfill deterministico apenas para lotes historicos autoritativos;
+- marcos de inicio, resultado, publicacao e projecao no pedido;
+- classificacao diferencial e fingerprint da decisao na resposta;
+- foreign keys restritivas e indices de fila;
+- rollback fail-closed quando dados 53F tornariam o contrato anterior
+  impossivel sem perda.
+
+O ciclo `up/down/up` passou em SQLite e MySQL temporarios. No MySQL foram ainda
+confirmados o backfill legacy, a foreign key, os indices unicos e o bloqueio de
+um lote coletivo duplicado. Os lotes sao imutaveis e nao usam SoftDeletes; os
+pedidos mantem SoftDeletes sem libertar a unicidade do lote final.
+
+### Enums e modelos
+
+Foram criados `CorrectionRevalidationItemType` e
+`CorrectionRevalidationAggregateResult`. Foram estendidos
+`CorrectionResponseReviewResult` com `requires_manual_decision` e
+`ApplicationReviewBatchOutcome` com `correction_rejected`.
+
+`ApplicationReviewBatch`, `CorrectionRequest` e `CorrectionResponse` receberam
+apenas relacoes, casts, propriedades e protecoes necessarias ao novo ciclo. Os
+lotes selados continuam imutaveis e os caminhos legacy permanecem separados.
+
+### Servicos
+
+- `CorrectionDifferentialResolver`: origem, recibo, comparacao, carry-forward,
+  dependencias, stale sources e fingerprint.
+- `CorrectionRevalidationSnapshotBuilder`: snapshot canonico e hash estavel.
+- `CorrectionRevalidationService`: fila, abertura, decisoes, tokens otimistas,
+  progresso e agregado.
+- `CorrectionResolutionService`: preview, locks, validacao, selagem e
+  idempotencia.
+- `PublishedCorrectionRevalidationProjector`: integridade, projecao,
+  transicao, auditoria e evento after-commit.
+- `ApplicationReviewPublicationService`: integracao atomica com publicacao,
+  notificacao e recuperacao idempotente.
+- `CorrectionProgressMetricsService` e
+  `CorrectionRequestTimelineProvider`: operacao agregada sem PII.
+
+### Controllers, Form Requests e rotas
+
+`CorrectionRevalidationController` permanece fino. Foram criados Form Requests
+especificos para fila, abertura, decisao, preview e selagem; todos autorizam
+atraves de Policy/permission e validam apenas campos controlaveis pelo cliente.
+
+As cinco rotas novas exigem `auth`, `active.backoffice`, `mfa.backoffice`,
+`log.backoffice`, entitlement `applications.review`, permission exata e Policy.
+Nao usam `role:*`.
+
+Auditoria da colecao `--except-vendor`:
+
+- antes: 1188;
+- depois: 1193;
+- adicionadas: 5;
+- removidas: 0;
+- nomes duplicados: 0;
+- novas rotas backoffice com role fixa: 0.
+
+O comando global `access:audit-routes` observou 1196 rotas totais, 931 com
+permission middleware, 216 rotas candidate com role fixa e zero rotas
+backoffice com role fixa ou guards em falta. O teste de caracterizacao foi
+atualizado de 926 para 931 com base neste resultado real.
+
+### Permissions, Policies e scope municipal
+
+Nao foram criadas permissions. Foram reutilizadas:
+
+- `administrative_processes.view`;
+- `administrative_processes.update`;
+- `administrative_processes.decide`;
+- `administrative_processes.publish`;
+- `documents.view`.
+
+As abilities de `CorrectionRequestPolicy` e `CorrectionResponsePolicy`
+recusam candidato e mutacoes do auditor. O scope deriva o Municipio do resultado
+original publicado e falha fechado perante origem ausente, Municipio cruzado ou
+assignment global inexistente. O fallback menos forte fica limitado a respostas
+legacy e nao contamina o fluxo canonico.
+
+### Concorrencia e idempotencia
+
+Foram usados `DB::transaction()`, `lockForUpdate()` e unique constraints. Um
+teste com dois processos PHP e ligacoes MySQL independentes executou em
+concorrencia:
+
+- duas aberturas;
+- duas decisoes sobre o mesmo item;
+- duas selagens;
+- duas publicacoes;
+- duas projecoes;
+- duas tentativas de notificacao.
+
+Resultado observado: um inicio auditado, uma decisao auditada, um lote, um
+snapshot/hash final, uma publicacao, um resultado, uma notificacao, uma projecao
+e um pedido resolvido. O teste passou com 26 assercoes.
+
+### Backoffice e candidato
+
+O backoffice possui fila paginada e filtros municipais, detalhe da segunda
+analise, carry-forward bloqueado, comparacao por downloads protegidos, decisoes
+por item, progresso, preview confirmado, selagem e ligacao para a publicacao
+oficial.
+
+O candidato consulta o resultado final publicado. Quando existe rejeicao, a UI
+explica que se trata de um resultado documental e nao de exclusao automatica.
+Nomes de ficheiros e notas internas nao sao projetados para o dashboard,
+Timeline, Agenda ou resultado publico do candidato.
+
+### Dashboard, Timeline e Agenda
+
+As metricas municipais cobrem submetidos, parcialmente revistos, prontos,
+selados, publicados, resolvidos, rejeitados e duracao media. O scope e aplicado
+antes das agregacoes. O SLA fica explicitamente nao configurado.
+
+A Timeline produz um evento por pedido e representa os marcos relevantes sem
+ruido por item. A Agenda reutiliza o mesmo provider e apenas recebe eventos
+operacionais autorizados.
+
+### Notificacoes e auditoria
+
+A publicacao oficial continua a criar exatamente uma notificacao,
+`CommunicationLog` e entregas. O evento `CorrectionRevalidationProjected`
+implementa `ShouldDispatchAfterCommit` e transporta apenas IDs, outcome e data.
+
+As recusas nao persistem efeitos de dominio. Uma falha de projecao testada
+reverte publicacao, comunicacao, notificacao e auditoria dentro da mesma
+transacao.
+
+### RGPD e seguranca
+
+- storage e preview documental continuam privados e autorizados;
+- nao existem URLs publicas ou paths internos novos;
+- logs e eventos nao recebem OCR, documentos, texto integral, NIF, morada,
+  rendimentos, dados bancarios, cookies, tokens ou MFA;
+- dashboard, Timeline e Agenda recebem payload minimizado;
+- candidato permanece fora do backoffice;
+- auditor permanece read-only;
+- o isolamento municipal e fail-closed.
+
+### Performance
+
+- scope antes da paginacao;
+- fila baseada em agregados leves;
+- `withCount()` para progresso sem resolver cada diferencial na lista;
+- eager loading limitado ao detalhe autorizado;
+- nenhuma query em Blade;
+- nenhum documento binario ou OCR carregado por dashboard;
+- agregacoes SQL especificas por driver para duracao media;
+- limites preservados nos widgets e na Timeline.
+
+### Testes e gates observados
+
+- PHPUnit integral: 1525 testes, 22937 assercoes, PASS.
+- UX canonica por `--filter UX`: 135 testes, 664 assercoes, PASS.
+- Regressao 53B-53F/integrada: 58 testes, 580 assercoes, PASS.
+- Dashboard/Agenda dirigidos: 81 testes, 372 assercoes, PASS.
+- Processo/documentos/rotas dirigidos: 34 testes, 181 assercoes, PASS.
+- Publicacao/integracao 53F: 7 testes, 118 assercoes, PASS no ciclo dirigido
+  anterior ao fecho.
+- Concorrencia real MySQL: 1 teste, 26 assercoes, PASS.
+- PHPStan canonico: 0 erros.
+- Pint integral: PASS.
+- Pint incremental: PASS.
+- Integridade de testes: 0 violacoes criticas, 0 avisos.
+- Composer validate `--strict`: PASS.
+- Composer audit `--locked`: sem advisories.
+- Composer platform requirements: PASS.
+- `php artisan optimize:clear`: PASS.
+- Vite `npm run build`: PASS.
+- SQLite migration `up/down/up`: PASS.
+- MySQL migration `up/down/up`: PASS.
+- `php artisan route:list --json --except-vendor`: PASS.
+- `php artisan access:audit-routes`: PASS.
+- `git diff --check`: PASS.
+
+### Ficheiros alterados
+
+Foram alterados 53 ficheiros, agrupados em:
+
+- 2 DTOs, 4 enums e 1 evento;
+- 3 models e 2 Policies;
+- 3 controllers e 4 Form Requests;
+- 13 services de dominio, scope, publicacao, metricas e Timeline;
+- 1 migration e 1 seeder integrado;
+- 7 views Blade e 1 componente de dashboard;
+- `routes/web.php`;
+- 9 ficheiros de testes/fixtures, incluindo concorrencia real;
+- este relatorio e o teste de caracterizacao de rotas.
+
+A lista exata e reproduzivel por:
+
+```bash
+git diff --name-only d49c28b7ce504dde29e695db5de4117208769da2..HEAD
+```
+
+### Riscos residuais e exclusoes
+
+- O SLA da segunda analise necessita de fonte regulamentar/configuracao
+  autoritativa antes de apresentar atrasos.
+- O deploy real, backup, migracao em staging/producao e monitorizacao de queues
+  nao fazem parte deste trabalho de repositorio.
+- Exportacao temporal pertence a 53G.
+- Gestao global de perfis pertence a 53H.
+- Carga global, chaos/retry testing e observabilidade alargada pertencem a 53I.
+- Nao foi implementada elegibilidade automatica, exclusao automatica, terceiro
+  aperfeicoamento ou qualquer alteracao retroativa de snapshots.
+
+### Preparacao da Sprint 53G
+
+Os artefactos finais possuem `schema_version`, hashes, fingerprints, IDs
+estaveis, referencia ao resultado original, referencia ao recibo, decisoes,
+atores, timestamps UTC, carry-forward e ordem canonica. Podem ser exportados
+temporalmente sem depender de views ou logs transitórios.
+
+### Estado Git e classificacao
+
+A arvore final foi verificada como limpa antes do push. A branch foi publicada
+sem force push e sem alteracao de `main`; a igualdade entre HEAD local e remoto
+foi confirmada no fecho.
+
+Classificacao final:
+
+```text
+REPOSITORY_PASS
+```

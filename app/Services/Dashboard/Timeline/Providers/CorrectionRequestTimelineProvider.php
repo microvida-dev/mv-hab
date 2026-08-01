@@ -4,6 +4,8 @@ namespace App\Services\Dashboard\Timeline\Providers;
 
 use App\Data\Dashboard\TimelineEvent;
 use App\Enums\CorrectionRequestStatus;
+use App\Enums\CorrectionResponseReviewResult;
+use App\Enums\CorrectionRevalidationAggregateResult;
 use App\Enums\Dashboard\Timeline\TimelinePriority;
 use App\Enums\Dashboard\Timeline\TimelineType;
 use App\Enums\Dashboard\Timeline\TimelineWorkspace;
@@ -13,6 +15,8 @@ use App\Services\Administrative\CorrectionProgressMetricsService;
 use App\Services\Dashboard\Timeline\BaseTimelineProvider;
 use App\Services\Dashboard\Timeline\TimelineEventFactory;
 use App\Services\Municipalities\MunicipalRecordScopeService;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 class CorrectionRequestTimelineProvider extends BaseTimelineProvider
 {
@@ -41,13 +45,28 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
                     CorrectionRequest::query(),
                     $user,
                 )
-                ->with('items:id,correction_request_id,status,is_required,sort_order')
+                ->with([
+                    'items:id,correction_request_id,status,is_required,sort_order',
+                    'revalidationBatch:id,correction_request_id,sealed_at',
+                    'revalidationBatch.publication:id,application_review_batch_id,published_at',
+                ])
+                ->withCount([
+                    'responses as revalidation_responses_count',
+                    'responses as revalidation_reviewed_responses_count' => static fn (Builder $responses): Builder => $responses
+                        ->whereNotNull('reviewed_at'),
+                    'responses as revalidation_manual_responses_count' => static fn (Builder $responses): Builder => $responses
+                        ->where(
+                            'review_result',
+                            CorrectionResponseReviewResult::RequiresManualDecision->value,
+                        ),
+                ])
                 ->whereIn('status', [
                     CorrectionRequestStatus::Notified->value,
                     CorrectionRequestStatus::Open->value,
                     CorrectionRequestStatus::PartiallyCompleted->value,
                     CorrectionRequestStatus::Submitted->value,
                     CorrectionRequestStatus::Expired->value,
+                    CorrectionRequestStatus::Resolved->value,
                 ])
                 ->orderByRaw(
                     'CASE status '
@@ -56,6 +75,7 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
                     .'WHEN ? THEN 2 '
                     .'WHEN ? THEN 3 '
                     .'WHEN ? THEN 4 '
+                    .'WHEN ? THEN 5 '
                     .'ELSE 9 END',
                     [
                         CorrectionRequestStatus::Expired->value,
@@ -63,6 +83,7 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
                         CorrectionRequestStatus::PartiallyCompleted->value,
                         CorrectionRequestStatus::Open->value,
                         CorrectionRequestStatus::Notified->value,
+                        CorrectionRequestStatus::Resolved->value,
                     ],
                 )
                 ->orderBy('response_deadline_at')
@@ -80,16 +101,23 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
         CorrectionRequest $request,
     ): TimelineEvent {
         $progress = $this->progress->progress($request);
-        $submitted =
-            $request->status
-                === CorrectionRequestStatus::Submitted;
+        $stage = $this->revalidationStage($request);
+        $submitted = in_array($stage, [
+            'submitted',
+            'started',
+            'ready',
+            'sealed',
+            'published',
+            'resolved',
+            'rejected',
+        ], true);
 
         return $this->factory->make(
             id: 'correction-request-'.$request->getKey(),
             type: $submitted
                 ? TimelineType::CorrectionResponse
                 : TimelineType::CorrectionRequest,
-            title: $this->title($request),
+            title: $this->title($request, $stage),
             description: $this->description(
                 $request,
                 $progress,
@@ -98,17 +126,12 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
                 'backoffice.correction-requests.show',
                 $request,
             ),
-            datetime: $submitted
-                ? $request->submitted_at
-                : (
-                    $request->expired_at
-                    ?? $request->response_deadline_at
-                ),
-            priority: $this->priority($request, $progress),
+            datetime: $this->eventDate($request, $stage),
+            priority: $this->priority($request, $progress, $stage),
             icon: $submitted
                 ? 'document-check'
                 : 'document-warning',
-            tone: $this->eventTone($request, $progress),
+            tone: $this->eventTone($request, $progress, $stage),
             workspace: TimelineWorkspace::Applications,
             metadata: [
                 'correction_request_id' => $request->getKey(),
@@ -121,15 +144,48 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
                 'formal_submitted' => $progress['formal_submitted'],
                 'overdue' => $progress['overdue'],
                 'due_soon' => $progress['due_soon'],
+                'revalidation_stage' => $stage,
+                'revalidation_result' => $request->revalidation_result?->value,
+                'revalidation_responses' => (int) $request->getAttribute(
+                    'revalidation_responses_count',
+                ),
+                'revalidation_reviewed' => (int) $request->getAttribute(
+                    'revalidation_reviewed_responses_count',
+                ),
             ],
         );
     }
 
     private function title(
         CorrectionRequest $request,
+        string $stage,
     ): string {
+        if ($stage === 'rejected') {
+            return 'Aperfeiçoamento não aceite';
+        }
+
+        if ($stage === 'resolved') {
+            return 'Segunda análise concluída';
+        }
+
+        if ($stage === 'published') {
+            return 'Resultado da segunda análise publicado';
+        }
+
+        if ($stage === 'sealed') {
+            return 'Segunda análise selada';
+        }
+
+        if ($stage === 'ready') {
+            return 'Segunda análise pronta para fecho';
+        }
+
+        if ($stage === 'started') {
+            return 'Segunda análise em curso';
+        }
+
         return match ($request->status) {
-            CorrectionRequestStatus::Submitted => 'Aperfeiçoamento formalmente submetido',
+            CorrectionRequestStatus::Submitted => 'Aperfeiçoamento submetido para segunda análise',
             CorrectionRequestStatus::Expired => 'Prazo de aperfeiçoamento expirado',
             CorrectionRequestStatus::PartiallyCompleted => 'Aperfeiçoamento parcialmente preparado',
             CorrectionRequestStatus::Open,
@@ -177,6 +233,7 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
     private function priority(
         CorrectionRequest $request,
         array $progress,
+        string $stage,
     ): TimelinePriority {
         if (
             $request->status === CorrectionRequestStatus::Expired
@@ -187,6 +244,8 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
         }
 
         if (
+            in_array($stage, ['ready', 'sealed'], true)
+            ||
             $request->status
                 === CorrectionRequestStatus::Submitted
             || $request->status
@@ -213,7 +272,20 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
     private function eventTone(
         CorrectionRequest $request,
         array $progress,
+        string $stage,
     ): string {
+        if ($stage === 'rejected') {
+            return 'danger';
+        }
+
+        if ($stage === 'resolved') {
+            return 'success';
+        }
+
+        if (in_array($stage, ['ready', 'sealed', 'published'], true)) {
+            return 'info';
+        }
+
         if (
             $request->status === CorrectionRequestStatus::Expired
             || $progress['overdue']
@@ -231,5 +303,62 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
         return $progress['due_soon']
             ? 'warning'
             : 'neutral';
+    }
+
+    private function revalidationStage(CorrectionRequest $request): string
+    {
+        if (
+            $request->status === CorrectionRequestStatus::Resolved
+            && $request->revalidation_projected_at !== null
+        ) {
+            return $request->revalidation_result
+                === CorrectionRevalidationAggregateResult::Rejected
+                    ? 'rejected'
+                    : 'resolved';
+        }
+
+        if ($request->revalidationBatch?->publication !== null) {
+            return 'published';
+        }
+
+        if ($request->revalidationBatch !== null) {
+            return 'sealed';
+        }
+
+        if ($request->revalidation_started_at !== null) {
+            $responses = (int) $request->getAttribute(
+                'revalidation_responses_count',
+            );
+            $reviewed = (int) $request->getAttribute(
+                'revalidation_reviewed_responses_count',
+            );
+            $manual = (int) $request->getAttribute(
+                'revalidation_manual_responses_count',
+            );
+
+            return $responses > 0
+                && $reviewed >= $responses
+                && $manual === 0
+                    ? 'ready'
+                    : 'started';
+        }
+
+        return $request->status === CorrectionRequestStatus::Submitted
+            ? 'submitted'
+            : 'candidate_response';
+    }
+
+    private function eventDate(
+        CorrectionRequest $request,
+        string $stage,
+    ): ?Carbon {
+        return match ($stage) {
+            'resolved', 'rejected' => $request->revalidation_projected_at,
+            'published' => $request->revalidationBatch?->publication?->published_at,
+            'sealed' => $request->revalidationBatch?->sealed_at,
+            'started', 'ready' => $request->revalidation_started_at,
+            'submitted' => $request->submitted_at,
+            default => $request->expired_at ?? $request->response_deadline_at,
+        };
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services\Administrative;
 
+use App\Enums\ApplicationReviewBatchCycle;
 use App\Enums\ApplicationReviewBatchOutcome;
 use App\Enums\ApplicationReviewBatchStatus;
 use App\Enums\ApplicationReviewPublicationStatus;
@@ -48,6 +49,7 @@ class ApplicationReviewPublicationService
         private readonly CommunicationDeliveryService $deliveries,
         private readonly ProceduralEmailDeliveryService $proceduralEmails,
         private readonly PublishedCorrectionRequestProjector $correctionRequests,
+        private readonly PublishedCorrectionRevalidationProjector $correctionRevalidations,
         private readonly AuditLogger $audit,
     ) {}
 
@@ -149,6 +151,8 @@ class ApplicationReviewPublicationService
                 ->lockForUpdate()
                 ->firstOrFail();
             $lockedBatch->contest()->lockForUpdate()->firstOrFail();
+            $lockedBatch->loadMissing('contest.program');
+            $this->assertBatchScope($lockedBatch, $actor);
 
             $existing = ApplicationReviewPublication::query()
                 ->where('application_review_batch_id', $lockedBatch->id)
@@ -156,12 +160,22 @@ class ApplicationReviewPublicationService
                 ->first();
 
             if ($existing instanceof ApplicationReviewPublication) {
-                return $existing->load([
+                $existing->load([
                     'batch',
                     'contest.program',
                     'publishedBy',
                     'results',
                 ]);
+
+                if ($lockedBatch->cycle === ApplicationReviewBatchCycle::Revalidation) {
+                    $this->projectRevalidationPublication(
+                        $lockedBatch,
+                        $existing,
+                        $actor,
+                    );
+                }
+
+                return $existing;
             }
 
             $items = ApplicationReviewBatchItem::query()
@@ -170,8 +184,6 @@ class ApplicationReviewPublicationService
                 ->lockForUpdate()
                 ->get();
             $lockedBatch->setRelation('items', $items);
-            $lockedBatch->loadMissing('contest.program');
-            $this->assertBatchScope($lockedBatch, $actor);
             $preview = $this->buildPreview(
                 $lockedBatch,
                 $actor,
@@ -326,7 +338,12 @@ class ApplicationReviewPublicationService
                     'published_at' => $publishedAt,
                 ]);
 
-                if ($publishedResult->outcome === ApplicationReviewBatchOutcome::CorrectionRequired) {
+                if ($lockedBatch->cycle === ApplicationReviewBatchCycle::Revalidation) {
+                    $this->correctionRevalidations->project(
+                        $publishedResult,
+                        $actor,
+                    );
+                } elseif ($publishedResult->outcome === ApplicationReviewBatchOutcome::CorrectionRequired) {
                     $this->correctionRequests->project($publishedResult, $actor);
                 }
             }
@@ -358,6 +375,26 @@ class ApplicationReviewPublicationService
                 'results',
             ]);
         }, 3);
+    }
+
+    private function projectRevalidationPublication(
+        ApplicationReviewBatch $batch,
+        ApplicationReviewPublication $publication,
+        User $actor,
+    ): void {
+        if (
+            $batch->correction_request_id === null
+            || $publication->results->count() !== 1
+        ) {
+            throw ValidationException::withMessages([
+                'revalidation' => 'A publicação existente não contém um resultado final de revalidação coerente.',
+            ]);
+        }
+
+        $this->correctionRevalidations->project(
+            $publication->results->sole(),
+            $actor,
+        );
     }
 
     /**

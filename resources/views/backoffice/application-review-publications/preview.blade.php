@@ -25,7 +25,11 @@
                                 <p class="font-semibold text-ink-900">{{ $item['process_number'] }}</p>
                                 <p class="mt-1 text-sm text-ink-500">{{ $item['application_number'] ?? 'Sem número público' }}</p>
                             </div>
-                            <x-mv.badge :tone="$item['outcome']->value === 'correction_required' ? 'warning' : 'success'">{{ $item['outcome_label'] }}</x-mv.badge>
+                            <x-mv.badge :tone="match ($item['outcome']->value) {
+                                'correction_required' => 'warning',
+                                'correction_rejected' => 'danger',
+                                default => 'success',
+                            }">{{ $item['outcome_label'] }}</x-mv.badge>
                         </div>
                         <p class="mt-4 text-sm leading-6 text-ink-700">{{ $item['message'] }}</p>
                     </article>

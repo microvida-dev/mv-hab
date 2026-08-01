@@ -8,6 +8,8 @@ use App\Enums\ApplicationStatus;
 use App\Enums\ArrearStatus;
 use App\Enums\ComplaintStatus;
 use App\Enums\ContractStatus;
+use App\Enums\CorrectionRequestStatus;
+use App\Enums\CorrectionRevalidationAggregateResult;
 use App\Enums\DefinitiveListStatus;
 use App\Enums\EligibilityResult;
 use App\Enums\MaintenanceRequestStatus;
@@ -15,10 +17,13 @@ use App\Enums\ProvisionalListStatus;
 use App\Models\AdministrativeProcess;
 use App\Models\Allocation;
 use App\Models\Application;
+use App\Models\ApplicationReviewBatch;
+use App\Models\ApplicationReviewPublication;
 use App\Models\Arrear;
 use App\Models\AuditEvent;
 use App\Models\Complaint;
 use App\Models\Contract;
+use App\Models\CorrectionRequest;
 use App\Models\DefinitiveList;
 use App\Models\DocumentSubmission;
 use App\Models\EligibilityCheck;
@@ -84,6 +89,33 @@ class FullHousingProgramFlowTest extends TestCase
         $this->assertSame(1, ReportExport::query()->where('file_path', 'reports/testing/s19/quality-export.csv')->count());
         $this->assertDatabaseHas('audit_events', ['event_code' => 'sprint19.integrated_seed.created']);
         $this->assertSame(1, AuditEvent::query()->where('event_code', 'sprint19.integrated_seed.created')->count());
+
+        $revalidationCandidate = User::query()
+            ->where('email', 's19-correction-revalidation@example.test')
+            ->sole();
+        $revalidationRequest = CorrectionRequest::query()
+            ->where('user_id', $revalidationCandidate->id)
+            ->whereNotNull('application_review_publication_result_id')
+            ->sole();
+        $revalidationBatch = ApplicationReviewBatch::query()
+            ->where('correction_request_id', $revalidationRequest->id)
+            ->sole();
+        $revalidationPublication = ApplicationReviewPublication::query()
+            ->where('application_review_batch_id', $revalidationBatch->id)
+            ->sole();
+
+        $this->assertSame(CorrectionRequestStatus::Resolved, $revalidationRequest->status);
+        $this->assertSame(
+            CorrectionRevalidationAggregateResult::Accepted,
+            $revalidationRequest->revalidation_result,
+        );
+        $this->assertNotNull($revalidationRequest->revalidation_publication_result_id);
+        $this->assertNotNull($revalidationRequest->revalidation_projected_at);
+        $this->assertSame(1, $revalidationPublication->results()->count());
+        $this->assertSame(1, OfficialNotification::query()
+            ->where('notifiable_type', $revalidationPublication->getMorphClass())
+            ->where('notifiable_id', $revalidationPublication->id)
+            ->count());
     }
 
     public function test_core_public_candidate_and_backoffice_pages_render_against_integrated_dataset(): void

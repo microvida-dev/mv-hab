@@ -26,6 +26,10 @@
                 <x-mv.alert tone="info" title="A revisão documental não é uma decisão final">
                     A conclusão sem bloqueios documentais não corresponde a admissão, elegibilidade, classificação, atribuição ou decisão final do procedimento.
                 </x-mv.alert>
+            @elseif ($result->outcome->value === 'correction_rejected')
+                <x-mv.alert tone="warning" title="Elemento não aceite na segunda análise">
+                    Este resultado documental não constitui exclusão automática. O processo regressa à análise municipal antes de qualquer decisão administrativa formal.
+                </x-mv.alert>
             @endif
             <div class="flex flex-wrap gap-3">
                 <a href="{{ route('candidate.application-review-results.index') }}" class="mv-button-secondary">Voltar aos resultados</a>

@@ -35,7 +35,11 @@
                                 <p class="font-semibold text-ink-900">{{ $result->process_number }}</p>
                                 <p class="mt-1 text-sm text-ink-500">{{ $result->application_number ?? $result->application_public_id }}</p>
                             </div>
-                            <x-mv.badge :tone="$result->outcome->value === 'correction_required' ? 'warning' : 'success'">{{ $result->outcome->label() }}</x-mv.badge>
+                            <x-mv.badge :tone="match ($result->outcome->value) {
+                                'correction_required' => 'warning',
+                                'correction_rejected' => 'danger',
+                                default => 'success',
+                            }">{{ $result->outcome->label() }}</x-mv.badge>
                         </div>
                         <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-4">
                             <div><dt class="text-ink-400">Área pessoal</dt><dd class="mt-1 font-semibold text-ink-800">{{ $result->inAppDelivery->status->label() }}</dd></div>

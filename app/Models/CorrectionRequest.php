@@ -51,6 +51,10 @@ use Illuminate\Support\Carbon;
  * @property-read AdministrativeProcess $administrativeProcess
  * @property-read Application $application
  * @property-read User $candidate
+ * @property-read ApplicationReviewBatch|null $revalidationBatch
+ * @property-read ApplicationReviewPublicationResult|null $revalidationPublicationResult
+ * @property-read User|null $revalidationStartedBy
+ * @property-read User|null $revalidationProjectedBy
  */
 class CorrectionRequest extends Model
 {

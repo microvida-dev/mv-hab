@@ -8,8 +8,8 @@
     $urgent = collect($metrics['urgent'] ?? []);
     $collapsedSummary = [
         ($summary['active_requests'] ?? 0).' ativo(s)',
-        ($summary['submitted_requests'] ?? 0).' submetido(s)',
-        ($summary['overdue_requests'] ?? 0).' vencido(s)',
+        ($summary['ready_to_close_revalidations'] ?? 0).' pronto(s) para fecho',
+        ($summary['rejected_revalidations'] ?? 0).' não aceite(s)',
     ];
 @endphp
 
@@ -57,6 +57,37 @@
                         {{ $summary['percentage'] ?? 100 }}%
                     </p>
                 </div>
+            </div>
+
+            <div class="mt-5 border-t border-ink-100 pt-5">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 class="font-semibold text-ink-900">Segunda análise</h3>
+                        <p class="mt-1 text-sm text-ink-500">Estágios agregados da revalidação diferencial.</p>
+                    </div>
+                    @if (\Illuminate\Support\Facades\Route::has('backoffice.correction-revalidations.index'))
+                        <a href="{{ route('backoffice.correction-revalidations.index') }}" class="mv-button-secondary">
+                            Abrir fila de revalidação
+                        </a>
+                    @endif
+                </div>
+
+                <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <x-mv.stat-card label="Por iniciar" :value="$summary['submitted_for_revalidation'] ?? 0" />
+                    <x-mv.stat-card label="Parcialmente revistos" :value="$summary['partially_reviewed_revalidations'] ?? 0" />
+                    <x-mv.stat-card label="Prontos para fecho" :value="$summary['ready_to_close_revalidations'] ?? 0" />
+                    <x-mv.stat-card label="Selados" :value="$summary['sealed_revalidations'] ?? 0" />
+                    <x-mv.stat-card label="Publicados" :value="$summary['published_revalidations'] ?? 0" />
+                    <x-mv.stat-card label="Resolvidos" :value="$summary['resolved_revalidations'] ?? 0" />
+                    <x-mv.stat-card label="Não aceites" :value="$summary['rejected_revalidations'] ?? 0" />
+                    <x-mv.stat-card label="Tempo médio" :value="($summary['average_revalidation_minutes'] ?? 0).' min'" />
+                </div>
+
+                @if (! ($summary['revalidation_sla_configured'] ?? false))
+                    <p class="mt-4 text-sm text-ink-500">
+                        SLA da segunda análise não configurado; não é apresentado um atraso inferido.
+                    </p>
+                @endif
             </div>
 
             <div class="mt-5">

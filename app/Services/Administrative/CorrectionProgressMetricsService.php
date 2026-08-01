@@ -4,12 +4,15 @@ namespace App\Services\Administrative;
 
 use App\Enums\CorrectionRequestItemStatus;
 use App\Enums\CorrectionRequestStatus;
+use App\Enums\CorrectionResponseReviewResult;
+use App\Enums\CorrectionRevalidationAggregateResult;
 use App\Models\CorrectionRequest;
 use App\Models\CorrectionRequestItem;
 use App\Models\User;
 use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 final class CorrectionProgressMetricsService
 {
@@ -185,7 +188,7 @@ final class CorrectionProgressMetricsService
     /**
      * @return array{
      *     available: bool,
-     *     summary: array<string, int>,
+     *     summary: array<string, int|bool|null>,
      *     urgent: list<array<string, mixed>>
      * }
      */
@@ -261,6 +264,7 @@ final class CorrectionProgressMetricsService
                     });
             })
             ->count();
+        $revalidation = $this->revalidationSummary($user);
 
         $summary = [
             'total_requests' => (int) $statusCounts->sum(),
@@ -298,6 +302,7 @@ final class CorrectionProgressMetricsService
                 : (int) round(
                     ($completedItems / $totalItems) * 100,
                 ),
+            ...$revalidation,
         ];
 
         /** @var list<array<string, mixed>> $urgent */
@@ -355,6 +360,105 @@ final class CorrectionProgressMetricsService
             CorrectionRequest::query(),
             $user,
         );
+    }
+
+    /**
+     * @return array{
+     *     submitted_for_revalidation: int,
+     *     partially_reviewed_revalidations: int,
+     *     ready_to_close_revalidations: int,
+     *     sealed_revalidations: int,
+     *     published_revalidations: int,
+     *     resolved_revalidations: int,
+     *     rejected_revalidations: int,
+     *     revalidation_sla_configured: bool,
+     *     revalidation_sla_overdue_requests: null,
+     *     average_revalidation_minutes: int
+     * }
+     */
+    private function revalidationSummary(User $user): array
+    {
+        $submitted = $this->scopedRequests($user)
+            ->where('status', CorrectionRequestStatus::Submitted->value);
+        $inReview = (clone $submitted)
+            ->whereNotNull('revalidation_started_at')
+            ->whereDoesntHave('revalidationBatch');
+        $partiallyReviewed = (clone $inReview)
+            ->whereHas(
+                'responses',
+                static fn (Builder $responses): Builder => $responses
+                    ->whereNotNull('reviewed_at'),
+            )
+            ->whereHas(
+                'responses',
+                static fn (Builder $responses): Builder => $responses
+                    ->whereNull('review_result'),
+            )
+            ->count();
+        $readyToClose = (clone $inReview)
+            ->whereHas('responses')
+            ->whereDoesntHave(
+                'responses',
+                static fn (Builder $responses): Builder => $responses
+                    ->whereNull('review_result')
+                    ->orWhere(
+                        'review_result',
+                        CorrectionResponseReviewResult::RequiresManualDecision->value,
+                    ),
+            )
+            ->count();
+
+        return [
+            'submitted_for_revalidation' => (clone $submitted)
+                ->whereNull('revalidation_started_at')
+                ->count(),
+            'partially_reviewed_revalidations' => $partiallyReviewed,
+            'ready_to_close_revalidations' => $readyToClose,
+            'sealed_revalidations' => $this->scopedRequests($user)
+                ->whereHas('revalidationBatch')
+                ->count(),
+            'published_revalidations' => $this->scopedRequests($user)
+                ->whereHas('revalidationBatch.publication')
+                ->count(),
+            'resolved_revalidations' => $this->scopedRequests($user)
+                ->where('status', CorrectionRequestStatus::Resolved->value)
+                ->whereNotNull('revalidation_projected_at')
+                ->count(),
+            'rejected_revalidations' => $this->scopedRequests($user)
+                ->where(
+                    'revalidation_result',
+                    CorrectionRevalidationAggregateResult::Rejected->value,
+                )
+                ->count(),
+            'revalidation_sla_configured' => false,
+            'revalidation_sla_overdue_requests' => null,
+            'average_revalidation_minutes' => $this->averageRevalidationMinutes(
+                $user,
+            ),
+        ];
+    }
+
+    private function averageRevalidationMinutes(User $user): int
+    {
+        $query = $this->scopedRequests($user)
+            ->whereNotNull('revalidation_started_at')
+            ->whereNotNull('revalidation_projected_at');
+        $expression = match (DB::getDriverName()) {
+            'mysql', 'mariadb' => 'AVG(TIMESTAMPDIFF(SECOND, revalidation_started_at, revalidation_projected_at) / 60)',
+            'pgsql' => 'AVG(EXTRACT(EPOCH FROM (revalidation_projected_at - revalidation_started_at)) / 60)',
+            'sqlite' => 'AVG((julianday(revalidation_projected_at) - julianday(revalidation_started_at)) * 1440)',
+            default => null,
+        };
+
+        if ($expression === null) {
+            return 0;
+        }
+
+        $average = $query
+            ->selectRaw($expression.' AS aggregate')
+            ->value('aggregate');
+
+        return max(0, (int) round((float) ($average ?? 0)));
     }
 
     /**
@@ -435,7 +539,7 @@ final class CorrectionProgressMetricsService
     /**
      * @return array{
      *     available: false,
-     *     summary: array<string, int>,
+     *     summary: array<string, int|bool|null>,
      *     urgent: array{}
      * }
      */
@@ -457,6 +561,16 @@ final class CorrectionProgressMetricsService
                 'completed_items' => 0,
                 'pending_items' => 0,
                 'percentage' => 100,
+                'submitted_for_revalidation' => 0,
+                'partially_reviewed_revalidations' => 0,
+                'ready_to_close_revalidations' => 0,
+                'sealed_revalidations' => 0,
+                'published_revalidations' => 0,
+                'resolved_revalidations' => 0,
+                'rejected_revalidations' => 0,
+                'revalidation_sla_configured' => false,
+                'revalidation_sla_overdue_requests' => null,
+                'average_revalidation_minutes' => 0,
             ],
             'urgent' => [],
         ];

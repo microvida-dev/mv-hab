@@ -59,7 +59,11 @@
                                     {{ $item->application_number ?: $item->application_public_id }}
                                 </p>
                             </div>
-                            <x-mv.badge :tone="$item->outcome->value === 'correction_required' ? 'warning' : 'success'">
+                            <x-mv.badge :tone="match ($item->outcome->value) {
+                                'correction_required' => 'warning',
+                                'correction_rejected' => 'danger',
+                                default => 'success',
+                            }">
                                 {{ $item->outcome->label() }}
                             </x-mv.badge>
                         </div>
