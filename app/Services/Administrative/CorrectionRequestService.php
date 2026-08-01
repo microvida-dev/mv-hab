@@ -54,6 +54,7 @@ class CorrectionRequestService
                 'user_id' => $process->user_id,
                 'request_number' => $this->generateRequestNumber($process),
                 'status' => CorrectionRequestStatus::Notified,
+                'original_response_deadline_at' => $deadline,
             ]);
             $request->save();
 
@@ -96,13 +97,18 @@ class CorrectionRequestService
             throw ValidationException::withMessages(['correction_request' => 'Apenas rascunhos podem ser editados.']);
         }
 
+        $deadline = $data['response_deadline_at']
+            ?? $request->response_deadline_at;
+
         $request->fill([
             'subject' => $data['subject'],
             'message' => $data['message'],
             'legal_basis' => $data['legal_basis'] ?? null,
             'instructions' => $data['instructions'] ?? null,
-            'response_deadline_at' => $data['response_deadline_at'] ?? $request->response_deadline_at,
+            'response_deadline_at' => $deadline,
             'internal_notes' => $data['internal_notes'] ?? null,
+        ])->forceFill([
+            'original_response_deadline_at' => $deadline,
         ])->save();
 
         $this->auditLogger->record(

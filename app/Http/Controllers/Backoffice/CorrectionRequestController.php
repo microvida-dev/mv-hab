@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backoffice;
 use App\Enums\CorrectionIssueType;
 use App\Enums\CorrectionRequiredAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ExtendCorrectionDeadlineRequest;
 use App\Http\Requests\IssueCorrectionRequestRequest;
 use App\Http\Requests\StoreCorrectionRequestRequest;
 use App\Http\Requests\UpdateCorrectionRequestRequest;
@@ -12,7 +13,9 @@ use App\Models\AdministrativeProcess;
 use App\Models\CorrectionRequest;
 use App\Models\DocumentType;
 use App\Models\RequiredDocument;
+use App\Services\Administrative\CorrectionDeadlineExtensionService;
 use App\Services\Administrative\CorrectionRequestService;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +23,10 @@ use Illuminate\Support\Facades\Gate;
 
 class CorrectionRequestController extends Controller
 {
-    public function __construct(private readonly CorrectionRequestService $correctionRequestService) {}
+    public function __construct(
+        private readonly CorrectionRequestService $correctionRequestService,
+        private readonly CorrectionDeadlineExtensionService $deadlineExtensions,
+    ) {}
 
     public function index(Request $request, AdministrativeProcess $administrativeProcess): View
     {
@@ -55,7 +61,19 @@ class CorrectionRequestController extends Controller
     public function show(Request $request, CorrectionRequest $correctionRequest): View
     {
         Gate::authorize('viewBackoffice', $correctionRequest);
-        $correctionRequest->load(['administrativeProcess', 'application', 'candidate', 'issuedBy', 'items.documentType', 'items.requiredDocument', 'responses.correctionRequestItem', 'responses.documentSubmission', 'responses.reviewedBy']);
+        $correctionRequest->load([
+            'administrativeProcess',
+            'application',
+            'candidate',
+            'issuedBy',
+            'items.documentType',
+            'items.requiredDocument',
+            'responses.correctionRequestItem',
+            'responses.documentSubmission',
+            'responses.reviewedBy',
+            'deadlineExtensions.authorizedBy',
+            'submissionReceipt',
+        ]);
 
         return view('backoffice.correction-requests.show', ['correctionRequest' => $correctionRequest]);
     }
@@ -98,6 +116,31 @@ class CorrectionRequestController extends Controller
         $this->correctionRequestService->close($correctionRequest, $this->authenticatedUser($request));
 
         return back()->with('success', 'Pedido fechado.');
+    }
+
+    public function extendDeadline(
+        ExtendCorrectionDeadlineRequest $request,
+        CorrectionRequest $correctionRequest,
+    ): RedirectResponse {
+        Gate::authorize(
+            'extendDeadlineBackoffice',
+            $correctionRequest,
+        );
+        $data = $request->validated();
+
+        $this->deadlineExtensions->extend(
+            request: $correctionRequest,
+            extendedDeadline: CarbonImmutable::parse(
+                (string) $data['extended_deadline_at'],
+            ),
+            reason: (string) $data['reason'],
+            actor: $this->authenticatedUser($request),
+        );
+
+        return back()->with(
+            'success',
+            'Prazo prorrogado e registado em auditoria.',
+        );
     }
 
     public function markOverdue(Request $request, CorrectionRequest $correctionRequest): RedirectResponse

@@ -2,6 +2,7 @@
 
 namespace App\Services\Administrative;
 
+use App\Enums\AdministrativeProcessStatus;
 use App\Enums\ApplicationReviewBatchOutcome;
 use App\Enums\ApplicationReviewPublicationStatus;
 use App\Enums\ContestDeadlineType;
@@ -32,6 +33,7 @@ class PublishedCorrectionRequestProjector
         private readonly PublishedCorrectionFindingMapper $findings,
         private readonly CorrectionRequestNumberService $numbers,
         private readonly ContestApplicationPhaseService $phases,
+        private readonly AdministrativeWorkflowTransitionService $transitions,
         private readonly MunicipalRecordScopeService $municipalScope,
         private readonly PlatformOperatorScopeService $platformScope,
         private readonly CanonicalJsonHasher $hasher,
@@ -114,6 +116,7 @@ class PublishedCorrectionRequestProjector
                     (int) $publication->published_at->format('Y'),
                 ),
                 'status' => CorrectionRequestStatus::Notified,
+                'original_response_deadline_at' => $deadline->ends_at,
                 'issued_by' => $actor->id,
                 'issued_at' => $publication->published_at,
                 'notified_at' => $publication->published_at,
@@ -131,6 +134,11 @@ class PublishedCorrectionRequestProjector
             $process->forceFill([
                 'current_correction_request_id' => $request->id,
             ])->save();
+
+            $process = $this->alignProcessWithPublishedRequest(
+                $process,
+                $actor,
+            );
 
             $this->audit->record(
                 event: AuditEvents::CREATE,
@@ -179,6 +187,45 @@ class PublishedCorrectionRequestProjector
                     $actor,
                 ),
             );
+    }
+
+    private function alignProcessWithPublishedRequest(
+        AdministrativeProcess $process,
+        User $actor,
+    ): AdministrativeProcess {
+        $path = match ($process->status) {
+            AdministrativeProcessStatus::DocumentReview => [
+                AdministrativeProcessStatus::EligibilityReview,
+                AdministrativeProcessStatus::RequiresCorrection,
+                AdministrativeProcessStatus::AwaitingCandidateResponse,
+            ],
+            AdministrativeProcessStatus::EligibilityReview => [
+                AdministrativeProcessStatus::RequiresCorrection,
+                AdministrativeProcessStatus::AwaitingCandidateResponse,
+            ],
+            AdministrativeProcessStatus::RequiresCorrection => [
+                AdministrativeProcessStatus::AwaitingCandidateResponse,
+            ],
+            AdministrativeProcessStatus::AwaitingCandidateResponse => [],
+            default => null,
+        };
+
+        if ($path === null) {
+            throw ValidationException::withMessages([
+                'process' => 'O processo não se encontra numa fase compatível com o aperfeiçoamento publicado.',
+            ]);
+        }
+
+        foreach ($path as $status) {
+            $process = $this->transitions->transition(
+                $process,
+                $status,
+                $actor,
+                'Pedido de aperfeiçoamento publicado ao candidato.',
+            );
+        }
+
+        return $process;
     }
 
     private function assertProjectable(

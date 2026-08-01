@@ -22,6 +22,7 @@ class AdministrativeWorkflowTransitionService
         'requires_correction' => ['awaiting_candidate_response'],
         'awaiting_candidate_response' => ['correction_submitted', 'correction_overdue'],
         'correction_submitted' => ['correction_under_review'],
+        'correction_overdue' => ['awaiting_candidate_response'],
         'correction_under_review' => ['eligibility_review'],
         'admitted_for_scoring' => ['archived'],
         'not_admitted' => ['archived'],
@@ -46,7 +47,7 @@ class AdministrativeWorkflowTransitionService
     public function transition(
         AdministrativeProcess $process,
         AdministrativeProcessStatus $to,
-        User $actor,
+        ?User $actor,
         ?string $reason = null,
     ): AdministrativeProcess {
         return DB::transaction(function () use ($process, $to, $actor, $reason) {
@@ -85,14 +86,14 @@ class AdministrativeWorkflowTransitionService
 
             $process->forceFill([
                 'status' => $to,
-                'updated_by' => $actor->id,
+                'updated_by' => $actor?->id,
                 ...$timestamps,
             ])->save();
 
             $process->statusHistories()->create([
                 'from_status' => $from->value,
                 'to_status' => $to->value,
-                'changed_by' => $actor->id,
+                'changed_by' => $actor?->id,
                 'reason' => $reason,
             ]);
 
@@ -104,7 +105,11 @@ class AdministrativeWorkflowTransitionService
                 description: 'Estado administrativo alterado.',
                 oldValues: ['status' => $from->value],
                 newValues: ['status' => $to->value],
-                metadata: ['reason_provided' => filled($reason)],
+                metadata: [
+                    'reason_provided' => filled($reason),
+                    'actor_id' => $actor?->id,
+                    'system_initiated' => $actor === null,
+                ],
             );
 
             return $process->refresh();

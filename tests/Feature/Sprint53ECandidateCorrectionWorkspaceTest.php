@@ -13,15 +13,20 @@ use App\Enums\CorrectionResponseStatus;
 use App\Enums\DocumentAppliesTo;
 use App\Enums\DocumentStatus;
 use App\Enums\FeatureKey;
+use App\Enums\OfficialNotificationChannel;
+use App\Enums\OfficialNotificationType;
 use App\Models\AdministrativeProcess;
 use App\Models\Application;
 use App\Models\ApplicationReviewBatch;
 use App\Models\ApplicationReviewBatchItem;
 use App\Models\ContestDeadline;
+use App\Models\CorrectionDeadlineExtension;
 use App\Models\CorrectionRequest;
+use App\Models\CorrectionSubmissionReceipt;
 use App\Models\DocumentSubmission;
 use App\Models\DocumentType;
 use App\Models\DocumentVersion;
+use App\Models\OfficialNotification;
 use App\Models\Permission;
 use App\Models\RequiredDocument;
 use App\Models\Role;
@@ -222,6 +227,352 @@ class Sprint53ECandidateCorrectionWorkspaceTest extends TestCase
         ]);
     }
 
+    public function test_complete_workspace_is_formally_submitted_once_with_immutable_receipt(): void
+    {
+        [$request, $candidate] = $this->publishedCorrectionRequest(
+            documentStatus: DocumentStatus::Missing,
+        );
+        $item = $request->items()->firstOrFail();
+        $process = $request->administrativeProcess()->firstOrFail();
+
+        $this->actingAs($candidate)
+            ->post(
+                route(
+                    'candidate.correction-requests.responses.store',
+                    $request,
+                ),
+                [
+                    'correction_request_item_id' => $item->id,
+                    'justification' => 'A entidade emissora ainda não disponibilizou o documento.',
+                ],
+            )
+            ->assertRedirect();
+
+        $issuedBy = $request->issuedBy()->firstOrFail();
+        $notificationsBefore = OfficialNotification::query()
+            ->where('user_id', $issuedBy->id)
+            ->where('notifiable_type', $request->getMorphClass())
+            ->where('notifiable_id', $request->id)
+            ->count();
+
+        $this->actingAs($candidate)
+            ->post(
+                route(
+                    'candidate.correction-requests.submit',
+                    $request,
+                ),
+                ['confirm_submit' => '1'],
+            )
+            ->assertRedirect(
+                route(
+                    'candidate.correction-requests.receipt',
+                    $request,
+                ),
+            );
+
+        $request->refresh();
+        $receipt = CorrectionSubmissionReceipt::query()
+            ->where('correction_request_id', $request->id)
+            ->firstOrFail();
+
+        $this->assertSame(
+            CorrectionRequestStatus::Submitted,
+            $request->status,
+        );
+        $this->assertNotNull($request->submitted_at);
+        $this->assertSame(
+            CorrectionResponseStatus::Submitted,
+            $request->responses()->firstOrFail()->status,
+        );
+        $this->assertSame(
+            AdministrativeProcessStatus::CorrectionSubmitted,
+            $process->refresh()->status,
+        );
+        $this->assertSame(
+            app(CanonicalJsonHasher::class)->hash(
+                $receipt->snapshot_payload,
+            ),
+            $receipt->snapshot_hash,
+        );
+        $this->assertDatabaseHas(
+            'official_notifications',
+            [
+                'id' => $receipt->municipal_notification_id,
+                'user_id' => $issuedBy->id,
+                'notification_type' => OfficialNotificationType::CorrectionSubmissionReceived->value,
+                'channel' => OfficialNotificationChannel::Backoffice->value,
+            ],
+        );
+        $this->assertSame(
+            $notificationsBefore + 1,
+            OfficialNotification::query()
+                ->where('user_id', $issuedBy->id)
+                ->where(
+                    'notifiable_type',
+                    $request->getMorphClass(),
+                )
+                ->where('notifiable_id', $request->id)
+                ->count(),
+        );
+
+        $this->actingAs($candidate)
+            ->post(
+                route(
+                    'candidate.correction-requests.submit',
+                    $request,
+                ),
+                ['confirm_submit' => '1'],
+            )
+            ->assertRedirect(
+                route(
+                    'candidate.correction-requests.receipt',
+                    $request,
+                ),
+            );
+
+        $this->assertDatabaseCount(
+            'correction_submission_receipts',
+            1,
+        );
+        $this->assertSame(
+            $notificationsBefore + 1,
+            OfficialNotification::query()
+                ->where('user_id', $issuedBy->id)
+                ->where(
+                    'notifiable_type',
+                    $request->getMorphClass(),
+                )
+                ->where('notifiable_id', $request->id)
+                ->count(),
+        );
+
+        $this->actingAs($candidate)
+            ->get(
+                route(
+                    'candidate.correction-requests.receipt',
+                    $request,
+                ),
+            )
+            ->assertOk()
+            ->assertSee($receipt->receipt_number)
+            ->assertSee($receipt->snapshot_hash);
+    }
+
+    public function test_incomplete_workspace_cannot_be_formally_submitted(): void
+    {
+        [$request, $candidate] = $this->publishedCorrectionRequest(
+            documentStatus: DocumentStatus::Missing,
+        );
+
+        $this->actingAs($candidate)
+            ->from(
+                route(
+                    'candidate.correction-requests.show',
+                    $request,
+                ),
+            )
+            ->post(
+                route(
+                    'candidate.correction-requests.submit',
+                    $request,
+                ),
+                ['confirm_submit' => '1'],
+            )
+            ->assertRedirect(
+                route(
+                    'candidate.correction-requests.show',
+                    $request,
+                ),
+            )
+            ->assertSessionHasErrors('items');
+
+        $this->assertDatabaseMissing(
+            'correction_submission_receipts',
+            ['correction_request_id' => $request->id],
+        );
+    }
+
+    public function test_submission_after_deadline_expires_request_atomically(): void
+    {
+        [$request, $candidate] = $this->publishedCorrectionRequest(
+            documentStatus: DocumentStatus::Missing,
+        );
+        $item = $request->items()->firstOrFail();
+        $process = $request->administrativeProcess()->firstOrFail();
+
+        $this->actingAs($candidate)
+            ->post(
+                route(
+                    'candidate.correction-requests.responses.store',
+                    $request,
+                ),
+                [
+                    'correction_request_item_id' => $item->id,
+                    'justification' => 'Justificação preparada antes do termo do prazo.',
+                ],
+            )
+            ->assertRedirect();
+
+        $request->forceFill([
+            'response_deadline_at' => now()->subSecond(),
+        ])->save();
+
+        $this->actingAs($candidate)
+            ->from(
+                route(
+                    'candidate.correction-requests.show',
+                    $request,
+                ),
+            )
+            ->post(
+                route(
+                    'candidate.correction-requests.submit',
+                    $request,
+                ),
+                ['confirm_submit' => '1'],
+            )
+            ->assertRedirect(
+                route(
+                    'candidate.correction-requests.show',
+                    $request,
+                ),
+            )
+            ->assertSessionHasErrors('correction_request');
+
+        $this->assertSame(
+            CorrectionRequestStatus::Expired,
+            $request->refresh()->status,
+        );
+        $this->assertSame(
+            AdministrativeProcessStatus::CorrectionOverdue,
+            $process->refresh()->status,
+        );
+        $this->assertDatabaseMissing(
+            'correction_submission_receipts',
+            ['correction_request_id' => $request->id],
+        );
+    }
+
+    public function test_authorized_extension_preserves_original_deadline_and_reopens_request(): void
+    {
+        [$request] = $this->publishedCorrectionRequest(
+            documentStatus: DocumentStatus::Missing,
+        );
+        $actor = $request->issuedBy()->firstOrFail();
+        $process = $request->administrativeProcess()->firstOrFail();
+        $originalDeadline = now()->subDay()->startOfMinute();
+        $newDeadline = now()->addDays(3)->startOfMinute();
+
+        $request->forceFill([
+            'status' => CorrectionRequestStatus::Expired,
+            'response_deadline_at' => $originalDeadline,
+            'original_response_deadline_at' => $originalDeadline,
+            'expired_at' => now(),
+        ])->save();
+        $process->forceFill([
+            'status' => AdministrativeProcessStatus::CorrectionOverdue,
+        ])->save();
+
+        $this->actingAs($actor)
+            ->withSession([
+                'mfa.verified_at' => now(),
+            ])
+            ->from(
+                route(
+                    'backoffice.correction-requests.show',
+                    $request,
+                ),
+            )
+            ->post(
+                route(
+                    'backoffice.correction-requests.extend-deadline',
+                    $request,
+                ),
+                [
+                    'extended_deadline_at' => $newDeadline->format('Y-m-d H:i:s'),
+                    'reason' => 'Prorrogação autorizada por indisponibilidade comprovada da entidade emissora.',
+                    'confirm_extension' => '1',
+                ],
+            )
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(
+                route(
+                    'backoffice.correction-requests.show',
+                    $request,
+                ),
+            );
+
+        $request->refresh();
+
+        $this->assertSame(
+            CorrectionRequestStatus::Open,
+            $request->status,
+        );
+        $this->assertSame(
+            $originalDeadline->toDateTimeString(),
+            $request->original_response_deadline_at
+                ?->toDateTimeString(),
+        );
+        $this->assertSame(
+            $newDeadline->toDateTimeString(),
+            $request->response_deadline_at
+                ?->toDateTimeString(),
+        );
+        $this->assertSame(
+            1,
+            $request->deadline_extension_count,
+        );
+        $this->assertNull($request->expired_at);
+        $this->assertSame(
+            AdministrativeProcessStatus::AwaitingCandidateResponse,
+            $process->refresh()->status,
+        );
+        $this->assertDatabaseHas(
+            'correction_deadline_extensions',
+            [
+                'correction_request_id' => $request->id,
+                'authorized_by' => $actor->id,
+            ],
+        );
+        $this->assertInstanceOf(
+            CorrectionDeadlineExtension::class,
+            $request->deadlineExtensions()->first(),
+        );
+    }
+
+    public function test_scheduled_command_expires_due_requests(): void
+    {
+        [$request] = $this->publishedCorrectionRequest(
+            documentStatus: DocumentStatus::Missing,
+        );
+        $process = $request->administrativeProcess()->firstOrFail();
+
+        $request->forceFill([
+            'status' => CorrectionRequestStatus::Open,
+            'response_deadline_at' => now()->subMinute(),
+        ])->save();
+        $process->forceFill([
+            'status' => AdministrativeProcessStatus::AwaitingCandidateResponse,
+        ])->save();
+
+        auth()->logout();
+
+        $this->artisan('corrections:expire')
+            ->expectsOutput(
+                '1 pedido(s) de aperfeiçoamento expirado(s).',
+            )
+            ->assertSuccessful();
+
+        $this->assertSame(
+            CorrectionRequestStatus::Expired,
+            $request->refresh()->status,
+        );
+        $this->assertSame(
+            AdministrativeProcessStatus::CorrectionOverdue,
+            $process->refresh()->status,
+        );
+    }
+
     /**
      * @return array{
      *     CorrectionRequest,
@@ -251,6 +602,7 @@ class Sprint53ECandidateCorrectionWorkspaceTest extends TestCase
         $actor = $this->userWithPermissions([
             'administrative_processes.view',
             'administrative_processes.publish',
+            'administrative_processes.update',
         ]);
         $this->assignApplicationMunicipality(
             $actor,

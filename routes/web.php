@@ -203,6 +203,7 @@ use App\Http\Controllers\Candidate\ControlledWithdrawalController as CandidateCo
 use App\Http\Controllers\Candidate\CorrectionRequestController as CandidateCorrectionRequestController;
 use App\Http\Controllers\Candidate\CorrectionRequestResponseController as CandidateCorrectionRequestResponseController;
 use App\Http\Controllers\Candidate\CorrectionResponseController as CandidateCorrectionResponseController;
+use App\Http\Controllers\Candidate\CorrectionSubmissionReceiptController as CandidateCorrectionSubmissionReceiptController;
 use App\Http\Controllers\Candidate\CurrentHousingSituationController as CandidateCurrentHousingSituationController;
 use App\Http\Controllers\Candidate\DashboardController as CandidateDashboardController;
 use App\Http\Controllers\Candidate\DocumentChecklistController as CandidateDocumentChecklistController;
@@ -658,6 +659,8 @@ Route::middleware('auth')->group(function () {
                 ->name('correction-responses.update');
             Route::post('/pedidos-aperfeicoamento/{correctionRequest}/submeter', [CandidateCorrectionResponseController::class, 'submit'])
                 ->name('correction-requests.submit');
+            Route::get('/pedidos-aperfeicoamento/{correctionRequest}/recibo', [CandidateCorrectionSubmissionReceiptController::class, 'show'])
+                ->name('correction-requests.receipt');
 
             Route::get('/documentos', [CandidateDocumentController::class, 'index'])
                 ->name('documents.index');
@@ -3256,6 +3259,8 @@ Route::middleware('auth')->group(function () {
                         ->name('correction-requests.close');
                     Route::post('correction-requests/{correctionRequest}/mark-overdue', [BackofficeCorrectionRequestController::class, 'markOverdue'])
                         ->name('correction-requests.mark-overdue');
+                    Route::post('correction-requests/{correctionRequest}/extend-deadline', [BackofficeCorrectionRequestController::class, 'extendDeadline'])
+                        ->name('correction-requests.extend-deadline');
 
                     Route::get('correction-responses/{correctionResponse}', [BackofficeCorrectionResponseReviewController::class, 'show'])
                         ->name('correction-responses.show');
@@ -5583,6 +5588,7 @@ Route::middleware('auth')->group(function () {
                 'backoffice.correction-requests.close' => ['administrative_processes.complete', 'applications.review'],
                 'backoffice.correction-requests.create' => ['administrative_processes.create', 'applications.review'],
                 'backoffice.correction-requests.edit' => ['administrative_processes.update', 'applications.review'],
+                'backoffice.correction-requests.extend-deadline' => ['administrative_processes.update', 'applications.review'],
                 'backoffice.correction-requests.index' => ['administrative_processes.view', 'applications.review'],
                 'backoffice.correction-requests.issue' => ['administrative_processes.issue', 'applications.review'],
                 'backoffice.correction-requests.mark-overdue' => ['administrative_processes.mark_overdue', 'applications.review'],

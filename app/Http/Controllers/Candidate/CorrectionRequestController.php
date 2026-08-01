@@ -81,6 +81,8 @@ class CorrectionRequestController extends Controller
             'items.responses.documentSubmission.currentVersion',
             'items.responses.documentVersion.replacedVersion',
             'responses.documentSubmission.currentVersion',
+            'submissionReceipt',
+            'deadlineExtensions.authorizedBy',
         ]);
 
         return view('candidate.correction-requests.show', [

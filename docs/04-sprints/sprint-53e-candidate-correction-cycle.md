@@ -105,3 +105,18 @@ Regras implementadas:
 
 A gravação de um item não executa revisão técnica, segunda publicação,
 notificação municipal, exportação ou submissão formal.
+
+## Bloco 53E-C — submissão formal, recibo e controlo temporal
+
+- submissão agregada de toda a checklist sob lock pessimista;
+- respostas em rascunho promovidas atomicamente a submetidas;
+- recibo único, imutável e idempotente com snapshot canónico;
+- bloqueio de alterações depois da submissão;
+- uma notificação interna municipal por submissão formal;
+- prazo original preservado e histórico imutável de prorrogações;
+- prorrogação municipal autorizada por `administrative_processes.update`;
+- reabertura controlada de pedidos expirados após prorrogação;
+- expiração automática através de `corrections:expire`;
+- agendamento de cinco em cinco minutos com prevenção de sobreposição;
+- compatibilidade do ciclo de migrations com SQLite e MySQL a validar;
+- revisão técnica das respostas continua reservada ao Bloco 53E-F.

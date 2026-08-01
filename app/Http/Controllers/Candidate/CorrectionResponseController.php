@@ -12,6 +12,7 @@ use App\Models\CorrectionResponse;
 use App\Models\DocumentSubmission;
 use App\Services\Administrative\CandidateCorrectionWorkspaceService;
 use App\Services\Administrative\CorrectionResponseService;
+use App\Services\Administrative\CorrectionSubmissionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,7 @@ class CorrectionResponseController extends Controller
     public function __construct(
         private readonly CorrectionResponseService $responseService,
         private readonly CandidateCorrectionWorkspaceService $workspace,
+        private readonly CorrectionSubmissionService $submissions,
     ) {}
 
     public function create(
@@ -177,13 +179,26 @@ class CorrectionResponseController extends Controller
         SubmitCorrectionResponseRequest $request,
         CorrectionRequest $correctionRequest,
     ): RedirectResponse {
-        Gate::authorize('view', $correctionRequest);
-
         if (! $correctionRequest->isLegacy()) {
-            throw ValidationException::withMessages([
-                'correction_request' => 'A submissão formal é executada apenas depois de toda a checklist estar preparada.',
-            ]);
+            Gate::authorize('submit', $correctionRequest);
+
+            $receipt = $this->submissions->submit(
+                $correctionRequest,
+                $this->authenticatedUser($request),
+            );
+
+            return to_route(
+                'candidate.correction-requests.receipt',
+                $correctionRequest,
+            )->with(
+                'success',
+                'Aperfeiçoamento submetido formalmente. Recibo '
+                    .$receipt->receipt_number
+                    .' emitido.',
+            );
         }
+
+        Gate::authorize('view', $correctionRequest);
 
         $pending = $correctionRequest->items()
             ->where('is_required', true)

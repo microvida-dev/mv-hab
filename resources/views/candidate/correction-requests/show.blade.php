@@ -42,7 +42,10 @@
                     {{ $correctionRequest->response_deadline_at?->format('d/m/Y H:i') ?? '—' }}
                 </p>
 
-                @if ($correctionRequest->response_deadline_at?->isPast())
+                @if (
+                    $correctionRequest->status->acceptsCandidateWork()
+                    && $correctionRequest->response_deadline_at?->isPast()
+                )
                     <p class="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-700">
                         O prazo de resposta encontra-se vencido. Contacte os
                         serviços municipais para esclarecimentos.
@@ -82,6 +85,61 @@
                         checklist estar preparada.
                     </p>
                 </section>
+
+                @if ($correctionRequest->submissionReceipt)
+                    <section class="mv-surface border border-emerald-200 p-6">
+                        <h2 class="text-lg font-semibold text-emerald-900">
+                            Submissão formal concluída
+                        </h2>
+                        <p class="mt-2 text-sm text-emerald-800">
+                            Recibo
+                            {{ $correctionRequest->submissionReceipt->receipt_number }}
+                            emitido em
+                            {{ $correctionRequest->submissionReceipt->submitted_at->format('d/m/Y H:i') }}.
+                        </p>
+                        <a
+                            href="{{ route('candidate.correction-requests.receipt', $correctionRequest) }}"
+                            class="mv-button-primary mt-4"
+                        >
+                            Consultar recibo
+                        </a>
+                    </section>
+                @elseif (
+                    $workspaceProgress['ready_for_submission']
+                    && $correctionRequest->isResponseWindowOpen()
+                )
+                    <section class="mv-surface border border-civic-200 p-6">
+                        <h2 class="text-lg font-semibold text-ink-900">
+                            Submeter aperfeiçoamento
+                        </h2>
+                        <p class="mt-2 text-sm text-ink-600">
+                            Todos os elementos obrigatórios estão preparados.
+                            Depois da submissão deixam de poder ser alterados.
+                        </p>
+
+                        <form
+                            method="POST"
+                            action="{{ route('candidate.correction-requests.submit', $correctionRequest) }}"
+                            class="mt-4 space-y-4"
+                        >
+                            @csrf
+                            <label class="flex items-start gap-2 text-sm text-ink-700">
+                                <input
+                                    type="checkbox"
+                                    name="confirm_submit"
+                                    value="1"
+                                    required
+                                    class="mt-0.5 rounded border-ink-300"
+                                >
+                                Confirmo que pretendo submeter formalmente toda
+                                a checklist e emitir o respetivo recibo.
+                            </label>
+                            <button class="mv-button-primary">
+                                Submeter e emitir recibo
+                            </button>
+                        </form>
+                    </section>
+                @endif
             @endunless
 
             <section class="space-y-4">

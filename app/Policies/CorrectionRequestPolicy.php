@@ -31,6 +31,21 @@ class CorrectionRequestPolicy
         return $this->canAccess($user, self::MODULE, 'view');
     }
 
+    public function submit(
+        User $user,
+        CorrectionRequest $correctionRequest,
+    ): bool {
+        return $user->hasRole('candidate')
+            && (int) $correctionRequest->user_id
+                === (int) $user->id
+            && $correctionRequest->isVisibleToCandidate()
+            && $this->canAccess(
+                $user,
+                self::MODULE,
+                'create',
+            );
+    }
+
     public function create(User $user): bool
     {
         return ! $user->hasRole(['candidate', 'auditor']) && $this->canAccess($user, self::MODULE, 'create');
@@ -73,6 +88,18 @@ class CorrectionRequestPolicy
     public function markOverdueBackoffice(User $user, CorrectionRequest $request): bool
     {
         return $this->transitionBackoffice($user, $request, 'mark_overdue');
+    }
+
+    public function extendDeadlineBackoffice(
+        User $user,
+        CorrectionRequest $request,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'update')
+            && $this->municipalScope->ownsCorrectionRequest(
+                $user,
+                $request,
+            );
     }
 
     private function transitionBackoffice(

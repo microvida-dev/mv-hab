@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -19,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property int $administrative_process_id
  * @property int $application_id
  * @property int $user_id
+ * @property int|null $issued_by
  * @property string $request_number
  * @property bool $candidate_visible
  * @property string $subject
@@ -27,6 +29,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $notified_at
  * @property Carbon|null $opened_at
  * @property Carbon|null $response_deadline_at
+ * @property Carbon|null $original_response_deadline_at
+ * @property int $deadline_extension_count
  * @property Carbon|null $responded_at
  * @property Carbon|null $submitted_at
  * @property Carbon|null $expired_at
@@ -56,6 +60,8 @@ class CorrectionRequest extends Model
         'issued_at',
         'notified_at',
         'opened_at',
+        'original_response_deadline_at',
+        'deadline_extension_count',
         'responded_at',
         'submitted_at',
         'expired_at',
@@ -75,6 +81,8 @@ class CorrectionRequest extends Model
             'notified_at' => 'datetime',
             'opened_at' => 'datetime',
             'response_deadline_at' => 'datetime',
+            'original_response_deadline_at' => 'datetime',
+            'deadline_extension_count' => 'integer',
             'responded_at' => 'datetime',
             'submitted_at' => 'datetime',
             'expired_at' => 'datetime',
@@ -133,6 +141,20 @@ class CorrectionRequest extends Model
     public function responses(): HasMany
     {
         return $this->hasMany(CorrectionResponse::class);
+    }
+
+    /** @return HasOne<CorrectionSubmissionReceipt, $this> */
+    public function submissionReceipt(): HasOne
+    {
+        return $this->hasOne(CorrectionSubmissionReceipt::class);
+    }
+
+    /** @return HasMany<CorrectionDeadlineExtension, $this> */
+    public function deadlineExtensions(): HasMany
+    {
+        return $this->hasMany(
+            CorrectionDeadlineExtension::class,
+        )->orderBy('authorized_at');
     }
 
     public function isLegacy(): bool
