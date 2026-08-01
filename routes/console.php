@@ -1,6 +1,10 @@
 <?php
 
+use App\Enums\ReportExportStatus;
+use App\Jobs\ExpireApplicationResultExport;
+use App\Models\ReportExport;
 use App\Services\Administrative\AdministrativeDeadlineService;
+use App\Services\Reporting\Temporal\TemporalApplicationResultExportService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -27,5 +31,28 @@ Artisan::command(
 
 Schedule::command('corrections:expire')
     ->everyFiveMinutes()
+    ->withoutOverlapping()
+    ->onOneServer();
+
+Artisan::command('reports:expire-temporal-exports', function (): void {
+    $count = 0;
+    ReportExport::query()
+        ->where('export_profile', TemporalApplicationResultExportService::PROFILE)
+        ->where('status', ReportExportStatus::Completed->value)
+        ->whereNotNull('expires_at')
+        ->where('expires_at', '<=', now())
+        ->select('id')
+        ->chunkById(100, function ($exports) use (&$count): void {
+            foreach ($exports as $export) {
+                ExpireApplicationResultExport::dispatch((int) $export->getKey());
+                $count++;
+            }
+        });
+
+    $this->info($count.' exportação(ões) temporal(is) enviada(s) para expiração.');
+})->purpose('Expira pacotes temporais de candidaturas e elimina os artefactos privados.');
+
+Schedule::command('reports:expire-temporal-exports')
+    ->hourly()
     ->withoutOverlapping()
     ->onOneServer();

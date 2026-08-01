@@ -19,9 +19,22 @@ class ReportExportPolicy
         return $user->hasPermission('reports.view');
     }
 
+    public function createTemporal(User $user): bool
+    {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $user->municipality_id !== null
+            && $this->permissions->canAccessApplicationExportCatalog($user);
+    }
+
     public function view(User $user, ReportExport $export): bool
     {
         $definition = $export->run->definition;
+        if ($export->isTemporalApplicationResultExport() && $user->hasRole('auditor')) {
+            return $user->hasPermission('reports.view')
+                && $this->permissions->canAudit($user)
+                && $this->municipalScope->ownsReportExport($user, $export);
+        }
+
         $canView = $this->permissions->isApplicationReport($definition)
             ? $this->permissions->canExportDefinition($user, $definition)
             : $this->permissions->canViewReport($user, $definition);
@@ -34,6 +47,14 @@ class ReportExportPolicy
     {
         return ! $user->hasRole('auditor')
             && $this->permissions->canExport($user, $export->run->definition, $export->scope)
+            && (
+                ! $export->isTemporalApplicationResultExport()
+                || (
+                    ! $export->sensitive_fields_included
+                    && ! $export->document_files_requested
+                )
+                || $user->hasPermission('reports.export_sensitive')
+            )
             && $this->municipalScope->ownsReportExport($user, $export);
     }
 }

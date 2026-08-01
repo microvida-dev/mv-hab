@@ -12,6 +12,7 @@ use App\Http\Requests\Reporting\UpdateReportDefinitionRequest;
 use App\Models\ReportDefinition;
 use App\Services\Reporting\ReportDefinitionService;
 use App\Services\Reporting\ReportPermissionService;
+use App\Services\Reporting\Temporal\TemporalApplicationResultExportService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -64,7 +65,7 @@ class ReportDefinitionController extends Controller
     {
         Gate::authorize('updateBackoffice', $reportDefinition);
 
-        return view('backoffice.reports.definitions.edit', ['report' => $reportDefinition] + $this->formOptions());
+        return view('backoffice.reports.definitions.edit', ['report' => $reportDefinition] + $this->formOptions($reportDefinition));
     }
 
     public function update(UpdateReportDefinitionRequest $request, ReportDefinition $reportDefinition): RedirectResponse
@@ -89,12 +90,17 @@ class ReportDefinitionController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formOptions(): array
+    private function formOptions(?ReportDefinition $report = null): array
     {
+        $formats = ReportFormat::legacyOptions();
+        if ($report?->code === TemporalApplicationResultExportService::REPORT_CODE) {
+            $formats[ReportFormat::Zip->value] = ReportFormat::Zip->label();
+        }
+
         return [
             'types' => ReportType::options(),
             'sensitivities' => ReportSensitivityLevel::options(),
-            'formats' => ReportFormat::options(),
+            'formats' => $formats,
             'scopes' => ExportScope::options(),
         ];
     }

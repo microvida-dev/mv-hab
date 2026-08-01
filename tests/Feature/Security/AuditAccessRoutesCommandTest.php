@@ -49,9 +49,55 @@ class AuditAccessRoutesCommandTest extends TestCase
         );
 
         $this->assertSame(
-            931,
+            937,
             $payload['summary']['permission_middleware_routes'],
         );
+
+        $temporalExportPermissions = [
+            'backoffice.reports.temporal-exports.index' => [
+                'permission:reports.view',
+            ],
+            'backoffice.reports.temporal-exports.create' => [
+                'permission:reports.export',
+                'permission:applications.export',
+            ],
+            'backoffice.reports.temporal-exports.preview' => [
+                'permission:reports.export',
+                'permission:applications.export',
+            ],
+            'backoffice.reports.temporal-exports.store' => [
+                'permission:reports.export',
+                'permission:applications.export',
+            ],
+            'backoffice.reports.temporal-exports.show' => [
+                'permission:reports.view',
+            ],
+            'backoffice.reports.temporal-exports.download' => [
+                'permission:reports.export',
+                'permission:applications.export',
+            ],
+        ];
+        $temporalExportRoutes = collect($payload['routes'])
+            ->whereIn('name', array_keys($temporalExportPermissions))
+            ->keyBy('name');
+
+        $this->assertCount(6, $temporalExportRoutes);
+
+        foreach ($temporalExportPermissions as $routeName => $permissions) {
+            $route = $temporalExportRoutes->get($routeName);
+
+            $this->assertNotNull($route);
+            $this->assertFalse($route['uses_fixed_role_middleware']);
+            $this->assertSame([], $route['missing_backoffice_guards']);
+            $this->assertContains(
+                'municipality.feature:applications.export',
+                $route['middleware'],
+            );
+
+            foreach ($permissions as $permission) {
+                $this->assertContains($permission, $route['permission_middleware']);
+            }
+        }
 
         $this->assertSame(
             0,

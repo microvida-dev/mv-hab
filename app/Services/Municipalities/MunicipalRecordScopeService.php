@@ -135,6 +135,7 @@ class MunicipalRecordScopeService
     private const APPLICATION_REPORT_CODES = [
         'applications_by_contest',
         'application_status_summary',
+        'temporal_application_results',
     ];
 
     public function __construct(
@@ -3007,10 +3008,25 @@ class MunicipalRecordScopeService
         User $user,
         bool $includeApplicationReports = true,
     ): Builder {
-        $query->whereIn(
-            'report_run_id',
-            $this->reportRuns(ReportRun::query(), $user)->select('id'),
-        );
+        if (! $this->platformScope->hasGlobalScope($user)) {
+            if ($user->municipality_id === null) {
+                return $query->whereRaw('1 = 0');
+            }
+
+            $query->where(function (Builder $exports) use ($user): void {
+                $exports
+                    ->where('municipality_id', $user->municipality_id)
+                    ->orWhere(function (Builder $legacy) use ($user): void {
+                        $legacy
+                            ->whereNull('municipality_id')
+                            ->whereIn(
+                                'report_run_id',
+                                $this->reportRuns(ReportRun::query(), $user)
+                                    ->select('id'),
+                            );
+                    });
+            });
+        }
 
         if (! $includeApplicationReports) {
             $query->whereHas(

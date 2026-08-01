@@ -29,6 +29,7 @@ class Sprint53ECorrectionOperationsTest extends TestCase
     {
         parent::setUp();
 
+        $this->travelTo('2026-08-01 09:00:00');
         $this->seed(SystemAccessSeeder::class);
         Queue::fake();
     }

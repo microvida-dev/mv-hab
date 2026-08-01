@@ -153,6 +153,7 @@ use App\Http\Controllers\Backoffice\Reporting\ReportExportController as Backoffi
 use App\Http\Controllers\Backoffice\Reporting\ReportFilterPresetController as BackofficeReportFilterPresetController;
 use App\Http\Controllers\Backoffice\Reporting\ReportingController as BackofficeReportingController;
 use App\Http\Controllers\Backoffice\Reporting\ReportRunController as BackofficeReportRunController;
+use App\Http\Controllers\Backoffice\Reporting\TemporalApplicationResultExportController as BackofficeTemporalApplicationResultExportController;
 use App\Http\Controllers\Backoffice\ReserveListController as BackofficeReserveListController;
 use App\Http\Controllers\Backoffice\ScoringCriterionController as BackofficeScoringCriterionController;
 use App\Http\Controllers\Backoffice\ScoringRuleController as BackofficeScoringRuleController;
@@ -2144,6 +2145,71 @@ Route::middleware('auth')->group(function () {
                                 ])
                                 ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                                 ->name('exports.download');
+
+                            Route::get('temporal-exports', [BackofficeTemporalApplicationResultExportController::class, 'index'])
+                                ->middleware([
+                                    'active.backoffice',
+                                    'mfa.backoffice',
+                                    'log.backoffice',
+                                    'municipality.feature:applications.export',
+                                    'permission:reports.view',
+                                ])
+                                ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                                ->name('temporal-exports.index');
+                            Route::get('temporal-exports/create', [BackofficeTemporalApplicationResultExportController::class, 'create'])
+                                ->middleware([
+                                    'active.backoffice',
+                                    'mfa.backoffice',
+                                    'log.backoffice',
+                                    'municipality.feature:applications.export',
+                                    'permission:reports.export',
+                                    'permission:applications.export',
+                                ])
+                                ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                                ->name('temporal-exports.create');
+                            Route::post('temporal-exports/preview', [BackofficeTemporalApplicationResultExportController::class, 'preview'])
+                                ->middleware([
+                                    'active.backoffice',
+                                    'mfa.backoffice',
+                                    'log.backoffice',
+                                    'municipality.feature:applications.export',
+                                    'permission:reports.export',
+                                    'permission:applications.export',
+                                ])
+                                ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                                ->name('temporal-exports.preview');
+                            Route::post('temporal-exports', [BackofficeTemporalApplicationResultExportController::class, 'store'])
+                                ->middleware([
+                                    'active.backoffice',
+                                    'mfa.backoffice',
+                                    'log.backoffice',
+                                    'municipality.feature:applications.export',
+                                    'permission:reports.export',
+                                    'permission:applications.export',
+                                ])
+                                ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                                ->name('temporal-exports.store');
+                            Route::get('temporal-exports/{reportExport}', [BackofficeTemporalApplicationResultExportController::class, 'show'])
+                                ->middleware([
+                                    'active.backoffice',
+                                    'mfa.backoffice',
+                                    'log.backoffice',
+                                    'municipality.feature:applications.export',
+                                    'permission:reports.view',
+                                ])
+                                ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                                ->name('temporal-exports.show');
+                            Route::get('temporal-exports/{reportExport}/download', BackofficeReportDownloadController::class)
+                                ->middleware([
+                                    'active.backoffice',
+                                    'mfa.backoffice',
+                                    'log.backoffice',
+                                    'municipality.feature:applications.export',
+                                    'permission:reports.export',
+                                    'permission:applications.export',
+                                ])
+                                ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                                ->name('temporal-exports.download');
 
                             Route::get('filter-presets', [BackofficeReportFilterPresetController::class, 'index'])
                                 ->middleware('permission:report_filter_presets.view')

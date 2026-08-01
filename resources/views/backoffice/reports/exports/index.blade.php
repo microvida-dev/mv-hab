@@ -1,6 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <h1 class="text-xl font-semibold text-ink-900">Exportações</h1>
+        <x-mv.page-header title="Exportações" description="Histórico de relatórios e artefactos privados.">
+            <x-slot name="actions">
+                @can('createTemporal', \App\Models\ReportExport::class)
+                    <a class="mv-button-primary" href="{{ route('backoffice.reports.temporal-exports.index') }}">
+                        Exportações temporais
+                    </a>
+                @endcan
+            </x-slot>
+        </x-mv.page-header>
     </x-slot>
 
     <x-ui.table :headers="['Relatório', 'Formato', 'Âmbito', 'Estado', 'Expira']">

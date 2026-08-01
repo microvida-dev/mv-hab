@@ -19,12 +19,14 @@ class ReportPermissionService
     private const APPLICATION_REPORT_CODES = [
         'applications_by_contest',
         'application_status_summary',
+        'temporal_application_results',
     ];
 
     /** @var array<string, string> */
     private const DOMAIN_EXPORT_PERMISSIONS = [
         'applications_by_contest' => 'applications.export',
         'application_status_summary' => 'applications.export',
+        'temporal_application_results' => 'applications.export',
         'complaints_summary' => 'complaints.export',
         'housing_occupancy_report' => 'housing_units.export',
     ];

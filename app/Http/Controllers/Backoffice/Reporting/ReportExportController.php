@@ -54,6 +54,7 @@ class ReportExportController extends Controller
                     ),
                 )
                 ->with(['run.definition', 'user'])
+                ->whereNull('export_profile')
                 ->latest()
                 ->paginate(30),
         ]);
