@@ -61,6 +61,7 @@ class ApplicationReviewBatchService
 
         $batches = ApplicationReviewBatch::query()
             ->whereIn('contest_id', $contests->pluck('id'))
+            ->whereNull('correction_request_id')
             ->get(['id', 'contest_id', 'cycle']);
 
         return $contests->map(function (Contest $contest) use (
@@ -108,6 +109,7 @@ class ApplicationReviewBatchService
 
         return ApplicationReviewBatch::query()
             ->where('contest_id', $contest->id)
+            ->whereNull('correction_request_id')
             ->with(['sealedBy'])
             ->orderBy('sequence_number')
             ->get();
@@ -129,6 +131,7 @@ class ApplicationReviewBatchService
 
         $existingCycles = ApplicationReviewBatch::query()
             ->where('contest_id', $contest->id)
+            ->whereNull('correction_request_id')
             ->pluck('cycle')
             ->map(fn (mixed $cycle): string => (string) $cycle)
             ->all();
@@ -777,6 +780,7 @@ class ApplicationReviewBatchService
     ): array {
         $existing = ApplicationReviewBatch::query()
             ->where('contest_id', $contest->id)
+            ->whereNull('correction_request_id')
             ->where('cycle', $cycle->value)
             ->exists();
 
@@ -790,6 +794,7 @@ class ApplicationReviewBatchService
         if ($cycle === ApplicationReviewBatchCycle::Revalidation
             && ! ApplicationReviewBatch::query()
                 ->where('contest_id', $contest->id)
+                ->whereNull('correction_request_id')
                 ->where(
                     'cycle',
                     ApplicationReviewBatchCycle::InitialReview->value,
@@ -868,6 +873,7 @@ class ApplicationReviewBatchService
         return match ($outcome) {
             ApplicationReviewBatchOutcome::CompletePendingDecision => ApplicationReviewResult::Passed,
             ApplicationReviewBatchOutcome::CorrectionRequired => ApplicationReviewResult::RequiresCorrection,
+            ApplicationReviewBatchOutcome::CorrectionRejected => ApplicationReviewResult::Failed,
             ApplicationReviewBatchOutcome::Withdrawn,
             ApplicationReviewBatchOutcome::NotAssessed => ApplicationReviewResult::NotApplicable,
         };

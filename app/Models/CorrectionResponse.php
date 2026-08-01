@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\CorrectionResponseKind;
 use App\Enums\CorrectionResponseReviewResult;
 use App\Enums\CorrectionResponseStatus;
+use App\Enums\CorrectionRevalidationItemType;
 use Database\Factories\CorrectionResponseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,8 +24,14 @@ use Illuminate\Support\Carbon;
  * @property string|null $response_text
  * @property CorrectionResponseKind|null $response_kind
  * @property CorrectionResponseStatus $status
+ * @property CorrectionResponseReviewResult|null $review_result
+ * @property CorrectionRevalidationItemType|null $differential_classification
+ * @property string|null $decision_source_fingerprint
  * @property Carbon|null $prepared_at
  * @property Carbon|null $submitted_at
+ * @property int|null $reviewed_by
+ * @property Carbon|null $reviewed_at
+ * @property string|null $review_notes
  * @property-read CorrectionRequest $correctionRequest
  * @property-read CorrectionRequestItem $correctionRequestItem
  * @property-read DocumentSubmission|null $documentSubmission
@@ -48,6 +55,7 @@ class CorrectionResponse extends Model
             'response_kind' => CorrectionResponseKind::class,
             'status' => CorrectionResponseStatus::class,
             'review_result' => CorrectionResponseReviewResult::class,
+            'differential_classification' => CorrectionRevalidationItemType::class,
             'prepared_at' => 'datetime',
             'submitted_at' => 'datetime',
             'reviewed_at' => 'datetime',

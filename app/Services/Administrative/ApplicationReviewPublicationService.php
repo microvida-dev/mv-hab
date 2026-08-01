@@ -548,6 +548,10 @@ class ApplicationReviewPublicationService
                 'A revisão documental identificou elementos que necessitam de aperfeiçoamento. O pedido formal, os elementos concretos e o prazo serão disponibilizados separadamente.',
                 'await_correction_request',
             ],
+            ApplicationReviewBatchOutcome::CorrectionRejected => [
+                'A segunda análise documental identificou elementos não aceites. Este resultado não constitui uma decisão automática de exclusão.',
+                'await_formal_decision',
+            ],
             ApplicationReviewBatchOutcome::Withdrawn => [
                 'A desistência da candidatura encontra-se registada neste ciclo de revisão.',
                 'none',

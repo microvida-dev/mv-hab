@@ -580,6 +580,8 @@ class CorrectionSubmissionService
                                 'document_version' => $version instanceof DocumentVersion
                                     ? [
                                         'id' => $version->id,
+                                        'replaces_document_version_id' => $version
+                                            ->replaces_document_version_id,
                                         'version_number' => $version->version_number,
                                         'original_filename' => $version->original_filename,
                                         'mime_type' => $version->mime_type,

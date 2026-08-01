@@ -339,6 +339,7 @@ class ReviewBatchSnapshotBuilder
         return match ($outcome) {
             ApplicationReviewBatchOutcome::CompletePendingDecision => ApplicationReviewResult::Passed,
             ApplicationReviewBatchOutcome::CorrectionRequired => ApplicationReviewResult::RequiresCorrection,
+            ApplicationReviewBatchOutcome::CorrectionRejected => ApplicationReviewResult::Failed,
             ApplicationReviewBatchOutcome::Withdrawn,
             ApplicationReviewBatchOutcome::NotAssessed => ApplicationReviewResult::NotApplicable,
         };

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\CorrectionRequestStatusCast;
 use App\Enums\CorrectionRequestStatus;
+use App\Enums\CorrectionRevalidationAggregateResult;
 use Database\Factories\CorrectionRequestFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -33,6 +34,12 @@ use Illuminate\Support\Carbon;
  * @property int $deadline_extension_count
  * @property Carbon|null $responded_at
  * @property Carbon|null $submitted_at
+ * @property int|null $revalidation_started_by
+ * @property Carbon|null $revalidation_started_at
+ * @property CorrectionRevalidationAggregateResult|null $revalidation_result
+ * @property int|null $revalidation_publication_result_id
+ * @property int|null $revalidation_projected_by
+ * @property Carbon|null $revalidation_projected_at
  * @property Carbon|null $expired_at
  * @property Carbon|null $resolved_at
  * @property Carbon|null $closed_at
@@ -67,6 +74,12 @@ class CorrectionRequest extends Model
         'deadline_extension_count',
         'responded_at',
         'submitted_at',
+        'revalidation_started_by',
+        'revalidation_started_at',
+        'revalidation_result',
+        'revalidation_publication_result_id',
+        'revalidation_projected_by',
+        'revalidation_projected_at',
         'expired_at',
         'resolved_at',
         'closed_at',
@@ -88,6 +101,9 @@ class CorrectionRequest extends Model
             'deadline_extension_count' => 'integer',
             'responded_at' => 'datetime',
             'submitted_at' => 'datetime',
+            'revalidation_started_at' => 'datetime',
+            'revalidation_result' => CorrectionRevalidationAggregateResult::class,
+            'revalidation_projected_at' => 'datetime',
             'expired_at' => 'datetime',
             'resolved_at' => 'datetime',
             'closed_at' => 'datetime',
@@ -150,6 +166,36 @@ class CorrectionRequest extends Model
     public function submissionReceipt(): HasOne
     {
         return $this->hasOne(CorrectionSubmissionReceipt::class);
+    }
+
+    /** @return HasOne<ApplicationReviewBatch, $this> */
+    public function revalidationBatch(): HasOne
+    {
+        return $this->hasOne(
+            ApplicationReviewBatch::class,
+            'correction_request_id',
+        );
+    }
+
+    /** @return BelongsTo<ApplicationReviewPublicationResult, $this> */
+    public function revalidationPublicationResult(): BelongsTo
+    {
+        return $this->belongsTo(
+            ApplicationReviewPublicationResult::class,
+            'revalidation_publication_result_id',
+        );
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function revalidationStartedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'revalidation_started_by');
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function revalidationProjectedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'revalidation_projected_by');
     }
 
     /** @return HasMany<CorrectionDeadlineExtension, $this> */

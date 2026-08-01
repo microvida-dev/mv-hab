@@ -29,6 +29,9 @@ use RuntimeException;
 
 trait CreatesPublishedCorrectionRequests
 {
+    /**
+     * @param  list<array<string, mixed>>  $validatedDocumentSnapshots
+     */
     protected function createPublishedCorrectionRequest(
         Municipality $municipality,
         User $operator,
@@ -36,6 +39,7 @@ trait CreatesPublishedCorrectionRequests
         int $completedItems,
         int $totalItems,
         DateTimeInterface $deadline,
+        array $validatedDocumentSnapshots = [],
     ): CorrectionRequest {
         if ($totalItems < 1) {
             throw new RuntimeException(
@@ -169,7 +173,7 @@ trait CreatesPublishedCorrectionRequests
                     .' elemento(s) obrigatório(s) em falta',
                 ],
             ],
-            'documents' => [],
+            'documents' => $validatedDocumentSnapshots,
             'findings' => $findings,
         ];
 
@@ -222,7 +226,7 @@ trait CreatesPublishedCorrectionRequests
             'technical_result' => 'requires_correction',
             'review_lock_version' => 1,
             'readiness_snapshot' => $payload['readiness'],
-            'document_snapshot' => [],
+            'document_snapshot' => $validatedDocumentSnapshots,
             'snapshot_payload' => $payload,
             'source_fingerprint' => hash(
                 'sha256',
