@@ -107,7 +107,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('lottery_participant_id')->nullable();
             $table->string('status', 80)->default('generated')->index();
-            $table->timestamp('scheduled_for');
+            $table->dateTime('scheduled_for');
             $table->string('location');
             $table->text('instructions')->nullable();
             $table->timestamp('generated_at')->nullable();
@@ -253,7 +253,7 @@ return new class extends Migration
             $table->unsignedBigInteger('contest_housing_unit_id')->nullable();
             $table->unsignedBigInteger('housing_unit_id')->nullable();
             $table->string('status', 80)->default('scheduled')->index();
-            $table->timestamp('scheduled_for');
+            $table->dateTime('scheduled_for');
             $table->string('location');
             $table->text('instructions')->nullable();
             $table->timestamp('rescheduled_at')->nullable();

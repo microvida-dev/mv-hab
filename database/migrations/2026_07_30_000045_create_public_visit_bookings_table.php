@@ -44,16 +44,16 @@ return new class extends Migration
                 $table->unsignedSmallInteger('guest_count')->default(1);
                 $table->char('cancellation_token_hash', 64)->unique();
                 $table->text('cancellation_token')->nullable();
-                $table->timestamp('cancellation_token_expires_at');
-                $table->timestamp('privacy_notice_accepted_at');
+                $table->dateTime('cancellation_token_expires_at');
+                $table->dateTime('privacy_notice_accepted_at');
                 $table->string('privacy_notice_version', 80);
                 $table->string('booking_source', 80)->default('public_portal');
-                $table->timestamp('booked_at');
+                $table->dateTime('booked_at');
                 $table->timestamp('cancelled_at')->nullable();
                 $table->timestamp('confirmation_sent_at')->nullable();
                 $table->timestamp('confirmation_failed_at')->nullable();
                 $table->string('confirmation_error_code', 160)->nullable();
-                $table->timestamp('retention_due_at')->index();
+                $table->dateTime('retention_due_at')->index();
                 $table->timestamp('anonymized_at')->nullable()->index();
                 $table->text('status_notes')->nullable();
                 $table

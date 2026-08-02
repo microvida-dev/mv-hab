@@ -209,7 +209,7 @@ return new class extends Migration
             $table->unsignedBigInteger('communication_delivery_id');
             $table->unsignedInteger('attempt_number');
             $table->string('status', 60)->index();
-            $table->timestamp('started_at');
+            $table->dateTime('started_at');
             $table->timestamp('finished_at')->nullable();
             $table->string('provider')->nullable();
             $table->text('request_payload_summary')->nullable();
@@ -236,7 +236,7 @@ return new class extends Migration
             $table->unsignedBigInteger('file_size');
             $table->string('checksum', 128);
             $table->unsignedBigInteger('generated_by')->nullable();
-            $table->timestamp('generated_at');
+            $table->dateTime('generated_at');
             $table->timestamps();
             $table->softDeletes();
 
@@ -343,7 +343,7 @@ return new class extends Migration
             $table->unsignedBigInteger('file_size');
             $table->string('checksum', 128);
             $table->unsignedBigInteger('generated_by')->nullable();
-            $table->timestamp('generated_at');
+            $table->dateTime('generated_at');
             $table->unsignedBigInteger('issued_by')->nullable();
             $table->timestamp('issued_at')->nullable();
             $table->unsignedBigInteger('cancelled_by')->nullable();

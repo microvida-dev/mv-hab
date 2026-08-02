@@ -57,7 +57,7 @@ return new class extends Migration
                     'published_by',
                     'review_publications_publisher_fk',
                 )->references('id')->on('users')->nullOnDelete();
-                $table->timestamp('published_at');
+                $table->dateTime('published_at');
                 $table->timestamps();
 
                 $table->index(
@@ -164,7 +164,7 @@ return new class extends Migration
                     'email_delivery_id',
                     'review_results_email_delivery_fk',
                 )->references('id')->on('communication_deliveries')->restrictOnDelete();
-                $table->timestamp('published_at');
+                $table->dateTime('published_at');
                 $table->timestamps();
 
                 $table->unique(

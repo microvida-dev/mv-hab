@@ -18,7 +18,7 @@ return new class extends Migration
             $table->date('period_end')->nullable();
             $table->json('metrics');
             $table->foreignId('generated_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamp('generated_at');
+            $table->dateTime('generated_at');
             $table->timestamps();
 
             $table->index('contest_id');
@@ -178,7 +178,7 @@ return new class extends Migration
             $table->json('result_payload');
             $table->string('file_path')->nullable();
             $table->foreignId('generated_by')->constrained('users')->cascadeOnDelete();
-            $table->timestamp('generated_at')->index();
+            $table->dateTime('generated_at')->index();
             $table->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('reviewed_at')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
@@ -206,7 +206,7 @@ return new class extends Migration
             $table->json('payload');
             $table->string('file_path')->nullable();
             $table->foreignId('generated_by')->constrained('users')->cascadeOnDelete();
-            $table->timestamp('generated_at')->index();
+            $table->dateTime('generated_at')->index();
             $table->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('reviewed_at')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
