@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Contracts\Program53\Program53FaultInjector;
 use App\Enums\AdministrativeProcessStatus;
 use App\Enums\ApplicationReviewBatchCycle;
 use App\Enums\ApplicationReviewBatchOutcome;
@@ -10,6 +11,7 @@ use App\Enums\ApplicationReviewStatus;
 use App\Enums\ApplicationReviewType;
 use App\Enums\DocumentStatus;
 use App\Enums\FeatureKey;
+use App\Enums\Program53FailureCode;
 use App\Models\AdministrativeProcess;
 use App\Models\ApplicationReview;
 use App\Models\Contest;
@@ -19,6 +21,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\Administrative\ApplicationReviewBatchService;
 use App\Services\Administrative\ApplicationReviewReadinessService;
+use App\Services\Program53\Resilience\ControlledProgram53FaultInjector;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -165,6 +168,48 @@ class Sprint53CReviewBatchSnapshotTest extends TestCase
             $review->result,
         );
         Notification::assertNothingSent();
+    }
+
+    public function test_failure_after_items_rolls_back_seal_and_retry_is_safe(): void
+    {
+        [$process, $review] = $this->readyProcess();
+        $actor = $this->actorFor($process);
+        $payload = $this->payload([$process->id]);
+        $preview = app(ApplicationReviewBatchService::class)->preview(
+            $this->contest($process),
+            $actor,
+            $payload,
+        );
+        $payload['preview_token'] = $preview['token'];
+        $this->app->instance(
+            Program53FaultInjector::class,
+            new ControlledProgram53FaultInjector([
+                'after_batch_items_before_seal' => Program53FailureCode::DatabaseDeadlock,
+            ]),
+        );
+        $service = app(ApplicationReviewBatchService::class);
+
+        try {
+            $service->seal($this->contest($process), $actor, $payload);
+            $this->fail('A falha controlada deveria interromper a selagem.');
+        } catch (\Throwable) {
+            $this->assertDatabaseCount('application_review_batches', 0);
+            $this->assertDatabaseCount('application_review_batch_items', 0);
+            $this->assertSame(
+                ApplicationReviewStatus::ReadyForClosure,
+                $review->refresh()->status,
+            );
+        }
+
+        $batch = $service->seal(
+            $this->contest($process),
+            $actor,
+            $payload,
+        );
+
+        $this->assertDatabaseCount('application_review_batches', 1);
+        $this->assertDatabaseCount('application_review_batch_items', 1);
+        $this->assertSame(1, $batch->item_count);
     }
 
     public function test_document_change_invalidates_preview_token(): void

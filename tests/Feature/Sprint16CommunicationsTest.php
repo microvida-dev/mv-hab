@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Contracts\Program53\Program53FaultInjector;
 use App\Enums\CommunicationAttemptStatus;
 use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationDeliveryStatus;
 use App\Enums\CommunicationReceiptType;
 use App\Enums\DocumentGenerationStatus;
 use App\Enums\OfficialNotificationType;
+use App\Enums\Program53FailureCode;
 use App\Enums\TemplateStatus;
 use App\Jobs\DeliverProceduralEmail;
 use App\Models\CommunicationReceipt;
@@ -24,6 +26,7 @@ use App\Services\Notifications\CommunicationLogService;
 use App\Services\Notifications\NotificationEventDispatcher;
 use App\Services\Notifications\OfficialNotificationService;
 use App\Services\Notifications\TemplateRenderingService;
+use App\Services\Program53\Resilience\ControlledProgram53FaultInjector;
 use Database\Seeders\DocumentTemplateSeeder;
 use Database\Seeders\NotificationEventRuleSeeder;
 use Database\Seeders\NotificationTemplateSeeder;
@@ -288,6 +291,51 @@ class Sprint16CommunicationsTest extends TestCase
         $this->assertSame(CommunicationDeliveryStatus::Disabled, $sms->refresh()->status);
         $this->assertNull($sms->sent_at);
         $this->assertSame(CommunicationAttemptStatus::Skipped, $sms->attempts()->firstOrFail()->status);
+    }
+
+    public function test_retry_after_persisted_delivery_does_not_duplicate_attempt(): void
+    {
+        $candidate = $this->userWithRole('candidate');
+        $admin = $this->userWithRole('administrator');
+        $communication = app(CommunicationLogService::class)->create(
+            eventCode: 'program53.delivery.retry',
+            recipient: $candidate,
+            content: [
+                'title' => 'Teste de retoma',
+                'body' => 'Conteúdo exclusivamente fictício.',
+            ],
+            actor: $admin,
+        );
+        $this->app->instance(
+            Program53FaultInjector::class,
+            new ControlledProgram53FaultInjector([
+                'after_delivery_before_ack' => Program53FailureCode::DatabaseUnavailable,
+            ]),
+        );
+        $deliveries = app(CommunicationDeliveryService::class);
+        $delivery = $deliveries->create(
+            $communication,
+            CommunicationChannel::InApp,
+        );
+
+        try {
+            $deliveries->execute($delivery, $admin);
+            $this->fail('A falha após persistência deveria interromper o ack.');
+        } catch (\Throwable) {
+            $this->assertSame(
+                CommunicationDeliveryStatus::Delivered,
+                $delivery->refresh()->status,
+            );
+        }
+        $attempts = $delivery->attempts()->count();
+
+        $deliveries->execute($delivery, $admin);
+
+        $this->assertSame($attempts, $delivery->attempts()->count());
+        $this->assertSame(
+            CommunicationDeliveryStatus::Delivered,
+            $delivery->refresh()->status,
+        );
     }
 
     public function test_official_document_is_private_versioned_and_only_visible_to_recipient(): void

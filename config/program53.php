@@ -26,5 +26,8 @@ return [
     'exports' => [
         'retention_days' => 7,
         'stale_after_seconds' => 2100,
+        'retry_window_seconds' => 7200,
+        'orphan_staging_after_seconds' => 7200,
+        'failed_job_warning_after_seconds' => 3600,
     ],
 ];

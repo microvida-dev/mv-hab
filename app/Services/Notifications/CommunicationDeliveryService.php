@@ -2,6 +2,9 @@
 
 namespace App\Services\Notifications;
 
+use App\Contracts\Program53\Program53FaultInjector;
+use App\Contracts\Program53\Program53MetricsRecorder;
+use App\Data\Program53\Program53OperationalContext;
 use App\Enums\AuditEventCategory;
 use App\Enums\AuditEventSeverity;
 use App\Enums\CommunicationChannel;
@@ -37,6 +40,8 @@ class CommunicationDeliveryService
         private readonly PlatformOperatorScopeService $platformScope,
         private readonly AuditLogger $audit,
         private readonly AuditTrailService $auditTrail,
+        private readonly Program53FaultInjector $faults,
+        private readonly Program53MetricsRecorder $metrics,
     ) {}
 
     public function create(CommunicationLog $communication, CommunicationChannel $channel, ?string $destination = null, ?OfficialNotification $notification = null): CommunicationDelivery
@@ -106,7 +111,26 @@ class CommunicationDeliveryService
         };
         $communication = $delivery->communication;
         assert($communication instanceof CommunicationLog);
+        $context = new Program53OperationalContext(
+            operationId: 'delivery-'.(int) $result->id,
+            municipalityId: $communication->municipality_id !== null
+                ? (int) $communication->municipality_id
+                : null,
+            stage: 'delivery_persisted',
+        );
+        $this->faults->checkpoint('after_delivery_before_ack', $context);
         $this->refreshCommunicationStatus($communication);
+        $this->metrics->record(
+            $result->status === CommunicationDeliveryStatus::Failed
+                ? 'delivery_failed'
+                : 'delivery_succeeded',
+            1,
+            $context,
+            [
+                'status' => $result->status->value,
+                'component' => 'procedural_notification',
+            ],
+        );
         $this->auditTrail->record(
             eventCode: 'communication_delivery_processed',
             auditable: $result,

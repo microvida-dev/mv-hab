@@ -2,7 +2,10 @@
 
 namespace App\Jobs;
 
+use App\Services\Program53\Resilience\Program53FailureClassifier;
 use App\Services\Reporting\Temporal\TemporalApplicationResultExportService;
+use Carbon\CarbonImmutable;
+use DateTimeInterface;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -18,9 +21,18 @@ final class GenerateApplicationResultExport implements ShouldBeUniqueUntilProces
 
     public bool $failOnTimeout = true;
 
-    public function __construct(public readonly int $reportExportId)
-    {
+    public int $retryUntilTimestamp;
+
+    public function __construct(
+        public readonly int $reportExportId,
+        ?int $retryUntilTimestamp = null,
+    ) {
         $this->onQueue('reports');
+        $this->retryUntilTimestamp = $retryUntilTimestamp
+            ?? now()->addSeconds((int) config(
+                'program53.exports.retry_window_seconds',
+                7200,
+            ))->getTimestamp();
     }
 
     public function uniqueId(): string
@@ -34,9 +46,28 @@ final class GenerateApplicationResultExport implements ShouldBeUniqueUntilProces
         return [60, 300, 900];
     }
 
-    public function handle(TemporalApplicationResultExportService $exports): void
+    public function retryUntil(): DateTimeInterface
     {
-        $exports->process($this->reportExportId);
+        return CarbonImmutable::createFromTimestampUTC(
+            $this->retryUntilTimestamp,
+        );
+    }
+
+    public function handle(
+        TemporalApplicationResultExportService $exports,
+        Program53FailureClassifier $failures,
+    ): void {
+        try {
+            $exports->process($this->reportExportId);
+        } catch (Throwable $exception) {
+            if (! $failures->classify($exception)->retryable()) {
+                $this->fail($exception);
+
+                return;
+            }
+
+            throw $exception;
+        }
     }
 
     public function failed(Throwable $exception): void

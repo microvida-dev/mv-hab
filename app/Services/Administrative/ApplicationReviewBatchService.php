@@ -2,7 +2,10 @@
 
 namespace App\Services\Administrative;
 
+use App\Contracts\Program53\Program53FaultInjector;
+use App\Contracts\Program53\Program53MetricsRecorder;
 use App\Data\Administrative\ReviewBatchSelectionItem;
+use App\Data\Program53\Program53OperationalContext;
 use App\Enums\AdministrativeProcessStatus;
 use App\Enums\ApplicationReviewBatchCycle;
 use App\Enums\ApplicationReviewBatchOutcome;
@@ -40,6 +43,8 @@ class ApplicationReviewBatchService
         private readonly ReviewBatchSnapshotBuilder $snapshotBuilder,
         private readonly CanonicalJsonHasher $hasher,
         private readonly AuditLogger $auditLogger,
+        private readonly Program53FaultInjector $faults,
+        private readonly Program53MetricsRecorder $metrics,
     ) {}
 
     /**
@@ -226,12 +231,24 @@ class ApplicationReviewBatchService
             return $existing->load(['items', 'sealedBy', 'contest']);
         }
 
-        return DB::transaction(function () use (
+        $startedAt = hrtime(true);
+        $context = new Program53OperationalContext(
+            operationId: 'batch-seal-'.substr($sealKey, 0, 24),
+            municipalityId: $actor->municipality_id !== null
+                ? (int) $actor->municipality_id
+                : null,
+            contestId: (int) $contest->id,
+            stage: 'seal',
+        );
+        $this->faults->checkpoint('before_batch_lock', $context);
+
+        $batch = DB::transaction(function () use (
             $contest,
             $actor,
             $payload,
             $token,
             $sealKey,
+            $context,
         ): ApplicationReviewBatch {
             $lockedContest = Contest::query()
                 ->whereKey($contest->id)
@@ -353,6 +370,11 @@ class ApplicationReviewBatchService
                 $this->completeReview($item, $technicalResult, $actor, $batch);
             }
 
+            $this->faults->checkpoint(
+                'after_batch_items_before_seal',
+                $context->withStage('items_persisted'),
+            );
+
             $outcomes = collect($preview['items'])
                 ->countBy(fn (ReviewBatchSelectionItem $item): string => $item
                     ->outcome
@@ -381,6 +403,30 @@ class ApplicationReviewBatchService
 
             return $batch->load(['items', 'sealedBy', 'contest']);
         }, 3);
+
+        $this->faults->checkpoint(
+            'after_seal_commit_before_dispatch',
+            new Program53OperationalContext(
+                operationId: $context->operationId,
+                municipalityId: $context->municipalityId,
+                contestId: $context->contestId,
+                batchId: (int) $batch->id,
+                stage: 'sealed',
+            ),
+        );
+        $this->metrics->record(
+            'batch_seal_duration',
+            round((hrtime(true) - $startedAt) / 1_000_000, 3),
+            $context->withStage('sealed'),
+            ['result' => 'completed'],
+        );
+        $this->metrics->record(
+            'batch_items',
+            (int) $batch->item_count,
+            $context->withStage('sealed'),
+        );
+
+        return $batch;
     }
 
     /**

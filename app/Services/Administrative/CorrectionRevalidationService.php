@@ -2,8 +2,10 @@
 
 namespace App\Services\Administrative;
 
+use App\Contracts\Program53\Program53FaultInjector;
 use App\Data\Administrative\CorrectionDifferentialItemData;
 use App\Data\Administrative\CorrectionDifferentialResultData;
+use App\Data\Program53\Program53OperationalContext;
 use App\Enums\AdministrativeProcessStatus;
 use App\Enums\CorrectionRequestItemStatus;
 use App\Enums\CorrectionRequestStatus;
@@ -43,6 +45,7 @@ final class CorrectionRevalidationService
         private readonly AdministrativeWorkflowTransitionService $transitions,
         private readonly CanonicalJsonHasher $hasher,
         private readonly AuditLogger $audit,
+        private readonly Program53FaultInjector $faults,
     ) {}
 
     /**
@@ -282,6 +285,17 @@ final class CorrectionRevalidationService
             }
 
             $differential = $this->differentialResolver->resolve($locked);
+            $this->faults->checkpoint(
+                'during_revalidation',
+                new Program53OperationalContext(
+                    operationId: 'revalidation-'.(int) $locked->id,
+                    municipalityId: $actor->municipality_id !== null
+                        ? (int) $actor->municipality_id
+                        : null,
+                    correctionRequestId: (int) $locked->id,
+                    stage: 'start',
+                ),
+            );
 
             if ($differential->isStale()) {
                 throw ValidationException::withMessages([

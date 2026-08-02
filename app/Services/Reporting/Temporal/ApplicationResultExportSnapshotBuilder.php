@@ -2,6 +2,8 @@
 
 namespace App\Services\Reporting\Temporal;
 
+use App\Contracts\Program53\Program53FaultInjector;
+use App\Data\Program53\Program53OperationalContext;
 use App\Data\Reports\ApplicationResultExportSnapshotData;
 use App\Data\Reports\ApplicationResultExportSourceData;
 use App\Enums\ApplicationResultExportDataset;
@@ -48,6 +50,7 @@ final class ApplicationResultExportSnapshotBuilder
         private readonly ApplicationResultExportFieldCatalog $catalog,
         private readonly ApplicationResultExportComparator $comparator,
         private readonly CanonicalJsonHasher $hasher,
+        private readonly Program53FaultInjector $faults,
     ) {}
 
     /**
@@ -58,6 +61,7 @@ final class ApplicationResultExportSnapshotBuilder
         string $stagingDirectory,
         bool $includeSensitive = false,
         bool $includeUnchanged = false,
+        ?Program53OperationalContext $context = null,
     ): ApplicationResultExportSnapshotData {
         $this->store->deleteDirectory($stagingDirectory);
         $this->store->createDirectory($stagingDirectory);
@@ -75,6 +79,13 @@ final class ApplicationResultExportSnapshotBuilder
                     $stagingDirectory,
                     $includeSensitive,
                 );
+
+            if ($context instanceof Program53OperationalContext) {
+                $this->faults->checkpoint(
+                    'mid_ndjson_snapshot',
+                    $context->withStage('snapshot'),
+                );
+            }
 
             $preFingerprintChecksums = $this->checksums($paths);
             $sourceFingerprint = $this->hasher->hash([

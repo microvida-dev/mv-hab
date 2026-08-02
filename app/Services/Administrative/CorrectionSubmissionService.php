@@ -2,6 +2,9 @@
 
 namespace App\Services\Administrative;
 
+use App\Contracts\Program53\Program53FaultInjector;
+use App\Contracts\Program53\Program53MetricsRecorder;
+use App\Data\Program53\Program53OperationalContext;
 use App\Enums\AdministrativeProcessStatus;
 use App\Enums\CorrectionRequestItemStatus;
 use App\Enums\CorrectionRequestStatus;
@@ -33,12 +36,23 @@ class CorrectionSubmissionService
         private readonly OfficialNotificationService $notifications,
         private readonly CanonicalJsonHasher $hasher,
         private readonly AuditLogger $audit,
+        private readonly Program53FaultInjector $faults,
+        private readonly Program53MetricsRecorder $metrics,
     ) {}
 
     public function submit(
         CorrectionRequest $request,
         User $candidate,
     ): CorrectionSubmissionReceipt {
+        $startedAt = hrtime(true);
+        $context = new Program53OperationalContext(
+            operationId: 'correction-submit-'.(int) $request->id,
+            municipalityId: $candidate->municipality_id !== null
+                ? (int) $candidate->municipality_id
+                : null,
+            correctionRequestId: (int) $request->id,
+            stage: 'formal_submission',
+        );
         /**
          * @var array{
          *     receipt: CorrectionSubmissionReceipt|null,
@@ -49,6 +63,7 @@ class CorrectionSubmissionService
         $result = DB::transaction(function () use (
             $request,
             $candidate,
+            $context,
         ): array {
             $lockedRequest = CorrectionRequest::query()
                 ->whereKey($request->id)
@@ -72,6 +87,10 @@ class CorrectionSubmissionService
                 )
                 ->lockForUpdate()
                 ->first();
+            $this->faults->checkpoint(
+                'after_receipt_lock',
+                $context->withStage('receipt_lock'),
+            );
 
             if ($existing instanceof CorrectionSubmissionReceipt) {
                 return [
@@ -233,6 +252,10 @@ class CorrectionSubmissionService
                 submittedAt: $submittedAt,
             );
             $snapshotHash = $this->hasher->hash($snapshot);
+            $this->faults->checkpoint(
+                'after_snapshot_before_commit',
+                $context->withStage('submission_snapshot'),
+            );
 
             foreach ($responses as $response) {
                 $response->forceFill([
@@ -330,6 +353,18 @@ class CorrectionSubmissionService
                 'correction_request' => 'Não foi possível emitir o recibo da submissão.',
             ]);
         }
+
+        $this->metrics->record(
+            'corrections_submitted',
+            $result['created'] ? 1 : 0,
+            $context->withStage('submitted'),
+            ['result' => $result['created'] ? 'created' : 'idempotent'],
+        );
+        $this->metrics->record(
+            'correction_submission_duration',
+            round((hrtime(true) - $startedAt) / 1_000_000, 3),
+            $context->withStage('submitted'),
+        );
 
         return $receipt;
     }

@@ -2,6 +2,9 @@
 
 namespace App\Services\Administrative;
 
+use App\Contracts\Program53\Program53FaultInjector;
+use App\Contracts\Program53\Program53MetricsRecorder;
+use App\Data\Program53\Program53OperationalContext;
 use App\Enums\ApplicationReviewBatchCycle;
 use App\Enums\ApplicationReviewBatchOutcome;
 use App\Enums\ApplicationReviewBatchStatus;
@@ -51,6 +54,8 @@ class ApplicationReviewPublicationService
         private readonly PublishedCorrectionRequestProjector $correctionRequests,
         private readonly PublishedCorrectionRevalidationProjector $correctionRevalidations,
         private readonly AuditLogger $audit,
+        private readonly Program53FaultInjector $faults,
+        private readonly Program53MetricsRecorder $metrics,
     ) {}
 
     /** @return LengthAwarePaginator<int, ApplicationReviewPublication> */
@@ -140,11 +145,21 @@ class ApplicationReviewPublicationService
             ]);
         }
 
-        return DB::transaction(function () use (
+        $startedAt = hrtime(true);
+        $context = new Program53OperationalContext(
+            operationId: 'publication-'.substr(hash('sha256', $token), 0, 24),
+            municipalityId: (int) $batch->municipality_id,
+            contestId: (int) $batch->contest_id,
+            batchId: (int) $batch->id,
+            stage: 'publication',
+        );
+
+        $publication = DB::transaction(function () use (
             $batch,
             $actor,
             $payload,
             $token,
+            $context,
         ): ApplicationReviewPublication {
             $lockedBatch = ApplicationReviewBatch::query()
                 ->whereKey($batch->id)
@@ -196,6 +211,22 @@ class ApplicationReviewPublicationService
                 ]);
             }
 
+            $processes = AdministrativeProcess::query()
+                ->whereIn('id', $items->pluck('administrative_process_id'))
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+            $applications = Application::query()
+                ->whereIn('id', $items->pluck('application_id'))
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+            $recipients = User::query()
+                ->whereIn('id', $applications->pluck('user_id'))
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
             $publishedAt = now('UTC');
             $publication = new ApplicationReviewPublication([
                 'municipality_id' => $lockedBatch->municipality_id,
@@ -216,6 +247,12 @@ class ApplicationReviewPublicationService
                 'published_at' => $publishedAt,
             ])->save();
 
+            $this->faults->checkpoint(
+                'before_notification_chunk',
+                $context->withStage('notifications'),
+            );
+            $processedItems = 0;
+            $midpoint = max(1, (int) ceil(count($preview['items']) / 2));
             foreach ($preview['items'] as $prepared) {
                 $batchItem = $items->firstWhere(
                     'id',
@@ -228,18 +265,20 @@ class ApplicationReviewPublicationService
                     ]);
                 }
 
-                $process = AdministrativeProcess::query()
-                    ->whereKey($batchItem->administrative_process_id)
-                    ->lockForUpdate()
-                    ->firstOrFail();
-                $application = Application::query()
-                    ->whereKey($batchItem->application_id)
-                    ->lockForUpdate()
-                    ->firstOrFail();
-                $recipient = User::query()
-                    ->whereKey($application->user_id)
-                    ->lockForUpdate()
-                    ->firstOrFail();
+                $process = $processes->get($batchItem->administrative_process_id);
+                $application = $applications->get($batchItem->application_id);
+                $recipient = $application instanceof Application
+                    ? $recipients->get($application->user_id)
+                    : null;
+                if (
+                    ! $process instanceof AdministrativeProcess
+                    || ! $application instanceof Application
+                    || ! $recipient instanceof User
+                ) {
+                    throw ValidationException::withMessages([
+                        'publication' => 'O contexto processual de um item deixou de estar disponível.',
+                    ]);
+                }
 
                 $this->assertRecipientConsistency(
                     $lockedBatch,
@@ -339,14 +378,35 @@ class ApplicationReviewPublicationService
                 ]);
 
                 if ($lockedBatch->cycle === ApplicationReviewBatchCycle::Revalidation) {
+                    $this->faults->checkpoint(
+                        'during_projection',
+                        $context->withStage('revalidation_projection'),
+                    );
                     $this->correctionRevalidations->project(
                         $publishedResult,
                         $actor,
                     );
                 } elseif ($publishedResult->outcome === ApplicationReviewBatchOutcome::CorrectionRequired) {
+                    $this->faults->checkpoint(
+                        'during_projection',
+                        $context->withStage('correction_projection'),
+                    );
                     $this->correctionRequests->project($publishedResult, $actor);
                 }
+
+                $processedItems++;
+                if ($processedItems === $midpoint) {
+                    $this->faults->checkpoint(
+                        'mid_notification_chunk',
+                        $context->withStage('notifications'),
+                    );
+                }
             }
+
+            $this->faults->checkpoint(
+                'after_outbox_persist',
+                $context->withStage('outbox_persisted'),
+            );
 
             $this->audit->record(
                 event: AuditEvents::CREATE,
@@ -375,6 +435,27 @@ class ApplicationReviewPublicationService
                 'results',
             ]);
         }, 3);
+
+        $completedContext = new Program53OperationalContext(
+            operationId: $context->operationId,
+            municipalityId: $context->municipalityId,
+            contestId: $context->contestId,
+            batchId: $context->batchId,
+            publicationId: (int) $publication->id,
+            stage: 'published',
+        );
+        $this->faults->checkpoint(
+            'after_publication_commit',
+            $completedContext,
+        );
+        $this->metrics->record(
+            'batch_publish_duration',
+            round((hrtime(true) - $startedAt) / 1_000_000, 3),
+            $completedContext,
+            ['result' => 'completed'],
+        );
+
+        return $publication;
     }
 
     private function projectRevalidationPublication(

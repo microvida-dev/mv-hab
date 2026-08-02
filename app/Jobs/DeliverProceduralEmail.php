@@ -7,6 +7,7 @@ use App\Models\CommunicationDelivery;
 use App\Services\Audit\AuditLogger;
 use App\Services\Notifications\CommunicationDeliveryService;
 use App\Support\AuditEvents;
+use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -22,10 +23,19 @@ class DeliverProceduralEmail implements ShouldBeUniqueUntilProcessing, ShouldQue
 
     public int $timeout = 120;
 
+    public int $retryUntilTimestamp;
+
     public function __construct(
         public readonly int $communicationDeliveryId,
         public readonly int $municipalityId,
-    ) {}
+        ?int $retryUntilTimestamp = null,
+    ) {
+        $this->retryUntilTimestamp = $retryUntilTimestamp
+            ?? now()->addHours((int) config(
+                'mvhab.procedural_notifications.retry_hours',
+                12,
+            ))->getTimestamp();
+    }
 
     public function uniqueId(): string
     {
@@ -50,11 +60,8 @@ class DeliverProceduralEmail implements ShouldBeUniqueUntilProcessing, ShouldQue
 
     public function retryUntil(): DateTimeInterface
     {
-        return now()->addHours(
-            (int) config(
-                'mvhab.procedural_notifications.retry_hours',
-                12,
-            ),
+        return CarbonImmutable::createFromTimestampUTC(
+            $this->retryUntilTimestamp,
         );
     }
 

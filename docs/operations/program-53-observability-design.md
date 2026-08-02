@@ -2,129 +2,119 @@
 
 ## Decisao arquitetural
 
-O repositorio nao possui APM ou backend de metricas externo. A Sprint 53I cria
-contratos internos e usa structured logging como adapter inicial. A integracao
-futura com OpenTelemetry, Prometheus, StatsD ou outro backend nao altera os
-servicos de dominio.
+O repositorio nao possui Horizon, Pulse ativo, OpenTelemetry, Prometheus,
+StatsD, Sentry ou outro APM obrigatorio. A Sprint 53I introduz contratos
+internos e um adapter inicial de structured logging. A integracao futura com
+um backend de metricas nao exige alteracoes nos servicos de dominio.
+
+## Componentes implementados
+
+- `Program53OperationalContext`: contexto tipado e minimizado.
+- `Program53MetricsRecorder`: contrato sem dependencia de fornecedor.
+- `StructuredLogProgram53MetricsRecorder`: emite `program53.metric`.
+- `Program53ContextRedactor`: allowlist de contexto e labels.
+- `Program53FailureClassifier`: codigo e disposicao tipados.
+- `Program53FaultInjector`: fronteira interna de checkpoints.
+- `NoopProgram53FaultInjector`: binding unico normal da aplicacao.
+- `ControlledProgram53FaultInjector`: apenas construivel em `testing`.
+- `Program53OperationalHealthService`: diagnostico sem escrita persistente na
+  base de dados.
+- `program53:operational-check`: table, JSON ou Markdown, com gates por
+  severidade.
+
+Nao existe endpoint HTTP nem feature flag para fault injection.
 
 ## Contexto operacional
 
-Cada operacao pode transportar apenas identificadores tecnicos minimizados:
+O contexto pode transportar apenas:
 
-- `correlation_id` opaco;
-- `operation` de catalogo fechado;
-- `municipality_id`, `contest_id`, `batch_id`, `publication_id`, `export_id`;
-- `phase`, `queue`, `attempt`, `failure_code`;
-- timestamps UTC e duracao.
+```text
+operation_id
+request_id
+correlation_id
+municipality_id
+contest_id
+batch_id
+publication_id
+correction_request_id
+export_id
+job_id
+attempt
+stage
+```
 
-O contexto nunca inclui nome, email, NIF, numero de processo/candidatura, texto
-livre, documento, payload, path absoluto, token ou credencial.
+Os IDs tecnicos existem no log operacional restrito, nunca como labels de
+metricas agregadas. Nao sao aceites nome, email, NIF, numero de candidatura,
+texto livre, payload, documento, filename, path, token ou credencial.
 
-## Contratos internos
+## Metricas emitidas no codigo
 
-- `Program53OperationalContext`: contexto tipado e serializacao redigida.
-- `Program53MetricsRecorder`: incrementos, gauges e duracoes.
-- `StructuredLogProgram53MetricsRecorder`: adapter inicial para canal de log.
-- `Program53FailureClassifier`: codigo tipado e retryability.
-- `Program53FaultInjector`: checkpoints internos; Noop fora de testes.
-- `Program53OperationalHealthService`: findings read-only e severidade.
+| Dominio | Metricas |
+|---|---|
+| Lotes | `batch_seal_duration`, `batch_items` |
+| Publicacao | `batch_publish_duration` |
+| Notificacoes | `delivery_succeeded`, `delivery_failed` |
+| Aperfeicoamentos | `corrections_submitted`, `correction_submission_duration`, `revalidation_duration` |
+| Exportacao | `export_retries`, `snapshot_duration`, `rows_by_dataset`, `package_duration`, `export_duration`, `peak_memory`, `export_failures` |
+| Retencao | `expiration_duration`, `expiration_failures` |
 
-## Catalogo de metricas
+Labels permitidas: `component`, `operation`, `stage`, `status`,
+`failure_code`, `format`, `dataset`, `result` e `reused`. Qualquer outra label
+e removida antes da escrita.
 
-### Revisao
+Contagens globais de readiness, backlog, outbox, aperfeicoamentos e seguranca
+podem ser acrescentadas por um adapter futuro. Nao se declaram implementadas
+enquanto nao existir instrumentacao real nos respetivos pontos.
 
-- `program53.review.claimed_total`
-- `program53.review.decisions_total`
-- `program53.review.conflicts_total`
-- `program53.review.readiness_duration_ms`
+## Structured logging e RGPD
 
-### Lotes/publicacao
-
-- `program53.batch.sealed_total`
-- `program53.batch.items_total`
-- `program53.batch.seal_duration_ms`
-- `program53.publication.completed_total`
-- `program53.publication.results_total`
-- `program53.publication.duration_ms`
-- `program53.publication.idempotent_reuse_total`
-
-### Notificacoes
-
-- `program53.notification.queued_total`
-- `program53.notification.delivered_total`
-- `program53.notification.failed_total`
-- `program53.notification.retry_total`
-
-### Aperfeicoamentos
-
-- `program53.correction.open_total`
-- `program53.correction.submitted_total`
-- `program53.correction.expired_total`
-- `program53.correction.revalidated_total`
-- `program53.correction.duration_ms`
-
-### Exportacoes
-
-- `program53.export.requested_total`
-- `program53.export.snapshot_rows_total`
-- `program53.export.snapshot_reused_total`
-- `program53.export.completed_total`
-- `program53.export.failed_total`
-- `program53.export.expired_total`
-- `program53.export.duration_ms`
-- `program53.export.bytes_total`
-- `program53.export.queue_wait_ms`
-
-### Seguranca
-
-- `program53.access.denied_total`
-- `program53.scope.denied_total`
-- `program53.mfa.denied_total`
-- `program53.rate_limit.denied_total`
-
-## Labels permitidas
-
-`operation`, `phase`, `status`, `outcome`, `failure_code`, `retryable`, `queue`,
-`mode`, `format`, `dataset` e `environment`, todos provenientes de enum/catalogo
-fechado. IDs nao sao labels de metricas; podem existir apenas no contexto
-estruturado de logs operacionais com acesso restrito.
-
-## Structured logging
-
-Eventos usam JSON logico com `event`, `context`, `measurements` e `result`.
-Excecoes sao representadas por classe e failure code, nunca mensagem arbitraria
-quando possa conter dados. O redactor remove recursivamente chaves sensiveis e
-limita strings e arrays.
+Cada metrica gera um registo `program53.metric` com nome de catalogo, valor,
+contexto tecnico e labels redigidas. Strings sao limitadas e mapas usam
+allowlist. Mensagens livres de exceptions e payloads funcionais nao sao
+persistidos. A retencao do log depende da politica aprovada no ambiente alvo.
 
 ## Health operacional
 
-`program53:operational-check` e read-only e verifica:
+O comando executa 24 verificacoes e cobre:
 
-- migrations/tabelas/indices essenciais;
-- queue assincrona e coerencia `retry_after > timeout`;
-- failed jobs e backlog por filas do programa;
-- scheduler e locks suportados;
-- storage privado, staging orfao e espaco disponivel;
-- exports presos, falhados, expirados ou com ficheiro/hash incoerente;
-- publicacoes com contagens divergentes;
-- notificacoes pendentes/falhadas;
-- pedidos de aperfeicoamento expirados nao processados;
-- manifesto de acesso e drift;
-- configuracao de logs e metricas.
+- ligacao, tabelas, migration e indices nucleares;
+- drift do manifesto de acesso;
+- JSON Schema e XSD;
+- queue assincrona, relacao `retry_after > timeout`, backlog e failed jobs;
+- atomic locks e rate limiters;
+- escrita, leitura, move e remocao controlados no storage privado;
+- espaco livre;
+- exports stale, staging orfao e ficheiros parciais;
+- existencia e SHA-256 do pacote concluido;
+- validade de `source_fingerprint` e `manifest_sha256`;
+- artefactos de exports expirados;
+- comandos do scheduler, timezone e retencao de sete dias.
 
-Severidades: `info`, `warning`, `critical`. O comando suporta table, JSON e
-Markdown, output opcional e `--fail-on-warning`/`--fail-on-critical`.
+O probe de cache/storage e transitorio e integralmente removido. O comando nao
+altera a base de dados, nao cria auditoria, nao repara estados e nao repete jobs.
 
-## Alertas recomendados
+Execucao local observada em 2 de agosto de 2026:
 
-- Critical: perda de integridade/hash, scope divergente, queue sync fora de
-  local/teste, export final ausente, publicacao parcial, storage indisponivel.
-- Warning: backlog, failed jobs, export stale, notification retry, pouco disco,
-  cache nao partilhado, scheduler nao verificavel.
-- Info: contagens, versoes, tempo desde ultima execucao e configuracao ativa.
+```text
+24 findings
+21 info
+3 warning
+0 critical
+```
 
-## RGPD e cardinalidade
+Os avisos locais sao `queue=sync`, timeout nao validavel nesse driver e
+heartbeat externo do scheduler ausente. O teste dirigido prova que package hash
+invalido e atomic lock indisponivel produzem severidade `critical`.
 
-Logs e metricas sao dados operacionais minimizados. Nao transportar PII nem
-conteudo de candidaturas. Retencao dos logs pertence a politica operacional do
-ambiente e deve ser aprovada separadamente; o repositorio nao inventa esse prazo.
+## Evidencia de queues e recuperacao
+
+Um teste com SQLite temporaria e queue `database` inicia um `queue:work`, mata o
+processo com `SIGKILL` durante o job, aguarda `retry_after` e inicia outro worker.
+Resultado observado: duas tentativas, uma conclusao, zero jobs pendentes e zero
+`failed_jobs`. A base e o storage temporarios sao eliminados no final.
+
+## Integracao futura
+
+Um adapter Prometheus/OpenTelemetry/StatsD deve preservar a allowlist, evitar
+IDs como labels e mapear apenas as metricas instrumentadas. Worker heartbeat,
+dashboards, alertas externos e retencao dos logs continuam deployment gates.

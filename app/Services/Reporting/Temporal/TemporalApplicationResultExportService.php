@@ -2,8 +2,12 @@
 
 namespace App\Services\Reporting\Temporal;
 
+use App\Contracts\Program53\Program53FaultInjector;
+use App\Contracts\Program53\Program53MetricsRecorder;
+use App\Data\Program53\Program53OperationalContext;
 use App\Data\Reports\ApplicationResultExportPackageOptionsData;
 use App\Data\Reports\ApplicationResultExportPreviewData;
+use App\Data\Reports\ApplicationResultExportSnapshotData;
 use App\Enums\ApplicationResultExportDataset;
 use App\Enums\ApplicationResultExportFormat;
 use App\Enums\ApplicationResultExportMode;
@@ -11,10 +15,13 @@ use App\Enums\ApplicationResultExportStage;
 use App\Enums\AuditEventCategory;
 use App\Enums\AuditEventSeverity;
 use App\Enums\ExportScope;
+use App\Enums\Program53FailureCode;
 use App\Enums\ReportAccessType;
 use App\Enums\ReportExportStatus;
 use App\Enums\ReportFormat;
 use App\Enums\ReportRunStatus;
+use App\Exceptions\Program53OperationalException;
+use App\Http\Middleware\RequestCorrelationId;
 use App\Jobs\GenerateApplicationResultExport;
 use App\Models\Application;
 use App\Models\Contest;
@@ -24,16 +31,17 @@ use App\Models\ReportRun;
 use App\Models\User;
 use App\Services\Audit\AuditTrailService;
 use App\Services\Municipalities\MunicipalRecordScopeService;
+use App\Services\Program53\Resilience\Program53FailureClassifier;
 use App\Services\Reporting\ReportAccessLogger;
 use App\Services\Reporting\ReportPermissionService;
 use App\Services\Support\CanonicalJsonHasher;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Throwable;
 
@@ -48,6 +56,7 @@ final class TemporalApplicationResultExportService
     public function __construct(
         private readonly ApplicationResultExportSourceResolver $sources,
         private readonly ApplicationResultExportSnapshotBuilder $snapshots,
+        private readonly ApplicationResultExportCheckpointStore $checkpoints,
         private readonly ApplicationResultExportPackageBuilder $packages,
         private readonly ApplicationResultExportPathGuard $paths,
         private readonly ReportPermissionService $permissions,
@@ -55,6 +64,9 @@ final class TemporalApplicationResultExportService
         private readonly ReportAccessLogger $access,
         private readonly AuditTrailService $audit,
         private readonly CanonicalJsonHasher $hasher,
+        private readonly Program53FailureClassifier $failureClassifier,
+        private readonly Program53MetricsRecorder $metrics,
+        private readonly Program53FaultInjector $faults,
     ) {}
 
     /** @param array<string, mixed> $data */
@@ -134,6 +146,8 @@ final class TemporalApplicationResultExportService
         $idempotencyKey = $this->idempotencyKey($actor, $contest, $data);
         $sensitive = (bool) ($data['include_sensitive'] ?? false);
         $documents = (bool) ($data['include_document_files'] ?? false);
+        $operationId = (string) Str::orderedUuid();
+        [$requestId, $correlationId] = $this->requestIdentifiers();
         $created = false;
 
         try {
@@ -151,6 +165,9 @@ final class TemporalApplicationResultExportService
                 $sensitive,
                 $documents,
                 $data,
+                $operationId,
+                $requestId,
+                $correlationId,
                 &$created,
             ): ReportExport {
                 $existing = ReportExport::query()
@@ -200,6 +217,12 @@ final class TemporalApplicationResultExportService
                     'progress' => 0,
                     'expires_at' => $requestedAt->addDays(self::RETENTION_DAYS),
                     'source_metadata' => [
+                        'operational' => [
+                            'operation_id' => $operationId,
+                            'request_id' => $requestId,
+                            'correlation_id' => $correlationId,
+                            'attempt' => 0,
+                        ],
                         'parameters' => $parameters,
                         'request_options' => [
                             'csv_delimiter' => $this->csvDelimiter($data),
@@ -293,9 +316,23 @@ final class TemporalApplicationResultExportService
 
         $baseDirectory = $this->baseDirectory($export);
         $finalPath = null;
+        $startedAt = hrtime(true);
+        $context = $this->operationalContext(
+            $export,
+            ApplicationResultExportStage::Snapshotting->value,
+        );
+
+        if ($context->attempt > 1) {
+            $this->metrics->record(
+                'export_retries',
+                1,
+                $context,
+                ['operation' => 'generate'],
+            );
+        }
 
         try {
-            Storage::disk('local')->deleteDirectory($baseDirectory.'/staging');
+            Storage::disk('local')->deleteDirectory($baseDirectory.'/staging/package');
             Storage::disk('local')->deleteDirectory($this->finalDirectory($export));
 
             $contest = Contest::query()
@@ -314,12 +351,30 @@ final class TemporalApplicationResultExportService
                 $mode,
                 $this->array($metadata['parameters'] ?? []),
             );
-            $snapshot = $this->snapshots->build(
-                $source,
-                $baseDirectory.'/staging/source',
-                $export->sensitive_fields_included,
-                (bool) data_get($metadata, 'request_options.include_unchanged', false),
+            $this->faults->checkpoint(
+                'after_source_resolution',
+                $context->withStage('source_resolution'),
             );
+
+            $snapshotStartedAt = hrtime(true);
+            $sourceDirectory = $baseDirectory.'/staging/source';
+            $snapshot = $this->checkpoints->restore(
+                $source,
+                $sourceDirectory,
+                $this->array($metadata['export_checkpoint'] ?? []),
+            );
+            $reusedSnapshot = $snapshot !== null;
+            if (! $snapshot instanceof ApplicationResultExportSnapshotData) {
+                $snapshot = $this->snapshots->build(
+                    $source,
+                    $sourceDirectory,
+                    $export->sensitive_fields_included,
+                    (bool) data_get($metadata, 'request_options.include_unchanged', false),
+                    $context,
+                );
+            }
+
+            $checkpoint = $this->checkpoints->capture($snapshot);
             $this->updateStage(
                 $exportId,
                 ApplicationResultExportStage::Rendering,
@@ -329,9 +384,30 @@ final class TemporalApplicationResultExportService
                     'source_references' => $source->sourceReferences,
                     'snapshot_counts' => $snapshot->counts,
                     'warnings' => $snapshot->warnings,
+                    'export_checkpoint' => $checkpoint,
+                    'snapshot_reused' => $reusedSnapshot,
                 ],
                 snapshotAt: $source->snapshotAt,
                 sourceFingerprint: $snapshot->sourceFingerprint,
+            );
+            $snapshotDuration = $this->elapsedMilliseconds($snapshotStartedAt);
+            $this->metrics->record(
+                'snapshot_duration',
+                $snapshotDuration,
+                $context->withStage('snapshot'),
+                ['reused' => $reusedSnapshot],
+            );
+            foreach ($snapshot->counts as $dataset => $count) {
+                $this->metrics->record(
+                    'rows_by_dataset',
+                    $count,
+                    $context->withStage('snapshot'),
+                    ['dataset' => $dataset],
+                );
+            }
+            $this->faults->checkpoint(
+                'after_snapshot_checksum',
+                $context->withStage('snapshot'),
             );
             $this->recordAudit(
                 'application_result_export_snapshot_created',
@@ -348,6 +424,7 @@ final class TemporalApplicationResultExportService
                 ],
             );
 
+            $packageStartedAt = hrtime(true);
             $this->updateStage(
                 $exportId,
                 ApplicationResultExportStage::Packaging,
@@ -358,6 +435,12 @@ final class TemporalApplicationResultExportService
                 $snapshot,
                 $options,
                 $baseDirectory.'/staging/package',
+                $context,
+            );
+            $this->metrics->record(
+                'package_duration',
+                $this->elapsedMilliseconds($packageStartedAt),
+                $context->withStage('package'),
             );
 
             $finalDirectory = $this->finalDirectory($export);
@@ -366,6 +449,10 @@ final class TemporalApplicationResultExportService
             if (! $disk->makeDirectory($finalDirectory)) {
                 throw new RuntimeException('Não foi possível preparar o destino privado da exportação.');
             }
+            $this->faults->checkpoint(
+                'before_atomic_move',
+                $context->withStage('publish'),
+            );
             if (! $disk->move($package->packagePath, $finalPath)) {
                 throw new RuntimeException('Não foi possível publicar atomicamente a exportação.');
             }
@@ -374,6 +461,10 @@ final class TemporalApplicationResultExportService
             if (! is_string($publishedHash) || ! hash_equals($package->packageSha256, $publishedHash)) {
                 throw new RuntimeException('O hash do pacote publicado não é válido.');
             }
+            $this->faults->checkpoint(
+                'after_atomic_move_before_completion',
+                $context->withStage('publish'),
+            );
 
             $this->complete(
                 $exportId,
@@ -387,12 +478,32 @@ final class TemporalApplicationResultExportService
                 $package->warnings,
             );
             $disk->deleteDirectory($baseDirectory.'/staging');
+            $this->metrics->record(
+                'export_duration',
+                $this->elapsedMilliseconds($startedAt),
+                $context->withStage('completed'),
+                ['result' => 'completed'],
+            );
+            $this->metrics->record(
+                'peak_memory',
+                memory_get_peak_usage(true),
+                $context->withStage('completed'),
+            );
         } catch (Throwable $exception) {
             if (is_string($finalPath)) {
                 Storage::disk('local')->delete($finalPath);
             }
-            Storage::disk('local')->deleteDirectory($baseDirectory.'/staging');
             $this->markFailed($exportId, $exception);
+            $failure = $this->failureClassifier->classify($exception);
+            $this->metrics->record(
+                'export_failures',
+                1,
+                $context->withStage('failed'),
+                [
+                    'failure_code' => $failure->code->value,
+                    'result' => $failure->disposition->value,
+                ],
+            );
 
             throw $exception;
         }
@@ -400,8 +511,9 @@ final class TemporalApplicationResultExportService
 
     public function markFailed(int $exportId, Throwable $exception): void
     {
-        $failureCode = $this->failureCode($exception);
-        $export = DB::transaction(function () use ($exportId, $failureCode): ?ReportExport {
+        $failure = $this->failureClassifier->classify($exception);
+        $failureCode = $failure->code->value;
+        $export = DB::transaction(function () use ($exportId, $failure, $failureCode): ?ReportExport {
             $locked = ReportExport::query()->whereKey($exportId)->lockForUpdate()->first();
             if (! $locked instanceof ReportExport || in_array($locked->status, [
                 ReportExportStatus::Completed,
@@ -410,12 +522,18 @@ final class TemporalApplicationResultExportService
             ], true)) {
                 return null;
             }
+            if (
+                $locked->status === ReportExportStatus::Failed
+                && $locked->failure_code === $failureCode
+            ) {
+                return null;
+            }
 
             $locked->forceFill([
                 'status' => ReportExportStatus::Failed,
                 'processing_stage' => ApplicationResultExportStage::Failed,
                 'failure_code' => $failureCode,
-                'error_message' => $this->failureMessage($failureCode),
+                'error_message' => $failure->safeMessage(),
                 'failed_at' => now(),
                 'progress' => 0,
                 'file_path' => '',
@@ -425,7 +543,7 @@ final class TemporalApplicationResultExportService
             $locked->run()->update([
                 'status' => ReportRunStatus::Failed->value,
                 'failed_at' => now(),
-                'error_message' => $this->failureMessage($failureCode),
+                'error_message' => $failure->safeMessage(),
             ]);
 
             return $locked->loadMissing('user');
@@ -435,7 +553,11 @@ final class TemporalApplicationResultExportService
             return;
         }
 
-        Storage::disk('local')->deleteDirectory($this->baseDirectory($export).'/staging');
+        $baseDirectory = $this->baseDirectory($export);
+        Storage::disk('local')->deleteDirectory($baseDirectory.'/staging/package');
+        if (! $failure->retryable()) {
+            Storage::disk('local')->deleteDirectory($baseDirectory.'/staging');
+        }
         Storage::disk('local')->deleteDirectory($this->finalDirectory($export));
         $this->recordAudit(
             'application_result_export_failed',
@@ -447,6 +569,8 @@ final class TemporalApplicationResultExportService
                 'contest_id' => $export->contest_id,
                 'mode' => $export->export_mode?->value,
                 'failure_code' => $failureCode,
+                'failure_disposition' => $failure->disposition->value,
+                'snapshot_preserved' => $failure->retryable(),
             ],
             AuditEventSeverity::Warning,
         );
@@ -454,12 +578,31 @@ final class TemporalApplicationResultExportService
 
     public function expire(int $exportId): bool
     {
+        $candidate = ReportExport::query()->find($exportId);
+        if (! $candidate instanceof ReportExport) {
+            return false;
+        }
+        $context = $this->operationalContext($candidate, 'expiration');
+        $this->faults->checkpoint('before_expiration_lock', $context);
+        $startedAt = hrtime(true);
+
         $export = DB::transaction(function () use ($exportId): ?ReportExport {
             $locked = ReportExport::query()->whereKey($exportId)->lockForUpdate()->first();
             if (
                 ! $locked instanceof ReportExport
                 || ! $locked->isTemporalApplicationResultExport()
-                || $locked->status !== ReportExportStatus::Completed
+            ) {
+                return null;
+            }
+
+            if ($locked->status === ReportExportStatus::Expired) {
+                return $locked->file_path !== ''
+                    ? $locked->loadMissing('user')
+                    : null;
+            }
+
+            if (
+                $locked->status !== ReportExportStatus::Completed
                 || $locked->expires_at === null
                 || $locked->expires_at->isFuture()
                 || $locked->downloaded_at?->greaterThan(now()->subMinutes(5))
@@ -467,19 +610,10 @@ final class TemporalApplicationResultExportService
                 return null;
             }
 
-            $path = ltrim((string) $locked->file_path, '/');
-            if ($path !== '' && ! str_contains($path, '..')) {
-                Storage::disk('local')->delete($path);
-            }
-            Storage::disk('local')->deleteDirectory($this->baseDirectory($locked));
-
             $locked->forceFill([
                 'status' => ReportExportStatus::Expired,
                 'processing_stage' => ApplicationResultExportStage::Expired,
                 'progress' => 100,
-                'file_path' => '',
-                'file_name' => '',
-                'file_size' => null,
             ])->save();
 
             return $locked->loadMissing('user');
@@ -488,6 +622,44 @@ final class TemporalApplicationResultExportService
         if (! $export instanceof ReportExport) {
             return false;
         }
+
+        $this->faults->checkpoint(
+            'after_database_expired_before_file_delete',
+            $context,
+        );
+        $path = ltrim((string) $export->file_path, '/');
+        $disk = Storage::disk('local');
+        if (
+            $path !== ''
+            && ! str_contains($path, '..')
+            && $disk->exists($path)
+            && ! $disk->delete($path)
+        ) {
+            throw new Program53OperationalException(
+                Program53FailureCode::StorageUnavailable,
+            );
+        }
+        $this->faults->checkpoint(
+            'during_staging_cleanup',
+            $context,
+        );
+        $disk->deleteDirectory($this->baseDirectory($export));
+
+        DB::transaction(function () use ($exportId): void {
+            $locked = ReportExport::query()->whereKey($exportId)->lockForUpdate()->first();
+            if (
+                ! $locked instanceof ReportExport
+                || $locked->status !== ReportExportStatus::Expired
+            ) {
+                return;
+            }
+
+            $locked->forceFill([
+                'file_path' => '',
+                'file_name' => '',
+                'file_size' => null,
+            ])->save();
+        });
 
         $this->recordAudit(
             'application_result_export_expired',
@@ -502,8 +674,43 @@ final class TemporalApplicationResultExportService
             ],
             subject: $export->user,
         );
+        $this->metrics->record(
+            'expiration_duration',
+            $this->elapsedMilliseconds($startedAt),
+            $context->withStage('expired'),
+            ['result' => 'completed'],
+        );
 
         return true;
+    }
+
+    public function markExpirationFailed(int $exportId, Throwable $exception): void
+    {
+        $export = ReportExport::query()->with('user')->find($exportId);
+        if (! $export instanceof ReportExport) {
+            return;
+        }
+
+        $failure = $this->failureClassifier->classify($exception);
+        $this->metrics->record(
+            'expiration_failures',
+            1,
+            $this->operationalContext($export, 'expiration_failed'),
+            ['failure_code' => $failure->code->value],
+        );
+        $this->recordAudit(
+            'application_result_export_expiration_failed',
+            $export,
+            null,
+            [
+                'export_public_id' => $export->public_id,
+                'municipality_id' => $export->municipality_id,
+                'contest_id' => $export->contest_id,
+                'failure_code' => $failure->code->value,
+            ],
+            AuditEventSeverity::Warning,
+            $export->user,
+        );
     }
 
     private function start(int $exportId): ?ReportExport
@@ -517,7 +724,6 @@ final class TemporalApplicationResultExportService
                 ! $locked instanceof ReportExport
                 || ! $locked->isTemporalApplicationResultExport()
                 || in_array($locked->status, [
-                    ReportExportStatus::Processing,
                     ReportExportStatus::Completed,
                     ReportExportStatus::Expired,
                     ReportExportStatus::Cancelled,
@@ -525,6 +731,23 @@ final class TemporalApplicationResultExportService
             ) {
                 return null;
             }
+            $staleAfter = max(60, (int) config(
+                'program53.exports.stale_after_seconds',
+                2100,
+            ));
+            if (
+                $locked->status === ReportExportStatus::Processing
+                && $locked->updated_at?->greaterThan(now()->subSeconds($staleAfter))
+            ) {
+                return null;
+            }
+
+            $metadata = $this->metadata($locked);
+            $operational = $this->array($metadata['operational'] ?? []);
+            $attempt = max(0, (int) ($operational['attempt'] ?? 0)) + 1;
+            $operationId = is_string($operational['operation_id'] ?? null)
+                ? $operational['operation_id']
+                : (string) Str::orderedUuid();
 
             $locked->forceFill([
                 'status' => ReportExportStatus::Processing,
@@ -538,6 +761,14 @@ final class TemporalApplicationResultExportService
                 'file_path' => '',
                 'file_name' => '',
                 'file_size' => null,
+                'source_metadata' => [
+                    ...$metadata,
+                    'operational' => [
+                        ...$operational,
+                        'operation_id' => $operationId,
+                        'attempt' => $attempt,
+                    ],
+                ],
             ])->save();
             $locked->run()->update([
                 'status' => ReportRunStatus::Started->value,
@@ -860,38 +1091,64 @@ final class TemporalApplicationResultExportService
         };
     }
 
-    private function failureCode(Throwable $exception): string
+    /** @return array{string|null, string|null} */
+    private function requestIdentifiers(): array
     {
-        if ($exception instanceof ValidationException) {
-            $code = $exception->errors()['failure_code'][0] ?? null;
-            if (is_string($code) && preg_match('/^[a-z0-9_]{1,120}$/', $code) === 1) {
-                return $code;
-            }
-
-            return 'source_not_found';
+        if (! app()->bound('request')) {
+            return [null, null];
         }
 
-        $message = mb_strtolower($exception->getMessage());
+        $request = app(Request::class);
+        $requestId = $this->safeIdentifier(
+            $request->attributes->get(RequestCorrelationId::ATTRIBUTE),
+        );
+        $correlationId = $this->safeIdentifier(
+            $request->headers->get('X-Correlation-ID'),
+        ) ?? $requestId;
 
-        return match (true) {
-            str_contains($message, 'schema'), str_contains($message, 'xsd') => 'schema_validation_failed',
-            str_contains($message, 'hash'), str_contains($message, 'zip'), str_contains($message, 'pacote') => 'package_validation_failed',
-            str_contains($message, 'document') => 'document_unavailable',
-            str_contains($message, 'storage'), str_contains($message, 'ficheiro'), str_contains($message, 'destino') => 'storage_write_failed',
-            default => 'export_generation_failed',
-        };
+        return [$requestId, $correlationId];
     }
 
-    private function failureMessage(string $code): string
+    private function operationalContext(
+        ReportExport $export,
+        string $stage,
+    ): Program53OperationalContext {
+        $metadata = $this->metadata($export);
+        $operational = $this->array($metadata['operational'] ?? []);
+
+        return new Program53OperationalContext(
+            operationId: $this->safeIdentifier($operational['operation_id'] ?? null)
+                ?? 'export-'.$export->getKey(),
+            requestId: $this->safeIdentifier($operational['request_id'] ?? null),
+            correlationId: $this->safeIdentifier($operational['correlation_id'] ?? null),
+            municipalityId: $export->municipality_id !== null
+                ? (int) $export->municipality_id
+                : null,
+            contestId: $export->contest_id !== null
+                ? (int) $export->contest_id
+                : null,
+            exportId: (int) $export->getKey(),
+            attempt: max(1, (int) ($operational['attempt'] ?? 1)),
+            stage: $stage,
+        );
+    }
+
+    private function safeIdentifier(mixed $value): ?string
     {
-        return match ($code) {
-            'source_not_found', 'source_stale' => 'A fonte temporal deixou de estar disponível ou válida.',
-            'schema_validation_failed' => 'Um formato gerado não cumpriu o schema versionado.',
-            'storage_write_failed' => 'Não foi possível guardar o artefacto privado.',
-            'document_unavailable' => 'O dossier contém documentos indisponíveis para inclusão segura.',
-            'package_validation_failed' => 'O pacote municipal não passou a validação de integridade.',
-            default => 'A exportação não pôde ser concluída.',
-        };
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return preg_match('/^[A-Za-z0-9][A-Za-z0-9_.:\-]{0,119}$/', $value) === 1
+            ? $value
+            : null;
+    }
+
+    private function elapsedMilliseconds(int $startedAt): float
+    {
+        return round((hrtime(true) - $startedAt) / 1_000_000, 3);
     }
 
     /**
@@ -946,6 +1203,7 @@ final class TemporalApplicationResultExportService
                 'application_result_export_completed' => 'Exportação temporal concluída.',
                 'application_result_export_failed' => 'Exportação temporal falhou de forma controlada.',
                 'application_result_export_expired' => 'Exportação temporal expirada e artefactos eliminados.',
+                'application_result_export_expiration_failed' => 'A limpeza de uma exportação temporal falhou de forma controlada.',
                 default => 'Evento de exportação temporal registado.',
             },
             metadata: $metadata,
