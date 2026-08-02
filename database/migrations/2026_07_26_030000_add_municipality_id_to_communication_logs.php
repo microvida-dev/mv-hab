@@ -25,10 +25,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('communication_logs', function (Blueprint $table): void {
+            $table->dropForeign(
+                'communication_logs_municipality_id_foreign',
+            );
             $table->dropIndex(
                 'communication_logs_municipality_status_idx',
             );
-            $table->dropConstrainedForeignId('municipality_id');
+            $table->dropColumn('municipality_id');
         });
     }
 };
