@@ -31,7 +31,7 @@ return new class extends Migration
                     ->nullable()
                     ->constrained('users')
                     ->nullOnDelete();
-                $table->timestamp('sealed_at');
+                $table->dateTime('sealed_at');
                 $table->timestamps();
 
                 $table->unique(

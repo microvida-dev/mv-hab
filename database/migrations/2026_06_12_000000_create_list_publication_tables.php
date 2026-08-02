@@ -292,7 +292,7 @@ return new class extends Migration
             $table->string('subject');
             $table->text('message');
             $table->text('instructions')->nullable();
-            $table->timestamp('deadline_at');
+            $table->dateTime('deadline_at');
             $table->unsignedBigInteger('issued_by')->nullable();
             $table->timestamp('issued_at')->nullable();
             $table->timestamp('responded_at')->nullable();
@@ -346,7 +346,7 @@ return new class extends Migration
             $table->text('message');
             $table->text('legal_basis')->nullable();
             $table->text('grounds');
-            $table->timestamp('deadline_at');
+            $table->dateTime('deadline_at');
             $table->unsignedBigInteger('issued_by')->nullable();
             $table->timestamp('issued_at')->nullable();
             $table->timestamp('submitted_at')->nullable();

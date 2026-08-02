@@ -73,7 +73,7 @@ return new class extends Migration
             $table->string('origin', 80);
             $table->char('checksum', 64)->index();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamp('locked_at');
+            $table->dateTime('locked_at');
             $table->timestamps();
 
             $table->unique(

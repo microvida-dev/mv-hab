@@ -20,9 +20,9 @@ return new class extends Migration
             $table->text('description');
             $table->text('application_instructions')->nullable();
             $table->string('status')->default('draft')->index();
-            $table->timestamp('opens_at')->index();
-            $table->timestamp('closes_at')->index();
-            $table->timestamp('published_at')->nullable()->index();
+            $table->dateTime('opens_at')->index();
+            $table->dateTime('closes_at')->index();
+            $table->dateTime('published_at')->nullable()->index();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -32,8 +32,8 @@ return new class extends Migration
             $table->foreignId('contest_id')->constrained()->cascadeOnDelete();
             $table->string('type')->index();
             $table->string('label');
-            $table->timestamp('starts_at')->nullable();
-            $table->timestamp('ends_at');
+            $table->dateTime('starts_at')->nullable();
+            $table->dateTime('ends_at');
             $table->text('description')->nullable();
             $table->unsignedSmallInteger('sort_order')->default(0);
             $table->timestamps();
@@ -44,7 +44,7 @@ return new class extends Migration
             $table->foreignId('contest_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->restrictOnDelete();
             $table->string('role_in_jury');
-            $table->timestamp('appointed_at')->nullable();
+            $table->dateTime('appointed_at')->nullable();
             $table->timestamps();
 
             $table->unique(['contest_id', 'user_id']);

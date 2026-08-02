@@ -36,14 +36,14 @@ return new class extends Migration
                 $table->foreignId('correction_request_id')
                     ->constrained('correction_requests')
                     ->cascadeOnDelete();
-                $table->timestamp('original_deadline_at');
-                $table->timestamp('previous_deadline_at');
-                $table->timestamp('extended_deadline_at');
+                $table->dateTime('original_deadline_at');
+                $table->dateTime('previous_deadline_at');
+                $table->dateTime('extended_deadline_at');
                 $table->text('reason');
                 $table->foreignId('authorized_by')
                     ->constrained('users')
                     ->restrictOnDelete();
-                $table->timestamp('authorized_at');
+                $table->dateTime('authorized_at');
                 $table->timestamps();
 
                 $table->unique(
@@ -85,8 +85,8 @@ return new class extends Migration
                 $table->string('receipt_number')->unique();
                 $table->json('snapshot_payload');
                 $table->char('snapshot_hash', 64)->unique();
-                $table->timestamp('submitted_at');
-                $table->timestamp('created_at');
+                $table->dateTime('submitted_at');
+                $table->dateTime('created_at');
 
                 $table->index(
                     ['user_id', 'submitted_at'],

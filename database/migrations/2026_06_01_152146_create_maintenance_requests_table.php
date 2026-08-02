@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('description');
             $table->string('priority')->default('medium')->index();
             $table->string('status')->default('open')->index();
-            $table->timestamp('reported_at');
+            $table->dateTime('reported_at');
             $table->timestamp('resolved_at')->nullable();
             $table->timestamps();
         });
