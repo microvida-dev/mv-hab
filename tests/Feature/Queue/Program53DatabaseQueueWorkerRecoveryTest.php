@@ -11,9 +11,15 @@ final class Program53DatabaseQueueWorkerRecoveryTest extends TestCase
 {
     public function test_killed_database_worker_releases_job_for_idempotent_retry(): void
     {
-        if (! function_exists('proc_open') || PHP_OS_FAMILY === 'Windows') {
-            $this->markTestSkipped('O gate exige processos POSIX independentes.');
-        }
+        $this->assertTrue(
+            function_exists('proc_open'),
+            'O gate exige suporte a processos independentes.',
+        );
+        $this->assertNotSame(
+            'Windows',
+            PHP_OS_FAMILY,
+            'O gate exige sinais POSIX para terminar o primeiro worker.',
+        );
 
         $directory = storage_path('qa/program53-queue-'.Str::uuid());
         $database = $directory.'/queue.sqlite';

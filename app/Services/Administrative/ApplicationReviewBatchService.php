@@ -730,6 +730,7 @@ class ApplicationReviewBatchService
                     );
                 }
             })
+            ->with('requiredDocument')
             ->orderBy('id');
 
         if ($lockForUpdate) {

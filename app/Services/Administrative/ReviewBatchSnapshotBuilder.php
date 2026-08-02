@@ -21,6 +21,7 @@ use App\Models\HouseholdMember;
 use App\Models\IncomeRecord;
 use App\Models\RequiredDocument;
 use App\Services\Documents\DocumentChecklistService;
+use App\Services\Documents\DocumentSubmissionContextResolver;
 use App\Services\Support\CanonicalJsonHasher;
 use BackedEnum;
 use Carbon\CarbonInterface;
@@ -31,6 +32,7 @@ class ReviewBatchSnapshotBuilder
     public function __construct(
         private readonly CanonicalJsonHasher $hasher,
         private readonly DocumentChecklistService $checklist,
+        private readonly DocumentSubmissionContextResolver $documentContext,
     ) {}
 
     /**
@@ -171,6 +173,8 @@ class ReviewBatchSnapshotBuilder
             ->sortByDesc('id')
             ->first();
 
+        $context = $this->documentContext->resolve($document);
+
         return [
             'id' => (int) $document->id,
             'document_type_id' => (int) $document->document_type_id,
@@ -182,15 +186,7 @@ class ReviewBatchSnapshotBuilder
             'checksum' => $document->checksum,
             'current_version_id' => $document->current_version_id,
             'target' => [
-                'adhesion_registration_id' => $document
-                    ->adhesion_registration_id,
-                'household_id' => $document->household_id,
-                'household_member_id' => $document->household_member_id,
-                'income_record_id' => $document->income_record_id,
-                'current_housing_situation_id' => $document
-                    ->current_housing_situation_id,
-                'application_id' => $document->application_id,
-                'contract_id' => $document->contract_id,
+                $context['target_type'].'_id' => $context['target_id'],
             ],
             'submitted_at' => $this->dateTime($document->submitted_at),
             'reviewed_at' => $this->dateTime($document->reviewed_at),

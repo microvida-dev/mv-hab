@@ -72,6 +72,28 @@ Se a remocao falhar depois de `expired`, o scheduler seleciona novamente apenas
 o cleanup pendente. Duas execucoes do scheduler convergem para uma transicao e
 um evento de auditoria.
 
+## Documentos repetíveis e candidatos sem resposta
+
+- O alvo documental canónico é resolvido pelo `required_for` do requisito. Um
+  documento de membro/rendimento não colapsa no alvo mais amplo da candidatura,
+  mesmo quando ambos os foreign keys estão presentes.
+- O snapshot preserva `requirement_instance`, `reference_period`, checksum e
+  alvo específico. Versões posteriores ao recibo formal ficam fora da
+  revalidação em curso.
+- Um pedido sem resposta, depois do deadline configurado, converge para
+  `expired`; não é criada resposta sintética nem novo lote por inferência.
+- A expiração duplicada pelo scheduler é idempotente e preserva auditoria.
+
+## Procedimento de incidente
+
+1. Capturar apenas código de falha, operation/correlation ID e instante UTC.
+2. Executar `program53:operational-check --format=json --fail-on-critical`.
+3. Confirmar DB, cache lock, worker, storage e scheduler.
+4. Corrigir a dependência; repetir apenas falhas `retryable`.
+5. Exigir nova operação para `stale_source`; não reutilizar preview/checkpoint.
+6. Não repetir falhas terminais sem corrigir autorização/schema/fonte.
+7. Verificar estado único, hashes, contagens, outbox e ausência de PII.
+
 ## Queues
 
 - export: `tries=3`, `timeout=1800`, backoff `60/300/900`, retry deadline fixa;

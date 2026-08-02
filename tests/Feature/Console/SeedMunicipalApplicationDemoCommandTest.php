@@ -108,6 +108,36 @@ class SeedMunicipalApplicationDemoCommandTest extends TestCase
             15,
             data_get($summary, 'counts.document_dossier_items'),
         );
+        $this->assertSame(
+            2,
+            data_get($summary, 'counts.municipalities'),
+        );
+        $this->assertSame(
+            2,
+            data_get($summary, 'counts.review_batches'),
+        );
+        $this->assertSame(
+            3,
+            data_get($summary, 'counts.review_publication_results'),
+        );
+        $this->assertSame(
+            1,
+            data_get($summary, 'counts.correction_submission_receipts'),
+        );
+        $this->assertSame(
+            1,
+            data_get($summary, 'counts.expired_without_response'),
+        );
+        $this->assertSame(
+            2,
+            data_get($summary, 'counts.temporal_exports'),
+        );
+        $this->assertTrue(
+            data_get(
+                $summary,
+                'program53.municipality_isolation.cross_access_denied',
+            ),
+        );
 
         Queue::assertNothingPushed();
     }
@@ -271,8 +301,26 @@ class SeedMunicipalApplicationDemoCommandTest extends TestCase
         unset($second['verified_at']);
 
         $this->assertSame($first, $second);
-        $this->assertDatabaseCount('municipalities', 1);
-        $this->assertDatabaseCount('applications', 1);
+        $this->assertDatabaseCount('municipalities', 2);
+        $this->assertDatabaseCount('applications', 3);
+        $this->assertDatabaseCount('application_review_batches', 3);
+        $this->assertDatabaseCount(
+            'application_review_batch_items',
+            4,
+        );
+        $this->assertDatabaseCount(
+            'application_review_publications',
+            3,
+        );
+        $this->assertDatabaseCount(
+            'application_review_publication_results',
+            4,
+        );
+        $this->assertDatabaseCount(
+            'correction_submission_receipts',
+            1,
+        );
+        $this->assertDatabaseCount('report_exports', 2);
         $this->assertDatabaseCount('document_submissions', 15);
         $this->assertDatabaseCount('document_versions', 16);
         $this->assertDatabaseCount('housing_visits', 1);

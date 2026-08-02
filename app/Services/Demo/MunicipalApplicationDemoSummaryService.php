@@ -4,29 +4,40 @@ namespace App\Services\Demo;
 
 use App\Enums\AdministrativeProcessStatus;
 use App\Enums\ApplicationReportStatus;
+use App\Enums\ApplicationResultExportMode;
+use App\Enums\ApplicationReviewBatchStatus;
 use App\Enums\ApplicationStatus;
 use App\Enums\CorrectionRequestStatus;
 use App\Enums\CorrectionResponseStatus;
 use App\Enums\DocumentDossierStatus;
 use App\Enums\DocumentStatus;
 use App\Enums\FeatureKey;
+use App\Enums\ReportExportStatus;
 use App\Enums\VisitStatus;
 use App\Models\AdministrativeProcess;
 use App\Models\Application;
 use App\Models\ApplicationReport;
+use App\Models\ApplicationReviewBatch;
+use App\Models\ApplicationReviewPublication;
 use App\Models\Contest;
 use App\Models\CorrectionRequest;
 use App\Models\CorrectionResponse;
+use App\Models\CorrectionSubmissionReceipt;
 use App\Models\DocumentDossier;
 use App\Models\HousingVisit;
 use App\Models\Municipality;
 use App\Models\MunicipalityFeatureEntitlement;
 use App\Models\PlatformOperatorAssignment;
+use App\Models\ReportExport;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Access\MunicipalRoleTemplateRegistry;
+use App\Services\Municipalities\MunicipalRecordScopeService;
+use App\Services\Reporting\Temporal\TemporalApplicationResultExportService;
+use App\Services\Support\CanonicalJsonHasher;
 use Database\Seeders\Demo\MunicipalApplicationDemoAccessSeeder;
 use Database\Seeders\Demo\MunicipalApplicationDemoCatalogSeeder;
+use Database\Seeders\Demo\MunicipalApplicationDemoProgram53Seeder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -108,6 +119,12 @@ final class MunicipalApplicationDemoSummaryService
             applicationId: (int) $application->id,
             dossierId: (int) $dossier->id,
         );
+        $program53 = $this->program53Scenario(
+            municipality: $municipality,
+            contest: $contest,
+            application: $application,
+        );
+        $counts = [...$counts, ...$program53['counts']];
 
         $expectedCounts = [
             'municipal_roles' => 5,
@@ -130,10 +147,22 @@ final class MunicipalApplicationDemoSummaryService
             'application_reports' => 2,
             'document_dossiers' => 1,
             'document_dossier_items' => 15,
-            'official_notifications' => 6,
+            'official_notifications' => 9,
             'candidate_interactions' => 3,
             'work_tasks' => 1,
             'document_ai_analyses' => 0,
+            'municipalities' => 2,
+            'contest_applications' => 2,
+            'review_batches' => 2,
+            'review_batch_items' => 3,
+            'review_publications' => 2,
+            'review_publication_results' => 3,
+            'correction_submission_receipts' => 1,
+            'expired_without_response' => 1,
+            'temporal_exports' => 2,
+            'control_applications' => 1,
+            'control_review_batches' => 1,
+            'control_publications' => 1,
         ];
 
         $this->assertCounts($counts, $expectedCounts);
@@ -280,9 +309,11 @@ final class MunicipalApplicationDemoSummaryService
             'counts' => $counts,
             'accounts' => $accounts,
             'program53_profile' => $program53Profile,
+            'program53' => $program53,
             'files' => [
                 'reports' => $reportPaths,
                 'document_dossier' => $dossierPath,
+                'temporal_exports' => $program53['files'],
             ],
             'verified_at' => now()->toIso8601String(),
         ];
@@ -415,6 +446,305 @@ final class MunicipalApplicationDemoSummaryService
                 ->whereIn('document_submission_id', $submissionIds)
                 ->count(),
         ];
+    }
+
+    /**
+     * @return array{
+     *     counts: array<string, int>,
+     *     municipality_isolation: array<string, int|bool>,
+     *     exports: list<array<string, mixed>>,
+     *     files: list<string>
+     * }
+     */
+    private function program53Scenario(
+        Municipality $municipality,
+        Contest $contest,
+        Application $application,
+    ): array {
+        $controlMunicipality = Municipality::query()
+            ->where(
+                'code',
+                MunicipalApplicationDemoProgram53Seeder::CONTROL_MUNICIPALITY_CODE,
+            )
+            ->sole();
+        $controlContest = Contest::query()
+            ->where(
+                'code',
+                MunicipalApplicationDemoProgram53Seeder::CONTROL_CONTEST_CODE,
+            )
+            ->sole();
+        $controlAnalyst = User::query()
+            ->where(
+                'email',
+                MunicipalApplicationDemoProgram53Seeder::CONTROL_ANALYST_EMAIL,
+            )
+            ->where('municipality_id', $controlMunicipality->id)
+            ->sole();
+        $primaryAnalyst = User::query()
+            ->where(
+                'email',
+                MunicipalApplicationDemoAccessSeeder::ANALYST_EXPORT_EMAIL,
+            )
+            ->where('municipality_id', $municipality->id)
+            ->sole();
+        $noResponseApplication = Application::query()
+            ->where(
+                'application_number',
+                MunicipalApplicationDemoProgram53Seeder::NO_RESPONSE_APPLICATION_NUMBER,
+            )
+            ->where('contest_id', $contest->id)
+            ->sole();
+        $controlApplication = Application::query()
+            ->where('contest_id', $controlContest->id)
+            ->sole();
+
+        $batches = ApplicationReviewBatch::query()
+            ->where('municipality_id', $municipality->id)
+            ->where('contest_id', $contest->id)
+            ->with(['items', 'publication.results'])
+            ->orderBy('sequence_number')
+            ->get();
+        if (
+            $batches->count() !== 2
+            || $batches->contains(
+                static fn (ApplicationReviewBatch $batch): bool => $batch->status
+                    !== ApplicationReviewBatchStatus::Sealed,
+            )
+        ) {
+            throw new LogicException(
+                'Os dois lotes municipais demo não estão selados.',
+            );
+        }
+
+        $hasher = app(CanonicalJsonHasher::class);
+        foreach ($batches as $batch) {
+            $items = $batch->items->sortBy('application_id')->values();
+            foreach ($items as $item) {
+                if (! hash_equals(
+                    (string) $item->snapshot_hash,
+                    $hasher->hash($item->snapshot_payload),
+                )) {
+                    throw new LogicException(
+                        'Um item demo não corresponde ao snapshot imutável.',
+                    );
+                }
+            }
+            $batchPayload = [
+                'schema_version' => 1,
+                'contest_id' => $batch->contest_id,
+                'cycle' => $batch->cycle->value,
+                'items' => $items
+                    ->map(static fn ($item): array => [
+                        'application_id' => $item->application_id,
+                        'snapshot_hash' => $item->snapshot_hash,
+                        'payload' => $item->snapshot_payload,
+                    ])
+                    ->all(),
+            ];
+            if (! hash_equals(
+                (string) $batch->snapshot_hash,
+                $hasher->hash($batchPayload),
+            )) {
+                throw new LogicException(
+                    'Um lote demo não corresponde ao hash canónico.',
+                );
+            }
+
+            $publication = $batch->publication;
+            if (
+                ! $publication instanceof ApplicationReviewPublication
+                || $publication->results->count() !== $batch->item_count
+            ) {
+                throw new LogicException(
+                    'Um lote demo não possui publicação integral.',
+                );
+            }
+            foreach ($publication->results as $result) {
+                if (
+                    ! hash_equals(
+                        (string) $result->result_hash,
+                        $hasher->hash($result->result_payload),
+                    )
+                    || ! $this->isSha256($result->notification_hash)
+                ) {
+                    throw new LogicException(
+                        'Um resultado publicado demo perdeu integridade.',
+                    );
+                }
+            }
+        }
+
+        $receipt = CorrectionSubmissionReceipt::query()
+            ->where('application_id', $application->id)
+            ->sole();
+        if (! hash_equals(
+            (string) $receipt->snapshot_hash,
+            $hasher->hash($receipt->snapshot_payload),
+        )) {
+            throw new LogicException(
+                'O recibo demo não corresponde ao snapshot canónico.',
+            );
+        }
+
+        $expiredRequest = CorrectionRequest::query()
+            ->where('application_id', $noResponseApplication->id)
+            ->sole();
+        if (
+            $expiredRequest->status !== CorrectionRequestStatus::Expired
+            || $expiredRequest->responses()->exists()
+            || $expiredRequest->submissionReceipt()->exists()
+        ) {
+            throw new LogicException(
+                'O controlo demo sem resposta não está expirado e vazio.',
+            );
+        }
+
+        $exports = ReportExport::query()
+            ->where('municipality_id', $municipality->id)
+            ->where(
+                'export_profile',
+                TemporalApplicationResultExportService::PROFILE,
+            )
+            ->orderBy('export_mode')
+            ->get();
+        if ($exports->count() !== 2) {
+            throw new LogicException(
+                'O cenário demo exige duas exportações temporais.',
+            );
+        }
+        $exportFiles = [];
+        $exportSummary = [];
+        foreach ($exports as $export) {
+            if (
+                $export->status !== ReportExportStatus::Completed
+                || $export->sensitive_fields_included
+                || $export->document_files_requested
+                || $export->document_files_included
+                || ! $this->isSha256($export->source_fingerprint)
+                || ! $this->isSha256($export->manifest_sha256)
+                || ! $this->isSha256($export->package_sha256)
+                || trim($export->file_path) === ''
+                || ! Storage::disk('local')->exists($export->file_path)
+            ) {
+                throw new LogicException(
+                    'Uma exportação temporal demo é insegura ou incompleta.',
+                );
+            }
+
+            $exportFiles[] = $export->file_path;
+            $exportSummary[] = [
+                'public_id' => (string) $export->public_id,
+                'mode' => $export->export_mode?->value,
+                'status' => $export->status->value,
+                'datasets' => $export->datasets,
+                'formats' => $export->formats,
+                'package_sha256' => (string) $export->package_sha256,
+            ];
+        }
+        $modes = $exports
+            ->map(static fn (ReportExport $export): ?string => $export
+                ->export_mode?->value)
+            ->filter()
+            ->sort()
+            ->values()
+            ->all();
+        $expectedModes = [
+            ApplicationResultExportMode::DeltaBetweenBatches->value,
+            ApplicationResultExportMode::SealedBatch->value,
+        ];
+        sort($expectedModes, SORT_STRING);
+        if ($modes !== $expectedModes) {
+            throw new LogicException(
+                'Os modos temporais demo não cobrem lote e delta.',
+            );
+        }
+
+        $scope = app(MunicipalRecordScopeService::class);
+        $primaryVisible = $scope
+            ->applications(Application::query(), $primaryAnalyst)
+            ->count();
+        $controlVisible = $scope
+            ->applications(Application::query(), $controlAnalyst)
+            ->count();
+        if (
+            $primaryVisible !== 2
+            || $controlVisible !== 1
+            || $scope->ownsApplication($primaryAnalyst, $controlApplication)
+            || $scope->ownsApplication($controlAnalyst, $application)
+        ) {
+            throw new LogicException(
+                'O cenário demo não preserva o isolamento municipal.',
+            );
+        }
+
+        $primaryBatchIds = $batches->pluck('id');
+        $controlBatchIds = ApplicationReviewBatch::query()
+            ->where('municipality_id', $controlMunicipality->id)
+            ->where('contest_id', $controlContest->id)
+            ->pluck('id');
+
+        return [
+            'counts' => [
+                'municipalities' => Municipality::query()->count(),
+                'contest_applications' => Application::query()
+                    ->where('contest_id', $contest->id)
+                    ->count(),
+                'review_batches' => $batches->count(),
+                'review_batch_items' => DB::table(
+                    'application_review_batch_items',
+                )->whereIn('application_review_batch_id', $primaryBatchIds)
+                    ->count(),
+                'review_publications' => DB::table(
+                    'application_review_publications',
+                )->whereIn('application_review_batch_id', $primaryBatchIds)
+                    ->count(),
+                'review_publication_results' => DB::table(
+                    'application_review_publication_results',
+                )->whereIn(
+                    'application_review_publication_id',
+                    DB::table('application_review_publications')
+                        ->whereIn(
+                            'application_review_batch_id',
+                            $primaryBatchIds,
+                        )
+                        ->select('id'),
+                )->count(),
+                'correction_submission_receipts' => CorrectionSubmissionReceipt::query()
+                    ->where('application_id', $application->id)
+                    ->count(),
+                'expired_without_response' => CorrectionRequest::query()
+                    ->where('application_id', $noResponseApplication->id)
+                    ->where(
+                        'status',
+                        CorrectionRequestStatus::Expired->value,
+                    )
+                    ->count(),
+                'temporal_exports' => $exports->count(),
+                'control_applications' => Application::query()
+                    ->where('contest_id', $controlContest->id)
+                    ->count(),
+                'control_review_batches' => $controlBatchIds->count(),
+                'control_publications' => DB::table(
+                    'application_review_publications',
+                )->whereIn(
+                    'application_review_batch_id',
+                    $controlBatchIds,
+                )->count(),
+            ],
+            'municipality_isolation' => [
+                'primary_visible_applications' => $primaryVisible,
+                'control_visible_applications' => $controlVisible,
+                'cross_access_denied' => true,
+            ],
+            'exports' => $exportSummary,
+            'files' => $exportFiles,
+        ];
+    }
+
+    private function isSha256(mixed $value): bool
+    {
+        return is_string($value)
+            && preg_match('/\A[a-f0-9]{64}\z/', $value) === 1;
     }
 
     /**

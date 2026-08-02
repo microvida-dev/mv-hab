@@ -28,6 +28,7 @@ use App\Models\DocumentType;
 use App\Models\DocumentVersion;
 use App\Models\EligibilityCheck;
 use App\Models\RequiredDocument;
+use App\Services\Documents\DocumentSubmissionContextResolver;
 use App\Services\Support\CanonicalJsonHasher;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -51,6 +52,7 @@ final class ApplicationResultExportSnapshotBuilder
         private readonly ApplicationResultExportComparator $comparator,
         private readonly CanonicalJsonHasher $hasher,
         private readonly Program53FaultInjector $faults,
+        private readonly DocumentSubmissionContextResolver $documentContext,
     ) {}
 
     /**
@@ -511,7 +513,7 @@ final class ApplicationResultExportSnapshotBuilder
             })
             ->with([
                 'documentType:id,code',
-                'requiredDocument:id,document_type_id,required_submissions',
+                'requiredDocument:id,document_type_id,required_for,required_submissions',
                 'currentVersion:id,document_submission_id,version_number,checksum',
             ])
             ->orderBy('id')
@@ -1309,21 +1311,14 @@ final class ApplicationResultExportSnapshotBuilder
     /** @return array{string|null, string|null} */
     private function currentDocumentTarget(DocumentSubmission $document): array
     {
-        foreach ([
-            'application' => $document->application_id,
-            'adhesion_registration' => $document->adhesion_registration_id,
-            'household' => $document->household_id,
-            'household_member' => $document->household_member_id,
-            'income_record' => $document->income_record_id,
-            'current_housing_situation' => $document->current_housing_situation_id,
-            'contract' => $document->contract_id,
-        ] as $type => $id) {
-            if ($id !== null) {
-                return [$type, $type.':'.$id];
-            }
-        }
+        $context = $this->documentContext->resolve($document);
+        $type = $context['target_type'];
+        $id = $context['target_id'];
 
-        return [null, null];
+        return [
+            $type,
+            $id === null ? null : $type.':'.$id,
+        ];
     }
 
     /**

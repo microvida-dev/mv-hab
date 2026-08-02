@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    id="Definitions_Program53"
+    targetNamespace="https://mvhab.example.test/bpmn/program-53">
+  <bpmn:process id="Process_Program53" name="Programa 53 - análise, aperfeiçoamento e exportação" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Program53">
+      <bpmn:lane id="Lane_Candidate" name="Candidato">
+        <bpmn:flowNodeRef>Task_SubmitApplication</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AnswerCorrection</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ViewResult</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Analyst" name="Técnico municipal">
+        <bpmn:flowNodeRef>Task_ProgressiveReview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PreviewBatch</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SealBatch</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Revalidate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RequestExport</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_System" name="Sistema MV-HAB">
+        <bpmn:flowNodeRef>Start_Program53</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CheckReadiness</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Publish</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CorrectionRequired</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_OpenCorrection</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ResponseReceived</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ExpireCorrection</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SealRevalidation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PublishFinal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Program53</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Queue" name="Filas e workers">
+        <bpmn:flowNodeRef>Task_QueueNotifications</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DeliverNotifications</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_QueueExport</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_GenerateExport</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="Start_Program53" name="Fase de candidaturas aberta" />
+    <bpmn:userTask id="Task_SubmitApplication" name="Submeter candidatura e documentos" />
+    <bpmn:userTask id="Task_ProgressiveReview" name="Analisar progressivamente" />
+    <bpmn:serviceTask id="Task_CheckReadiness" name="Calcular prontidão documental" />
+    <bpmn:userTask id="Task_PreviewBatch" name="Pré-visualizar lote completo" />
+    <bpmn:userTask id="Task_SealBatch" name="Selar lote inicial" />
+    <bpmn:serviceTask id="Task_Publish" name="Publicar resultados simultaneamente" />
+    <bpmn:serviceTask id="Task_QueueNotifications" name="Persistir outbox e enfileirar entregas" />
+    <bpmn:serviceTask id="Task_DeliverNotifications" name="Entregar notificações com retry" />
+    <bpmn:exclusiveGateway id="Gateway_CorrectionRequired" name="Requer aperfeiçoamento?" />
+    <bpmn:serviceTask id="Task_OpenCorrection" name="Projetar pedido de aperfeiçoamento" />
+    <bpmn:userTask id="Task_AnswerCorrection" name="Responder e obter recibo imutável" />
+    <bpmn:exclusiveGateway id="Gateway_ResponseReceived" name="Resposta dentro do prazo?" />
+    <bpmn:serviceTask id="Task_ExpireCorrection" name="Expirar pedido sem resposta" />
+    <bpmn:userTask id="Task_Revalidate" name="Revalidar apenas alterações" />
+    <bpmn:serviceTask id="Task_SealRevalidation" name="Selar lote de revalidação" />
+    <bpmn:serviceTask id="Task_PublishFinal" name="Publicar segundo resultado" />
+    <bpmn:userTask id="Task_ViewResult" name="Consultar resultado privado" />
+    <bpmn:userTask id="Task_RequestExport" name="Pedir exportação temporal autorizada" />
+    <bpmn:serviceTask id="Task_QueueExport" name="Enfileirar exportação" />
+    <bpmn:serviceTask id="Task_GenerateExport" name="Gerar snapshot, formatos e pacote" />
+    <bpmn:endEvent id="End_Program53" name="Ciclo reproduzível e auditado" />
+
+    <bpmn:sequenceFlow id="Flow_01" sourceRef="Start_Program53" targetRef="Task_SubmitApplication" />
+    <bpmn:sequenceFlow id="Flow_02" sourceRef="Task_SubmitApplication" targetRef="Task_ProgressiveReview" />
+    <bpmn:sequenceFlow id="Flow_03" sourceRef="Task_ProgressiveReview" targetRef="Task_CheckReadiness" />
+    <bpmn:sequenceFlow id="Flow_04" sourceRef="Task_CheckReadiness" targetRef="Task_PreviewBatch" />
+    <bpmn:sequenceFlow id="Flow_05" sourceRef="Task_PreviewBatch" targetRef="Task_SealBatch" />
+    <bpmn:sequenceFlow id="Flow_06" sourceRef="Task_SealBatch" targetRef="Task_Publish" />
+    <bpmn:sequenceFlow id="Flow_07" sourceRef="Task_Publish" targetRef="Task_QueueNotifications" />
+    <bpmn:sequenceFlow id="Flow_08" sourceRef="Task_QueueNotifications" targetRef="Task_DeliverNotifications" />
+    <bpmn:sequenceFlow id="Flow_09" sourceRef="Task_DeliverNotifications" targetRef="Gateway_CorrectionRequired" />
+    <bpmn:sequenceFlow id="Flow_10_yes" name="Sim" sourceRef="Gateway_CorrectionRequired" targetRef="Task_OpenCorrection">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">correction_required</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_10_no" name="Não" sourceRef="Gateway_CorrectionRequired" targetRef="Task_ViewResult">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">complete_pending_decision</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Task_OpenCorrection" targetRef="Task_AnswerCorrection" />
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_AnswerCorrection" targetRef="Gateway_ResponseReceived" />
+    <bpmn:sequenceFlow id="Flow_13_yes" name="Sim" sourceRef="Gateway_ResponseReceived" targetRef="Task_Revalidate">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">submitted</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_13_no" name="Não" sourceRef="Gateway_ResponseReceived" targetRef="Task_ExpireCorrection">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">expired</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="Task_Revalidate" targetRef="Task_SealRevalidation" />
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="Task_SealRevalidation" targetRef="Task_PublishFinal" />
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="Task_PublishFinal" targetRef="Task_ViewResult" />
+    <bpmn:sequenceFlow id="Flow_17" sourceRef="Task_ExpireCorrection" targetRef="Task_ViewResult" />
+    <bpmn:sequenceFlow id="Flow_18" sourceRef="Task_ViewResult" targetRef="Task_RequestExport" />
+    <bpmn:sequenceFlow id="Flow_19" sourceRef="Task_RequestExport" targetRef="Task_QueueExport" />
+    <bpmn:sequenceFlow id="Flow_20" sourceRef="Task_QueueExport" targetRef="Task_GenerateExport" />
+    <bpmn:sequenceFlow id="Flow_21" sourceRef="Task_GenerateExport" targetRef="End_Program53" />
+  </bpmn:process>
+</bpmn:definitions>

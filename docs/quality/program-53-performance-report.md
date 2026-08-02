@@ -89,3 +89,19 @@ Hashes dos pacotes observados:
   retry do Bloco C.
 - Tempos não são comparáveis entre hardware diferente.
 - O benchmark não contém PII nem documentos binários.
+
+## Hardening funcional associado
+
+A consolidação final do seeder expôs um caso real de documentos repetíveis:
+submissions de membro/rendimento possuem frequentemente uma ligação ampla à
+candidatura e uma ligação específica ao alvo. Os snapshots de lote e de estado
+atual passaram a usar `DocumentSubmissionContextResolver` e a carregar
+`required_for`, eliminando chaves temporais ambíguas sem aumentar a memória nem
+alterar os writers. A regressão dirigida passou com 15 testes e 144 asserções;
+PHPStan dirigido terminou com zero erros.
+
+## Gate de produção
+
+Os resultados SQLite comprovam streaming e budgets do harness. O deploy exige
+repetir o smoke/EXPLAIN, queue e concorrência na versão MySQL/MariaDB e hardware
+do ambiente alvo, com workers assíncronos e storage privado reais.
