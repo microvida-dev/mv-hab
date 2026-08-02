@@ -46,9 +46,10 @@ classificacao tipada de falhas e health check read-only. Sem dependencia externa
 
 ## 7. Harness de benchmark
 
-Previsto o comando `program53:benchmark`, com base e storage isolados, seed
-deterministico, queue assincrona e relatorios JSON/Markdown. O comando recusa
-producao e bases persistentes nao reconhecidas como benchmark/teste.
+Implementado o comando `program53:benchmark`, com base SQLite e storage isolados,
+seed deterministico, queue persistente `database`, relatórios JSON/Markdown e
+limpeza segura. O comando recusa produção, paths fora de `storage/qa`, volumes
+fora do limite e zero workers.
 
 ## 8. Datasets
 
@@ -59,18 +60,18 @@ publicados. As percentagens sao parametros tecnicos, nao regras municipais.
 
 ## 9. Cenario 1.000
 
-Planeado como smoke operacional completo e validacao de todos os formatos.
-Resultado ainda nao medido no Bloco A.
+PASS: 1.000 candidaturas, 3.840 linhas, 3,327 s, 38.273.024 bytes de
+peak memory, 66 queries e pacote de 739.586 bytes.
 
 ## 10. Cenario 10.000
 
-Planeado para validar chunking, oito analistas, queue, memoria e comparacao de
-snapshots. Resultado ainda nao medido no Bloco A.
+PASS: 10.000 candidaturas, 38.487 linhas, 32,449 s, 38.273.024 bytes de
+peak memory, 259 queries e pacote de 7.071.311 bytes.
 
 ## 11. Cenario 50.000
 
-Planeado como hard gate de streaming, pacote ZIP, publicacao, notificacoes,
-retencao, recuperacao e ausencia de OOM. Resultado ainda nao medido no Bloco A.
+PASS: 50.000 candidaturas, 192.615 linhas, 179,258 s, 38.273.024 bytes
+de peak memory, 1.059 queries e pacote de 35.211.923 bytes. Sem OOM.
 
 ## 12. Hardware e ambiente
 
@@ -80,29 +81,30 @@ ambiente. O espaco reduzido obriga a limpeza de cada cenario.
 
 ## 13. Memoria
 
-Budget tecnico: limite explicito igual ao menor valor operacional entre o CI e
-512 MiB; no ambiente local a configuracao PHP observada e 256 MiB. O gate e
-concluir 50.000 sem colecoes integrais nem OOM.
+Budget técnico: menor valor entre CI e 512 MiB. Os três cenários foram executados
+com 256 MiB e mantiveram peak constante de 38,3 MiB, confirmando streaming.
 
 ## 14. Tempos
 
-Nao existe SLA legal ou contratual definido nesta sprint. Duracoes por fase,
-queue wait e throughput serao apenas guardrails de engenharia calibrados.
+Não existe SLA legal ou contratual. No cenário 50.000: dataset 1,207 s, revisão
+0,176 s, selagem 0,111 s, publicação 0,440 s, snapshot 3,434 s e package com
+quatro formatos 173,601 s.
 
 ## 15. Throughput
 
-Sera medido em candidaturas/segundo e linhas/segundo, sem hard gate temporal
-antes de existir baseline reproduzivel no mesmo hardware.
+Observado entre 278,928 e 308,177 candidaturas/s e entre 1.088,005 e 1.197,403
+linhas exportadas/s. É baseline local, não hard gate portátil.
 
 ## 16. Queries
 
-Serão contabilizadas por fase. O gate e proporcionalidade por chunks e ausencia
-de queries por relacao/candidatura nas operacoes de leitura massiva.
+Foram contabilizadas 66/259/1.059 queries. O crescimento é proporcional aos
+chunks de 50 e não ao número de linhas dos writers, que leem NDJSON.
 
 ## 17. Indices
 
-Qualquer indice novo exige `EXPLAIN` antes/depois e uma query real que o
-justifique. O Bloco A nao introduz migrations.
+O `EXPLAIN QUERY PLAN` confirmou os índices de scope, fila de analista,
+publicação/resultados e queue. O ajuste ocorreu apenas no schema sintético; não
+foi necessária migration de produção no Bloco B.
 
 ## 18. Multiplos analistas
 
