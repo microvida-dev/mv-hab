@@ -375,6 +375,22 @@ return new class extends Migration
         Schema::dropIfExists('maintenance_assignments');
         Schema::dropIfExists('maintenance_request_status_histories');
 
+        $hasCanonicalHousingUnitIndex = collect(
+            Schema::getIndexes('maintenance_requests'),
+        )->contains(
+            fn (array $index): bool => ($index['name'] ?? null)
+                === 'maintenance_requests_housing_unit_id_foreign',
+        );
+
+        if (! $hasCanonicalHousingUnitIndex) {
+            Schema::table('maintenance_requests', function (Blueprint $table): void {
+                $table->index(
+                    'housing_unit_id',
+                    'maintenance_requests_housing_unit_id_foreign',
+                );
+            });
+        }
+
         Schema::table('maintenance_requests', function (Blueprint $table) {
             $table->dropForeign('maint_req_contract_fk');
             $table->dropForeign('maint_req_application_fk');
