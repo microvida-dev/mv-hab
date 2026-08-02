@@ -36,10 +36,13 @@ use App\Models\RentRuleSet;
 use App\Models\RequiredDocument;
 use App\Models\TypologyAdequacyRule;
 use App\Models\User;
+use App\Services\Documents\RequiredDocumentResolver;
 use Carbon\CarbonImmutable;
 use Database\Seeders\AffordableRentRegulatoryProfileSeeder;
 use Database\Seeders\Demo\MunicipalApplicationDemoAccessSeeder;
 use Database\Seeders\Demo\MunicipalApplicationDemoCatalogSeeder;
+use Database\Seeders\DocumentTypeSeeder;
+use Database\Seeders\RequiredDocumentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -313,6 +316,11 @@ class MunicipalApplicationDemoCatalogSeederTest extends TestCase
             'ALC-DEMO-APP-T2-02' => '400.00',
             'ALC-DEMO-APP-T2-03' => '410.00',
         ];
+        $expectedReferences = [
+            'ALC-DEMO-APP-T2-01' => 'ALC-DEMO-APP-T2-CENTRO',
+            'ALC-DEMO-APP-T2-02' => 'ALC-DEMO-APP-T2-MONSANTO',
+            'ALC-DEMO-APP-T2-03' => 'ALC-DEMO-APP-T2-MINDE',
+        ];
 
         $units = HousingUnit::query()
             ->where('municipality_id', $municipality->id)
@@ -331,6 +339,10 @@ class MunicipalApplicationDemoCatalogSeederTest extends TestCase
             $this->assertSame(
                 $expectedRents[$unit->code],
                 $unit->monthly_rent,
+            );
+            $this->assertSame(
+                $expectedReferences[$unit->code],
+                $unit->public_reference,
             );
             $this->assertSame(
                 HousingUnitStatus::Available,
@@ -401,6 +413,34 @@ class MunicipalApplicationDemoCatalogSeederTest extends TestCase
         $this->assertSame(2, $typologyRule->min_bedrooms);
         $this->assertSame(2, $typologyRule->max_bedrooms);
         $this->assertTrue($typologyRule->is_active);
+    }
+
+    public function test_seeder_isolates_demo_checklist_from_inherited_catalogue_requirements(): void
+    {
+        $this->seed(DocumentTypeSeeder::class);
+        $this->seed(RequiredDocumentSeeder::class);
+        $this->seedDemo();
+
+        $contest = $this->demoContest();
+        $requiredCodes = app(RequiredDocumentResolver::class)
+            ->resolve($contest->program_id, $contest->id)
+            ->where('is_required', true)
+            ->map(
+                static fn (RequiredDocument $requirement): ?string => $requirement->documentType?->code,
+            )
+            ->filter()
+            ->sort()
+            ->values()
+            ->all();
+
+        $this->assertSame([
+            'alcanena_demo_identificacao_residencia',
+            'alcanena_demo_nif',
+            'alcanena_demo_nota_liquidacao_irs',
+            'alcanena_demo_situacao_regular_at',
+            'alcanena_demo_situacao_regular_iss',
+            'recibos_vencimento',
+        ], $requiredCodes);
     }
 
     public function test_preference_and_rent_configuration_is_demo_only_and_fail_closed(): void

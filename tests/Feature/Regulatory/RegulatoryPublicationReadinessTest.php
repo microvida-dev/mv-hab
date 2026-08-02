@@ -295,6 +295,8 @@ class RegulatoryPublicationReadinessTest extends TestCase
                 'program_id' => $program->id,
                 'contest_id' => null,
                 'regulatory_profile_id' => $profile->id,
+                'starts_at' => $startsAt,
+                'ends_at' => null,
             ]);
             $rentRuleSet = RentRuleSet::factory()->create([
                 'program_id' => $program->id,

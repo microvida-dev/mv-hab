@@ -9,6 +9,7 @@ use App\Enums\CorrectionRequestStatus;
 use App\Enums\CorrectionResponseStatus;
 use App\Enums\DocumentDossierStatus;
 use App\Enums\DocumentStatus;
+use App\Enums\FeatureKey;
 use App\Enums\VisitStatus;
 use App\Models\AdministrativeProcess;
 use App\Models\Application;
@@ -19,8 +20,11 @@ use App\Models\CorrectionResponse;
 use App\Models\DocumentDossier;
 use App\Models\HousingVisit;
 use App\Models\Municipality;
+use App\Models\MunicipalityFeatureEntitlement;
+use App\Models\PlatformOperatorAssignment;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Access\MunicipalRoleTemplateRegistry;
 use Database\Seeders\Demo\MunicipalApplicationDemoAccessSeeder;
 use Database\Seeders\Demo\MunicipalApplicationDemoCatalogSeeder;
 use Illuminate\Database\Eloquent\Model;
@@ -38,6 +42,7 @@ final class MunicipalApplicationDemoSummaryService
         MunicipalApplicationDemoAccessSeeder::ANALYST_EMAIL => MunicipalApplicationDemoAccessSeeder::ANALYST_ROLE_NAME,
         MunicipalApplicationDemoAccessSeeder::VISIT_MANAGER_EMAIL => MunicipalApplicationDemoAccessSeeder::VISIT_MANAGER_ROLE_NAME,
         MunicipalApplicationDemoAccessSeeder::EXPORTER_EMAIL => MunicipalApplicationDemoAccessSeeder::EXPORTER_ROLE_NAME,
+        MunicipalApplicationDemoAccessSeeder::ANALYST_EXPORT_EMAIL => MunicipalApplicationDemoAccessSeeder::ANALYST_EXPORT_ROLE_NAME,
         MunicipalApplicationDemoAccessSeeder::CANDIDATE_EMAIL => 'candidate',
     ];
 
@@ -105,8 +110,8 @@ final class MunicipalApplicationDemoSummaryService
         );
 
         $expectedCounts = [
-            'municipal_roles' => 4,
-            'demo_users' => 5,
+            'municipal_roles' => 5,
+            'demo_users' => 6,
             'housing_units' => 3,
             'contest_housing_units' => 3,
             'applications' => 1,
@@ -247,6 +252,7 @@ final class MunicipalApplicationDemoSummaryService
         $accounts = $this->accounts(
             municipalityId: (int) $municipality->id,
         );
+        $program53Profile = $this->program53Profile($municipality);
 
         return [
             'demo_notice' => 'Dados fictícios e sem efeitos administrativos.',
@@ -273,6 +279,7 @@ final class MunicipalApplicationDemoSummaryService
             ],
             'counts' => $counts,
             'accounts' => $accounts,
+            'program53_profile' => $program53Profile,
             'files' => [
                 'reports' => $reportPaths,
                 'document_dossier' => $dossierPath,
@@ -467,7 +474,7 @@ final class MunicipalApplicationDemoSummaryService
 
         if ($users->count() !== count(self::ACCOUNT_ROLES)) {
             throw new LogicException(
-                'As cinco contas demo não estão disponíveis.',
+                'As seis contas demo não estão disponíveis.',
             );
         }
 
@@ -505,5 +512,149 @@ final class MunicipalApplicationDemoSummaryService
         }
 
         return $accounts;
+    }
+
+    /**
+     * @return array{
+     *     email: string,
+     *     role: string,
+     *     template_key: string,
+     *     template_version: string,
+     *     template_fingerprint: string,
+     *     mfa_required: bool,
+     *     entitlements: list<string>,
+     *     allowed_operations: list<string>,
+     *     denied_operations: list<string>,
+     *     global_scope: bool
+     * }
+     */
+    private function program53Profile(Municipality $municipality): array
+    {
+        $user = User::query()
+            ->where('municipality_id', $municipality->id)
+            ->where(
+                'email',
+                MunicipalApplicationDemoAccessSeeder::ANALYST_EXPORT_EMAIL,
+            )
+            ->with('roles.permissions')
+            ->sole();
+        $role = $user->roles->sole();
+        $template = app(MunicipalRoleTemplateRegistry::class)
+            ->resolve('analista-candidaturas-exportacao');
+
+        if (
+            $role->template_key !== $template['key']
+            || $role->template_version !== $template['version']
+            || $role->template_fingerprint !== $template['fingerprint']
+            || $role->scope !== 'municipal'
+            || $role->is_system
+        ) {
+            throw new LogicException(
+                'O perfil combinado demo não corresponde ao template municipal versionado.',
+            );
+        }
+
+        $permissions = $role->permissions
+            ->pluck('name')
+            ->map(static fn ($name): string => (string) $name)
+            ->sort()
+            ->values()
+            ->all();
+        $expectedPermissions = $template['permissions'];
+        sort($expectedPermissions, SORT_STRING);
+
+        if ($permissions !== $expectedPermissions) {
+            throw new LogicException(
+                'A matriz efetiva do perfil combinado demo diverge do template.',
+            );
+        }
+
+        $allowed = [
+            'administrative_processes.view',
+            'documents.approve',
+            'documents.reject',
+            'administrative_processes.update',
+            'administrative_processes.publish',
+            'applications.export',
+            'reports.export',
+            'reports.audit',
+        ];
+        $denied = [
+            'reports.export_sensitive',
+            'roles.view',
+            'users.view',
+            'platform_operators.view',
+            'finance.view',
+            'contracts.view',
+            'rgpd.retention.view',
+            '*',
+        ];
+
+        foreach ($allowed as $permission) {
+            if (! $user->hasPermission($permission)) {
+                throw new LogicException(
+                    "O perfil combinado demo não possui {$permission}.",
+                );
+            }
+        }
+
+        foreach ($denied as $permission) {
+            if ($user->hasPermission($permission)) {
+                throw new LogicException(
+                    "O perfil combinado demo possui indevidamente {$permission}.",
+                );
+            }
+        }
+
+        if (! $user->mfa_required) {
+            throw new LogicException(
+                'O perfil combinado demo deve exigir MFA.',
+            );
+        }
+
+        if (PlatformOperatorAssignment::query()
+            ->where('user_id', $user->id)
+            ->whereNull('revoked_at')
+            ->exists()) {
+            throw new LogicException(
+                'O perfil combinado demo não pode possuir scope global.',
+            );
+        }
+
+        $entitlements = MunicipalityFeatureEntitlement::query()
+            ->where('municipality_id', $municipality->id)
+            ->where('enabled', true)
+            ->pluck('feature_key')
+            ->map(static fn ($feature): string => $feature instanceof FeatureKey
+                ? $feature->value
+                : (string) $feature)
+            ->sort()
+            ->values()
+            ->all();
+        $expectedEntitlements = [
+            FeatureKey::ApplicationIntake->value,
+            FeatureKey::ApplicationReview->value,
+            FeatureKey::ApplicationExport->value,
+        ];
+        sort($expectedEntitlements, SORT_STRING);
+
+        if ($entitlements !== $expectedEntitlements) {
+            throw new LogicException(
+                'O Município demo deve possuir apenas os entitlements necessários ao fluxo candidatural.',
+            );
+        }
+
+        return [
+            'email' => (string) $user->email,
+            'role' => (string) $role->name,
+            'template_key' => (string) $role->template_key,
+            'template_version' => (string) $role->template_version,
+            'template_fingerprint' => (string) $role->template_fingerprint,
+            'mfa_required' => (bool) $user->mfa_required,
+            'entitlements' => $entitlements,
+            'allowed_operations' => $allowed,
+            'denied_operations' => $denied,
+            'global_scope' => false,
+        ];
     }
 }

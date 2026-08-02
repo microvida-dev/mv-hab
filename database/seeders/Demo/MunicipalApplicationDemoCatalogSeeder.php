@@ -42,6 +42,7 @@ use App\Models\RentRuleSet;
 use App\Models\RequiredDocument;
 use App\Models\TypologyAdequacyRule;
 use App\Models\User;
+use App\Services\Documents\RequiredDocumentResolver;
 use App\Services\Regulatory\MunicipalRegulatoryOverlayService;
 use App\Services\Regulatory\RegulatorySnapshotService;
 use App\Services\Regulatory\RentLimits\RentLimitTableChecksumService;
@@ -586,6 +587,54 @@ final class MunicipalApplicationDemoCatalogSeeder extends Seeder
                 'deleted_at' => null,
             ])->save();
         }
+
+        $this->suppressInheritedDocumentRequirements(
+            $program,
+            $contest,
+        );
+    }
+
+    private function suppressInheritedDocumentRequirements(
+        Program $program,
+        Contest $contest,
+    ): void {
+        $inherited = app(RequiredDocumentResolver::class)
+            ->resolve($program->id, $contest->id)
+            ->filter(
+                static fn (RequiredDocument $requirement): bool => $requirement->contest_id !== $contest->id,
+            )
+            ->values();
+
+        foreach ($inherited as $index => $requirement) {
+            $override = RequiredDocument::withTrashed()->firstOrNew([
+                'document_type_id' => $requirement->document_type_id,
+                'program_id' => $program->id,
+                'contest_id' => $contest->id,
+                'required_for' => $requirement->required_for->value,
+                'condition_key' => $requirement->condition_key,
+                'condition_operator' => $requirement
+                    ->condition_operator
+                    ->value,
+                'condition_value' => $requirement->condition_value,
+            ]);
+            $override->forceFill([
+                'is_required' => false,
+                'is_active' => true,
+                'required_submissions' => max(
+                    1,
+                    $requirement->required_submissions,
+                ),
+                'reference_period_unit' => $requirement
+                    ->reference_period_unit
+                    ?->value,
+                'requires_distinct_reference_periods' => $requirement->requires_distinct_reference_periods,
+                'reference_period_recency' => $requirement->reference_period_recency,
+                'instructions' => 'Requisito herdado não obrigatório no '
+                    .'cenário municipal fictício.',
+                'sort_order' => 1000 + $index,
+                'deleted_at' => null,
+            ])->save();
+        }
     }
 
     private function seedEligibility(
@@ -762,7 +811,7 @@ final class MunicipalApplicationDemoCatalogSeeder extends Seeder
         $units = [
             [
                 'code' => 'ALC-DEMO-APP-T2-01',
-                'reference' => 'ALC-DEMO-T2-CENTRO',
+                'reference' => 'ALC-DEMO-APP-T2-CENTRO',
                 'title' => 'T2 Centro de Alcanena — Demo',
                 'slug' => 't2-centro-alcanena-demo-candidaturas',
                 'rent' => '390.00',
@@ -779,7 +828,7 @@ final class MunicipalApplicationDemoCatalogSeeder extends Seeder
             ],
             [
                 'code' => 'ALC-DEMO-APP-T2-02',
-                'reference' => 'ALC-DEMO-T2-MONSANTO',
+                'reference' => 'ALC-DEMO-APP-T2-MONSANTO',
                 'title' => 'T2 Monsanto — Demo',
                 'slug' => 't2-monsanto-demo-candidaturas',
                 'rent' => '400.00',
@@ -796,7 +845,7 @@ final class MunicipalApplicationDemoCatalogSeeder extends Seeder
             ],
             [
                 'code' => 'ALC-DEMO-APP-T2-03',
-                'reference' => 'ALC-DEMO-T2-MINDE',
+                'reference' => 'ALC-DEMO-APP-T2-MINDE',
                 'title' => 'T2 Minde — Demo',
                 'slug' => 't2-minde-demo-candidaturas',
                 'rent' => '410.00',

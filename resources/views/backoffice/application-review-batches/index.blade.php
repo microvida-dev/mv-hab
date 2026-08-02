@@ -50,10 +50,14 @@
                         </div>
                     </article>
                 @empty
-                    <x-mv.empty-state
-                        title="Sem concursos disponíveis"
-                        description="Não existem concursos acessíveis para preparar lotes de revisão."
-                    />
+                    <div class="mv-surface p-8 text-center lg:col-span-2" role="status">
+                        <h2 class="text-base font-semibold text-ink-900">
+                            Sem concursos disponíveis
+                        </h2>
+                        <p class="mt-2 text-sm text-ink-500">
+                            Não existem concursos acessíveis para preparar lotes de revisão.
+                        </p>
+                    </div>
                 @endforelse
             </section>
         </div>

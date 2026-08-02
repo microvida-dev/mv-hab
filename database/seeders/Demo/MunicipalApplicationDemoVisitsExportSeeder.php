@@ -699,7 +699,7 @@ final class MunicipalApplicationDemoVisitsExportSeeder extends Seeder
                 ->generate(
                     $application,
                     $exporter,
-                    [],
+                    ['required_only' => true],
                 );
         }
 

@@ -32,6 +32,9 @@ final class MunicipalApplicationDemoAccessSeeder extends Seeder
     public const EXPORTER_ROLE_NAME =
         'demo_alcanena_exportador_candidaturas';
 
+    public const ANALYST_EXPORT_ROLE_NAME =
+        'demo_alcanena_analista_candidaturas_exportacao';
+
     public const OPERATOR_EMAIL =
         'operador.recolha.demo@mvhab.local';
 
@@ -43,6 +46,9 @@ final class MunicipalApplicationDemoAccessSeeder extends Seeder
 
     public const EXPORTER_EMAIL =
         'exportador.candidaturas.demo@mvhab.local';
+
+    public const ANALYST_EXPORT_EMAIL =
+        'analista.exportacao.demo@mvhab.local';
 
     public const CANDIDATE_EMAIL =
         'joao.ferreira.demo@mvhab.local';
@@ -86,7 +92,7 @@ final class MunicipalApplicationDemoAccessSeeder extends Seeder
 
             $this->enableEntitlements(
                 $municipality,
-                $users['analyst'],
+                $users['analyst_export'],
             );
         });
     }
@@ -127,7 +133,8 @@ final class MunicipalApplicationDemoAccessSeeder extends Seeder
      *     operator: Role,
      *     analyst: Role,
      *     visit_manager: Role,
-     *     exporter: Role
+     *     exporter: Role,
+     *     analyst_export: Role
      * }
      */
     private function upsertMunicipalRoles(
@@ -153,6 +160,11 @@ final class MunicipalApplicationDemoAccessSeeder extends Seeder
                 $municipality,
                 self::EXPORTER_ROLE_NAME,
                 'exportador-candidaturas',
+            ),
+            'analyst_export' => $this->upsertMunicipalRole(
+                $municipality,
+                self::ANALYST_EXPORT_ROLE_NAME,
+                'analista-candidaturas-exportacao',
             ),
         ];
     }
@@ -183,6 +195,9 @@ final class MunicipalApplicationDemoAccessSeeder extends Seeder
 
         $role->forceFill([
             'municipality_id' => $municipality->getKey(),
+            'template_key' => $template['key'],
+            'template_version' => $template['version'],
+            'template_fingerprint' => $template['fingerprint'],
             'label' => $template['label'],
             'description' => $template['description'],
             'scope' => 'municipal',
@@ -202,13 +217,15 @@ final class MunicipalApplicationDemoAccessSeeder extends Seeder
      *     operator: Role,
      *     analyst: Role,
      *     visit_manager: Role,
-     *     exporter: Role
+     *     exporter: Role,
+     *     analyst_export: Role
      * } $roles
      * @return array{
      *     operator: User,
      *     analyst: User,
      *     visit_manager: User,
      *     exporter: User,
+     *     analyst_export: User,
      *     candidate: User
      * }
      */
@@ -253,6 +270,12 @@ final class MunicipalApplicationDemoAccessSeeder extends Seeder
                 'name' => 'Exportador de Candidaturas Demo',
                 'email' => self::EXPORTER_EMAIL,
                 'role' => $roles['exporter'],
+                'mfa_required' => true,
+            ],
+            'analyst_export' => [
+                'name' => 'Analista de Candidaturas e Exportação Demo',
+                'email' => self::ANALYST_EXPORT_EMAIL,
+                'role' => $roles['analyst_export'],
                 'mfa_required' => true,
             ],
             'candidate' => [
@@ -323,6 +346,7 @@ final class MunicipalApplicationDemoAccessSeeder extends Seeder
          *     analyst: User,
          *     visit_manager: User,
          *     exporter: User,
+         *     analyst_export: User,
          *     candidate: User
          * } $users
          */

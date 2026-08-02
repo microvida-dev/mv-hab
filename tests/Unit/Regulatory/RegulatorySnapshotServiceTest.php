@@ -73,7 +73,10 @@ class RegulatorySnapshotServiceTest extends TestCase
         [$program, $profile, $actor] = $this->context();
         $ruleSet = EligibilityRuleSet::factory()->active()->create([
             'program_id' => $program->id,
+            'contest_id' => null,
             'regulatory_profile_id' => $profile->id,
+            'starts_at' => '2026-01-01 00:00:00',
+            'ends_at' => '2026-12-31 23:59:59',
         ]);
         $snapshot = app(RegulatorySnapshotService::class)->attach(
             $program,

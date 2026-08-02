@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    private const MUNICIPALITY_INDEX =
+        'roles_municipality_lookup_index';
+
     public function up(): void
     {
         Schema::table('roles', function (Blueprint $table): void {
@@ -19,6 +22,8 @@ return new class extends Migration
                 'roles_municipality_template_unique',
             );
         });
+
+        $this->ensureMunicipalityIndex();
     }
 
     public function down(): void
@@ -35,6 +40,8 @@ return new class extends Migration
             );
         }
 
+        $this->ensureMunicipalityIndex();
+
         Schema::table('roles', function (Blueprint $table): void {
             $table->dropUnique('roles_municipality_template_unique');
             $table->dropColumn([
@@ -42,6 +49,20 @@ return new class extends Migration
                 'template_version',
                 'template_fingerprint',
             ]);
+        });
+    }
+
+    private function ensureMunicipalityIndex(): void
+    {
+        if (Schema::hasIndex('roles', self::MUNICIPALITY_INDEX)) {
+            return;
+        }
+
+        Schema::table('roles', function (Blueprint $table): void {
+            $table->index(
+                'municipality_id',
+                self::MUNICIPALITY_INDEX,
+            );
         });
     }
 };

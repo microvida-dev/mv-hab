@@ -74,6 +74,13 @@ final class DocumentDossierBuilder
             ->filter(
                 fn (mixed $item): bool => is_array($item),
             )
+            ->when(
+                ($options['required_only'] ?? false) === true,
+                static fn (Collection $items): Collection => $items
+                    ->filter(
+                        static fn (array $item): bool => ($item['is_required'] ?? false) === true,
+                    ),
+            )
             ->values();
 
         /** @var Collection<int, DocumentSubmission> $formalSubmissions */

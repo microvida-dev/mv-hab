@@ -5,6 +5,8 @@ namespace Tests\Feature\Console;
 use App\Console\Commands\SeedMunicipalApplicationDemo;
 use App\Services\Demo\MunicipalApplicationDemoSummaryService;
 use Carbon\CarbonImmutable;
+use Database\Seeders\DocumentTypeSeeder;
+use Database\Seeders\RequiredDocumentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
@@ -149,8 +151,24 @@ class SeedMunicipalApplicationDemoCommandTest extends TestCase
             data_get($payload, 'application.status'),
         );
         $this->assertCount(
-            5,
+            6,
             data_get($payload, 'accounts', []),
+        );
+        $this->assertSame(
+            'analista-candidaturas-exportacao',
+            data_get($payload, 'program53_profile.template_key'),
+        );
+        $this->assertTrue((bool) data_get(
+            $payload,
+            'program53_profile.mfa_required',
+        ));
+        $this->assertFalse((bool) data_get(
+            $payload,
+            'program53_profile.global_scope',
+        ));
+        $this->assertContains(
+            'reports.export_sensitive',
+            data_get($payload, 'program53_profile.denied_operations', []),
         );
         $this->assertSame(
             0,
@@ -261,6 +279,36 @@ class SeedMunicipalApplicationDemoCommandTest extends TestCase
         $this->assertDatabaseCount('application_reports', 2);
         $this->assertDatabaseCount('document_dossiers', 1);
         $this->assertDatabaseCount('document_dossier_items', 15);
+        $this->assertDatabaseHas('users', [
+            'email' => 'analista.exportacao.demo@mvhab.local',
+            'municipality_id' => data_get($second, 'municipality.id'),
+            'status' => 'active',
+            'mfa_required' => true,
+        ]);
+
+        Queue::assertNothingPushed();
+    }
+
+    public function test_command_isolates_the_demo_from_an_installed_global_document_catalogue(): void
+    {
+        $this->seed(DocumentTypeSeeder::class);
+        $this->seed(RequiredDocumentSeeder::class);
+
+        $this->artisan(
+            'mvhab:demo:municipal-application',
+            ['--force' => true],
+        )->assertSuccessful();
+
+        $this->artisan(
+            'mvhab:demo:municipal-application',
+            ['--verify-only' => true],
+        )->assertSuccessful();
+
+        $this->assertDatabaseCount('document_submissions', 15);
+        $this->assertDatabaseCount('document_dossier_items', 15);
+        $this->assertDatabaseMissing('document_dossier_items', [
+            'is_required' => false,
+        ]);
 
         Queue::assertNothingPushed();
     }

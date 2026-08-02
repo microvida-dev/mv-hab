@@ -134,9 +134,14 @@ class MunicipalApplicationDemoAccessSeederTest extends TestCase
             MunicipalApplicationDemoAccessSeeder::EXPORTER_ROLE_NAME,
             'exportador-candidaturas',
         );
+        $this->assertRoleMatchesTemplate(
+            $municipality,
+            MunicipalApplicationDemoAccessSeeder::ANALYST_EXPORT_ROLE_NAME,
+            'analista-candidaturas-exportacao',
+        );
 
         $this->assertSame(
-            4,
+            5,
             Role::query()
                 ->where('municipality_id', $municipality->id)
                 ->where('scope', 'municipal')
@@ -228,6 +233,12 @@ class MunicipalApplicationDemoAccessSeederTest extends TestCase
                 MunicipalApplicationDemoAccessSeeder::EXPORTER_EMAIL,
             )
             ->sole();
+        $analystExport = User::query()
+            ->where(
+                'email',
+                MunicipalApplicationDemoAccessSeeder::ANALYST_EXPORT_EMAIL,
+            )
+            ->sole();
 
         $this->assertFalse(
             $operator->hasPermission('documents.approve'),
@@ -276,6 +287,22 @@ class MunicipalApplicationDemoAccessSeederTest extends TestCase
         $this->assertFalse(
             $exporter->hasPermission('visits.view'),
         );
+
+        $this->assertTrue(
+            $analystExport->hasPermission('documents.approve'),
+        );
+        $this->assertTrue(
+            $analystExport->hasPermission('applications.export'),
+        );
+        $this->assertTrue(
+            $analystExport->hasPermission('reports.export'),
+        );
+        $this->assertFalse(
+            $analystExport->hasPermission('reports.export_sensitive'),
+        );
+        $this->assertFalse(
+            $analystExport->hasPermission('roles.view'),
+        );
     }
 
     public function test_seeder_enables_only_the_required_application_features(): void
@@ -311,10 +338,10 @@ class MunicipalApplicationDemoAccessSeederTest extends TestCase
                 ->count(),
         );
 
-        $analyst = User::query()
+        $analystExport = User::query()
             ->where(
                 'email',
-                MunicipalApplicationDemoAccessSeeder::ANALYST_EMAIL,
+                MunicipalApplicationDemoAccessSeeder::ANALYST_EXPORT_EMAIL,
             )
             ->sole();
 
@@ -329,7 +356,7 @@ class MunicipalApplicationDemoAccessSeederTest extends TestCase
         $this->assertCount(3, $events);
         $this->assertTrue(
             $events->every(
-                fn (AuditEvent $event): bool => $event->user_id === $analyst->id,
+                fn (AuditEvent $event): bool => $event->user_id === $analystExport->id,
             ),
         );
     }
@@ -431,7 +458,7 @@ class MunicipalApplicationDemoAccessSeederTest extends TestCase
         $roleIds = array_values($firstRoleIds);
 
         $this->assertSame(
-            5,
+            6,
             DB::table('role_user')
                 ->whereIn('user_id', $userIds)
                 ->count(),
@@ -510,6 +537,12 @@ class MunicipalApplicationDemoAccessSeederTest extends TestCase
         $this->assertFalse($role->is_system);
         $this->assertTrue($role->is_active);
         $this->assertTrue($role->isMunicipalCustom());
+        $this->assertSame($template['key'], $role->template_key);
+        $this->assertSame($template['version'], $role->template_version);
+        $this->assertSame(
+            $template['fingerprint'],
+            $role->template_fingerprint,
+        );
 
         $this->assertEqualsCanonicalizing(
             $template['permissions'],
@@ -554,6 +587,10 @@ class MunicipalApplicationDemoAccessSeederTest extends TestCase
                 'role' => MunicipalApplicationDemoAccessSeeder::EXPORTER_ROLE_NAME,
                 'mfa_required' => true,
             ],
+            MunicipalApplicationDemoAccessSeeder::ANALYST_EXPORT_EMAIL => [
+                'role' => MunicipalApplicationDemoAccessSeeder::ANALYST_EXPORT_ROLE_NAME,
+                'mfa_required' => true,
+            ],
             MunicipalApplicationDemoAccessSeeder::CANDIDATE_EMAIL => [
                 'role' => 'candidate',
                 'mfa_required' => false,
@@ -571,6 +608,7 @@ class MunicipalApplicationDemoAccessSeederTest extends TestCase
             MunicipalApplicationDemoAccessSeeder::ANALYST_ROLE_NAME,
             MunicipalApplicationDemoAccessSeeder::VISIT_MANAGER_ROLE_NAME,
             MunicipalApplicationDemoAccessSeeder::EXPORTER_ROLE_NAME,
+            MunicipalApplicationDemoAccessSeeder::ANALYST_EXPORT_ROLE_NAME,
         ];
     }
 }
