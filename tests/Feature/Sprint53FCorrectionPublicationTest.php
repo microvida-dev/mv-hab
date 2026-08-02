@@ -26,6 +26,7 @@ use App\Services\Dashboard\Timeline\Providers\CorrectionRequestTimelineProvider;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -49,8 +50,20 @@ class Sprint53FCorrectionPublicationTest extends TestCase
         Queue::fake();
     }
 
+    protected function tearDown(): void
+    {
+        $this->travelBack();
+
+        parent::tearDown();
+    }
+
     public function test_accepted_revalidation_is_published_projected_and_notified_once(): void
     {
+        $this->travelTo(Carbon::parse(
+            '2026-08-03 00:15:00',
+            (string) config('app.timezone', 'Europe/Lisbon'),
+        ));
+
         [$request, $operator, $batch] = $this->sealedRequest(
             CorrectionResponseReviewResult::Accepted,
         );

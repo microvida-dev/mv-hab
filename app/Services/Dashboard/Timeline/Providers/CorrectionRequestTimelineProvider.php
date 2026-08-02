@@ -353,12 +353,31 @@ class CorrectionRequestTimelineProvider extends BaseTimelineProvider
         string $stage,
     ): ?Carbon {
         return match ($stage) {
-            'resolved', 'rejected' => $request->revalidation_projected_at,
+            'resolved', 'rejected' => $this->utcTimestampInApplicationTimezone(
+                $request,
+                'revalidation_projected_at',
+            ),
             'published' => $request->revalidationBatch?->publication?->published_at,
             'sealed' => $request->revalidationBatch?->sealed_at,
             'started', 'ready' => $request->revalidation_started_at,
             'submitted' => $request->submitted_at,
             default => $request->expired_at ?? $request->response_deadline_at,
         };
+    }
+
+    private function utcTimestampInApplicationTimezone(
+        CorrectionRequest $request,
+        string $attribute,
+    ): ?Carbon {
+        $rawValue = $request->getRawOriginal($attribute);
+
+        if (! is_string($rawValue) || $rawValue === '') {
+            return null;
+        }
+
+        return Carbon::parse($rawValue, 'UTC')
+            ->setTimezone(
+                (string) config('app.timezone', 'UTC'),
+            );
     }
 }
