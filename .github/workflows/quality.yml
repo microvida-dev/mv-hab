@@ -17,14 +17,17 @@ jobs:
       APP_ENV: testing
       APP_DEBUG: true
       APP_URL: http://localhost
-      CACHE_STORE: file
-      CACHE_DRIVER: file
-      SESSION_DRIVER: file
+
+      CACHE_STORE: array
+      CACHE_DRIVER: array
+      SESSION_DRIVER: array
       QUEUE_CONNECTION: sync
+
       DB_CONNECTION: sqlite
-      DB_DATABASE: database/database.sqlite
-      MAIL_MAILER: log
-      BROADCAST_CONNECTION: log
+      DB_DATABASE: ":memory:"
+
+      MAIL_MAILER: array
+      BROADCAST_CONNECTION: "null"
       FILESYSTEM_DISK: local
 
     steps:
@@ -72,36 +75,57 @@ jobs:
           LOG_LEVEL=debug
 
           DB_CONNECTION=sqlite
-          DB_DATABASE=database/database.sqlite
+          DB_DATABASE=:memory:
 
-          CACHE_STORE=file
-          CACHE_DRIVER=file
-          SESSION_DRIVER=file
+          CACHE_STORE=array
+          CACHE_DRIVER=array
+          SESSION_DRIVER=array
           QUEUE_CONNECTION=sync
-          MAIL_MAILER=log
-          BROADCAST_CONNECTION=log
+          MAIL_MAILER=array
+          BROADCAST_CONNECTION=null
           FILESYSTEM_DISK=local
 
           VITE_APP_NAME="${APP_NAME}"
           ENV
 
-          rm -f bootstrap/cache/config.php bootstrap/cache/services.php bootstrap/cache/packages.php
-          mkdir -p bootstrap/cache database storage/framework/views storage/framework/cache/data storage/framework/sessions storage/logs
-          touch database/database.sqlite
+          rm -f \
+            bootstrap/cache/config.php \
+            bootstrap/cache/services.php \
+            bootstrap/cache/packages.php
+
+          mkdir -p \
+            bootstrap/cache \
+            database \
+            storage/framework/views \
+            storage/framework/cache/data \
+            storage/framework/sessions \
+            storage/logs
 
       - name: Generate application key
         run: php artisan key:generate --no-interaction
 
       - name: Clear Laravel bootstrap cache safely
         run: |
-          rm -f bootstrap/cache/config.php bootstrap/cache/services.php bootstrap/cache/packages.php
+          rm -f \
+            bootstrap/cache/config.php \
+            bootstrap/cache/services.php \
+            bootstrap/cache/packages.php
+
           php artisan config:clear
           php artisan route:clear
           php artisan view:clear
 
       - name: Debug Laravel runtime config
         run: |
-          php artisan tinker --execute="dump(config('cache.default')); dump(config('session.driver')); dump(config('queue.default')); dump(config('database.default')); dump(config('database.connections.sqlite.database'));"
+          php artisan tinker --execute="
+              dump(config('cache.default'));
+              dump(config('session.driver'));
+              dump(config('queue.default'));
+              dump(config('database.default'));
+              dump(config('database.connections.sqlite.database'));
+              dump(config('mail.default'));
+              dump(config('broadcasting.default'));
+          "
 
       - name: Check changed PHP code style
         if: github.event_name == 'pull_request'
