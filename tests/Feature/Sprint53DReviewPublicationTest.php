@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Contracts\Program53\Program53FaultInjector;
 use App\Enums\AdministrativeProcessStatus;
 use App\Enums\ApplicationReviewBatchCycle;
 use App\Enums\ApplicationReviewBatchOutcome;
@@ -9,6 +10,7 @@ use App\Enums\ApplicationReviewBatchStatus;
 use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationDeliveryStatus;
 use App\Enums\FeatureKey;
+use App\Enums\Program53FailureCode;
 use App\Models\AdministrativeProcess;
 use App\Models\ApplicationReviewBatch;
 use App\Models\ApplicationReviewBatchItem;
@@ -17,6 +19,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Administrative\ApplicationReviewPublicationService;
+use App\Services\Program53\Resilience\ControlledProgram53FaultInjector;
 use App\Services\Support\CanonicalJsonHasher;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -126,6 +129,48 @@ class Sprint53DReviewPublicationTest extends TestCase
             $result->user->email,
             $emailDelivery->destination,
         );
+    }
+
+    public function test_failure_after_publication_commit_recovers_without_duplicate_notifications(): void
+    {
+        Queue::fake();
+        [$batch, $actor] = $this->sealedBatch();
+        $preview = app(ApplicationReviewPublicationService::class)->preview(
+            $batch,
+            $actor,
+            'Publicação resiliente.',
+        );
+        $payload = [
+            'reason' => 'Publicação resiliente.',
+            'preview_token' => $preview['token'],
+        ];
+        $this->app->instance(
+            Program53FaultInjector::class,
+            new ControlledProgram53FaultInjector([
+                'after_publication_commit' => Program53FailureCode::DatabaseUnavailable,
+            ]),
+        );
+        $service = app(ApplicationReviewPublicationService::class);
+
+        try {
+            $service->publish($batch, $actor, $payload);
+            $this->fail('A falha pós-commit deveria interromper a resposta.');
+        } catch (\Throwable) {
+            $this->assertDatabaseCount('application_review_publications', 1);
+            $this->assertDatabaseCount('application_review_publication_results', 1);
+            $this->assertDatabaseCount('communication_logs', 1);
+            $this->assertDatabaseCount('official_notifications', 1);
+            $this->assertDatabaseCount('communication_deliveries', 2);
+        }
+
+        $publication = $service->publish($batch, $actor, $payload);
+
+        $this->assertDatabaseCount('application_review_publications', 1);
+        $this->assertDatabaseCount('application_review_publication_results', 1);
+        $this->assertDatabaseCount('communication_logs', 1);
+        $this->assertDatabaseCount('official_notifications', 1);
+        $this->assertDatabaseCount('communication_deliveries', 2);
+        $this->assertSame($batch->id, $publication->application_review_batch_id);
     }
 
     public function test_candidate_payload_does_not_expose_internal_snapshot_content(): void

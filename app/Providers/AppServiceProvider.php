@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Contracts\Program53\Program53FaultInjector;
+use App\Contracts\Program53\Program53MetricsRecorder;
 use App\Services\Dashboard\Timeline\TimelineAggregatorService;
 use App\Services\Dashboard\Timeline\TimelineProviderRegistry;
+use App\Services\Program53\Observability\StructuredLogProgram53MetricsRecorder;
+use App\Services\Program53\Resilience\NoopProgram53FaultInjector;
 use App\Services\Regulatory\RentLimits\PaaRentLimitProvider;
 use App\Services\Regulatory\RentLimits\RentLimitProviderRegistry;
 use App\Services\Regulatory\RentLimits\RsaaRentLimitProvider;
@@ -16,6 +20,14 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->singleton(
+            Program53FaultInjector::class,
+            NoopProgram53FaultInjector::class,
+        );
+        $this->app->singleton(
+            Program53MetricsRecorder::class,
+            StructuredLogProgram53MetricsRecorder::class,
+        );
         $this->app->singleton(TimelineProviderRegistry::class);
         $this->app->singleton(
             RentLimitProviderRegistry::class,

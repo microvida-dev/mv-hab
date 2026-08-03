@@ -2,23 +2,29 @@
 
 namespace Tests\Feature;
 
+use App\Contracts\Program53\Program53FaultInjector;
 use App\Enums\AdministrativeProcessStatus;
 use App\Enums\ApplicationReviewBatchCycle;
 use App\Enums\ApplicationReviewBatchOutcome;
 use App\Enums\ApplicationReviewResult;
 use App\Enums\ApplicationReviewStatus;
 use App\Enums\ApplicationReviewType;
+use App\Enums\DocumentAppliesTo;
 use App\Enums\DocumentStatus;
 use App\Enums\FeatureKey;
+use App\Enums\Program53FailureCode;
 use App\Models\AdministrativeProcess;
 use App\Models\ApplicationReview;
 use App\Models\Contest;
 use App\Models\DocumentSubmission;
+use App\Models\HouseholdMember;
 use App\Models\Permission;
+use App\Models\RequiredDocument;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Administrative\ApplicationReviewBatchService;
 use App\Services\Administrative\ApplicationReviewReadinessService;
+use App\Services\Program53\Resilience\ControlledProgram53FaultInjector;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -167,6 +173,48 @@ class Sprint53CReviewBatchSnapshotTest extends TestCase
         Notification::assertNothingSent();
     }
 
+    public function test_failure_after_items_rolls_back_seal_and_retry_is_safe(): void
+    {
+        [$process, $review] = $this->readyProcess();
+        $actor = $this->actorFor($process);
+        $payload = $this->payload([$process->id]);
+        $preview = app(ApplicationReviewBatchService::class)->preview(
+            $this->contest($process),
+            $actor,
+            $payload,
+        );
+        $payload['preview_token'] = $preview['token'];
+        $this->app->instance(
+            Program53FaultInjector::class,
+            new ControlledProgram53FaultInjector([
+                'after_batch_items_before_seal' => Program53FailureCode::DatabaseDeadlock,
+            ]),
+        );
+        $service = app(ApplicationReviewBatchService::class);
+
+        try {
+            $service->seal($this->contest($process), $actor, $payload);
+            $this->fail('A falha controlada deveria interromper a selagem.');
+        } catch (\Throwable) {
+            $this->assertDatabaseCount('application_review_batches', 0);
+            $this->assertDatabaseCount('application_review_batch_items', 0);
+            $this->assertSame(
+                ApplicationReviewStatus::ReadyForClosure,
+                $review->refresh()->status,
+            );
+        }
+
+        $batch = $service->seal(
+            $this->contest($process),
+            $actor,
+            $payload,
+        );
+
+        $this->assertDatabaseCount('application_review_batches', 1);
+        $this->assertDatabaseCount('application_review_batch_items', 1);
+        $this->assertSame(1, $batch->item_count);
+    }
+
     public function test_document_change_invalidates_preview_token(): void
     {
         [$process] = $this->readyProcess();
@@ -190,6 +238,85 @@ class Sprint53CReviewBatchSnapshotTest extends TestCase
             $this->contest($process),
             $actor,
             $payload,
+        );
+    }
+
+    public function test_repeatable_member_documents_keep_distinct_canonical_targets(): void
+    {
+        [$process] = $this->readyProcess();
+        $application = $process->application;
+        $members = collect([
+            HouseholdMember::factory()->create([
+                'household_id' => $application->household_id,
+                'adhesion_registration_id' => $application
+                    ->adhesion_registration_id,
+            ]),
+            HouseholdMember::factory()->create([
+                'household_id' => $application->household_id,
+                'adhesion_registration_id' => $application
+                    ->adhesion_registration_id,
+            ]),
+        ]);
+        $requirement = RequiredDocument::factory()->create([
+            'program_id' => $application->program_id,
+            'contest_id' => $application->contest_id,
+            'required_for' => DocumentAppliesTo::HouseholdMember,
+        ]);
+
+        foreach ($members as $member) {
+            DocumentSubmission::factory()
+                ->forRequiredDocument($requirement)
+                ->create([
+                    'application_id' => $application->id,
+                    'adhesion_registration_id' => $application
+                        ->adhesion_registration_id,
+                    'household_id' => $application->household_id,
+                    'household_member_id' => $member->id,
+                    'user_id' => $application->user_id,
+                    'status' => DocumentStatus::Validated,
+                    'reviewed_at' => now(),
+                    'validated_at' => now(),
+                ]);
+        }
+
+        $actor = $this->actorFor($process);
+        $payload = $this->payload([$process->id]);
+        $service = app(ApplicationReviewBatchService::class);
+        $preview = $service->preview(
+            $this->contest($process),
+            $actor,
+            $payload,
+        );
+        $payload['preview_token'] = $preview['token'];
+        $batch = $service->seal(
+            $this->contest($process),
+            $actor,
+            $payload,
+        );
+        $documents = collect(
+            $batch->items()->firstOrFail()->document_snapshot,
+        )
+            ->where('required_document_id', $requirement->id)
+            ->values();
+
+        $this->assertCount(2, $documents);
+        $this->assertSame(
+            $members
+                ->map(fn (HouseholdMember $member): array => [
+                    'household_member_id' => $member->id,
+                ])
+                ->all(),
+            $documents->pluck('target')->all(),
+        );
+        $this->assertCount(
+            2,
+            $documents
+                ->pluck('target')
+                ->map(static fn (array $target): string => json_encode(
+                    $target,
+                    JSON_THROW_ON_ERROR,
+                ))
+                ->unique(),
         );
     }
 

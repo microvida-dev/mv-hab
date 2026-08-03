@@ -38,9 +38,20 @@ Artisan::command('reports:expire-temporal-exports', function (): void {
     $count = 0;
     ReportExport::query()
         ->where('export_profile', TemporalApplicationResultExportService::PROFILE)
-        ->where('status', ReportExportStatus::Completed->value)
-        ->whereNotNull('expires_at')
-        ->where('expires_at', '<=', now())
+        ->where(function ($query): void {
+            $query
+                ->where(function ($completed): void {
+                    $completed
+                        ->where('status', ReportExportStatus::Completed->value)
+                        ->whereNotNull('expires_at')
+                        ->where('expires_at', '<=', now());
+                })
+                ->orWhere(function ($expired): void {
+                    $expired
+                        ->where('status', ReportExportStatus::Expired->value)
+                        ->where('file_path', '!=', '');
+                });
+        })
         ->select('id')
         ->chunkById(100, function ($exports) use (&$count): void {
             foreach ($exports as $export) {

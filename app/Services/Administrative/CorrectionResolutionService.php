@@ -2,7 +2,10 @@
 
 namespace App\Services\Administrative;
 
+use App\Contracts\Program53\Program53FaultInjector;
+use App\Contracts\Program53\Program53MetricsRecorder;
 use App\Data\Administrative\CorrectionDifferentialResultData;
+use App\Data\Program53\Program53OperationalContext;
 use App\Enums\AdministrativeProcessStatus;
 use App\Enums\ApplicationReviewBatchCycle;
 use App\Enums\ApplicationReviewBatchStatus;
@@ -32,6 +35,8 @@ final class CorrectionResolutionService
         private readonly CorrectionRevalidationSnapshotBuilder $snapshotBuilder,
         private readonly CanonicalJsonHasher $hasher,
         private readonly AuditLogger $audit,
+        private readonly Program53FaultInjector $faults,
+        private readonly Program53MetricsRecorder $metrics,
     ) {}
 
     /**
@@ -87,11 +92,26 @@ final class CorrectionResolutionService
             ]);
         }
 
-        return DB::transaction(function () use (
+        $startedAt = hrtime(true);
+        $context = new Program53OperationalContext(
+            operationId: 'correction-seal-'.substr(
+                hash('sha256', $previewToken),
+                0,
+                24,
+            ),
+            municipalityId: $actor->municipality_id !== null
+                ? (int) $actor->municipality_id
+                : null,
+            correctionRequestId: (int) $request->id,
+            stage: 'revalidation_seal',
+        );
+
+        $batch = DB::transaction(function () use (
             $request,
             $actor,
             $reason,
             $previewToken,
+            $context,
         ): ApplicationReviewBatch {
             $lockedRequest = $this->municipalScope
                 ->correctionRequests(CorrectionRequest::query(), $actor)
@@ -155,6 +175,10 @@ final class CorrectionResolutionService
                     'preview_token' => 'As decisões ou as fontes foram alteradas. Gere uma nova pré-visualização.',
                 ]);
             }
+            $this->faults->checkpoint(
+                'after_snapshot_before_commit',
+                $context->withStage('revalidation_snapshot'),
+            );
 
             $result = $lockedRequest->publicationResult()
                 ->lockForUpdate()
@@ -238,6 +262,27 @@ final class CorrectionResolutionService
                 'correctionRequest',
             ]);
         }, 3);
+
+        $completedContext = new Program53OperationalContext(
+            operationId: $context->operationId,
+            municipalityId: $context->municipalityId,
+            contestId: (int) $batch->contest_id,
+            batchId: (int) $batch->id,
+            correctionRequestId: $context->correctionRequestId,
+            stage: 'revalidation_sealed',
+        );
+        $this->faults->checkpoint(
+            'after_resolution_before_projection',
+            $completedContext,
+        );
+        $this->metrics->record(
+            'revalidation_duration',
+            round((hrtime(true) - $startedAt) / 1_000_000, 3),
+            $completedContext,
+            ['result' => 'sealed'],
+        );
+
+        return $batch;
     }
 
     /**

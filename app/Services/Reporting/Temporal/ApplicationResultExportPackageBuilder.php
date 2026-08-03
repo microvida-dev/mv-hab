@@ -2,6 +2,8 @@
 
 namespace App\Services\Reporting\Temporal;
 
+use App\Contracts\Program53\Program53FaultInjector;
+use App\Data\Program53\Program53OperationalContext;
 use App\Data\Reports\ApplicationResultExportFileData;
 use App\Data\Reports\ApplicationResultExportPackageData;
 use App\Data\Reports\ApplicationResultExportPackageOptionsData;
@@ -24,12 +26,14 @@ final class ApplicationResultExportPackageBuilder
         private readonly ApplicationResultExportFileFactory $files,
         private readonly ApplicationResultExportPathGuard $paths,
         private readonly CanonicalJsonHasher $hasher,
+        private readonly Program53FaultInjector $faults,
     ) {}
 
     public function build(
         ApplicationResultExportSnapshotData $snapshot,
         ApplicationResultExportPackageOptionsData $options,
         string $stagingDirectory,
+        ?Program53OperationalContext $context = null,
     ): ApplicationResultExportPackageData {
         $this->validateOptions($snapshot, $options);
         $this->paths->assertRelative($stagingDirectory);
@@ -53,6 +57,12 @@ final class ApplicationResultExportPackageBuilder
                         $metadata,
                     ),
                 ];
+                if ($context instanceof Program53OperationalContext) {
+                    $this->faults->checkpoint(
+                        'after_'.$format->value,
+                        $context->withStage('rendering_'.$format->value),
+                    );
+                }
             }
 
             $files = [...$files, ...$this->copySchemas($contentsDirectory)];
@@ -73,6 +83,12 @@ final class ApplicationResultExportPackageBuilder
                 throw new RuntimeException('Não foi possível escrever o manifesto municipal.');
             }
             $manifestSha256 = hash('sha256', $manifestContents);
+            if ($context instanceof Program53OperationalContext) {
+                $this->faults->checkpoint(
+                    'after_manifest',
+                    $context->withStage('manifest'),
+                );
+            }
 
             $this->writeChecksums(
                 $contentsDirectory,
@@ -95,6 +111,12 @@ final class ApplicationResultExportPackageBuilder
                 $entries,
                 $snapshot->source->snapshotAt->getTimestamp(),
             );
+            if ($context instanceof Program53OperationalContext) {
+                $this->faults->checkpoint(
+                    'after_partial_zip',
+                    $context->withStage('package'),
+                );
+            }
             $this->validateZip($packagePath, $entries);
             $packageSha256 = hash_file('sha256', $disk->path($packagePath));
             if (! is_string($packageSha256)) {
