@@ -8,47 +8,78 @@ use App\Http\Requests\UpdateTypologyAdequacyRuleRequest;
 use App\Models\Contest;
 use App\Models\Program;
 use App\Models\TypologyAdequacyRule;
+use App\Models\User;
+use App\Services\Municipalities\MunicipalRecordScopeService;
+use App\Services\Regulatory\RegulatoryRuleSetLinkService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class TypologyAdequacyRuleController extends Controller
 {
-    public function index(): View
+    public function __construct(
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly RegulatoryRuleSetLinkService $regulatoryLink,
+    ) {}
+
+    public function index(Request $request): View
     {
         Gate::authorize('viewAnyBackoffice', TypologyAdequacyRule::class);
 
         return view('backoffice.allocation.typology-rules.index', [
-            'rules' => TypologyAdequacyRule::query()->with(['program', 'contest'])->orderBy('priority_order')->paginate(15),
+            'rules' => $this->municipalScope
+                ->typologyAdequacyRules(
+                    TypologyAdequacyRule::query(),
+                    $this->authenticatedUser($request),
+                )
+                ->with(['program', 'contest'])
+                ->orderBy('priority_order')
+                ->paginate(15),
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         Gate::authorize('createBackoffice', TypologyAdequacyRule::class);
 
-        return view('backoffice.allocation.typology-rules.create', $this->formData());
+        return view(
+            'backoffice.allocation.typology-rules.create',
+            $this->formData($this->authenticatedUser($request)),
+        );
     }
 
     public function store(StoreTypologyAdequacyRuleRequest $request): RedirectResponse
     {
         Gate::authorize('createBackoffice', TypologyAdequacyRule::class);
-        TypologyAdequacyRule::query()->create($request->validated());
+        TypologyAdequacyRule::query()->create($this->regulatoryLink->link(
+            $request->validated(),
+            $this->authenticatedUser($request),
+        ));
 
         return to_route('backoffice.allocation.typology-rules.index')->with('success', 'Regra de tipologia criada.');
     }
 
-    public function edit(TypologyAdequacyRule $typologyAdequacyRule): View
-    {
+    public function edit(
+        Request $request,
+        TypologyAdequacyRule $typologyAdequacyRule,
+    ): View {
         Gate::authorize('updateBackoffice', $typologyAdequacyRule);
 
-        return view('backoffice.allocation.typology-rules.edit', $this->formData() + compact('typologyAdequacyRule'));
+        return view(
+            'backoffice.allocation.typology-rules.edit',
+            $this->formData($this->authenticatedUser($request))
+                + compact('typologyAdequacyRule'),
+        );
     }
 
     public function update(UpdateTypologyAdequacyRuleRequest $request, TypologyAdequacyRule $typologyAdequacyRule): RedirectResponse
     {
         Gate::authorize('updateBackoffice', $typologyAdequacyRule);
-        $typologyAdequacyRule->update($request->validated());
+        $typologyAdequacyRule->update($this->regulatoryLink->link(
+            $request->validated(),
+            $this->authenticatedUser($request),
+        ));
 
         return to_route('backoffice.allocation.typology-rules.index')->with('success', 'Regra de tipologia atualizada.');
     }
@@ -72,11 +103,17 @@ class TypologyAdequacyRuleController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formData(): array
+    private function formData(User $actor): array
     {
         return [
-            'programs' => Program::query()->orderBy('name')->get(),
-            'contests' => Contest::query()->orderByDesc('created_at')->get(),
+            'programs' => $this->municipalScope
+                ->programs(Program::query(), $actor)
+                ->orderBy('name')
+                ->get(),
+            'contests' => $this->municipalScope
+                ->contests(Contest::query(), $actor)
+                ->orderByDesc('created_at')
+                ->get(),
         ];
     }
 }

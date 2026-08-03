@@ -11,31 +11,44 @@ use App\Http\Requests\Reporting\StoreReportDefinitionRequest;
 use App\Http\Requests\Reporting\UpdateReportDefinitionRequest;
 use App\Models\ReportDefinition;
 use App\Services\Reporting\ReportDefinitionService;
+use App\Services\Reporting\ReportPermissionService;
+use App\Services\Reporting\Temporal\TemporalApplicationResultExportService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 
 class ReportDefinitionController extends Controller
 {
-    public function __construct(private readonly ReportDefinitionService $definitions) {}
+    public function __construct(
+        private readonly ReportDefinitionService $definitions,
+        private readonly ReportPermissionService $permissions,
+    ) {}
 
     public function index(): View
     {
-        Gate::authorize('viewAny', ReportDefinition::class);
-        $allowed = ReportDefinition::query()->get()->filter(fn ($report) => $this->currentUser()->can('view', $report))->pluck('id');
+        Gate::authorize('viewAnyBackoffice', ReportDefinition::class);
 
-        return view('backoffice.reports.definitions.index', ['reports' => ReportDefinition::query()->whereIn('id', $allowed)->orderBy('name')->paginate(30)]);
+        return view('backoffice.reports.definitions.index', [
+            'reports' => $this->permissions
+                ->visibleReports(
+                    ReportDefinition::query(),
+                    $this->currentUser(),
+                )
+                ->orderBy('name')
+                ->paginate(30),
+        ]);
     }
 
     public function create(): View
     {
-        Gate::authorize('create', ReportDefinition::class);
+        Gate::authorize('createBackoffice', ReportDefinition::class);
 
         return view('backoffice.reports.definitions.create', $this->formOptions());
     }
 
     public function store(StoreReportDefinitionRequest $request): RedirectResponse
     {
+        Gate::authorize('createBackoffice', ReportDefinition::class);
         $report = $this->definitions->create($request->validated(), $this->authenticatedUser($request));
 
         return redirect()->route('backoffice.reports.definitions.show', $report)->with('success', 'Relatório criado.');
@@ -43,20 +56,21 @@ class ReportDefinitionController extends Controller
 
     public function show(ReportDefinition $reportDefinition): View
     {
-        Gate::authorize('view', $reportDefinition);
+        Gate::authorize('viewBackoffice', $reportDefinition);
 
         return view('backoffice.reports.definitions.show', ['report' => $reportDefinition->load('presets')]);
     }
 
     public function edit(ReportDefinition $reportDefinition): View
     {
-        Gate::authorize('update', $reportDefinition);
+        Gate::authorize('updateBackoffice', $reportDefinition);
 
-        return view('backoffice.reports.definitions.edit', ['report' => $reportDefinition] + $this->formOptions());
+        return view('backoffice.reports.definitions.edit', ['report' => $reportDefinition] + $this->formOptions($reportDefinition));
     }
 
     public function update(UpdateReportDefinitionRequest $request, ReportDefinition $reportDefinition): RedirectResponse
     {
+        Gate::authorize('updateBackoffice', $reportDefinition);
         $this->definitions->update($reportDefinition, $request->validated(), $this->authenticatedUser($request));
 
         return redirect()->route('backoffice.reports.definitions.show', $reportDefinition)->with('success', 'Relatório atualizado.');
@@ -64,8 +78,11 @@ class ReportDefinitionController extends Controller
 
     public function destroy(ReportDefinition $reportDefinition): RedirectResponse
     {
-        Gate::authorize('delete', $reportDefinition);
-        $reportDefinition->delete();
+        Gate::authorize('deleteBackoffice', $reportDefinition);
+        $this->definitions->delete(
+            $reportDefinition,
+            $this->currentUser(),
+        );
 
         return redirect()->route('backoffice.reports.definitions.index')->with('success', 'Relatório arquivado.');
     }
@@ -73,12 +90,17 @@ class ReportDefinitionController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formOptions(): array
+    private function formOptions(?ReportDefinition $report = null): array
     {
+        $formats = ReportFormat::legacyOptions();
+        if ($report?->code === TemporalApplicationResultExportService::REPORT_CODE) {
+            $formats[ReportFormat::Zip->value] = ReportFormat::Zip->label();
+        }
+
         return [
             'types' => ReportType::options(),
             'sensitivities' => ReportSensitivityLevel::options(),
-            'formats' => ReportFormat::options(),
+            'formats' => $formats,
             'scopes' => ExportScope::options(),
         ];
     }

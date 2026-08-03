@@ -20,15 +20,37 @@ class CorrectionRequestPolicy
         return $this->canAccess($user, self::MODULE, 'view');
     }
 
+    public function viewRevalidationQueue(User $user): bool
+    {
+        return ! $user->hasRole('candidate')
+            && $this->canAccess($user, self::MODULE, 'view')
+            && $this->municipalScope->hasMunicipalOrGlobalScope($user);
+    }
+
     public function view(User $user, CorrectionRequest $correctionRequest): bool
     {
         if ($user->hasRole('candidate')) {
             return $correctionRequest->user_id === $user->id
-                && $correctionRequest->candidate_visible
+                && $correctionRequest->isVisibleToCandidate()
                 && $this->canAccess($user, self::MODULE, 'view');
         }
 
         return $this->canAccess($user, self::MODULE, 'view');
+    }
+
+    public function submit(
+        User $user,
+        CorrectionRequest $correctionRequest,
+    ): bool {
+        return $user->hasRole('candidate')
+            && (int) $correctionRequest->user_id
+                === (int) $user->id
+            && $correctionRequest->isVisibleToCandidate()
+            && $this->canAccess(
+                $user,
+                self::MODULE,
+                'create',
+            );
     }
 
     public function create(User $user): bool
@@ -75,6 +97,39 @@ class CorrectionRequestPolicy
         return $this->transitionBackoffice($user, $request, 'mark_overdue');
     }
 
+    public function extendDeadlineBackoffice(
+        User $user,
+        CorrectionRequest $request,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'update')
+            && $this->municipalScope->ownsCorrectionRequest(
+                $user,
+                $request,
+            );
+    }
+
+    public function startRevalidationBackoffice(
+        User $user,
+        CorrectionRequest $request,
+    ): bool {
+        return $this->canManageRevalidation($user, $request);
+    }
+
+    public function previewRevalidationBackoffice(
+        User $user,
+        CorrectionRequest $request,
+    ): bool {
+        return $this->canManageRevalidation($user, $request);
+    }
+
+    public function sealRevalidationBackoffice(
+        User $user,
+        CorrectionRequest $request,
+    ): bool {
+        return $this->canManageRevalidation($user, $request);
+    }
+
     private function transitionBackoffice(
         User $user,
         CorrectionRequest $request,
@@ -82,6 +137,15 @@ class CorrectionRequestPolicy
     ): bool {
         return ! $user->hasRole(['candidate', 'auditor'])
             && $this->canAccess($user, self::MODULE, $action)
+            && $this->municipalScope->ownsCorrectionRequest($user, $request);
+    }
+
+    private function canManageRevalidation(
+        User $user,
+        CorrectionRequest $request,
+    ): bool {
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'update')
             && $this->municipalScope->ownsCorrectionRequest($user, $request);
     }
 }

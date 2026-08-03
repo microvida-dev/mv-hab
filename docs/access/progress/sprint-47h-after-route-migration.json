@@ -1,0 +1,3221 @@
+{
+  "summary": {
+    "manifest_routes": 123,
+    "runtime_found": 123,
+    "missing": 0,
+    "duplicates": 0,
+    "permission_exact": 123,
+    "permission_pending": 0,
+    "role_middleware_remaining": 0,
+    "active_backoffice_missing": 0,
+    "mfa_backoffice_missing": 0,
+    "log_backoffice_missing": 0,
+    "total_backoffice_fixed_role_routes": 0
+  },
+  "domains": {
+    "communications": 36,
+    "configuration": 8,
+    "notifications": 41,
+    "reports": 38
+  },
+  "routes": [
+    {
+      "name": "backoffice.procedure-minutes.download",
+      "domain": "communications",
+      "expected_permission": "documents.download",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/procedure-minutes/{procedureMinute}/download",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureMinuteController@download",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:documents.download"
+      ],
+      "permission_middleware": [
+        "permission:documents.download"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.support-ticket-attachments.download",
+      "domain": "communications",
+      "expected_permission": "support.attachments.download",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/support-ticket-attachments/{supportTicketAttachment}/download",
+      "action": "App\\Http\\Controllers\\Backoffice\\SupportTicketAttachmentController@download",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:support.attachments.download"
+      ],
+      "permission_middleware": [
+        "permission:support.attachments.download"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.deliveries.postal",
+      "domain": "communications",
+      "expected_permission": "communications.deliveries.postal",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/deliveries/{communicationDelivery}/postal",
+      "action": "App\\Http\\Controllers\\Backoffice\\CommunicationDeliveryController@registerPostal",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:communications.deliveries.postal"
+      ],
+      "permission_middleware": [
+        "permission:communications.deliveries.postal"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.deliveries.resend",
+      "domain": "communications",
+      "expected_permission": "communications.deliveries.resend",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/deliveries/{communicationDelivery}/resend",
+      "action": "App\\Http\\Controllers\\Backoffice\\CommunicationDeliveryController@resend",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:communications.deliveries.resend"
+      ],
+      "permission_middleware": [
+        "permission:communications.deliveries.resend"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.logs.archive",
+      "domain": "communications",
+      "expected_permission": "communications.archive",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/logs/{communicationLog}/archive",
+      "action": "App\\Http\\Controllers\\Backoffice\\CommunicationLogController@archive",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:communications.archive"
+      ],
+      "permission_middleware": [
+        "permission:communications.archive"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.logs.cancel",
+      "domain": "communications",
+      "expected_permission": "communications.cancel",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/logs/{communicationLog}/cancel",
+      "action": "App\\Http\\Controllers\\Backoffice\\CommunicationLogController@cancel",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:communications.cancel"
+      ],
+      "permission_middleware": [
+        "permission:communications.cancel"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.logs.index",
+      "domain": "communications",
+      "expected_permission": "communications.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/communications/logs",
+      "action": "App\\Http\\Controllers\\Backoffice\\CommunicationLogController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:communications.view"
+      ],
+      "permission_middleware": [
+        "permission:communications.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.logs.show",
+      "domain": "communications",
+      "expected_permission": "communications.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/communications/logs/{communicationLog}",
+      "action": "App\\Http\\Controllers\\Backoffice\\CommunicationLogController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:communications.view"
+      ],
+      "permission_middleware": [
+        "permission:communications.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.logs.store",
+      "domain": "communications",
+      "expected_permission": "communications.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/logs",
+      "action": "App\\Http\\Controllers\\Backoffice\\CommunicationLogController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:communications.create"
+      ],
+      "permission_middleware": [
+        "permission:communications.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.variables.index",
+      "domain": "communications",
+      "expected_permission": "communication_variables.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/communications/variables",
+      "action": "App\\Http\\Controllers\\Backoffice\\TemplateVariableController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:communication_variables.view"
+      ],
+      "permission_middleware": [
+        "permission:communication_variables.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.variables.store",
+      "domain": "communications",
+      "expected_permission": "communication_variables.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/variables",
+      "action": "App\\Http\\Controllers\\Backoffice\\TemplateVariableController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:communication_variables.create"
+      ],
+      "permission_middleware": [
+        "permission:communication_variables.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.variables.update",
+      "domain": "communications",
+      "expected_permission": "communication_variables.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/communications/variables/{templateVariable}",
+      "action": "App\\Http\\Controllers\\Backoffice\\TemplateVariableController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:communication_variables.update"
+      ],
+      "permission_middleware": [
+        "permission:communication_variables.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.contextual-faqs.create",
+      "domain": "communications",
+      "expected_permission": "contextual_faqs.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/contextual-faqs/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\ContextualFaqController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:contextual_faqs.create"
+      ],
+      "permission_middleware": [
+        "permission:contextual_faqs.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.contextual-faqs.destroy",
+      "domain": "communications",
+      "expected_permission": "contextual_faqs.delete",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "DELETE",
+      "uri": "backoffice/contextual-faqs/{contextualFaq}",
+      "action": "App\\Http\\Controllers\\Backoffice\\ContextualFaqController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:contextual_faqs.delete"
+      ],
+      "permission_middleware": [
+        "permission:contextual_faqs.delete"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.contextual-faqs.edit",
+      "domain": "communications",
+      "expected_permission": "contextual_faqs.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/contextual-faqs/{contextualFaq}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\ContextualFaqController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:contextual_faqs.update"
+      ],
+      "permission_middleware": [
+        "permission:contextual_faqs.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.contextual-faqs.index",
+      "domain": "communications",
+      "expected_permission": "contextual_faqs.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/contextual-faqs",
+      "action": "App\\Http\\Controllers\\Backoffice\\ContextualFaqController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:contextual_faqs.view"
+      ],
+      "permission_middleware": [
+        "permission:contextual_faqs.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.contextual-faqs.store",
+      "domain": "communications",
+      "expected_permission": "contextual_faqs.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/contextual-faqs",
+      "action": "App\\Http\\Controllers\\Backoffice\\ContextualFaqController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:contextual_faqs.create"
+      ],
+      "permission_middleware": [
+        "permission:contextual_faqs.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.contextual-faqs.update",
+      "domain": "communications",
+      "expected_permission": "contextual_faqs.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/contextual-faqs/{contextualFaq}",
+      "action": "App\\Http\\Controllers\\Backoffice\\ContextualFaqController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:contextual_faqs.update"
+      ],
+      "permission_middleware": [
+        "permission:contextual_faqs.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.procedure-minutes.approve",
+      "domain": "communications",
+      "expected_permission": "documents.approve",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/procedure-minutes/{procedureMinute}/approve",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureMinuteController@approve",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:documents.approve"
+      ],
+      "permission_middleware": [
+        "permission:documents.approve"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.procedure-minutes.destroy",
+      "domain": "communications",
+      "expected_permission": "documents.delete",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "DELETE",
+      "uri": "backoffice/procedure-minutes/{procedureMinute}",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureMinuteController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:documents.delete"
+      ],
+      "permission_middleware": [
+        "permission:documents.delete"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.procedure-minutes.generate",
+      "domain": "communications",
+      "expected_permission": "documents.generate",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/procedure-minutes",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureMinuteController@generate",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:documents.generate"
+      ],
+      "permission_middleware": [
+        "permission:documents.generate"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.procedure-minutes.index",
+      "domain": "communications",
+      "expected_permission": "documents.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/procedure-minutes",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureMinuteController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:documents.view"
+      ],
+      "permission_middleware": [
+        "permission:documents.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.procedure-minutes.show",
+      "domain": "communications",
+      "expected_permission": "documents.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/procedure-minutes/{procedureMinute}",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureMinuteController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:documents.view"
+      ],
+      "permission_middleware": [
+        "permission:documents.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.procedure-templates.create",
+      "domain": "communications",
+      "expected_permission": "documents.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/procedure-templates/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:documents.create"
+      ],
+      "permission_middleware": [
+        "permission:documents.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.procedure-templates.edit",
+      "domain": "communications",
+      "expected_permission": "documents.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/procedure-templates/{procedureTemplate}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:documents.update"
+      ],
+      "permission_middleware": [
+        "permission:documents.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.procedure-templates.index",
+      "domain": "communications",
+      "expected_permission": "documents.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/procedure-templates",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:documents.view"
+      ],
+      "permission_middleware": [
+        "permission:documents.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.procedure-templates.preview",
+      "domain": "communications",
+      "expected_permission": "documents.preview",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|POST|HEAD",
+      "uri": "backoffice/procedure-templates/{procedureTemplate}/preview",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@render",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:documents.preview"
+      ],
+      "permission_middleware": [
+        "permission:documents.preview"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.procedure-templates.publish",
+      "domain": "communications",
+      "expected_permission": "documents.publish",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/procedure-templates/{procedureTemplate}/publish",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@publish",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:documents.publish"
+      ],
+      "permission_middleware": [
+        "permission:documents.publish"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.procedure-templates.show",
+      "domain": "communications",
+      "expected_permission": "documents.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/procedure-templates/{procedureTemplate}",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:documents.view"
+      ],
+      "permission_middleware": [
+        "permission:documents.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.procedure-templates.store",
+      "domain": "communications",
+      "expected_permission": "documents.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/procedure-templates",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:documents.create"
+      ],
+      "permission_middleware": [
+        "permission:documents.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.procedure-templates.update",
+      "domain": "communications",
+      "expected_permission": "documents.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/procedure-templates/{procedureTemplate}",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:documents.update"
+      ],
+      "permission_middleware": [
+        "permission:documents.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.support-ticket-messages.store",
+      "domain": "communications",
+      "expected_permission": "support.message",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/support-tickets/{supportTicket}/messages",
+      "action": "App\\Http\\Controllers\\Backoffice\\SupportTicketMessageController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:support.message"
+      ],
+      "permission_middleware": [
+        "permission:support.message"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.support-tickets.assign",
+      "domain": "communications",
+      "expected_permission": "support.assign",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/support-tickets/{supportTicket}/assign",
+      "action": "App\\Http\\Controllers\\Backoffice\\SupportTicketController@assign",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:support.assign"
+      ],
+      "permission_middleware": [
+        "permission:support.assign"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.support-tickets.index",
+      "domain": "communications",
+      "expected_permission": "support.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/support-tickets",
+      "action": "App\\Http\\Controllers\\Backoffice\\SupportTicketController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:support.view"
+      ],
+      "permission_middleware": [
+        "permission:support.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.support-tickets.show",
+      "domain": "communications",
+      "expected_permission": "support.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/support-tickets/{supportTicket}",
+      "action": "App\\Http\\Controllers\\Backoffice\\SupportTicketController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:support.view"
+      ],
+      "permission_middleware": [
+        "permission:support.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.support-tickets.status",
+      "domain": "communications",
+      "expected_permission": "support.resolve",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/support-tickets/{supportTicket}/status",
+      "action": "App\\Http\\Controllers\\Backoffice\\SupportTicketController@updateStatus",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:support.resolve"
+      ],
+      "permission_middleware": [
+        "permission:support.resolve"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.administrative-workflow-configs.activate",
+      "domain": "configuration",
+      "expected_permission": "settings.activate",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/administrative-workflow-configs/{administrativeWorkflowConfig}/activate",
+      "action": "App\\Http\\Controllers\\Backoffice\\AdministrativeWorkflowConfigController@activate",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:settings.activate"
+      ],
+      "permission_middleware": [
+        "permission:settings.activate"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.administrative-workflow-configs.create",
+      "domain": "configuration",
+      "expected_permission": "settings.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/administrative-workflow-configs/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\AdministrativeWorkflowConfigController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:settings.create"
+      ],
+      "permission_middleware": [
+        "permission:settings.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.administrative-workflow-configs.deactivate",
+      "domain": "configuration",
+      "expected_permission": "settings.deactivate",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/administrative-workflow-configs/{administrativeWorkflowConfig}/deactivate",
+      "action": "App\\Http\\Controllers\\Backoffice\\AdministrativeWorkflowConfigController@deactivate",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:settings.deactivate"
+      ],
+      "permission_middleware": [
+        "permission:settings.deactivate"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.administrative-workflow-configs.edit",
+      "domain": "configuration",
+      "expected_permission": "settings.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/administrative-workflow-configs/{administrativeWorkflowConfig}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\AdministrativeWorkflowConfigController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:settings.update"
+      ],
+      "permission_middleware": [
+        "permission:settings.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.administrative-workflow-configs.index",
+      "domain": "configuration",
+      "expected_permission": "settings.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/administrative-workflow-configs",
+      "action": "App\\Http\\Controllers\\Backoffice\\AdministrativeWorkflowConfigController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:settings.view"
+      ],
+      "permission_middleware": [
+        "permission:settings.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.administrative-workflow-configs.store",
+      "domain": "configuration",
+      "expected_permission": "settings.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/administrative-workflow-configs",
+      "action": "App\\Http\\Controllers\\Backoffice\\AdministrativeWorkflowConfigController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:settings.create"
+      ],
+      "permission_middleware": [
+        "permission:settings.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.administrative-workflow-configs.update",
+      "domain": "configuration",
+      "expected_permission": "settings.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/administrative-workflow-configs/{administrativeWorkflowConfig}",
+      "action": "App\\Http\\Controllers\\Backoffice\\AdministrativeWorkflowConfigController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:settings.update"
+      ],
+      "permission_middleware": [
+        "permission:settings.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.contests.close",
+      "domain": "configuration",
+      "expected_permission": "contests.close",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/concursos/{contest}/fechar",
+      "action": "App\\Http\\Controllers\\Backoffice\\ContestClosureController@close",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:contests.close"
+      ],
+      "permission_middleware": [
+        "permission:contests.close"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.event-rules.activate",
+      "domain": "notifications",
+      "expected_permission": "notification_event_rules.activate",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/event-rules/{notificationEventRule}/activate",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationEventRuleController@activate",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_event_rules.activate"
+      ],
+      "permission_middleware": [
+        "permission:notification_event_rules.activate"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.event-rules.create",
+      "domain": "notifications",
+      "expected_permission": "notification_event_rules.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/communications/event-rules/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationEventRuleController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_event_rules.create"
+      ],
+      "permission_middleware": [
+        "permission:notification_event_rules.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.event-rules.deactivate",
+      "domain": "notifications",
+      "expected_permission": "notification_event_rules.deactivate",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/event-rules/{notificationEventRule}/deactivate",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationEventRuleController@deactivate",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_event_rules.deactivate"
+      ],
+      "permission_middleware": [
+        "permission:notification_event_rules.deactivate"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.event-rules.edit",
+      "domain": "notifications",
+      "expected_permission": "notification_event_rules.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/communications/event-rules/{notificationEventRule}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationEventRuleController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_event_rules.update"
+      ],
+      "permission_middleware": [
+        "permission:notification_event_rules.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.event-rules.index",
+      "domain": "notifications",
+      "expected_permission": "notification_event_rules.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/communications/event-rules",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationEventRuleController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_event_rules.view"
+      ],
+      "permission_middleware": [
+        "permission:notification_event_rules.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.event-rules.store",
+      "domain": "notifications",
+      "expected_permission": "notification_event_rules.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/event-rules",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationEventRuleController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_event_rules.create"
+      ],
+      "permission_middleware": [
+        "permission:notification_event_rules.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.event-rules.update",
+      "domain": "notifications",
+      "expected_permission": "notification_event_rules.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/communications/event-rules/{notificationEventRule}",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationEventRuleController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_event_rules.update"
+      ],
+      "permission_middleware": [
+        "permission:notification_event_rules.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.index",
+      "domain": "notifications",
+      "expected_permission": "notifications.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/communications",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationCenterController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notifications.view"
+      ],
+      "permission_middleware": [
+        "permission:notifications.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.preferences.index",
+      "domain": "notifications",
+      "expected_permission": "notification_preferences.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/communications/preferences",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationPreferenceController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_preferences.view"
+      ],
+      "permission_middleware": [
+        "permission:notification_preferences.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.template-versions.activate",
+      "domain": "notifications",
+      "expected_permission": "notification_template_versions.activate",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/template-versions/{notificationTemplateVersion}/activate",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateVersionController@activate",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_template_versions.activate"
+      ],
+      "permission_middleware": [
+        "permission:notification_template_versions.activate"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.template-versions.approve",
+      "domain": "notifications",
+      "expected_permission": "notification_template_versions.approve",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/template-versions/{notificationTemplateVersion}/approve",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateVersionController@approve",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_template_versions.approve"
+      ],
+      "permission_middleware": [
+        "permission:notification_template_versions.approve"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.template-versions.archive",
+      "domain": "notifications",
+      "expected_permission": "notification_template_versions.archive",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/template-versions/{notificationTemplateVersion}/archive",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateVersionController@archive",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_template_versions.archive"
+      ],
+      "permission_middleware": [
+        "permission:notification_template_versions.archive"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.template-versions.show",
+      "domain": "notifications",
+      "expected_permission": "notification_template_versions.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/communications/template-versions/{notificationTemplateVersion}",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateVersionController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_template_versions.view"
+      ],
+      "permission_middleware": [
+        "permission:notification_template_versions.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.template-versions.store",
+      "domain": "notifications",
+      "expected_permission": "notification_template_versions.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/templates/{notificationTemplate}/versions",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateVersionController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_template_versions.create"
+      ],
+      "permission_middleware": [
+        "permission:notification_template_versions.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.templates.archive",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.archive",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/templates/{notificationTemplate}/archive",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@archive",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_templates.archive"
+      ],
+      "permission_middleware": [
+        "permission:notification_templates.archive"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.templates.create",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/communications/templates/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_templates.create"
+      ],
+      "permission_middleware": [
+        "permission:notification_templates.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.templates.edit",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/communications/templates/{notificationTemplate}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_templates.update"
+      ],
+      "permission_middleware": [
+        "permission:notification_templates.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.templates.index",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/communications/templates",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_templates.view"
+      ],
+      "permission_middleware": [
+        "permission:notification_templates.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.templates.preview",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.preview",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|POST|HEAD",
+      "uri": "backoffice/communications/templates/{notificationTemplate}/preview",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@preview",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_templates.preview"
+      ],
+      "permission_middleware": [
+        "permission:notification_templates.preview"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.templates.show",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/communications/templates/{notificationTemplate}",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_templates.view"
+      ],
+      "permission_middleware": [
+        "permission:notification_templates.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.templates.store",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/communications/templates",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_templates.create"
+      ],
+      "permission_middleware": [
+        "permission:notification_templates.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.templates.update",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/communications/templates/{notificationTemplate}",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notification_templates.update"
+      ],
+      "permission_middleware": [
+        "permission:notification_templates.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.internal-alerts.detect",
+      "domain": "notifications",
+      "expected_permission": "internal_alerts.detect",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/internal-alerts/detect",
+      "action": "App\\Http\\Controllers\\Backoffice\\InternalAlertController@detect",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:internal_alerts.detect"
+      ],
+      "permission_middleware": [
+        "permission:internal_alerts.detect"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.internal-alerts.dismiss",
+      "domain": "notifications",
+      "expected_permission": "internal_alerts.dismiss",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/internal-alerts/{internalAlert}/dismiss",
+      "action": "App\\Http\\Controllers\\Backoffice\\InternalAlertController@dismiss",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:internal_alerts.dismiss"
+      ],
+      "permission_middleware": [
+        "permission:internal_alerts.dismiss"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.internal-alerts.index",
+      "domain": "notifications",
+      "expected_permission": "internal_alerts.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/internal-alerts",
+      "action": "App\\Http\\Controllers\\Backoffice\\InternalAlertController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:internal_alerts.view"
+      ],
+      "permission_middleware": [
+        "permission:internal_alerts.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.internal-alerts.resolve",
+      "domain": "notifications",
+      "expected_permission": "internal_alerts.resolve",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/internal-alerts/{internalAlert}/resolve",
+      "action": "App\\Http\\Controllers\\Backoffice\\InternalAlertController@resolve",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:internal_alerts.resolve"
+      ],
+      "permission_middleware": [
+        "permission:internal_alerts.resolve"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.internal-alerts.show",
+      "domain": "notifications",
+      "expected_permission": "internal_alerts.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/internal-alerts/{internalAlert}",
+      "action": "App\\Http\\Controllers\\Backoffice\\InternalAlertController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:internal_alerts.view"
+      ],
+      "permission_middleware": [
+        "permission:internal_alerts.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.official-notifications.create",
+      "domain": "notifications",
+      "expected_permission": "notifications.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/official-notifications/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\OfficialNotificationController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notifications.create"
+      ],
+      "permission_middleware": [
+        "permission:notifications.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.official-notifications.index",
+      "domain": "notifications",
+      "expected_permission": "notifications.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/official-notifications",
+      "action": "App\\Http\\Controllers\\Backoffice\\OfficialNotificationController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notifications.view"
+      ],
+      "permission_middleware": [
+        "permission:notifications.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.official-notifications.mark-failed",
+      "domain": "notifications",
+      "expected_permission": "notifications.mark_failed",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/official-notifications/{officialNotification}/mark-failed",
+      "action": "App\\Http\\Controllers\\Backoffice\\OfficialNotificationController@markFailed",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notifications.mark_failed"
+      ],
+      "permission_middleware": [
+        "permission:notifications.mark_failed"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.official-notifications.mark-sent",
+      "domain": "notifications",
+      "expected_permission": "notifications.mark_sent",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/official-notifications/{officialNotification}/mark-sent",
+      "action": "App\\Http\\Controllers\\Backoffice\\OfficialNotificationController@markSent",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notifications.mark_sent"
+      ],
+      "permission_middleware": [
+        "permission:notifications.mark_sent"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.official-notifications.show",
+      "domain": "notifications",
+      "expected_permission": "notifications.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/official-notifications/{officialNotification}",
+      "action": "App\\Http\\Controllers\\Backoffice\\OfficialNotificationController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notifications.view"
+      ],
+      "permission_middleware": [
+        "permission:notifications.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.official-notifications.store",
+      "domain": "notifications",
+      "expected_permission": "notifications.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/official-notifications",
+      "action": "App\\Http\\Controllers\\Backoffice\\OfficialNotificationController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notifications.create"
+      ],
+      "permission_middleware": [
+        "permission:notifications.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.claim",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.claim",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/work-tasks/{workTask}/claim",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@claim",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:work_tasks.claim"
+      ],
+      "permission_middleware": [
+        "permission:work_tasks.claim"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.index",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/work-tasks",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:work_tasks.view"
+      ],
+      "permission_middleware": [
+        "permission:work_tasks.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.my",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/work-tasks/my",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@my",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:work_tasks.view"
+      ],
+      "permission_middleware": [
+        "permission:work_tasks.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.overdue",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/work-tasks/overdue",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@overdue",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:work_tasks.view"
+      ],
+      "permission_middleware": [
+        "permission:work_tasks.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.reassign",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.reassign",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/work-tasks/{workTask}/reassign",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@reassign",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:work_tasks.reassign"
+      ],
+      "permission_middleware": [
+        "permission:work_tasks.reassign"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.show",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/work-tasks/{workTask}",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:work_tasks.view"
+      ],
+      "permission_middleware": [
+        "permission:work_tasks.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.status",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.update_status",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/work-tasks/{workTask}/status",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@updateStatus",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:work_tasks.update_status"
+      ],
+      "permission_middleware": [
+        "permission:work_tasks.update_status"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.team",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.view_team",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/work-tasks/team",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@team",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:work_tasks.view_team"
+      ],
+      "permission_middleware": [
+        "permission:work_tasks.view_team"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.analytics.index",
+      "domain": "reports",
+      "expected_permission": "reports.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/analytics",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\AnalyticsController",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:reports.view"
+      ],
+      "permission_middleware": [
+        "permission:reports.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.cases.audit.show",
+      "domain": "reports",
+      "expected_permission": "audit_logs.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/cases/audit/{auditEvent}",
+      "action": "App\\Http\\Controllers\\Backoffice\\CaseWorkspaceController@audit",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:audit_logs.view"
+      ],
+      "permission_middleware": [
+        "permission:audit_logs.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.cases.contests.show",
+      "domain": "reports",
+      "expected_permission": "contests.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/cases/contests/{contest}",
+      "action": "App\\Http\\Controllers\\Backoffice\\CaseWorkspaceController@contest",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:contests.view"
+      ],
+      "permission_middleware": [
+        "permission:contests.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.cases.tickets.show",
+      "domain": "reports",
+      "expected_permission": "support.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/cases/tickets/{supportTicket}",
+      "action": "App\\Http\\Controllers\\Backoffice\\CaseWorkspaceController@ticket",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:support.view"
+      ],
+      "permission_middleware": [
+        "permission:support.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.dashboard",
+      "domain": "reports",
+      "expected_permission": "notifications.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/communications/dashboard",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationCenterController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:notifications.view"
+      ],
+      "permission_middleware": [
+        "permission:notifications.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.operational.dashboard",
+      "domain": "reports",
+      "expected_permission": "dashboard.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/operational/dashboard",
+      "action": "App\\Http\\Controllers\\Backoffice\\OperationalDashboardController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:dashboard.view"
+      ],
+      "permission_middleware": [
+        "permission:dashboard.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.operational.executive-dashboard",
+      "domain": "reports",
+      "expected_permission": "reports.view_executive",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/operational/executive-dashboard",
+      "action": "App\\Http\\Controllers\\Backoffice\\ExecutiveDashboardController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:reports.view_executive"
+      ],
+      "permission_middleware": [
+        "permission:reports.view_executive"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.productivity.index",
+      "domain": "reports",
+      "expected_permission": "dashboard.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/productivity",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProductivityController",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:dashboard.view"
+      ],
+      "permission_middleware": [
+        "permission:dashboard.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.analytics",
+      "domain": "reports",
+      "expected_permission": "reports.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/reports/analytics",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\AnalyticsController",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:reports.view"
+      ],
+      "permission_middleware": [
+        "permission:reports.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.dashboard",
+      "domain": "reports",
+      "expected_permission": "reports.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/reports/dashboard",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\OperationalDashboardController",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:reports.view"
+      ],
+      "permission_middleware": [
+        "permission:reports.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.dashboards.create",
+      "domain": "reports",
+      "expected_permission": "dashboard_definitions.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/reports/dashboards/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardDefinitionController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:dashboard_definitions.create"
+      ],
+      "permission_middleware": [
+        "permission:dashboard_definitions.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.dashboards.destroy",
+      "domain": "reports",
+      "expected_permission": "dashboard_definitions.delete",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "DELETE",
+      "uri": "backoffice/reports/dashboards/{dashboardDefinition}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardDefinitionController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:dashboard_definitions.delete"
+      ],
+      "permission_middleware": [
+        "permission:dashboard_definitions.delete"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.dashboards.edit",
+      "domain": "reports",
+      "expected_permission": "dashboard_definitions.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/reports/dashboards/{dashboardDefinition}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardDefinitionController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:dashboard_definitions.update"
+      ],
+      "permission_middleware": [
+        "permission:dashboard_definitions.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.dashboards.index",
+      "domain": "reports",
+      "expected_permission": "dashboard_definitions.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/reports/dashboards",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardDefinitionController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:dashboard_definitions.view"
+      ],
+      "permission_middleware": [
+        "permission:dashboard_definitions.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.dashboards.store",
+      "domain": "reports",
+      "expected_permission": "dashboard_definitions.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/reports/dashboards",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardDefinitionController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:dashboard_definitions.create"
+      ],
+      "permission_middleware": [
+        "permission:dashboard_definitions.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.dashboards.update",
+      "domain": "reports",
+      "expected_permission": "dashboard_definitions.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/reports/dashboards/{dashboardDefinition}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardDefinitionController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:dashboard_definitions.update"
+      ],
+      "permission_middleware": [
+        "permission:dashboard_definitions.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.definitions.create",
+      "domain": "reports",
+      "expected_permission": "report_definitions.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/reports/definitions/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportDefinitionController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:report_definitions.create"
+      ],
+      "permission_middleware": [
+        "permission:report_definitions.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.definitions.destroy",
+      "domain": "reports",
+      "expected_permission": "report_definitions.delete",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "DELETE",
+      "uri": "backoffice/reports/definitions/{reportDefinition}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportDefinitionController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:report_definitions.delete"
+      ],
+      "permission_middleware": [
+        "permission:report_definitions.delete"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.definitions.edit",
+      "domain": "reports",
+      "expected_permission": "report_definitions.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/reports/definitions/{reportDefinition}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportDefinitionController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:report_definitions.update"
+      ],
+      "permission_middleware": [
+        "permission:report_definitions.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.definitions.store",
+      "domain": "reports",
+      "expected_permission": "report_definitions.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/reports/definitions",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportDefinitionController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:report_definitions.create"
+      ],
+      "permission_middleware": [
+        "permission:report_definitions.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.definitions.update",
+      "domain": "reports",
+      "expected_permission": "report_definitions.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/reports/definitions/{reportDefinition}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportDefinitionController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:report_definitions.update"
+      ],
+      "permission_middleware": [
+        "permission:report_definitions.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.executive",
+      "domain": "reports",
+      "expected_permission": "reports.view_executive",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/reports/executive",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ExecutiveDashboardController",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:reports.view_executive"
+      ],
+      "permission_middleware": [
+        "permission:reports.view_executive"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.filter-presets.destroy",
+      "domain": "reports",
+      "expected_permission": "report_filter_presets.delete",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "DELETE",
+      "uri": "backoffice/reports/filter-presets/{reportFilterPreset}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportFilterPresetController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:report_filter_presets.delete"
+      ],
+      "permission_middleware": [
+        "permission:report_filter_presets.delete"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.filter-presets.index",
+      "domain": "reports",
+      "expected_permission": "report_filter_presets.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/reports/filter-presets",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportFilterPresetController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:report_filter_presets.view"
+      ],
+      "permission_middleware": [
+        "permission:report_filter_presets.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.filter-presets.store",
+      "domain": "reports",
+      "expected_permission": "report_filter_presets.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/reports/filter-presets",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportFilterPresetController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:report_filter_presets.create"
+      ],
+      "permission_middleware": [
+        "permission:report_filter_presets.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.filter-presets.update",
+      "domain": "reports",
+      "expected_permission": "report_filter_presets.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/reports/filter-presets/{reportFilterPreset}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportFilterPresetController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:report_filter_presets.update"
+      ],
+      "permission_middleware": [
+        "permission:report_filter_presets.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.indicators.index",
+      "domain": "reports",
+      "expected_permission": "indicator_definitions.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/reports/indicators",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\IndicatorController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:indicator_definitions.view"
+      ],
+      "permission_middleware": [
+        "permission:indicator_definitions.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.indicators.show",
+      "domain": "reports",
+      "expected_permission": "indicator_definitions.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/reports/indicators/{indicatorDefinition}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\IndicatorController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:indicator_definitions.view"
+      ],
+      "permission_middleware": [
+        "permission:indicator_definitions.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.indicators.store",
+      "domain": "reports",
+      "expected_permission": "indicator_definitions.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/reports/indicators",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\IndicatorController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:indicator_definitions.create"
+      ],
+      "permission_middleware": [
+        "permission:indicator_definitions.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.indicators.update",
+      "domain": "reports",
+      "expected_permission": "indicator_definitions.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/reports/indicators/{indicatorDefinition}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\IndicatorController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:indicator_definitions.update"
+      ],
+      "permission_middleware": [
+        "permission:indicator_definitions.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.operational",
+      "domain": "reports",
+      "expected_permission": "reports.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/reports/operational",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\OperationalDashboardController",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:reports.view"
+      ],
+      "permission_middleware": [
+        "permission:reports.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.runs.index",
+      "domain": "reports",
+      "expected_permission": "reports.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/reports/runs",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportRunController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:reports.view"
+      ],
+      "permission_middleware": [
+        "permission:reports.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.runs.show",
+      "domain": "reports",
+      "expected_permission": "reports.view",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/reports/runs/{reportRun}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportRunController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:reports.view"
+      ],
+      "permission_middleware": [
+        "permission:reports.view"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.runs.store",
+      "domain": "reports",
+      "expected_permission": "reports.run",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/reports/definitions/{reportDefinition}/run",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportRunController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:reports.run"
+      ],
+      "permission_middleware": [
+        "permission:reports.run"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.widgets.destroy",
+      "domain": "reports",
+      "expected_permission": "dashboard_widgets.delete",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "DELETE",
+      "uri": "backoffice/reports/widgets/{dashboardWidget}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardWidgetController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:dashboard_widgets.delete"
+      ],
+      "permission_middleware": [
+        "permission:dashboard_widgets.delete"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.widgets.store",
+      "domain": "reports",
+      "expected_permission": "dashboard_widgets.create",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "POST",
+      "uri": "backoffice/reports/widgets",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardWidgetController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:dashboard_widgets.create"
+      ],
+      "permission_middleware": [
+        "permission:dashboard_widgets.create"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.widgets.update",
+      "domain": "reports",
+      "expected_permission": "dashboard_widgets.update",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/reports/widgets/{dashboardWidget}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardWidgetController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:dashboard_widgets.update"
+      ],
+      "permission_middleware": [
+        "permission:dashboard_widgets.update"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.dashboard",
+      "domain": "reports",
+      "expected_permission": "work_tasks.dashboard",
+      "runtime_count": 1,
+      "found": true,
+      "methods": "GET|HEAD",
+      "uri": "backoffice/work-tasks/dashboard",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskDashboardController",
+      "middleware": [
+        "web",
+        "auth",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice",
+        "permission:work_tasks.dashboard"
+      ],
+      "permission_middleware": [
+        "permission:work_tasks.dashboard"
+      ],
+      "role_middleware": [],
+      "permission_exact": true,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    }
+  ]
+}

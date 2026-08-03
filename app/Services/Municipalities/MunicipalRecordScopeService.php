@@ -7,21 +7,27 @@ use App\Models\AdministrativeDecision;
 use App\Models\AdministrativeProcess;
 use App\Models\AdministrativeProcessNote;
 use App\Models\AdministrativeTask;
+use App\Models\AdministrativeWorkflowConfig;
 use App\Models\Allocation;
+use App\Models\AllocationRuleSet;
 use App\Models\AllocationRun;
 use App\Models\AnnualDocumentUpdateRequest;
 use App\Models\Application;
 use App\Models\ApplicationReport;
 use App\Models\ApplicationReview;
+use App\Models\ApplicationReviewPublicationResult;
 use App\Models\ApplicationScore;
 use App\Models\ApplicationSimulationInconsistency;
 use App\Models\Arrear;
 use App\Models\Citizen;
+use App\Models\CommunicationDelivery;
+use App\Models\CommunicationLog;
 use App\Models\CommunicationReceipt;
 use App\Models\Complaint;
 use App\Models\ComplaintDecision;
 use App\Models\Contest;
 use App\Models\ContestClosure;
+use App\Models\ContextualFaq;
 use App\Models\Contract;
 use App\Models\ContractClause;
 use App\Models\ContractDeposit;
@@ -56,6 +62,7 @@ use App\Models\HousingUnit;
 use App\Models\HousingVisit;
 use App\Models\IncomeChangeDeclaration;
 use App\Models\InspectionChecklistTemplate;
+use App\Models\InternalAlert;
 use App\Models\KeyHandoverAppointment;
 use App\Models\LeaseContractDocument;
 use App\Models\LeaseContractValidation;
@@ -69,10 +76,17 @@ use App\Models\MaintenanceCost;
 use App\Models\MaintenanceIntervention;
 use App\Models\MaintenanceRequest;
 use App\Models\MaintenanceSupplier;
+use App\Models\MunicipalTeam;
+use App\Models\NotificationEventRule;
+use App\Models\NotificationPreference;
+use App\Models\NotificationTemplate;
+use App\Models\NotificationTemplateVersion;
+use App\Models\OfficialNotification;
 use App\Models\Payment;
 use App\Models\PaymentImportBatch;
 use App\Models\PaymentReceipt;
 use App\Models\PostDrawReport;
+use App\Models\ProcedureMinute;
 use App\Models\Program;
 use App\Models\PropertyInspection;
 use App\Models\ProvisionalList;
@@ -96,6 +110,8 @@ use App\Models\ScoringRuleSet;
 use App\Models\ScoringRun;
 use App\Models\SimulationSession;
 use App\Models\SimulatorConfiguration;
+use App\Models\SupportTicket;
+use App\Models\SupportTicketAttachment;
 use App\Models\TenantChargeRun;
 use App\Models\TenantCommunication;
 use App\Models\TenantFinancialAccount;
@@ -103,10 +119,12 @@ use App\Models\TenantInvoice;
 use App\Models\TenantPayment;
 use App\Models\TenantTransition;
 use App\Models\TieBreakerRule;
+use App\Models\TypologyAdequacyRule;
 use App\Models\User;
 use App\Models\VisitAvailability;
 use App\Models\VisitSlot;
 use App\Models\WinnerRegistration;
+use App\Models\WorkTask;
 use App\Services\Platform\PlatformOperatorScopeService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -117,6 +135,7 @@ class MunicipalRecordScopeService
     private const APPLICATION_REPORT_CODES = [
         'applications_by_contest',
         'application_status_summary',
+        'temporal_application_results',
     ];
 
     public function __construct(
@@ -679,6 +698,27 @@ class MunicipalRecordScopeService
     }
 
     /**
+     * @param  Builder<MunicipalTeam>  $query
+     * @return Builder<MunicipalTeam>
+     */
+    public function municipalTeams(Builder $query, User $user): Builder
+    {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        return $this->directMunicipalScope($query, $user);
+    }
+
+    public function ownsMunicipalTeam(User $user, MunicipalTeam $team): bool
+    {
+        return $this->municipalTeams(
+            MunicipalTeam::query()->whereKey($team),
+            $user,
+        )->exists();
+    }
+
+    /**
      * @param  Builder<FutureApplicationDataReuse>  $query
      * @return Builder<FutureApplicationDataReuse>
      */
@@ -715,6 +755,10 @@ class MunicipalRecordScopeService
      */
     public function applications(Builder $query, User $user): Builder
     {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
         if ($user->municipality_id === null) {
             return $query->whereRaw('1 = 0');
         }
@@ -1056,22 +1100,49 @@ class MunicipalRecordScopeService
     }
 
     /**
+     * @param  Builder<ApplicationReviewPublicationResult>  $query
+     * @return Builder<ApplicationReviewPublicationResult>
+     */
+    public function applicationReviewPublicationResults(
+        Builder $query,
+        User $user,
+    ): Builder {
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where('municipality_id', $user->municipality_id);
+    }
+
+    public function ownsApplicationReviewPublicationResult(
+        User $user,
+        ApplicationReviewPublicationResult $result,
+    ): bool {
+        return $this->applicationReviewPublicationResults(
+            ApplicationReviewPublicationResult::query()->whereKey($result),
+            $user,
+        )->exists();
+    }
+
+    /**
      * @param  Builder<CorrectionRequest>  $query
      * @return Builder<CorrectionRequest>
      */
     public function correctionRequests(Builder $query, User $user): Builder
     {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
         if ($user->municipality_id === null) {
             return $query->whereRaw('1 = 0');
         }
 
-        return $query->where(function (Builder $requests) use ($user): void {
-            $requests
-                ->whereHas('administrativeProcess.program', fn (Builder $program): Builder => $program
-                    ->where('municipality_id', $user->municipality_id))
-                ->orWhereHas('application.program', fn (Builder $program): Builder => $program
-                    ->where('municipality_id', $user->municipality_id));
-        });
+        return $query->whereHas(
+            'publicationResult',
+            fn (Builder $result): Builder => $result
+                ->where('municipality_id', $user->municipality_id),
+        );
     }
 
     public function ownsCorrectionRequest(User $user, CorrectionRequest $request): bool
@@ -1088,16 +1159,48 @@ class MunicipalRecordScopeService
      */
     public function correctionResponses(Builder $query, User $user): Builder
     {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
         if ($user->municipality_id === null) {
             return $query->whereRaw('1 = 0');
         }
 
         return $query->where(function (Builder $responses) use ($user): void {
-            $responses
-                ->whereHas('correctionRequest.administrativeProcess.program', fn (Builder $program): Builder => $program
-                    ->where('municipality_id', $user->municipality_id))
-                ->orWhereHas('application.program', fn (Builder $program): Builder => $program
-                    ->where('municipality_id', $user->municipality_id));
+            $responses->whereHas(
+                'correctionRequest.publicationResult',
+                fn (Builder $result): Builder => $result
+                    ->where('municipality_id', $user->municipality_id),
+            )->orWhere(function (Builder $legacy) use ($user): void {
+                $legacy
+                    ->whereHas(
+                        'correctionRequest',
+                        fn (Builder $requests): Builder => $requests
+                            ->whereNull(
+                                'application_review_publication_result_id',
+                            ),
+                    )
+                    ->where(function (Builder $legacyScope) use ($user): void {
+                        $legacyScope
+                            ->whereHas(
+                                'correctionRequest.administrativeProcess.program',
+                                fn (Builder $program): Builder => $program
+                                    ->where(
+                                        'municipality_id',
+                                        $user->municipality_id,
+                                    ),
+                            )
+                            ->orWhereHas(
+                                'application.program',
+                                fn (Builder $program): Builder => $program
+                                    ->where(
+                                        'municipality_id',
+                                        $user->municipality_id,
+                                    ),
+                            );
+                    });
+            });
         });
     }
 
@@ -1299,6 +1402,60 @@ class MunicipalRecordScopeService
     }
 
     /**
+     * @param  Builder<ProcedureMinute>  $query
+     * @return Builder<ProcedureMinute>
+     */
+    public function procedureMinutes(
+        Builder $query,
+        User $user,
+    ): Builder {
+        $query->where(function (Builder $minutes): void {
+            $minutes
+                ->whereNotNull('program_id')
+                ->orWhereNotNull('contest_id')
+                ->orWhereNotNull('application_id');
+        });
+
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query
+            ->where(function (Builder $minutes) use ($user): void {
+                $minutes
+                    ->whereNull('program_id')
+                    ->orWhereHas('program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+            })
+            ->where(function (Builder $minutes) use ($user): void {
+                $minutes
+                    ->whereNull('contest_id')
+                    ->orWhereHas('contest.program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+            })
+            ->where(function (Builder $minutes) use ($user): void {
+                $minutes
+                    ->whereNull('application_id')
+                    ->orWhereHas('application.program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+            });
+    }
+
+    public function ownsProcedureMinute(
+        User $user,
+        ProcedureMinute $minute,
+    ): bool {
+        return $this->procedureMinutes(
+            ProcedureMinute::query()->whereKey($minute),
+            $user,
+        )->exists();
+    }
+
+    /**
      * @param  Builder<LeaseContractDocument>  $query
      * @return Builder<LeaseContractDocument>
      */
@@ -1443,6 +1600,44 @@ class MunicipalRecordScopeService
     {
         return $this->rentRuleSets(
             RentRuleSet::query()->whereKey($ruleSet),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<TypologyAdequacyRule>  $query
+     * @return Builder<TypologyAdequacyRule>
+     */
+    public function typologyAdequacyRules(Builder $query, User $user): Builder
+    {
+        return $this->ruleSetsThroughProgramOrContest($query, $user);
+    }
+
+    public function ownsTypologyAdequacyRule(
+        User $user,
+        TypologyAdequacyRule $rule,
+    ): bool {
+        return $this->typologyAdequacyRules(
+            TypologyAdequacyRule::query()->whereKey($rule),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<AllocationRuleSet>  $query
+     * @return Builder<AllocationRuleSet>
+     */
+    public function allocationRuleSets(Builder $query, User $user): Builder
+    {
+        return $this->ruleSetsThroughProgramOrContest($query, $user);
+    }
+
+    public function ownsAllocationRuleSet(
+        User $user,
+        AllocationRuleSet $ruleSet,
+    ): bool {
+        return $this->allocationRuleSets(
+            AllocationRuleSet::query()->whereKey($ruleSet),
             $user,
         )->exists();
     }
@@ -1868,18 +2063,12 @@ class MunicipalRecordScopeService
      */
     public function communicationReceipts(Builder $query, User $user): Builder
     {
-        if ($this->platformScope->hasGlobalScope($user)) {
-            return $query;
-        }
-
-        if ($user->municipality_id === null) {
-            return $query->whereRaw('1 = 0');
-        }
-
-        return $query->whereHas(
-            'communication.recipient',
-            fn (Builder $recipient): Builder => $recipient
-                ->where('municipality_id', $user->municipality_id),
+        return $query->whereIn(
+            'communication_log_id',
+            $this->communicationLogs(
+                CommunicationLog::query(),
+                $user,
+            )->select('id'),
         );
     }
 
@@ -1889,6 +2078,360 @@ class MunicipalRecordScopeService
     ): bool {
         return $this->communicationReceipts(
             CommunicationReceipt::query()->whereKey($receipt),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<NotificationTemplate>  $query
+     * @return Builder<NotificationTemplate>
+     */
+    public function notificationTemplates(
+        Builder $query,
+        User $user,
+        bool $includeSystem = true,
+    ): Builder {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query
+            ->where(function (Builder $templates) use ($includeSystem, $user): void {
+                $templates
+                    ->where('municipality_id', $user->municipality_id)
+                    ->orWhereHas('program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id))
+                    ->orWhereHas('contest.program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+
+                if ($includeSystem) {
+                    $templates->orWhere(function (Builder $system): void {
+                        $system
+                            ->whereNull('municipality_id')
+                            ->whereNull('program_id')
+                            ->whereNull('contest_id');
+                    });
+                }
+            })
+            ->where(function (Builder $templates) use ($user): void {
+                $templates
+                    ->whereNull('municipality_id')
+                    ->orWhere('municipality_id', $user->municipality_id);
+            })
+            ->where(function (Builder $templates) use ($user): void {
+                $templates
+                    ->whereNull('program_id')
+                    ->orWhereHas('program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+            })
+            ->where(function (Builder $templates) use ($user): void {
+                $templates
+                    ->whereNull('contest_id')
+                    ->orWhereHas('contest.program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+            });
+    }
+
+    public function ownsNotificationTemplate(
+        User $user,
+        NotificationTemplate $template,
+        bool $includeSystem = true,
+    ): bool {
+        return $this->notificationTemplates(
+            NotificationTemplate::query()->whereKey($template),
+            $user,
+            $includeSystem,
+        )->exists();
+    }
+
+    public function canMutateNotificationTemplate(
+        User $user,
+        NotificationTemplate $template,
+    ): bool {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return true;
+        }
+
+        return $user->municipality_id !== null
+            && ! (
+                $template->municipality_id === null
+                && $template->program_id === null
+                && $template->contest_id === null
+            )
+            && $this->ownsNotificationTemplate($user, $template, false);
+    }
+
+    public function ownsNotificationTemplateVersion(
+        User $user,
+        NotificationTemplateVersion $version,
+        bool $includeSystem = true,
+    ): bool {
+        return NotificationTemplateVersion::query()
+            ->whereKey($version)
+            ->whereIn(
+                'notification_template_id',
+                $this->notificationTemplates(
+                    NotificationTemplate::query(),
+                    $user,
+                    $includeSystem,
+                )->select('id'),
+            )
+            ->exists();
+    }
+
+    public function canMutateNotificationTemplateVersion(
+        User $user,
+        NotificationTemplateVersion $version,
+    ): bool {
+        $version->loadMissing('template');
+
+        return $version->template instanceof NotificationTemplate
+            && $this->canMutateNotificationTemplate(
+                $user,
+                $version->template,
+            );
+    }
+
+    /**
+     * @param  Builder<NotificationEventRule>  $query
+     * @return Builder<NotificationEventRule>
+     */
+    public function notificationEventRules(
+        Builder $query,
+        User $user,
+        bool $includeSystem = true,
+    ): Builder {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query
+            ->whereIn(
+                'notification_template_id',
+                $this->notificationTemplates(
+                    NotificationTemplate::query(),
+                    $user,
+                    $includeSystem,
+                )->select('id'),
+            )
+            ->where(function (Builder $rules) use ($includeSystem, $user): void {
+                $rules
+                    ->where('municipality_id', $user->municipality_id)
+                    ->orWhereHas('program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id))
+                    ->orWhereHas('contest.program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+
+                if ($includeSystem) {
+                    $rules->orWhere(function (Builder $system): void {
+                        $system
+                            ->whereNull('municipality_id')
+                            ->whereNull('program_id')
+                            ->whereNull('contest_id');
+                    });
+                }
+            })
+            ->where(function (Builder $rules) use ($user): void {
+                $rules
+                    ->whereNull('municipality_id')
+                    ->orWhere('municipality_id', $user->municipality_id);
+            })
+            ->where(function (Builder $rules) use ($user): void {
+                $rules
+                    ->whereNull('program_id')
+                    ->orWhereHas('program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+            })
+            ->where(function (Builder $rules) use ($user): void {
+                $rules
+                    ->whereNull('contest_id')
+                    ->orWhereHas('contest.program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+            });
+    }
+
+    public function ownsNotificationEventRule(
+        User $user,
+        NotificationEventRule $rule,
+        bool $includeSystem = true,
+    ): bool {
+        return $this->notificationEventRules(
+            NotificationEventRule::query()->whereKey($rule),
+            $user,
+            $includeSystem,
+        )->exists();
+    }
+
+    public function canMutateNotificationEventRule(
+        User $user,
+        NotificationEventRule $rule,
+    ): bool {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return true;
+        }
+
+        return $user->municipality_id !== null
+            && ! (
+                $rule->municipality_id === null
+                && $rule->program_id === null
+                && $rule->contest_id === null
+            )
+            && $this->ownsNotificationEventRule($user, $rule, false);
+    }
+
+    /**
+     * @param  Builder<CommunicationLog>  $query
+     * @return Builder<CommunicationLog>
+     */
+    public function communicationLogs(
+        Builder $query,
+        User $user,
+    ): Builder {
+        $query->whereNotNull('municipality_id');
+
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query
+            ->where('municipality_id', $user->municipality_id)
+            ->where(function (Builder $logs) use ($user): void {
+                $logs
+                    ->whereNull('recipient_user_id')
+                    ->orWhereHas('recipient', fn (Builder $recipient): Builder => $recipient
+                        ->where('municipality_id', $user->municipality_id));
+            })
+            ->where(function (Builder $logs) use ($user): void {
+                $logs
+                    ->whereNull('notification_template_id')
+                    ->orWhereIn(
+                        'notification_template_id',
+                        $this->notificationTemplates(
+                            NotificationTemplate::query(),
+                            $user,
+                        )->select('id'),
+                    );
+            })
+            ->where(function (Builder $logs) use ($user): void {
+                $logs
+                    ->whereNull('created_by')
+                    ->orWhereHas('creator', fn (Builder $creator): Builder => $creator
+                        ->where('municipality_id', $user->municipality_id));
+            });
+    }
+
+    public function ownsCommunicationLog(
+        User $user,
+        CommunicationLog $communication,
+    ): bool {
+        return $this->communicationLogs(
+            CommunicationLog::query()->whereKey($communication),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<CommunicationDelivery>  $query
+     * @return Builder<CommunicationDelivery>
+     */
+    public function communicationDeliveries(
+        Builder $query,
+        User $user,
+    ): Builder {
+        return $query->whereIn(
+            'communication_log_id',
+            $this->communicationLogs(
+                CommunicationLog::query(),
+                $user,
+            )->select('id'),
+        );
+    }
+
+    public function ownsCommunicationDelivery(
+        User $user,
+        CommunicationDelivery $delivery,
+    ): bool {
+        return $this->communicationDeliveries(
+            CommunicationDelivery::query()->whereKey($delivery),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<NotificationPreference>  $query
+     * @return Builder<NotificationPreference>
+     */
+    public function notificationPreferences(
+        Builder $query,
+        User $user,
+    ): Builder {
+        return $query->whereIn(
+            'user_id',
+            $this->users(User::query(), $user)->select('id'),
+        );
+    }
+
+    /**
+     * @param  Builder<OfficialNotification>  $query
+     * @return Builder<OfficialNotification>
+     */
+    public function officialNotifications(
+        Builder $query,
+        User $user,
+    ): Builder {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query
+            ->whereHas('user', fn (Builder $recipient): Builder => $recipient
+                ->where('municipality_id', $user->municipality_id))
+            ->where(function (Builder $notifications) use ($user): void {
+                $notifications
+                    ->whereNull('application_id')
+                    ->orWhereIn(
+                        'application_id',
+                        $this->applications(
+                            Application::query(),
+                            $user,
+                        )->select('id'),
+                    );
+            })
+            ->where(function (Builder $notifications) use ($user): void {
+                $notifications
+                    ->whereNull('communication_log_id')
+                    ->orWhereIn(
+                        'communication_log_id',
+                        $this->communicationLogs(
+                            CommunicationLog::query(),
+                            $user,
+                        )->select('id'),
+                    );
+            });
+    }
+
+    public function ownsOfficialNotification(
+        User $user,
+        OfficialNotification $notification,
+    ): bool {
+        return $this->officialNotifications(
+            OfficialNotification::query()->whereKey($notification),
             $user,
         )->exists();
     }
@@ -1963,23 +2506,7 @@ class MunicipalRecordScopeService
      */
     public function eligibilityRuleSets(Builder $query, User $user): Builder
     {
-        if ($user->municipality_id === null) {
-            return $query->whereRaw('1 = 0');
-        }
-
-        return $query->where(function (Builder $ruleSets) use ($user): void {
-            $ruleSets
-                ->whereHas(
-                    'program',
-                    fn (Builder $program): Builder => $program
-                        ->where('municipality_id', $user->municipality_id),
-                )
-                ->orWhereHas(
-                    'contest.program',
-                    fn (Builder $program): Builder => $program
-                        ->where('municipality_id', $user->municipality_id),
-                );
-        });
+        return $this->ruleSetsThroughProgramOrContest($query, $user);
     }
 
     public function ownsEligibilityRuleSet(User $user, EligibilityRuleSet $ruleSet): bool
@@ -2452,20 +2979,19 @@ class MunicipalRecordScopeService
      */
     public function reportRuns(Builder $query, User $user): Builder
     {
-        return $query->where(function (Builder $runs) use ($user): void {
-            $runs->whereHas('definition', fn (Builder $definition): Builder => $definition
-                ->whereNotIn('code', self::APPLICATION_REPORT_CODES));
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
 
-            if ($user->municipality_id !== null) {
-                $runs->orWhere(function (Builder $applicationRuns) use ($user): void {
-                    $applicationRuns
-                        ->whereHas('definition', fn (Builder $definition): Builder => $definition
-                            ->whereIn('code', self::APPLICATION_REPORT_CODES))
-                        ->whereHas('user', fn (Builder $owner): Builder => $owner
-                            ->where('municipality_id', $user->municipality_id));
-                });
-            }
-        });
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereHas(
+            'user',
+            fn (Builder $owner): Builder => $owner
+                ->where('municipality_id', $user->municipality_id),
+        );
     }
 
     public function ownsReportRun(User $user, ReportRun $run): bool
@@ -2482,15 +3008,35 @@ class MunicipalRecordScopeService
         User $user,
         bool $includeApplicationReports = true,
     ): Builder {
-        if (! $includeApplicationReports) {
-            return $query->whereHas('run.definition', fn (Builder $definition): Builder => $definition
-                ->whereNotIn('code', self::APPLICATION_REPORT_CODES));
+        if (! $this->platformScope->hasGlobalScope($user)) {
+            if ($user->municipality_id === null) {
+                return $query->whereRaw('1 = 0');
+            }
+
+            $query->where(function (Builder $exports) use ($user): void {
+                $exports
+                    ->where('municipality_id', $user->municipality_id)
+                    ->orWhere(function (Builder $legacy) use ($user): void {
+                        $legacy
+                            ->whereNull('municipality_id')
+                            ->whereIn(
+                                'report_run_id',
+                                $this->reportRuns(ReportRun::query(), $user)
+                                    ->select('id'),
+                            );
+                    });
+            });
         }
 
-        return $query->whereIn(
-            'report_run_id',
-            $this->reportRuns(ReportRun::query(), $user)->select('id'),
-        );
+        if (! $includeApplicationReports) {
+            $query->whereHas(
+                'run.definition',
+                fn (Builder $definition): Builder => $definition
+                    ->whereNotIn('code', self::APPLICATION_REPORT_CODES),
+            );
+        }
+
+        return $query;
     }
 
     public function ownsReportExport(User $user, ReportExport $export): bool
@@ -2504,22 +3050,19 @@ class MunicipalRecordScopeService
      */
     public function reportAccessLogs(Builder $query, User $user): Builder
     {
-        return $query->where(function (Builder $logs) use ($user): void {
-            $logs
-                ->whereNull('report_definition_id')
-                ->orWhereHas('definition', fn (Builder $definition): Builder => $definition
-                    ->whereNotIn('code', self::APPLICATION_REPORT_CODES));
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
 
-            if ($user->municipality_id !== null) {
-                $logs->orWhere(function (Builder $applicationLogs) use ($user): void {
-                    $applicationLogs
-                        ->whereHas('definition', fn (Builder $definition): Builder => $definition
-                            ->whereIn('code', self::APPLICATION_REPORT_CODES))
-                        ->whereHas('user', fn (Builder $owner): Builder => $owner
-                            ->where('municipality_id', $user->municipality_id));
-                });
-            }
-        });
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereHas(
+            'user',
+            fn (Builder $owner): Builder => $owner
+                ->where('municipality_id', $user->municipality_id),
+        );
     }
 
     /**
@@ -3033,6 +3576,285 @@ class MunicipalRecordScopeService
     }
 
     /**
+     * @param  Builder<InternalAlert>  $query
+     * @return Builder<InternalAlert>
+     */
+    public function internalAlerts(
+        Builder $query,
+        User $user,
+    ): Builder {
+        $query->where(function (Builder $alerts): void {
+            $alerts
+                ->whereNotNull('municipality_id')
+                ->orWhereNotNull('program_id')
+                ->orWhereNotNull('contest_id')
+                ->orWhereNotNull('application_id');
+        });
+
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query
+            ->where(function (Builder $alerts) use ($user): void {
+                $alerts
+                    ->whereNull('municipality_id')
+                    ->orWhere('municipality_id', $user->municipality_id);
+            })
+            ->where(function (Builder $alerts) use ($user): void {
+                $alerts
+                    ->whereNull('program_id')
+                    ->orWhereHas('program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+            })
+            ->where(function (Builder $alerts) use ($user): void {
+                $alerts
+                    ->whereNull('contest_id')
+                    ->orWhereHas('contest.program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+            })
+            ->where(function (Builder $alerts) use ($user): void {
+                $alerts
+                    ->whereNull('application_id')
+                    ->orWhereHas('application.program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+            });
+    }
+
+    public function ownsInternalAlert(
+        User $user,
+        InternalAlert $alert,
+    ): bool {
+        return $this->internalAlerts(
+            InternalAlert::query()->whereKey($alert),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<AdministrativeWorkflowConfig>  $query
+     * @return Builder<AdministrativeWorkflowConfig>
+     */
+    public function administrativeWorkflowConfigs(
+        Builder $query,
+        User $user,
+    ): Builder {
+        $query->where(function (Builder $configs): void {
+            $configs
+                ->whereNotNull('program_id')
+                ->orWhereNotNull('contest_id');
+        });
+
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query
+            ->where(function (Builder $configs) use ($user): void {
+                $configs
+                    ->whereNull('program_id')
+                    ->orWhereHas('program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+            })
+            ->where(function (Builder $configs) use ($user): void {
+                $configs
+                    ->whereNull('contest_id')
+                    ->orWhereHas('contest.program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+            });
+    }
+
+    public function ownsAdministrativeWorkflowConfig(
+        User $user,
+        AdministrativeWorkflowConfig $config,
+    ): bool {
+        return $this->administrativeWorkflowConfigs(
+            AdministrativeWorkflowConfig::query()->whereKey($config),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<ContextualFaq>  $query
+     * @return Builder<ContextualFaq>
+     */
+    public function contextualFaqs(
+        Builder $query,
+        User $user,
+        bool $includeSystem = true,
+    ): Builder {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $faqs) use ($includeSystem, $user): void {
+            $faqs->whereHas('contest.program', fn (Builder $program): Builder => $program
+                ->where('municipality_id', $user->municipality_id));
+
+            if ($includeSystem) {
+                $faqs->orWhereNull('contest_id');
+            }
+        });
+    }
+
+    public function ownsContextualFaq(
+        User $user,
+        ContextualFaq $faq,
+        bool $includeSystem = true,
+    ): bool {
+        return $this->contextualFaqs(
+            ContextualFaq::query()->whereKey($faq),
+            $user,
+            $includeSystem,
+        )->exists();
+    }
+
+    public function canMutateContextualFaq(
+        User $user,
+        ContextualFaq $faq,
+    ): bool {
+        if ($faq->contest_id === null) {
+            return $this->platformScope->hasGlobalScope($user);
+        }
+
+        return $this->ownsContextualFaq($user, $faq, false);
+    }
+
+    /**
+     * @param  Builder<SupportTicket>  $query
+     * @return Builder<SupportTicket>
+     */
+    public function supportTickets(
+        Builder $query,
+        User $user,
+    ): Builder {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query
+            ->whereHas('user', fn (Builder $owner): Builder => $owner
+                ->where('municipality_id', $user->municipality_id))
+            ->where(function (Builder $tickets) use ($user): void {
+                $tickets
+                    ->whereNull('application_id')
+                    ->orWhereHas('application.program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+            })
+            ->where(function (Builder $tickets) use ($user): void {
+                $tickets
+                    ->whereNull('contest_id')
+                    ->orWhereHas('contest.program', fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id));
+            })
+            ->where(function (Builder $tickets) use ($user): void {
+                $tickets
+                    ->whereNull('housing_unit_id')
+                    ->orWhereHas('housingUnit', fn (Builder $unit): Builder => $unit
+                        ->where('municipality_id', $user->municipality_id));
+            });
+    }
+
+    public function ownsSupportTicket(
+        User $user,
+        SupportTicket $ticket,
+    ): bool {
+        return $this->supportTickets(
+            SupportTicket::query()->whereKey($ticket),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<SupportTicketAttachment>  $query
+     * @return Builder<SupportTicketAttachment>
+     */
+    public function supportTicketAttachments(
+        Builder $query,
+        User $user,
+    ): Builder {
+        return $query->whereIn(
+            'support_ticket_id',
+            $this->supportTickets(
+                SupportTicket::query(),
+                $user,
+            )->select('id'),
+        );
+    }
+
+    public function ownsSupportTicketAttachment(
+        User $user,
+        SupportTicketAttachment $attachment,
+    ): bool {
+        return $this->supportTicketAttachments(
+            SupportTicketAttachment::query()->whereKey($attachment),
+            $user,
+        )->exists();
+    }
+
+    /**
+     * @param  Builder<WorkTask>  $query
+     * @return Builder<WorkTask>
+     */
+    public function workTasks(
+        Builder $query,
+        User $user,
+    ): Builder {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $tasks) use ($user): void {
+            $tasks
+                ->whereHas('municipalTeam', fn (Builder $team): Builder => $team
+                    ->where('municipality_id', $user->municipality_id))
+                ->orWhere(function (Builder $withoutTeam) use ($user): void {
+                    $withoutTeam
+                        ->whereNull('municipal_team_id')
+                        ->whereHas('assignedUser', fn (Builder $assignee): Builder => $assignee
+                            ->where('municipality_id', $user->municipality_id));
+                })
+                ->orWhere(function (Builder $unassigned) use ($user): void {
+                    $unassigned
+                        ->whereNull('municipal_team_id')
+                        ->whereNull('assigned_user_id')
+                        ->whereHas('createdBy', fn (Builder $creator): Builder => $creator
+                            ->where('municipality_id', $user->municipality_id));
+                });
+        });
+    }
+
+    public function ownsWorkTask(
+        User $user,
+        WorkTask $task,
+    ): bool {
+        return $this->workTasks(
+            WorkTask::query()->whereKey($task),
+            $user,
+        )->exists();
+    }
+
+    /**
      * @param  Builder<MaintenanceCategory>  $query
      * @return Builder<MaintenanceCategory>
      */
@@ -3329,6 +4151,39 @@ class MunicipalRecordScopeService
         }
 
         return $query->where('municipality_id', $user->municipality_id);
+    }
+
+    /**
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
+     */
+    private function ruleSetsThroughProgramOrContest(
+        Builder $query,
+        User $user,
+    ): Builder {
+        if ($this->platformScope->hasGlobalScope($user)) {
+            return $query;
+        }
+
+        if ($user->municipality_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $ruleSets) use ($user): void {
+            $ruleSets
+                ->whereHas(
+                    'program',
+                    fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id),
+                )
+                ->orWhereHas(
+                    'contest.program',
+                    fn (Builder $program): Builder => $program
+                        ->where('municipality_id', $user->municipality_id),
+                );
+        });
     }
 
     /**

@@ -54,8 +54,8 @@ class EligibilityRuleSetPolicy
     public function viewAnyBackoffice(User $user): bool
     {
         return ! $user->hasRole('candidate')
-            && $user->municipality_id !== null
-            && $this->canAccess($user, 'eligibility', 'view');
+            && $this->canAccess($user, 'eligibility', 'view')
+            && $this->municipalScope->hasMunicipalOrGlobalScope($user);
     }
 
     public function viewBackoffice(User $user, EligibilityRuleSet $ruleSet): bool
@@ -67,8 +67,8 @@ class EligibilityRuleSetPolicy
     public function createBackoffice(User $user): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $user->municipality_id !== null
-            && $this->canAccess($user, 'eligibility', 'create');
+            && $this->canAccess($user, 'eligibility', 'create')
+            && $this->municipalScope->hasMunicipalOrGlobalScope($user);
     }
 
     public function updateBackoffice(User $user, EligibilityRuleSet $ruleSet): bool

@@ -2,13 +2,24 @@
 
 namespace App\Http\Requests;
 
+use App\Models\InternalAlert;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ResolveInternalAlertRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasPermission('backoffice.update') || $this->user()?->hasPermission('reports.update');
+        $alert = $this->route('internalAlert');
+
+        if (! $alert instanceof InternalAlert) {
+            return false;
+        }
+
+        $ability = $this->routeIs('backoffice.internal-alerts.dismiss')
+            ? 'dismissBackoffice'
+            : 'resolveBackoffice';
+
+        return $this->user()?->can($ability, $alert) === true;
     }
 
     /**

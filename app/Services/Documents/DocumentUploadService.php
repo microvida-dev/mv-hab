@@ -44,8 +44,9 @@ class DocumentUploadService
         UploadedFile $file,
         array $data,
         User $actor,
+        bool $allowCorrection = false,
     ): DocumentSubmission {
-        $this->ensureEditable($registration);
+        $this->ensureEditable($registration, $allowCorrection);
 
         $requiredDocument = RequiredDocument::query()
             ->with('documentType')
@@ -56,6 +57,7 @@ class DocumentUploadService
         $application = $this->applicationFor(
             $registration,
             $data['application_public_id'] ?? null,
+            $allowCorrection,
         );
 
         $this->ensureRuleScope($requiredDocument, $application);
@@ -201,12 +203,17 @@ class DocumentUploadService
     /**
      * @param  array{notes?: string|null, title?: string|null, issue_date?: mixed, expiry_date?: mixed}  $data
      */
-    public function replace(DocumentSubmission $submission, UploadedFile $file, array $data, User $actor): DocumentSubmission
-    {
+    public function replace(
+        DocumentSubmission $submission,
+        UploadedFile $file,
+        array $data,
+        User $actor,
+        bool $allowCorrection = false,
+    ): DocumentSubmission {
         $submission->loadMissing(['documentType', 'requiredDocument.documentType', 'currentVersion', 'adhesionRegistration']);
         $registration = $submission->adhesionRegistration;
         assert($registration instanceof AdhesionRegistration);
-        $this->ensureEditable($registration);
+        $this->ensureEditable($registration, $allowCorrection);
 
         if (! $submission->isReplaceable()) {
             throw ValidationException::withMessages([
@@ -258,7 +265,14 @@ class DocumentUploadService
                 $previousVersion->forceFill(['status_at_upload' => DocumentStatus::Replaced])->save();
             }
 
-            $version = $this->storeVersion($submission, $file, $nextVersion, $actor, $data['notes'] ?? null);
+            $version = $this->storeVersion(
+                submission: $submission,
+                file: $file,
+                versionNumber: $nextVersion,
+                actor: $actor,
+                notes: $data['notes'] ?? null,
+                replacesVersion: $previousVersion,
+            );
             $this->syncSubmissionFile(
                 submission: $submission,
                 version: $version,
@@ -328,6 +342,7 @@ class DocumentUploadService
         int $versionNumber,
         User $actor,
         ?string $notes,
+        ?DocumentVersion $replacesVersion = null,
     ): DocumentVersion {
         $extension = Str::lower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
         $storedFilename = Str::uuid()->toString().'.'.$extension;
@@ -339,6 +354,7 @@ class DocumentUploadService
         $version = new DocumentVersion(['notes' => $notes]);
         $version->forceFill([
             'document_submission_id' => $submission->id,
+            'replaces_document_version_id' => $replacesVersion?->id,
             'version_number' => $versionNumber,
             'original_filename' => $file->getClientOriginalName(),
             'stored_filename' => $storedFilename,
@@ -401,8 +417,14 @@ class DocumentUploadService
         }
     }
 
-    private function ensureEditable(AdhesionRegistration $registration): void
-    {
+    private function ensureEditable(
+        AdhesionRegistration $registration,
+        bool $allowCorrection = false,
+    ): void {
+        if ($allowCorrection) {
+            return;
+        }
+
         $status = $registration->status;
 
         if (! in_array($status, [
@@ -786,8 +808,11 @@ class DocumentUploadService
         });
     }
 
-    private function applicationFor(AdhesionRegistration $registration, ?string $publicId): ?Application
-    {
+    private function applicationFor(
+        AdhesionRegistration $registration,
+        ?string $publicId,
+        bool $allowCorrection = false,
+    ): ?Application {
         if ($publicId === null) {
             return null;
         }
@@ -796,7 +821,10 @@ class DocumentUploadService
             ->where('public_id', $publicId)
             ->first();
 
-        if ($application === null || ! $application->isEditable()) {
+        if (
+            $application === null
+            || (! $allowCorrection && ! $application->isEditable())
+        ) {
             throw ValidationException::withMessages([
                 'application_public_id' => 'A candidatura indicada não está disponível para submissão documental.',
             ]);

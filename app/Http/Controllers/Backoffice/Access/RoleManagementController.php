@@ -67,6 +67,7 @@ class RoleManagementController extends Controller
             'permissionGroups' => $permissions->grouped(),
             'roleDraft' => null,
             'template' => null,
+            'templatePreview' => null,
         ]);
     }
 
@@ -75,18 +76,29 @@ class RoleManagementController extends Controller
         $validated = $request->validated();
 
         try {
-            $role = $roles->create(
-                $this->authenticatedUser($request),
-                $validated,
-                $this->permissionIds($validated),
-                (string) $validated['justification'],
-            );
+            $actor = $this->authenticatedUser($request);
+            $templateKey = $validated['template_key'] ?? null;
+            $role = is_string($templateKey)
+                ? $roles->applyTemplate(
+                    $actor,
+                    $templateKey,
+                    (string) $validated['justification'],
+                    $request->boolean('confirm_reconcile'),
+                )
+                : $roles->create(
+                    $actor,
+                    $validated,
+                    $this->permissionIds($validated),
+                    (string) $validated['justification'],
+                );
         } catch (DomainException $exception) {
             return back()->withInput()->withErrors(['role' => $exception->getMessage()]);
         }
 
         return redirect()->route('backoffice.roles.show', $role)
-            ->with('status', 'Perfil municipal criado com auditoria.');
+            ->with('status', is_string($validated['template_key'] ?? null)
+                ? 'Template municipal aplicado com auditoria.'
+                : 'Perfil municipal criado com auditoria.');
     }
 
     public function show(

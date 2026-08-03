@@ -8,8 +8,11 @@ use App\Models\AdministrativeProcess;
 use App\Models\Application;
 use App\Models\CorrectionRequest;
 use App\Models\User;
+use App\Services\Audit\AuditLogger;
+use App\Support\AuditEvents;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AdministrativeDeadlineService
@@ -17,65 +20,122 @@ class AdministrativeDeadlineService
     public function __construct(
         private readonly AdministrativeWorkflowConfigResolver $configResolver,
         private readonly AdministrativeWorkflowTransitionService $transitionService,
+        private readonly AuditLogger $audit,
     ) {}
 
-    public function correctionDeadlineForApplication(Application $application): CarbonImmutable
-    {
-        $config = $this->configResolver->resolveForApplication($application);
+    public function correctionDeadlineForApplication(
+        Application $application,
+    ): CarbonImmutable {
+        $config = $this->configResolver
+            ->resolveForApplication($application);
 
-        return now()->toImmutable()->addDays($config->default_correction_deadline_days);
+        return now()->toImmutable()->addDays(
+            $config->default_correction_deadline_days,
+        );
     }
 
     /** @return Collection<int, CorrectionRequest> */
-    public function markOverdueCorrections(User $actor): Collection
-    {
-        return CorrectionRequest::query()
-            ->with('administrativeProcess')
+    public function markOverdueCorrections(
+        ?User $actor = null,
+    ): Collection {
+        $expired = collect();
+
+        CorrectionRequest::query()
+            ->select('id')
             ->whereIn('status', [
-                CorrectionRequestStatus::Issued->value,
+                CorrectionRequestStatus::Notified->value,
                 CorrectionRequestStatus::Open->value,
-                CorrectionRequestStatus::PartiallyResponded->value,
+                CorrectionRequestStatus::PartiallyCompleted->value,
             ])
             ->whereNotNull('response_deadline_at')
             ->where('response_deadline_at', '<', now())
-            ->get()
-            ->map(function (CorrectionRequest $request) use ($actor) {
-                $request->forceFill(['status' => CorrectionRequestStatus::Overdue])->save();
+            ->orderBy('id')
+            ->lazyById(100)
+            ->each(function (
+                CorrectionRequest $request,
+            ) use ($actor, $expired): void {
+                $result = $this->expire($request, $actor);
 
-                $process = $this->requiredAdministrativeProcess($request);
-
-                if ($this->processStatus($process) === AdministrativeProcessStatus::AwaitingCandidateResponse) {
-                    $this->transitionService->transition(
-                        $process,
-                        AdministrativeProcessStatus::CorrectionOverdue,
-                        $actor,
-                        'Prazo de resposta ao pedido de aperfeiçoamento vencido.',
-                    );
+                if ($result instanceof CorrectionRequest) {
+                    $expired->push($result);
                 }
-
-                return $request->refresh();
             });
+
+        return $expired;
     }
 
-    private function requiredAdministrativeProcess(CorrectionRequest $request): AdministrativeProcess
-    {
-        $process = $request->administrativeProcess;
+    public function expire(
+        CorrectionRequest $request,
+        ?User $actor = null,
+    ): ?CorrectionRequest {
+        return DB::transaction(function () use (
+            $request,
+            $actor,
+        ): ?CorrectionRequest {
+            $lockedRequest = CorrectionRequest::query()
+                ->whereKey($request->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        if (! $process instanceof AdministrativeProcess) {
-            throw ValidationException::withMessages(['process' => 'Pedido sem processo administrativo associado.']);
-        }
+            if (
+                ! in_array($lockedRequest->status, [
+                    CorrectionRequestStatus::Notified,
+                    CorrectionRequestStatus::Open,
+                    CorrectionRequestStatus::PartiallyCompleted,
+                ], true)
+                || $lockedRequest->response_deadline_at === null
+                || ! $lockedRequest->response_deadline_at->isPast()
+            ) {
+                return null;
+            }
 
-        return $process;
-    }
+            $lockedRequest->forceFill([
+                'status' => CorrectionRequestStatus::Expired,
+                'expired_at' => now('UTC'),
+            ])->save();
 
-    private function processStatus(AdministrativeProcess $process): ?AdministrativeProcessStatus
-    {
-        $status = $process->getAttribute('status');
+            $process = AdministrativeProcess::query()
+                ->whereKey(
+                    $lockedRequest->administrative_process_id,
+                )
+                ->lockForUpdate()
+                ->first();
 
-        if ($status instanceof AdministrativeProcessStatus) {
-            return $status;
-        }
+            if (! $process instanceof AdministrativeProcess) {
+                throw ValidationException::withMessages([
+                    'process' => 'Pedido sem processo administrativo associado.',
+                ]);
+            }
 
-        return is_string($status) ? AdministrativeProcessStatus::tryFrom($status) : null;
+            if (
+                $process->status
+                === AdministrativeProcessStatus::AwaitingCandidateResponse
+            ) {
+                $this->transitionService->transition(
+                    $process,
+                    AdministrativeProcessStatus::CorrectionOverdue,
+                    $actor,
+                    'Prazo de resposta ao pedido de aperfeiçoamento vencido.',
+                );
+            }
+
+            $this->audit->record(
+                event: AuditEvents::UPDATE,
+                auditable: $lockedRequest,
+                module: 'administrative_processes',
+                action: 'correction_request_expired',
+                description: 'Pedido de aperfeiçoamento marcado como expirado.',
+                newValues: [
+                    'status' => CorrectionRequestStatus::Expired->value,
+                    'expired_at' => $lockedRequest->expired_at?->toIso8601String(),
+                ],
+                metadata: [
+                    'actor_id' => $actor?->id,
+                    'system_initiated' => $actor === null,
+                ],
+            );
+
+            return $lockedRequest->refresh();
+        }, 3);
     }
 }

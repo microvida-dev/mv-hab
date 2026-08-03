@@ -8,6 +8,7 @@ use App\Enums\ContractStatus;
 use App\Enums\ContractValidationStatus;
 use App\Enums\DepositStatus;
 use App\Enums\HousingUnitStatus;
+use App\Enums\RegulatoryClassificationStatus;
 use App\Models\Contract;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
@@ -49,6 +50,21 @@ class ContractActivationService
             ], true)) {
                 throw ValidationException::withMessages([
                     'contract' => 'O contrato deve estar emitido, assinado ou suspenso para ativação.',
+                ]);
+            }
+
+            if (
+                $locked->regulatory_classification_status === RegulatoryClassificationStatus::Configured
+                && $locked->regulatory_snapshot_id === null
+            ) {
+                throw ValidationException::withMessages([
+                    'contract' => 'O contrato configurado não possui snapshot regulamentar e não pode ser ativado.',
+                ]);
+            }
+
+            if ($locked->regulatory_classification_status === RegulatoryClassificationStatus::RequiresManualReview) {
+                throw ValidationException::withMessages([
+                    'contract' => 'A classificação regulamentar do contrato requer revisão antes da ativação.',
                 ]);
             }
 

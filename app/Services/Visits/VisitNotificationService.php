@@ -67,7 +67,7 @@ class VisitNotificationService
                 application: $visit->application,
                 actor: $actor,
                 channel: OfficialNotificationChannel::CandidateArea,
-                actionUrl: route('candidate.visits.show', $visit, false),
+                actionUrl: null,
             );
         } catch (Throwable) {
             // Notificações não devem bloquear o fluxo operacional de visitas.

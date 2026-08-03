@@ -49,15 +49,14 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasTable('housing_unit_public_documents')) {
-            Schema::table('housing_unit_public_documents', function (Blueprint $table): void {
-                foreach (['hupd_unit_public_sort_idx', 'hupd_contest_public_idx'] as $index) {
-                    if ($this->indexExists('housing_unit_public_documents', $index)) {
-                        $table->dropIndex($index);
-                    }
-                }
-            });
-        }
+        /*
+         * These indexes are canonically created by
+         * 2026_06_18_120300_create_housing_unit_public_documents_table.
+         *
+         * This compatibility migration may restore them when absent, but must
+         * not remove them during rollback because MariaDB can use them to
+         * support the housing_unit_id and contest_id foreign keys.
+         */
     }
 
     private function indexExists(string $table, string $name): bool

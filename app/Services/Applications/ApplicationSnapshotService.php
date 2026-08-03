@@ -3,8 +3,10 @@
 namespace App\Services\Applications;
 
 use App\Enums\ApplicationSnapshotType;
+use App\Enums\ApplicationStatus;
 use App\Models\Application;
 use App\Models\ApplicationDocument;
+use App\Models\ApplicationSnapshot;
 use App\Models\DocumentSubmission;
 use App\Models\DocumentType;
 use App\Models\DocumentVersion;
@@ -17,7 +19,9 @@ use App\Support\AuditEvents;
 use BackedEnum;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ApplicationSnapshotService
@@ -25,16 +29,85 @@ class ApplicationSnapshotService
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly DocumentSubmissionContextResolver $documentContext,
+        private readonly HousingPreferenceSnapshotService $housingPreferences,
     ) {}
 
-    public function create(Application $application): void
+    /**
+     * @return EloquentCollection<int, ApplicationSnapshot>
+     */
+    public function create(Application $application): EloquentCollection
     {
+        try {
+            return DB::transaction(function () use ($application): EloquentCollection {
+                $lockedApplication = Application::query()
+                    ->whereKey($application->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+                $this->assertFinalSnapshotState($lockedApplication);
+
+                $expectedTypes = collect(ApplicationSnapshotType::cases())
+                    ->map(fn (ApplicationSnapshotType $type): string => $type->value);
+                $existingTypes = $lockedApplication->snapshots()
+                    ->lockForUpdate()
+                    ->get(['snapshot_type'])
+                    ->map(
+                        fn (ApplicationSnapshot $snapshot): string => $this
+                            ->snapshotTypeValue(
+                                $snapshot->getAttribute('snapshot_type'),
+                            ),
+                    );
+
+                if ($expectedTypes->diff($existingTypes)->isEmpty()) {
+                    return $lockedApplication->snapshots()
+                        ->orderBy('id')
+                        ->get();
+                }
+
+                if ($lockedApplication->status !== ApplicationStatus::Submitted) {
+                    throw ValidationException::withMessages([
+                        'application' => 'Os snapshots finais só podem ser criados durante a submissão formal.',
+                    ]);
+                }
+
+                return $this->createMissing(
+                    $lockedApplication,
+                    array_values($existingTypes->all()),
+                );
+            }, 3);
+        } catch (QueryException $exception) {
+            if (! $this->isUniqueConstraintViolation($exception)) {
+                throw $exception;
+            }
+
+            $snapshots = ApplicationSnapshot::query()
+                ->where('application_id', $application->id)
+                ->orderBy('id')
+                ->get();
+
+            if ($snapshots->count() === count(ApplicationSnapshotType::cases())) {
+                return $snapshots;
+            }
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @param  list<string>  $existingTypes
+     * @return EloquentCollection<int, ApplicationSnapshot>
+     */
+    private function createMissing(
+        Application $application,
+        array $existingTypes,
+    ): EloquentCollection {
         $application->loadMissing([
             'adhesionRegistration',
             'household.members.incomeRecords.incomeSource',
             'household.incomeRecords.incomeSource',
             'household.incomeRecords.householdMember',
             'currentHousingSituation',
+            'housingPreferences.housingUnit',
+            'preferences.housingUnit',
             'applicationDocuments.documentSubmission.currentVersion',
             'applicationDocuments.documentType',
             'applicationDocuments.documentSubmission.requiredDocument',
@@ -129,6 +202,9 @@ class ApplicationSnapshotService
                     'has_high_rent_burden', 'request_reason',
                 ],
             ),
+            ApplicationSnapshotType::HousingPreferences->value => $this
+                ->housingPreferences
+                ->liveForApplication($application),
             ApplicationSnapshotType::Documents->value => $applicationDocuments
                 ->map(function (ApplicationDocument $document): array {
                     /** @var DocumentType $documentType */
@@ -183,21 +259,55 @@ class ApplicationSnapshotService
             ],
         ];
 
+        $createdTypes = [];
+
         foreach ($snapshots as $type => $data) {
-            $application->snapshots()->updateOrCreate(
-                ['snapshot_type' => $type],
-                ['data' => $data],
+            if (in_array($type, $existingTypes, true)) {
+                continue;
+            }
+
+            $application->snapshots()->create([
+                'snapshot_type' => $type,
+                'data' => $data,
+            ]);
+            $createdTypes[] = $type;
+        }
+
+        if ($createdTypes !== []) {
+            $this->auditLogger->record(
+                event: AuditEvents::CREATE,
+                auditable: $application,
+                module: 'applications',
+                action: 'snapshot',
+                description: 'Snapshots finais da candidatura criados.',
+                metadata: ['snapshot_types' => $createdTypes],
             );
         }
 
-        $this->auditLogger->record(
-            event: AuditEvents::CREATE,
-            auditable: $application,
-            module: 'applications',
-            action: 'snapshot',
-            description: 'Snapshots da candidatura criados.',
-            metadata: ['snapshot_types' => array_keys($snapshots)],
-        );
+        return $application->snapshots()
+            ->orderBy('id')
+            ->get();
+    }
+
+    private function assertFinalSnapshotState(Application $application): void
+    {
+        if ($application->status === ApplicationStatus::Draft
+            || $application->submitted_at === null
+            || $application->locked_at === null) {
+            throw ValidationException::withMessages([
+                'application' => 'A candidatura tem de estar submetida e bloqueada para criar snapshots finais.',
+            ]);
+        }
+    }
+
+    private function isUniqueConstraintViolation(
+        QueryException $exception,
+    ): bool {
+        $sqlState = (string) ($exception->errorInfo[0] ?? $exception->getCode());
+        $driverCode = (int) ($exception->errorInfo[1] ?? 0);
+
+        return in_array($sqlState, ['23000', '23505'], true)
+            || in_array($driverCode, [19, 1062], true);
     }
 
     private function enumValue(mixed $value): string|int|null
@@ -208,5 +318,12 @@ class ApplicationSnapshotService
     private function dateTime(mixed $value): ?CarbonInterface
     {
         return $value instanceof CarbonInterface ? $value : null;
+    }
+
+    private function snapshotTypeValue(mixed $value): string
+    {
+        return $value instanceof ApplicationSnapshotType
+            ? $value->value
+            : (string) $value;
     }
 }

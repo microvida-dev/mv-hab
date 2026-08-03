@@ -71,7 +71,7 @@ return new class extends Migration
             $table->json('filters')->nullable();
             $table->string('filters_hash', 64)->index();
             $table->string('status', 60)->default('available')->index();
-            $table->timestamp('calculated_at')->index();
+            $table->dateTime('calculated_at')->index();
             $table->unsignedBigInteger('calculated_by')->nullable();
             $table->text('error_message')->nullable();
             $table->timestamps();
@@ -125,7 +125,7 @@ return new class extends Migration
             $table->string('scope', 60);
             $table->json('filters');
             $table->unsignedBigInteger('row_count')->nullable();
-            $table->timestamp('started_at');
+            $table->dateTime('started_at');
             $table->timestamp('completed_at')->nullable();
             $table->timestamp('failed_at')->nullable();
             $table->text('error_message')->nullable();
@@ -162,7 +162,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->ipAddress('ip_address')->nullable();
             $table->text('user_agent')->nullable();
-            $table->timestamp('downloaded_at')->index();
+            $table->dateTime('downloaded_at')->index();
             $table->timestamps();
             $table->foreign('report_export_id', 'rdl_export_fk')->references('id')->on('report_exports')->cascadeOnDelete();
             $table->foreign('user_id', 'rdl_user_fk')->references('id')->on('users')->restrictOnDelete();
@@ -181,7 +181,7 @@ return new class extends Migration
             $table->json('filters')->nullable();
             $table->ipAddress('ip_address')->nullable();
             $table->text('user_agent')->nullable();
-            $table->timestamp('accessed_at')->index();
+            $table->dateTime('accessed_at')->index();
             $table->timestamps();
             $table->foreign('user_id', 'ral_user_fk')->references('id')->on('users')->restrictOnDelete();
             $table->foreign('report_definition_id', 'ral_report_fk')->references('id')->on('report_definitions')->nullOnDelete();

@@ -8,32 +8,42 @@ enum CorrectionRequestStatus: string
 {
     use HasOptions;
 
-    case Draft = 'draft';
-    case Issued = 'issued';
+    case Notified = 'notified';
     case Open = 'open';
-    case PartiallyResponded = 'partially_responded';
-    case Responded = 'responded';
-    case Overdue = 'overdue';
-    case UnderReview = 'under_review';
-    case Accepted = 'accepted';
-    case Rejected = 'rejected';
-    case Closed = 'closed';
+    case PartiallyCompleted = 'partially_completed';
+    case Submitted = 'submitted';
+    case Expired = 'expired';
     case Cancelled = 'cancelled';
+    case Resolved = 'resolved';
 
     public function label(): string
     {
         return match ($this) {
-            self::Draft => 'Rascunho',
-            self::Issued => 'Emitido',
+            self::Notified => 'Notificado',
             self::Open => 'Aberto',
-            self::PartiallyResponded => 'Parcialmente respondido',
-            self::Responded => 'Respondido',
-            self::Overdue => 'Vencido',
-            self::UnderReview => 'Em análise',
-            self::Accepted => 'Aceite',
-            self::Rejected => 'Rejeitado',
-            self::Closed => 'Fechado',
+            self::PartiallyCompleted => 'Parcialmente concluído',
+            self::Submitted => 'Submetido',
+            self::Expired => 'Expirado',
             self::Cancelled => 'Cancelado',
+            self::Resolved => 'Resolvido',
         };
+    }
+
+    public function acceptsCandidateWork(): bool
+    {
+        return in_array($this, [
+            self::Notified,
+            self::Open,
+            self::PartiallyCompleted,
+        ], true);
+    }
+
+    public function isTerminal(): bool
+    {
+        return in_array($this, [
+            self::Expired,
+            self::Cancelled,
+            self::Resolved,
+        ], true);
     }
 }

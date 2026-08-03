@@ -28,34 +28,21 @@ class VisitCancellationService
     {
         return DB::transaction(function () use ($visit, $actor, $reason, $notes): HousingVisit {
             $visit = HousingVisit::query()->whereKey($visit->id)->lockForUpdate()->firstOrFail();
-            $candidateActor = $visit->belongsToCandidate($actor)
-                && $actor->hasPermission('visits.update');
 
-            if ($candidateActor) {
-                $this->municipalContext->validateCandidateVisit(
-                    $visit,
-                    $actor,
-                );
-            } elseif ($actor->hasPermission('visits.cancel')) {
-                $this->municipalContext->validateVisitForActor(
-                    $visit,
-                    $actor,
-                );
-            } else {
+            if ($actor->hasRole('candidate')
+                || ! $actor->hasPermission('visits.cancel')) {
                 throw ValidationException::withMessages([
-                    'visit' => 'O utilizador não pode cancelar esta visita.',
+                    'visit' => 'O utilizador não pode cancelar esta visita legacy.',
                 ]);
             }
 
+            $this->municipalContext->validateVisitForActor(
+                $visit,
+                $actor,
+            );
+
             if (! $visit->isActive()) {
                 throw ValidationException::withMessages(['visit' => 'A visita não pode ser cancelada neste estado.']);
-            }
-
-            if ($candidateActor) {
-                $minimumHours = (int) config('mvhab.candidate_support.minimum_cancel_hours', 24);
-                if ($visit->starts_at !== null && $visit->starts_at->lessThan(now()->addHours($minimumHours))) {
-                    throw ValidationException::withMessages(['visit' => 'O prazo mínimo para cancelamento já terminou.']);
-                }
             }
 
             $slot = $visit->slot()->lockForUpdate()->first();
@@ -65,11 +52,8 @@ class VisitCancellationService
 
             $from = VisitStatus::tryFrom((string) $visit->getRawOriginal('status'));
             $candidate = User::query()->findOrFail($visit->candidate_user_id);
-            $to = $candidateActor
-                ? VisitStatus::CancelledByCandidate
-                : VisitStatus::CancelledByStaff;
             $visit->forceFill([
-                'status' => $to,
+                'status' => VisitStatus::CancelledByStaff,
                 'cancelled_at' => now(),
                 'cancelled_by' => $actor->id,
                 'cancellation_reason' => $reason,
@@ -79,7 +63,7 @@ class VisitCancellationService
             HousingVisitStatusHistory::query()->create([
                 'housing_visit_id' => $visit->id,
                 'from_status' => $from?->value,
-                'to_status' => $to->value,
+                'to_status' => VisitStatus::CancelledByStaff->value,
                 'changed_by' => $actor->id,
                 'reason' => $reason->value,
                 'notes' => $notes,
@@ -91,14 +75,14 @@ class VisitCancellationService
                 user: $candidate,
                 type: InteractionType::VisitCancelled,
                 title: 'Visita cancelada',
-                description: 'A visita foi cancelada na plataforma.',
+                description: 'A visita foi cancelada pelos serviços municipais.',
                 related: $visit,
                 application: $visit->application,
                 contest: $visit->contest,
                 housingUnit: $visit->housingUnit,
                 actor: $actor,
             );
-            $this->audit->updated($visit, $actor, 'Visita cancelada.');
+            $this->audit->updated($visit, $actor, 'Visita legacy cancelada pelos serviços municipais.');
             $this->notifications->visitCancelled($visit->refresh(), $actor);
 
             return $visit->refresh();

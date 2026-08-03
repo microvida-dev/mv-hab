@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\AdministrativeProcessStatus;
+use App\Enums\AffordableRentLegalRegime;
+use App\Enums\ApplicationPreferenceSource;
 use App\Enums\ApplicationStatus;
 use Database\Factories\ApplicationFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,7 +17,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property int $program_id
+ * @property int $contest_id
+ * @property int|null $regulatory_snapshot_id
  * @property ApplicationStatus $status
+ * @property ApplicationPreferenceSource $preference_source
+ * @property AffordableRentLegalRegime|null $legal_regime
  * @property User $user
  * @property AdhesionRegistration $adhesionRegistration
  * @property Program $program
@@ -37,6 +45,10 @@ class Application extends Model
     {
         return [
             'status' => ApplicationStatus::class,
+            'preference_source' => ApplicationPreferenceSource::class,
+            'legal_regime' => AffordableRentLegalRegime::class,
+            'official_preferences_initialized_at' => 'datetime',
+            'legacy_preferences_reconciled_at' => 'datetime',
             'submitted_at' => 'datetime',
             'withdrawn_at' => 'datetime',
             'cancelled_at' => 'datetime',
@@ -82,6 +94,12 @@ class Application extends Model
     public function contest(): BelongsTo
     {
         return $this->belongsTo(Contest::class);
+    }
+
+    /** @return BelongsTo<RegulatorySnapshot, $this> */
+    public function regulatorySnapshot(): BelongsTo
+    {
+        return $this->belongsTo(RegulatorySnapshot::class);
     }
 
     /** @return BelongsTo<Household, $this> */
@@ -168,6 +186,12 @@ class Application extends Model
         return $this->hasMany(CorrectionRequest::class);
     }
 
+    /** @return HasOne<CorrectionRequest, $this> */
+    public function latestCorrectionRequest(): HasOne
+    {
+        return $this->hasOne(CorrectionRequest::class)->latestOfMany();
+    }
+
     /** @return HasMany<CorrectionResponse, $this> */
     public function correctionResponses(): HasMany
     {
@@ -178,6 +202,14 @@ class Application extends Model
     public function administrativeDecisions(): HasMany
     {
         return $this->hasMany(AdministrativeDecision::class);
+    }
+
+    /** @return HasOne<AdministrativeDecision, $this> */
+    public function latestApprovedAdministrativeDecision(): HasOne
+    {
+        return $this->hasOne(AdministrativeDecision::class)
+            ->where('status', 'approved')
+            ->latestOfMany();
     }
 
     /** @return HasMany<AdministrativeTask, $this> */

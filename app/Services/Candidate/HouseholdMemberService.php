@@ -2,6 +2,7 @@
 
 namespace App\Services\Candidate;
 
+use App\Events\HousingPreferenceInputsChanged;
 use App\Models\AdhesionRegistration;
 use App\Models\Household;
 use App\Models\HouseholdMember;
@@ -34,6 +35,11 @@ class HouseholdMemberService
             ]);
             $member->save();
             $this->householdService->refreshMetrics($household);
+            HousingPreferenceInputsChanged::dispatch(
+                $household,
+                'Composição do agregado alterada.',
+                HousingPreferenceInputsChanged::COMPOSITION,
+            );
 
             $this->auditLogger->record(
                 event: AuditEvents::CREATE,
@@ -75,6 +81,14 @@ class HouseholdMemberService
             $this->refreshIncomeSummary($member);
             $this->householdService->refreshMetrics($household);
 
+            if ($changedFields !== []) {
+                HousingPreferenceInputsChanged::dispatch(
+                    $household,
+                    'Dados de um membro do agregado alterados.',
+                    HousingPreferenceInputsChanged::COMPOSITION,
+                );
+            }
+
             $this->auditLogger->record(
                 event: AuditEvents::UPDATE,
                 auditable: $member,
@@ -108,6 +122,11 @@ class HouseholdMemberService
             $member->incomeRecords()->delete();
             $member->delete();
             $this->householdService->refreshMetrics($household);
+            HousingPreferenceInputsChanged::dispatch(
+                $household,
+                'Composição do agregado alterada.',
+                HousingPreferenceInputsChanged::COMPOSITION,
+            );
 
             $this->auditLogger->record(
                 event: AuditEvents::DELETE,

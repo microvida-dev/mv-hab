@@ -22,6 +22,20 @@
     </div>
 
     <div>
+        <x-input-label for="regulatory_profile_id" value="Perfil regulamentar" />
+        <select id="regulatory_profile_id" name="regulatory_profile_id" class="mv-input mt-1 block w-full" required>
+            <option value="">Selecionar perfil regulamentar</option>
+            @foreach ($regulatoryProfiles as $regulatoryProfile)
+                <option value="{{ $regulatoryProfile->id }}" @selected(old('regulatory_profile_id', $program->regulatory_profile_id ?? null) == $regulatoryProfile->id)>
+                    {{ $regulatoryProfile->legal_regime->label() }} · {{ $regulatoryProfile->name }} · {{ $regulatoryProfile->municipality?->name ?? 'Nacional' }}
+                </option>
+            @endforeach
+        </select>
+        <p class="mt-1 text-xs text-ink-500">O perfil tem de corresponder ao Município e à data de início do programa.</p>
+        <x-input-error :messages="$errors->get('regulatory_profile_id')" class="mt-2" />
+    </div>
+
+    <div>
         <x-input-label for="name" value="Nome" />
         <x-text-input id="name" name="name" class="mt-1 block w-full" :value="old('name', $program->name ?? '')" required />
         <x-input-error :messages="$errors->get('name')" class="mt-2" />
@@ -48,13 +62,13 @@
 
     <div class="lg:col-span-2">
         <x-input-label for="legal_basis" value="Enquadramento legal" />
-        <textarea id="legal_basis" name="legal_basis" rows="4" class="mv-input mt-1 block w-full">{{ old('legal_basis', $program->legal_basis ?? '') }}</textarea>
+        <textarea id="legal_basis" name="legal_basis" rows="4" class="mv-input mt-1 block w-full" required>{{ old('legal_basis', $program->legal_basis ?? '') }}</textarea>
         <x-input-error :messages="$errors->get('legal_basis')" class="mt-2" />
     </div>
 
     <div>
         <x-input-label for="starts_at" value="Data de início" />
-        <x-text-input id="starts_at" name="starts_at" type="date" class="mt-1 block w-full" :value="old('starts_at', isset($program) ? $program->starts_at?->format('Y-m-d') : '')" />
+        <x-text-input id="starts_at" name="starts_at" type="date" class="mt-1 block w-full" :value="old('starts_at', isset($program) ? $program->starts_at?->format('Y-m-d') : '')" required />
     </div>
 
     <div>

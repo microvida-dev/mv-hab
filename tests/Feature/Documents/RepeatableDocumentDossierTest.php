@@ -14,6 +14,7 @@ use App\Models\DocumentDossierItem;
 use App\Models\DocumentSubmission;
 use App\Models\DocumentType;
 use App\Models\RequiredDocument;
+use App\Services\Applications\HousingPreferenceSnapshotService;
 use App\Services\Documents\DocumentChecklistService;
 use App\Services\Documents\DocumentSubmissionContextResolver;
 use App\Services\DocumentStandardization\DocumentDossierBuilder;
@@ -182,6 +183,7 @@ class RepeatableDocumentDossierTest extends TestCase
                 DocumentSubmissionContextResolver::class,
             ),
             standardization: app(DocumentStandardizationService::class),
+            housingPreferences: app(HousingPreferenceSnapshotService::class),
         );
 
         $payload = $builder->build($application);

@@ -19,7 +19,44 @@ class CommunicationIndicatorsService
      */
     private function query(array $filters): Builder
     {
-        return $this->filters->applyDates(CommunicationLog::query(), $filters, 'created_at')->when($filters['status'] ?? null, fn (Builder $q, string $status) => $q->where('status', $status));
+        return $this->filters
+            ->applyDates(
+                CommunicationLog::query(),
+                $filters,
+                'created_at',
+            )
+            ->when(
+                $filters['municipality_id'] ?? null,
+                fn (Builder $query, int $municipalityId): Builder => $query
+                    ->whereHas(
+                        'creator',
+                        fn (Builder $creator): Builder => $creator->where(
+                            'municipality_id',
+                            $municipalityId,
+                        ),
+                    )
+                    ->where(function (Builder $logs) use (
+                        $municipalityId,
+                    ): void {
+                        $logs
+                            ->whereNull('recipient_user_id')
+                            ->orWhereHas(
+                                'recipient',
+                                fn (Builder $recipient): Builder => $recipient
+                                    ->where(
+                                        'municipality_id',
+                                        $municipalityId,
+                                    ),
+                            );
+                    }),
+            )
+            ->when(
+                $filters['status'] ?? null,
+                fn (Builder $query, string $status): Builder => $query->where(
+                    'status',
+                    $status,
+                ),
+            );
     }
 
     /**
@@ -43,7 +80,9 @@ class CommunicationIndicatorsService
      */
     public function countUnreadNotifications(array $filters): int
     {
-        return $this->filters->applyDates(OfficialNotification::query(), $filters, 'created_at')->whereNull('read_at')->count();
+        return $this->notificationQuery($filters)
+            ->whereNull('read_at')
+            ->count();
     }
 
     /**
@@ -60,6 +99,48 @@ class CommunicationIndicatorsService
      */
     public function countPendingAcknowledgements(array $filters): int
     {
-        return $this->filters->applyDates(OfficialNotification::query(), $filters, 'created_at')->where('requires_acknowledgement', true)->whereNull('acknowledged_at')->count();
+        return $this->notificationQuery($filters)
+            ->where('requires_acknowledgement', true)
+            ->whereNull('acknowledged_at')
+            ->count();
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return Builder<OfficialNotification>
+     */
+    private function notificationQuery(array $filters): Builder
+    {
+        return $this->filters
+            ->applyDates(
+                OfficialNotification::query(),
+                $filters,
+                'created_at',
+            )
+            ->when(
+                $filters['municipality_id'] ?? null,
+                fn (Builder $query, int $municipalityId): Builder => $query
+                    ->whereHas(
+                        'user',
+                        fn (Builder $recipient): Builder => $recipient->where(
+                            'municipality_id',
+                            $municipalityId,
+                        ),
+                    )
+                    ->where(function (Builder $notifications) use (
+                        $municipalityId,
+                    ): void {
+                        $notifications
+                            ->whereNull('application_id')
+                            ->orWhereHas(
+                                'application.program',
+                                fn (Builder $program): Builder => $program
+                                    ->where(
+                                        'municipality_id',
+                                        $municipalityId,
+                                    ),
+                            );
+                    }),
+            );
     }
 }

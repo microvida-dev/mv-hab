@@ -21,7 +21,7 @@ class CorrectionRequestFactory extends Factory
             'application_id' => $process->application_id,
             'user_id' => $process->user_id,
             'request_number' => 'APR-'.now()->format('Y').'-'.fake()->unique()->numerify('######'),
-            'status' => CorrectionRequestStatus::Draft->value,
+            'status' => CorrectionRequestStatus::Notified->value,
             'subject' => 'Pedido de aperfeiçoamento fictício',
             'message' => 'Mensagem fictícia para teste.',
             'instructions' => 'Responda através da área reservada.',

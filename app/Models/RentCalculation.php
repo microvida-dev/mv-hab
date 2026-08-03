@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AffordableRentLegalRegime;
 use App\Enums\RentCalculationMethod;
 use App\Enums\RentCalculationStatus;
 use Database\Factories\RentCalculationFactory;
@@ -11,6 +12,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property int $application_id
+ * @property int|null $regulatory_snapshot_id
+ * @property AffordableRentLegalRegime|null $legal_regime
+ * @property string|null $applicable_rent
+ * @property string|null $deposit_amount
+ */
 class RentCalculation extends Model
 {
     /** @use HasFactory<RentCalculationFactory> */
@@ -22,6 +31,7 @@ class RentCalculation extends Model
     {
         return [
             'status' => RentCalculationStatus::class,
+            'legal_regime' => AffordableRentLegalRegime::class,
             'calculation_method' => RentCalculationMethod::class,
             'monthly_household_income' => 'decimal:2',
             'annual_household_income' => 'decimal:2',
@@ -45,6 +55,12 @@ class RentCalculation extends Model
     public function rentRuleSet(): BelongsTo
     {
         return $this->belongsTo(RentRuleSet::class);
+    }
+
+    /** @return BelongsTo<RegulatorySnapshot, $this> */
+    public function regulatorySnapshot(): BelongsTo
+    {
+        return $this->belongsTo(RegulatorySnapshot::class);
     }
 
     /** @return BelongsTo<Allocation, $this> */

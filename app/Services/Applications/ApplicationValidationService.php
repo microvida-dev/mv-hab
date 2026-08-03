@@ -9,6 +9,7 @@ use App\Models\Application;
 use App\Models\Contest;
 use App\Models\HouseholdMember;
 use App\Models\User;
+use App\Services\Allocation\HousingPreferenceService;
 use App\Services\Documents\DocumentChecklistService;
 use BackedEnum;
 use Illuminate\Support\Collection;
@@ -18,6 +19,7 @@ class ApplicationValidationService
 {
     public function __construct(
         private readonly DocumentChecklistService $documentChecklistService,
+        private readonly HousingPreferenceService $housingPreferences,
     ) {}
 
     /**
@@ -107,10 +109,13 @@ class ApplicationValidationService
             'adhesionRegistration.household.members.incomeRecords',
             'adhesionRegistration.household.incomeRecords',
             'adhesionRegistration.currentHousingSituation',
+            'user',
         ]);
 
         $registration = $application->adhesionRegistration;
         $documentChecklist = $this->documentChecklistService->forApplication($application);
+        $preferenceReadiness = $this->housingPreferences
+            ->readinessForSubmission($application);
         /** @var list<array{is_required: bool, status: DocumentStatus|string|null}> $documentItems */
         $documentItems = $documentChecklist['items'] ?? [];
         $blockingDocuments = collect($documentItems)
@@ -125,6 +130,13 @@ class ApplicationValidationService
         $registrationMembers = $registration->household?->members;
 
         $checks = [
+            $this->check(
+                'email',
+                filter_var($application->user->email, FILTER_VALIDATE_EMAIL) !== false
+                    && $application->user->hasVerifiedEmail(),
+                'Confirme um endereço de email válido e verificado antes de submeter a candidatura.',
+                'verification.notice',
+            ),
             $this->check('draft', $application->status === ApplicationStatus::Draft, 'A candidatura já não está em rascunho.'),
             $this->check('contest', $application->contest->isOpenForApplications(), 'O período de candidatura terminou.'),
             $this->check('registration', $registration->status === AdhesionRegistrationStatus::Registered, 'O Registo de Adesão não está finalizado.'),
@@ -145,6 +157,13 @@ class ApplicationValidationService
                 $blockingDocuments->isEmpty(),
                 'Existem documentos obrigatórios em falta, rejeitados, expirados ou cancelados.',
             ),
+            $this->check(
+                'preferences',
+                $preferenceReadiness['passed'],
+                $preferenceReadiness['message'],
+                $preferenceReadiness['route'],
+                $preferenceReadiness['routeParameters'],
+            ),
         ];
 
         return [
@@ -152,6 +171,7 @@ class ApplicationValidationService
             'checks' => $checks,
             'documents' => $documentChecklist,
             'blocking_documents' => $blockingDocuments,
+            'housing_preferences' => $preferenceReadiness,
             'eligibility_pre_check' => $this->runEligibilityPreCheck($application),
         ];
     }
@@ -164,9 +184,26 @@ class ApplicationValidationService
         $readiness = $this->readinessForSubmission($application);
 
         if (! $readiness['ready']) {
-            throw ValidationException::withMessages([
-                'application' => $this->failedMessages($readiness['checks']),
-            ]);
+            /** @var list<array{key: string, passed: bool, message: string}> $checks */
+            $checks = $readiness['checks'];
+            $errors = [
+                'application' => $this->failedMessages($checks),
+            ];
+
+            foreach ($checks as $check) {
+                if (
+                    $check['key'] === 'preferences'
+                    && ! $check['passed']
+                ) {
+                    $errors['preferences'] = [
+                        $check['message'],
+                    ];
+
+                    break;
+                }
+            }
+
+            throw ValidationException::withMessages($errors);
         }
 
         return $readiness;
@@ -235,8 +272,10 @@ class ApplicationValidationService
             'income' => 'A informação de rendimentos está completa.',
             'housing' => 'A situação habitacional está preenchida.',
             'duplicate' => 'Não existe outra candidatura ativa para este concurso.',
+            'email' => 'O email da conta está válido e verificado.',
             'draft' => 'A candidatura está em rascunho e pode ser submetida.',
             'documents' => 'A documentação obrigatória está submetida ou validada.',
+            'preferences' => 'Todos os fogos compatíveis estão ordenados e validados.',
             default => 'Verificação concluída.',
         };
 

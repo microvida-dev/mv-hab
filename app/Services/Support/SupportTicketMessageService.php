@@ -11,6 +11,8 @@ use App\Models\SupportTicketMessage;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\CandidateExperience\CandidateInteractionService;
+use App\Services\CandidateExperience\TenantSupportEligibilityService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Notifications\OfficialNotificationService;
 use App\Support\AuditEvents;
 use Illuminate\Support\Facades\DB;
@@ -23,19 +25,64 @@ class SupportTicketMessageService
         private readonly CandidateInteractionService $interactions,
         private readonly AuditLogger $auditLogger,
         private readonly OfficialNotificationService $notifications,
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly TenantSupportEligibilityService $tenantSupport,
     ) {}
 
-    public function addMessage(SupportTicket $ticket, User $sender, string $message, MessageVisibility $visibility): SupportTicketMessage
-    {
-        return DB::transaction(function () use ($ticket, $sender, $message, $visibility): SupportTicketMessage {
+    public function addMessage(
+        SupportTicket $ticket,
+        User $sender,
+        string $message,
+        MessageVisibility $visibility,
+        bool $backoffice = false,
+    ): SupportTicketMessage {
+        if (! $backoffice) {
+            abort_unless(
+                $this->tenantSupport->isAvailableFor($sender),
+                403,
+            );
+        }
+
+        abort_unless(
+            $backoffice
+                ? (
+                    $sender->hasPermission('support.message')
+                    && $this->municipalScope->ownsSupportTicket(
+                        $sender,
+                        $ticket,
+                    )
+                )
+                : $ticket->belongsToUser($sender),
+            403,
+        );
+
+        return DB::transaction(function () use (
+            $backoffice,
+            $ticket,
+            $sender,
+            $message,
+            $visibility,
+        ): SupportTicketMessage {
             $ticket = SupportTicket::query()->whereKey($ticket->id)->lockForUpdate()->firstOrFail();
 
-            if ($sender->hasRole('candidate') && ! $ticket->acceptsCandidateReply()) {
+            if (! $backoffice && ! $ticket->acceptsCandidateReply()) {
                 throw ValidationException::withMessages(['message' => 'Este pedido já não aceita novas respostas do candidato.']);
             }
 
-            if ($sender->hasRole('candidate') && $visibility !== MessageVisibility::CandidateVisible) {
+            if (! $backoffice && $visibility !== MessageVisibility::CandidateVisible) {
                 throw ValidationException::withMessages(['visibility' => 'O candidato não pode criar mensagens internas.']);
+            }
+
+            $candidate = User::query()->findOrFail($ticket->user_id);
+
+            if (
+                $backoffice
+                && $visibility !== MessageVisibility::InternalOnly
+                && ! $this->tenantSupport->isAvailableFor($candidate)
+            ) {
+                throw ValidationException::withMessages([
+                    'visibility' => 'O apoio ao inquilino só pode comunicar com o candidato após contrato ativo, entrega concluída e portal do inquilino ativo.',
+                ]);
             }
 
             $entry = new SupportTicketMessage([
@@ -48,11 +95,11 @@ class SupportTicketMessageService
             ])->save();
 
             $ticket->forceFill([
-                'status' => $sender->hasRole('candidate') ? TicketStatus::PendingStaff : TicketStatus::PendingCandidate,
+                'status' => $backoffice
+                    ? TicketStatus::PendingCandidate
+                    : TicketStatus::PendingStaff,
                 'last_message_at' => now(),
             ])->save();
-
-            $candidate = User::query()->findOrFail($ticket->user_id);
 
             if ($visibility !== MessageVisibility::InternalOnly) {
                 $this->interactions->record(
@@ -72,7 +119,7 @@ class SupportTicketMessageService
                 'visibility' => $visibility->value,
             ]);
 
-            if (! $sender->hasRole('candidate') && $visibility !== MessageVisibility::InternalOnly) {
+            if ($backoffice && $visibility !== MessageVisibility::InternalOnly) {
                 $this->notifyCandidate($ticket);
             }
 

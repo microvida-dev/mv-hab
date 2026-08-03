@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\CommunicationChannel;
 use App\Enums\NotificationPriority;
+use App\Models\NotificationEventRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,7 +12,17 @@ class StoreNotificationEventRuleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $rule = $this->route('notificationEventRule');
+
+        return $rule instanceof NotificationEventRule
+            ? $this->user()?->can(
+                'updateBackoffice',
+                $rule,
+            ) === true
+            : $this->user()?->can(
+                'createBackoffice',
+                NotificationEventRule::class,
+            ) === true;
     }
 
     /**

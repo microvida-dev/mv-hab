@@ -3,6 +3,7 @@
 namespace App\Services\Dashboard;
 
 use App\Models\User;
+use App\Services\Administrative\CorrectionProgressMetricsService;
 use App\Services\Dashboard\Operations\OperationsSummaryProvider;
 use App\Services\Dashboard\Operations\TodayProvider;
 use App\Services\Productivity\ProductivityDashboardService;
@@ -14,6 +15,7 @@ class MunicipalOperationsDashboardService
         private readonly ProductivityDashboardService $productivityDashboards,
         private readonly OperationsSummaryProvider $summaryProvider,
         private readonly TodayProvider $todayProvider,
+        private readonly CorrectionProgressMetricsService $corrections,
     ) {}
 
     /**
@@ -22,7 +24,8 @@ class MunicipalOperationsDashboardService
     public function forUser(User $user): array
     {
         $dashboard = $this->profileDashboards->forUser($user);
-        $productivity = $this->productivityDashboards->forUser($user);
+        $productivity = $this->productivityDashboards
+            ->forUser($user);
 
         return [
             'dashboard' => $dashboard,
@@ -32,9 +35,14 @@ class MunicipalOperationsDashboardService
             'recentItems' => $dashboard['recent_items'] ?? [],
             'quickActions' => $dashboard['quick_actions'] ?? [],
             'searchGroups' => $dashboard['search_groups'] ?? [],
-            'operationsSummary' => $this->summaryProvider->forUser($user, $dashboard),
-            'todayOperations' => $this->todayProvider->forUser($user, $dashboard),
-            'operationsTimeline' => $this->todayProvider->timelineForUser($user, $dashboard),
+            'operationsSummary' => $this->summaryProvider
+                ->forUser($user, $dashboard),
+            'todayOperations' => $this->todayProvider
+                ->forUser($user, $dashboard),
+            'operationsTimeline' => $this->todayProvider
+                ->timelineForUser($user, $dashboard),
+            'correctionOperations' => $this->corrections
+                ->municipalDashboard($user),
         ];
     }
 }

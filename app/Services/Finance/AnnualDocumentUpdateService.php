@@ -4,9 +4,11 @@ namespace App\Services\Finance;
 
 use App\Enums\AnnualDocumentSubmissionStatus;
 use App\Enums\AnnualDocumentUpdateStatus;
+use App\Events\HousingPreferenceInputsChanged;
 use App\Models\AnnualDocumentUpdateRequest;
 use App\Models\AnnualDocumentUpdateSubmission;
 use App\Models\DocumentSubmission;
+use App\Models\Household;
 use App\Models\TenantFinancialAccount;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
@@ -105,6 +107,16 @@ class AnnualDocumentUpdateService
         ])->save();
 
         $this->auditLogger->record(AuditEvents::APPROVE, $request, 'finance', 'annual_document_update_accept', 'Atualização documental anual aceite.');
+
+        $household = Household::query()->find($request->household_id);
+
+        if ($household instanceof Household) {
+            HousingPreferenceInputsChanged::dispatch(
+                $household,
+                'Atualização documental anual aceite.',
+                HousingPreferenceInputsChanged::ANNUAL_UPDATE,
+            );
+        }
 
         return $request->refresh();
     }

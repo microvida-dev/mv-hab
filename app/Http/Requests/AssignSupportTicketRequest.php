@@ -11,7 +11,8 @@ class AssignSupportTicketRequest extends FormRequest
     {
         $ticket = $this->route('supportTicket');
 
-        return $ticket instanceof SupportTicket && ($this->user()?->can('assign', $ticket) ?? false);
+        return $ticket instanceof SupportTicket
+            && $this->user()?->can('assignBackoffice', $ticket) === true;
     }
 
     /**

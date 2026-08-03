@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:mvhab:application-results:v1"
+           xmlns="urn:mvhab:application-results:v1"
+           elementFormDefault="qualified"
+           version="1.0">
+    <xs:element name="applicationResults">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="export" type="ExportType"/>
+                <xs:element name="applications" type="ApplicationsType"/>
+                <xs:element name="documents" type="DocumentsType"/>
+                <xs:element name="findings" type="FindingsType"/>
+                <xs:element name="changes" type="ChangesType"/>
+            </xs:sequence>
+            <xs:attribute name="schemaVersion" type="xs:string" use="required" fixed="1.0"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="ExportType">
+        <xs:sequence>
+            <xs:element name="schema_version" type="xs:string"/>
+            <xs:element name="export_public_id" type="xs:string"/>
+            <xs:element name="generated_at" type="xs:string"/>
+            <xs:element name="snapshot_at" type="xs:string"/>
+            <xs:element name="municipality_code" type="xs:string"/>
+            <xs:element name="contest_code" type="xs:string"/>
+            <xs:element name="mode" type="xs:string"/>
+            <xs:element name="official" type="xs:boolean"/>
+            <xs:element name="source_type" type="xs:string"/>
+            <xs:element name="source_references" type="xs:string"/>
+            <xs:element name="source_fingerprint" type="xs:string"/>
+            <xs:element name="formats" type="xs:string"/>
+            <xs:element name="datasets" type="xs:string"/>
+            <xs:element name="sensitive_fields_included" type="xs:boolean"/>
+            <xs:element name="document_files_requested" type="xs:boolean"/>
+            <xs:element name="csv_configuration" type="xs:string"/>
+            <xs:element name="counts" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ApplicationsType">
+        <xs:sequence><xs:element name="application" type="ApplicationType" minOccurs="0" maxOccurs="unbounded"/></xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="DocumentsType">
+        <xs:sequence><xs:element name="document" type="DocumentType" minOccurs="0" maxOccurs="unbounded"/></xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="FindingsType">
+        <xs:sequence><xs:element name="finding" type="FindingType" minOccurs="0" maxOccurs="unbounded"/></xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="ChangesType">
+        <xs:sequence><xs:element name="change" type="ChangeType" minOccurs="0" maxOccurs="unbounded"/></xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ApplicationType">
+        <xs:sequence>
+            <xs:element name="municipality_code" type="xs:string" nillable="true"/>
+            <xs:element name="contest_code" type="xs:string" nillable="true"/>
+            <xs:element name="contest_public_id" type="xs:string" minOccurs="0" nillable="true"/>
+            <xs:element name="phase_code" type="xs:string" nillable="true"/>
+            <xs:element name="batch_public_id" type="xs:string" nillable="true"/>
+            <xs:element name="batch_cycle" type="xs:string" nillable="true"/>
+            <xs:element name="batch_sequence" type="xs:string" nillable="true"/>
+            <xs:element name="snapshot_at" type="xs:string" nillable="true"/>
+            <xs:element name="published_at" type="xs:string" nillable="true"/>
+            <xs:element name="application_number" type="xs:string" nillable="true"/>
+            <xs:element name="process_number" type="xs:string" nillable="true"/>
+            <xs:element name="candidate_name" type="xs:string" minOccurs="0" nillable="true"/>
+            <xs:element name="submission_status_code" type="xs:string" nillable="true"/>
+            <xs:element name="submission_status_label" type="xs:string" nillable="true"/>
+            <xs:element name="review_status_code" type="xs:string" nillable="true"/>
+            <xs:element name="review_status_label" type="xs:string" nillable="true"/>
+            <xs:element name="review_result_code" type="xs:string" nillable="true"/>
+            <xs:element name="review_result_label" type="xs:string" nillable="true"/>
+            <xs:element name="documents_required" type="xs:string" nillable="true"/>
+            <xs:element name="documents_valid" type="xs:string" nillable="true"/>
+            <xs:element name="documents_missing" type="xs:string" nillable="true"/>
+            <xs:element name="documents_invalid" type="xs:string" nillable="true"/>
+            <xs:element name="correction_required" type="xs:string" nillable="true"/>
+            <xs:element name="correction_deadline" type="xs:string" nillable="true"/>
+            <xs:element name="correction_submitted_at" type="xs:string" nillable="true"/>
+            <xs:element name="revalidation_result_code" type="xs:string" nillable="true"/>
+            <xs:element name="eligibility_status_code" type="xs:string" nillable="true"/>
+            <xs:element name="eligibility_status_label" type="xs:string" nillable="true"/>
+            <xs:element name="score_status_code" type="xs:string" nillable="true"/>
+            <xs:element name="score_status_label" type="xs:string" nillable="true"/>
+            <xs:element name="final_administrative_status_code" type="xs:string" nillable="true"/>
+            <xs:element name="final_administrative_status_label" type="xs:string" nillable="true"/>
+            <xs:element name="last_changed_at" type="xs:string" nillable="true"/>
+            <xs:element name="source_fingerprint" type="xs:string" nillable="true"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="DocumentType">
+        <xs:sequence>
+            <xs:element name="application_number" type="xs:string" nillable="true"/>
+            <xs:element name="process_number" type="xs:string" nillable="true"/>
+            <xs:element name="required_document_code" type="xs:string" nillable="true"/>
+            <xs:element name="document_type_code" type="xs:string" nillable="true"/>
+            <xs:element name="target_type" type="xs:string" nillable="true"/>
+            <xs:element name="target_reference" type="xs:string" nillable="true"/>
+            <xs:element name="requirement_instance" type="xs:string" nillable="true"/>
+            <xs:element name="required_submissions" type="xs:string" nillable="true"/>
+            <xs:element name="reference_period" type="xs:string" nillable="true"/>
+            <xs:element name="document_status_code" type="xs:string" nillable="true"/>
+            <xs:element name="version_number" type="xs:string" nillable="true"/>
+            <xs:element name="submitted_at" type="xs:string" nillable="true"/>
+            <xs:element name="validated_at" type="xs:string" nillable="true"/>
+            <xs:element name="source_sha256" type="xs:string" nillable="true"/>
+            <xs:element name="carried_forward" type="xs:string" nillable="true"/>
+            <xs:element name="source_batch_public_id" type="xs:string" nillable="true"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="FindingType">
+        <xs:sequence>
+            <xs:element name="application_number" type="xs:string" nillable="true"/>
+            <xs:element name="finding_code" type="xs:string" nillable="true"/>
+            <xs:element name="requirement_code" type="xs:string" nillable="true"/>
+            <xs:element name="finding_status_code" type="xs:string" nillable="true"/>
+            <xs:element name="finding_status_label" type="xs:string" nillable="true"/>
+            <xs:element name="decision_code" type="xs:string" nillable="true"/>
+            <xs:element name="carried_forward" type="xs:string" nillable="true"/>
+            <xs:element name="source_batch_public_id" type="xs:string" nillable="true"/>
+            <xs:element name="decided_at" type="xs:string" nillable="true"/>
+            <xs:element name="resolved_at" type="xs:string" nillable="true"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ChangeType">
+        <xs:sequence>
+            <xs:element name="entity_type" type="xs:string" nillable="true"/>
+            <xs:element name="entity_reference" type="xs:string" nillable="true"/>
+            <xs:element name="application_number" type="xs:string" nillable="true"/>
+            <xs:element name="change_type" type="xs:string" nillable="true"/>
+            <xs:element name="field_code" type="xs:string" nillable="true"/>
+            <xs:element name="before_value" type="xs:string" nillable="true"/>
+            <xs:element name="after_value" type="xs:string" nillable="true"/>
+            <xs:element name="before_source" type="xs:string" nillable="true"/>
+            <xs:element name="after_source" type="xs:string" nillable="true"/>
+            <xs:element name="changed_at" type="xs:string" nillable="true"/>
+            <xs:element name="sensitive_value_redacted" type="xs:string" nillable="true"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

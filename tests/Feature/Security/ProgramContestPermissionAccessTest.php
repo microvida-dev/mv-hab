@@ -3,6 +3,7 @@
 namespace Tests\Feature\Security;
 
 use App\Models\Contest;
+use App\Models\Municipality;
 use App\Models\Permission;
 use App\Models\Program;
 use App\Models\Role;
@@ -88,7 +89,7 @@ class ProgramContestPermissionAccessTest extends TestCase
             'programs.view',
         ]);
 
-        $program = Program::factory()->create();
+        $program = $this->programFor($user);
 
         $this->actingAs($user)
             ->withSession(['mfa.verified_at' => now()])
@@ -107,7 +108,7 @@ class ProgramContestPermissionAccessTest extends TestCase
             'contests.view',
         ]);
 
-        $contest = Contest::factory()->create();
+        $contest = $this->contestFor($user);
 
         $this->actingAs($user)
             ->withSession(['mfa.verified_at' => now()])
@@ -207,8 +208,8 @@ class ProgramContestPermissionAccessTest extends TestCase
             'contests.publish',
         ]);
 
-        $program = Program::factory()->create();
-        $contest = Contest::factory()->create();
+        $program = $this->programFor($auditor);
+        $contest = $this->contestFor($auditor);
 
         $this->actingAs($auditor)
             ->withSession(['mfa.verified_at' => now()])
@@ -277,7 +278,7 @@ class ProgramContestPermissionAccessTest extends TestCase
             'programs.update',
         ]);
 
-        $program = Program::factory()->create();
+        $program = $this->programFor($user);
 
         $this->actingAs($user)
             ->withSession(['mfa.verified_at' => now()])
@@ -296,7 +297,7 @@ class ProgramContestPermissionAccessTest extends TestCase
             'contests.update',
         ]);
 
-        $contest = Contest::factory()->create();
+        $contest = $this->contestFor($user);
 
         $this->actingAs($user)
             ->withSession(['mfa.verified_at' => now()])
@@ -307,6 +308,60 @@ class ProgramContestPermissionAccessTest extends TestCase
             ->withSession(['mfa.verified_at' => now()])
             ->post(route('admin.contests.publish', $contest))
             ->assertForbidden();
+    }
+
+    public function test_programs_and_contests_from_another_municipality_are_not_accessible(): void
+    {
+        $user = $this->userWithCustomRole([
+            'programs.view',
+            'programs.update',
+            'contests.view',
+            'contests.update',
+        ]);
+        $foreignMunicipality = Municipality::factory()->create();
+        $foreignProgram = Program::factory()->create([
+            'municipality_id' => $foreignMunicipality->id,
+            'name' => 'Programa municipal estrangeiro',
+        ]);
+        $foreignContest = Contest::factory()->for($foreignProgram)->create([
+            'title' => 'Concurso municipal estrangeiro',
+        ]);
+
+        $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('admin.programs.index'))
+            ->assertOk()
+            ->assertDontSee('Programa municipal estrangeiro');
+
+        $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('admin.programs.show', $foreignProgram))
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('admin.contests.index'))
+            ->assertOk()
+            ->assertDontSee('Concurso municipal estrangeiro');
+
+        $this->actingAs($user)
+            ->withSession(['mfa.verified_at' => now()])
+            ->get(route('admin.contests.edit', $foreignContest))
+            ->assertForbidden();
+    }
+
+    private function programFor(User $user): Program
+    {
+        return Program::factory()->create([
+            'municipality_id' => $user->municipality_id,
+        ]);
+    }
+
+    private function contestFor(User $user): Contest
+    {
+        return Contest::factory()
+            ->for($this->programFor($user))
+            ->create();
     }
 
     /**

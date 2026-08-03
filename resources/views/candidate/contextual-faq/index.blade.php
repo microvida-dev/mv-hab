@@ -6,7 +6,6 @@
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">Ajuda rápida</h1>
                 <p class="mt-1 text-sm text-ink-500">Perguntas frequentes filtradas pelo contexto do processo.</p>
             </div>
-            <a href="{{ route('candidate.support-tickets.create', ['context' => request('context')]) }}" class="mv-button-primary">Pedir apoio</a>
         </div>
     </x-slot>
 

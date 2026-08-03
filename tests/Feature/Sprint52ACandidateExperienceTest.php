@@ -1,0 +1,75 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\User;
+use Database\Seeders\SystemAccessSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
+use Tests\Support\CreatesTenantSupportEligibility;
+use Tests\TestCase;
+
+class Sprint52ACandidateExperienceTest extends TestCase
+{
+    use CreatesTenantSupportEligibility, RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(SystemAccessSeeder::class);
+    }
+
+    public function test_legacy_candidate_visits_and_notification_preferences_are_disabled_by_default(): void
+    {
+        foreach ([
+            'candidate.visits.index',
+            'candidate.visits.create',
+            'candidate.visits.store',
+            'candidate.visits.show',
+            'candidate.visits.reschedule',
+            'candidate.visits.reschedule.store',
+            'candidate.visits.cancel',
+        ] as $routeName) {
+            $this->assertFalse(Route::has($routeName));
+        }
+
+        $candidate = $this->candidate();
+
+        $this->actingAs($candidate)
+            ->get('/area-candidato/visitas')
+            ->assertNotFound();
+
+        $this->actingAs($candidate)
+            ->get(route('candidate.notification-preferences.edit'))
+            ->assertNotFound();
+    }
+
+    public function test_support_is_refused_before_the_complete_tenant_lifecycle(): void
+    {
+        $candidate = $this->candidate();
+
+        $this->actingAs($candidate)
+            ->get(route('candidate.support-tickets.index'))
+            ->assertForbidden();
+    }
+
+    public function test_support_is_available_after_contract_activation_and_key_handover(): void
+    {
+        $candidate = $this->candidate();
+        $this->enableTenantSupportFor($candidate);
+
+        $this->actingAs($candidate)
+            ->get(route('candidate.support-tickets.index'))
+            ->assertOk()
+            ->assertSee('apoio', false);
+    }
+
+    private function candidate(): User
+    {
+        $candidate = User::factory()->create();
+        $candidate->assignRole('candidate');
+
+        return $candidate;
+    }
+}

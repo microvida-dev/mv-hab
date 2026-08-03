@@ -59,7 +59,25 @@ enum OfficialNotificationType: string
     case SupportTicketResolved = 'support_ticket_resolved';
     case SupportTicketReopened = 'support_ticket_reopened';
     case ApplicationInconsistencyDetected = 'application_inconsistency_detected';
+    case ApplicationReviewResultPublished = 'application_review_result_published';
+    case CorrectionSubmissionReceived = 'correction_submission_received';
     case Other = 'other';
+
+    public function requiresMandatoryEmail(): bool
+    {
+        return ! in_array($this, [
+            self::VisitScheduled,
+            self::VisitConfirmed,
+            self::VisitRescheduled,
+            self::VisitCancelled,
+            self::VisitCompleted,
+            self::VisitNoShow,
+            self::SupportTicketCreated,
+            self::SupportTicketReply,
+            self::SupportTicketResolved,
+            self::SupportTicketReopened,
+        ], true);
+    }
 
     public function label(): string
     {
@@ -115,6 +133,8 @@ enum OfficialNotificationType: string
             self::SupportTicketResolved => 'Pedido de apoio resolvido',
             self::SupportTicketReopened => 'Pedido de apoio reaberto',
             self::ApplicationInconsistencyDetected => 'Inconsistência de candidatura detetada',
+            self::ApplicationReviewResultPublished => 'Resultado da revisão documental publicado',
+            self::CorrectionSubmissionReceived => 'Aperfeiçoamento submetido',
             self::Other => 'Outra',
         };
     }

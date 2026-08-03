@@ -13,25 +13,66 @@ use Illuminate\Support\Facades\Gate;
 
 class CorrectionRequestResponseController extends Controller
 {
-    public function __construct(private readonly CorrectionRequestResponseService $service) {}
+    public function __construct(
+        private readonly CorrectionRequestResponseService $service,
+    ) {}
 
-    public function create(Application $application, CorrectionRequest $correctionRequest): View
-    {
+    public function create(
+        Application $application,
+        CorrectionRequest $correctionRequest,
+    ): View|RedirectResponse {
         Gate::authorize('view', $correctionRequest);
-        abort_unless($correctionRequest->application_id === $application->id, 404);
+        abort_unless(
+            $correctionRequest->application_id === $application->id,
+            404,
+        );
+
+        if (! $correctionRequest->isLegacy()) {
+            return to_route(
+                'candidate.correction-requests.show',
+                $correctionRequest,
+            );
+        }
+
         $correctionRequest->load('items');
 
-        return view('candidate.correction-requests.respond', compact('application', 'correctionRequest'));
+        return view(
+            'candidate.correction-requests.respond',
+            compact('application', 'correctionRequest'),
+        );
     }
 
-    public function store(RespondCorrectionRequestRequest $request, Application $application, CorrectionRequest $correctionRequest): RedirectResponse
-    {
+    public function store(
+        RespondCorrectionRequestRequest $request,
+        Application $application,
+        CorrectionRequest $correctionRequest,
+    ): RedirectResponse {
         Gate::authorize('view', $correctionRequest);
-        abort_unless($correctionRequest->application_id === $application->id, 404);
-        $data = $request->validated();
-        $data['response_text'] = $data['response_text'] ?? $data['message'];
-        $this->service->submit($correctionRequest, $data, $this->authenticatedUser($request));
+        abort_unless(
+            $correctionRequest->application_id === $application->id,
+            404,
+        );
 
-        return to_route('candidate.correction-requests.show', $correctionRequest)->with('success', 'Resposta submetida.');
+        if (! $correctionRequest->isLegacy()) {
+            return to_route(
+                'candidate.correction-requests.show',
+                $correctionRequest,
+            );
+        }
+
+        $data = $request->validated();
+        $data['response_text'] = $data['response_text']
+            ?? $data['message'];
+
+        $this->service->submit(
+            $correctionRequest,
+            $data,
+            $this->authenticatedUser($request),
+        );
+
+        return to_route(
+            'candidate.correction-requests.show',
+            $correctionRequest,
+        )->with('success', 'Resposta submetida.');
     }
 }

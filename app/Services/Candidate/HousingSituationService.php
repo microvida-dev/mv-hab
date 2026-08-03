@@ -4,6 +4,7 @@ namespace App\Services\Candidate;
 
 use App\Enums\HousingCondition;
 use App\Enums\HousingStatus;
+use App\Events\HousingPreferenceInputsChanged;
 use App\Models\AdhesionRegistration;
 use App\Models\CurrentHousingSituation;
 use App\Models\User;
@@ -41,6 +42,14 @@ class HousingSituationService
             $changedFields = array_keys($situation->getDirty());
             $situation->forceFill(['adhesion_registration_id' => $registration->id]);
             $situation->save();
+
+            if ($changedFields !== []) {
+                HousingPreferenceInputsChanged::dispatch(
+                    $registration,
+                    'Situação habitacional ou necessidades de acessibilidade alteradas.',
+                    HousingPreferenceInputsChanged::HOUSING,
+                );
+            }
 
             $this->auditLogger->record(
                 event: $created ? AuditEvents::CREATE : AuditEvents::UPDATE,

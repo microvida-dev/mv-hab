@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ProcedureTemplate;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +10,14 @@ class StoreProcedureTemplateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasPermissionTo('documents', 'create') === true;
+        $template = $this->route('procedureTemplate');
+
+        return $template instanceof ProcedureTemplate
+            ? $this->user()?->can('updateBackoffice', $template) === true
+            : $this->user()?->can(
+                'createBackoffice',
+                ProcedureTemplate::class,
+            ) === true;
     }
 
     /**

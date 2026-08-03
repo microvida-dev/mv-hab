@@ -1,12 +1,31 @@
 @php
-    $deadlineRows = old('deadlines', isset($contest) ? $contest->deadlines->map(fn ($deadline) => [
-        'type' => $deadline->type->value,
-        'label' => $deadline->label,
-        'starts_at' => $deadline->starts_at?->format('Y-m-d\TH:i'),
-        'ends_at' => $deadline->ends_at->format('Y-m-d\TH:i'),
-        'description' => $deadline->description,
-    ])->all() : []);
-    $deadlineRows = array_pad($deadlineRows, max(3, count($deadlineRows)), []);
+    $defaultProcessingDeadlines = [
+        [
+            'type' => \App\Enums\ContestDeadlineType::Review->value,
+            'label' => \App\Enums\ContestDeadlineType::Review->defaultLabel(),
+        ],
+        [
+            'type' => \App\Enums\ContestDeadlineType::Corrections->value,
+            'label' => \App\Enums\ContestDeadlineType::Corrections->defaultLabel(),
+        ],
+        [
+            'type' => \App\Enums\ContestDeadlineType::Revalidation->value,
+            'label' => \App\Enums\ContestDeadlineType::Revalidation->defaultLabel(),
+        ],
+    ];
+
+    $deadlineRows = old('deadlines', isset($contest)
+        ? $contest->deadlines
+            ->reject(fn ($deadline) => $deadline->type === \App\Enums\ContestDeadlineType::Applications)
+            ->map(fn ($deadline) => [
+                'type' => $deadline->type->value,
+                'label' => $deadline->label,
+                'starts_at' => $deadline->starts_at?->format('Y-m-d\TH:i'),
+                'ends_at' => $deadline->ends_at->format('Y-m-d\TH:i'),
+                'description' => $deadline->description,
+            ])->values()->all()
+        : $defaultProcessingDeadlines);
+    $deadlineRows = array_pad($deadlineRows, max(5, count($deadlineRows)), []);
 
     $juryRows = old('jury_members', isset($contest) ? $contest->juryMembers->map(fn ($member) => [
         'user_id' => $member->user_id,
@@ -61,19 +80,20 @@
     </div>
 
     <div>
-        <x-input-label for="opens_at" value="Abertura" />
+        <x-input-label for="opens_at" value="Abertura das candidaturas" />
         <x-text-input id="opens_at" name="opens_at" type="datetime-local" class="mt-1 block w-full" :value="old('opens_at', isset($contest) ? $contest->opens_at->format('Y-m-d\TH:i') : '')" required />
     </div>
 
     <div>
-        <x-input-label for="closes_at" value="Encerramento" />
+        <x-input-label for="closes_at" value="Encerramento das candidaturas" />
         <x-text-input id="closes_at" name="closes_at" type="datetime-local" class="mt-1 block w-full" :value="old('closes_at', isset($contest) ? $contest->closes_at->format('Y-m-d\TH:i') : '')" required />
     </div>
 </div>
 
 <section class="mt-8 border-t border-ink-100 pt-6">
-    <h2 class="text-lg font-semibold text-ink-900">Prazos públicos</h2>
-    <p class="mt-1 text-sm text-ink-500">É necessário pelo menos um prazo para publicar o concurso.</p>
+    <h2 class="text-lg font-semibold text-ink-900">Prazos processuais</h2>
+    <p class="mt-1 text-sm text-ink-500">O prazo de candidaturas é sincronizado automaticamente com as datas acima. Configure a análise inicial, o aperfeiçoamento e a revalidação pela ordem processual.</p>
+    <x-input-error :messages="$errors->get('deadlines')" class="mt-2" />
 
     <div class="mt-5 space-y-4">
         @foreach ($deadlineRows as $index => $deadline)
@@ -84,9 +104,11 @@
                         <select id="deadline_{{ $index }}_type" name="deadlines[{{ $index }}][type]" class="mv-input mt-1 block w-full">
                             <option value="">Selecionar tipo</option>
                             @foreach ($deadlineTypes as $value => $label)
+                                @continue($value === \App\Enums\ContestDeadlineType::Applications->value)
                                 <option value="{{ $value }}" @selected(($deadline['type'] ?? '') === $value)>{{ $label }}</option>
                             @endforeach
                         </select>
+                        <x-input-error :messages="$errors->get('deadlines.'.$index.'.type')" class="mt-2" />
                     </div>
                     <div>
                         <x-input-label :for="'deadline_'.$index.'_label'" value="Designação" />

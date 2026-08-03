@@ -136,7 +136,7 @@ class Sprint9AdministrativeWorkflowTest extends TestCase
             ])
             ->assertRedirect(route('candidate.correction-requests.show', $draft));
 
-        $this->assertSame(CorrectionRequestStatus::Responded, $draft->fresh()->status);
+        $this->assertSame(CorrectionRequestStatus::Submitted, $draft->fresh()->status);
         $this->assertSame(AdministrativeProcessStatus::CorrectionSubmitted, $process->fresh()->status);
         $this->assertDatabaseHas('correction_responses', [
             'correction_request_id' => $draft->id,

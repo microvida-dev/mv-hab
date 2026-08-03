@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('public_status', 100)->nullable()->index();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->timestamp('occurred_at')->index();
+            $table->dateTime('occurred_at')->index();
             $table->timestamp('due_at')->nullable()->index();
             $table->nullableMorphs('related');
             $table->json('metadata')->nullable();

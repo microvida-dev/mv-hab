@@ -28,6 +28,7 @@ class DashboardPerformanceTest extends TestCase
         DB::enableQueryLog();
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.analytics.index'))
             ->assertOk();
 

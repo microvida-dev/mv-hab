@@ -6,7 +6,9 @@ use App\Enums\AllocationMethod;
 use App\Enums\AllocationRuleSetStatus;
 use App\Models\AllocationRuleSet;
 use App\Models\Contest;
+use App\Models\Municipality;
 use App\Models\Permission;
+use App\Models\Program;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\SystemAccessSeeder;
@@ -84,7 +86,7 @@ class AllocationRuleSetsPermissionAccessTest extends TestCase
             'allocations.view',
         ]);
 
-        $ruleSet = AllocationRuleSet::factory()->create();
+        $ruleSet = $this->ruleSetFor($user);
 
         $this->getAsBackofficeUser(
             $user,
@@ -113,7 +115,7 @@ class AllocationRuleSetsPermissionAccessTest extends TestCase
             'allocations.create',
         ]);
 
-        $ruleSet = AllocationRuleSet::factory()->create([
+        $ruleSet = $this->ruleSetFor($user, [
             'name' => 'Regra original',
             'status' => AllocationRuleSetStatus::Active,
         ]);
@@ -126,7 +128,7 @@ class AllocationRuleSetsPermissionAccessTest extends TestCase
         $this->postAsBackofficeUser(
             $user,
             route('backoffice.allocation.rule-sets.store'),
-            $this->validPayload(['name' => 'Regra criada']),
+            $this->validPayload($user, ['name' => 'Regra criada']),
         )->assertRedirect();
 
         $this->assertDatabaseHas('allocation_rule_sets', [
@@ -160,7 +162,7 @@ class AllocationRuleSetsPermissionAccessTest extends TestCase
             'allocations.update',
         ]);
 
-        $ruleSet = AllocationRuleSet::factory()->create([
+        $ruleSet = $this->ruleSetFor($user, [
             'status' => AllocationRuleSetStatus::Draft,
         ]);
 
@@ -172,7 +174,7 @@ class AllocationRuleSetsPermissionAccessTest extends TestCase
         $this->putAsBackofficeUser(
             $user,
             route('backoffice.allocation.rule-sets.update', $ruleSet),
-            $this->validPayload(['name' => 'Regra atualizada']),
+            $this->validPayload($user, ['name' => 'Regra atualizada']),
         )->assertRedirect();
 
         $this->assertDatabaseHas('allocation_rule_sets', [
@@ -212,7 +214,7 @@ class AllocationRuleSetsPermissionAccessTest extends TestCase
             'allocations.approve',
         ]);
 
-        $ruleSet = AllocationRuleSet::factory()->create([
+        $ruleSet = $this->ruleSetFor($user, [
             'status' => AllocationRuleSetStatus::Draft,
         ]);
 
@@ -240,7 +242,7 @@ class AllocationRuleSetsPermissionAccessTest extends TestCase
     public function test_user_without_allocation_permissions_is_blocked_and_does_not_change_state(): void
     {
         $user = $this->userWithCustomRole([]);
-        $ruleSet = AllocationRuleSet::factory()->create([
+        $ruleSet = $this->ruleSetFor($user, [
             'status' => AllocationRuleSetStatus::Draft,
         ]);
 
@@ -274,7 +276,7 @@ class AllocationRuleSetsPermissionAccessTest extends TestCase
             'allocations.approve',
         ]);
 
-        $ruleSet = AllocationRuleSet::factory()->create([
+        $ruleSet = $this->ruleSetFor($candidate, [
             'status' => AllocationRuleSetStatus::Draft,
         ]);
 
@@ -308,7 +310,7 @@ class AllocationRuleSetsPermissionAccessTest extends TestCase
             'allocations.approve',
         ]);
 
-        $ruleSet = AllocationRuleSet::factory()->create([
+        $ruleSet = $this->ruleSetFor($auditor, [
             'status' => AllocationRuleSetStatus::Draft,
         ]);
 
@@ -361,7 +363,7 @@ class AllocationRuleSetsPermissionAccessTest extends TestCase
             'allocations.approve',
         ]);
 
-        $ruleSet = AllocationRuleSet::factory()->create();
+        $ruleSet = $this->ruleSetFor($viewer);
 
         $this->assertTrue(
             Gate::forUser($viewer)->allows(
@@ -420,6 +422,38 @@ class AllocationRuleSetsPermissionAccessTest extends TestCase
         );
     }
 
+    public function test_rule_set_from_another_municipality_is_not_listed_or_mutable(): void
+    {
+        $user = $this->userWithCustomRole([
+            'allocations.view',
+            'allocations.update',
+            'allocations.approve',
+        ]);
+        $foreignUser = User::factory()->create([
+            'municipality_id' => Municipality::factory()->create()->id,
+        ]);
+        $foreignRuleSet = $this->ruleSetFor($foreignUser, [
+            'name' => 'Regra de atribuição de outro município',
+        ]);
+
+        $this->getAsBackofficeUser(
+            $user,
+            route('backoffice.allocation.rule-sets.index'),
+        )
+            ->assertOk()
+            ->assertDontSee('Regra de atribuição de outro município');
+
+        $this->getAsBackofficeUser(
+            $user,
+            route('backoffice.allocation.rule-sets.show', $foreignRuleSet),
+        )->assertForbidden();
+
+        $this->postAsBackofficeUser(
+            $user,
+            route('backoffice.allocation.rule-sets.activate', $foreignRuleSet),
+        )->assertForbidden();
+    }
+
     private function getAsBackofficeUser(
         User $user,
         string $uri,
@@ -459,11 +493,13 @@ class AllocationRuleSetsPermissionAccessTest extends TestCase
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
      */
-    private function validPayload(array $overrides = []): array
+    private function validPayload(User $user, array $overrides = []): array
     {
+        $contest = $this->contestFor($user);
+
         return array_merge([
             'program_id' => null,
-            'contest_id' => Contest::factory()->create()->id,
+            'contest_id' => $contest->id,
             'name' => 'Conjunto de regras de atribuição',
             'description' => 'Configuração de teste.',
             'status' => AllocationRuleSetStatus::Draft->value,
@@ -477,6 +513,30 @@ class AllocationRuleSetsPermissionAccessTest extends TestCase
             'auto_call_next_on_expiry' => true,
             'max_refusals_allowed' => 1,
         ], $overrides);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function ruleSetFor(
+        User $user,
+        array $overrides = [],
+    ): AllocationRuleSet {
+        $contest = $this->contestFor($user);
+
+        return AllocationRuleSet::factory()->create(array_merge([
+            'program_id' => $contest->program_id,
+            'contest_id' => $contest->id,
+        ], $overrides));
+    }
+
+    private function contestFor(User $user): Contest
+    {
+        $program = Program::factory()->create([
+            'municipality_id' => $user->municipality_id,
+        ]);
+
+        return Contest::factory()->for($program)->create();
     }
 
     /**

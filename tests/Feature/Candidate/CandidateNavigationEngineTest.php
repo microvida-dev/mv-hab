@@ -6,16 +6,16 @@ use App\Enums\SimulationResultStatus;
 use App\Models\Application;
 use App\Models\Hearing;
 use App\Models\SimulationSession;
-use App\Models\TenantProfile;
 use App\Models\User;
 use App\Services\CandidateExperience\CandidateNavigationService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesTenantSupportEligibility;
 use Tests\TestCase;
 
 class CandidateNavigationEngineTest extends TestCase
 {
-    use RefreshDatabase;
+    use CreatesTenantSupportEligibility, RefreshDatabase;
 
     private CandidateNavigationService $navigation;
 
@@ -111,19 +111,20 @@ class CandidateNavigationEngineTest extends TestCase
         self::assertNotContains('Nova candidatura', $labels);
     }
 
-    public function test_draft_application_reveals_application_documents_faq_and_support_only(): void
+    public function test_draft_application_reveals_application_documents_and_faq_only(): void
     {
         $candidate = $this->candidate();
         Application::factory()->create(['user_id' => $candidate->id]);
 
         $labels = $this->labels($candidate);
 
-        foreach (['Candidaturas', 'Documentos', 'FAQ', 'Apoio'] as $expected) {
+        foreach (['Candidaturas', 'Fogos', 'Documentos', 'FAQ'] as $expected) {
             self::assertContains($expected, $labels);
         }
 
         self::assertNotContains('Processo', $labels);
         self::assertNotContains('Interações', $labels);
+        self::assertNotContains('Apoio', $labels);
         self::assertNotContains('Audiência Prévia', $labels);
         self::assertNotContains('Reclamações', $labels);
     }
@@ -141,10 +142,12 @@ class CandidateNavigationEngineTest extends TestCase
             'Documentos',
             'Interações',
             'Aperfeiçoamentos',
-            'Visitas',
         ] as $expected) {
             self::assertContains($expected, $labels);
         }
+
+        self::assertNotContains('Visitas', $labels);
+        self::assertNotContains('Apoio', $labels);
     }
 
     public function test_provisional_list_stage_reveals_hearing_and_complaints(): void
@@ -166,7 +169,7 @@ class CandidateNavigationEngineTest extends TestCase
     public function test_tenant_access_replaces_candidate_navigation_with_tenant_area(): void
     {
         $candidate = $this->candidate();
-        TenantProfile::factory()->create(['user_id' => $candidate->id]);
+        $this->enableTenantSupportFor($candidate);
 
         $navigation = $this->navigation->forUser($candidate);
         $labels = $this->labels($candidate);
@@ -180,6 +183,7 @@ class CandidateNavigationEngineTest extends TestCase
             'Vistorias',
             'Manutenção',
             'Comunicações',
+            'Apoio',
         ] as $expected) {
             self::assertContains($expected, $labels);
         }

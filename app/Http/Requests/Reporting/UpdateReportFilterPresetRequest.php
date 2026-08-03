@@ -6,6 +6,9 @@ class UpdateReportFilterPresetRequest extends StoreReportFilterPresetRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('update', $this->route('reportFilterPreset')) ?? false;
+        return $this->user()?->can(
+            'updateBackoffice',
+            $this->route('reportFilterPreset'),
+        ) === true;
     }
 }

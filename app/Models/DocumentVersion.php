@@ -11,10 +11,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
+ * @property int $document_submission_id
+ * @property int|null $replaces_document_version_id
+ * @property int $version_number
  * @property string $storage_disk
  * @property string $storage_path
  * @property string $original_filename
  * @property string|null $mime_type
+ * @property-read DocumentVersion|null $replacedVersion
  */
 class DocumentVersion extends Model
 {
@@ -38,6 +42,24 @@ class DocumentVersion extends Model
     public function documentSubmission(): BelongsTo
     {
         return $this->belongsTo(DocumentSubmission::class);
+    }
+
+    /** @return BelongsTo<DocumentVersion, $this> */
+    public function replacedVersion(): BelongsTo
+    {
+        return $this->belongsTo(
+            self::class,
+            'replaces_document_version_id',
+        );
+    }
+
+    /** @return HasMany<DocumentVersion, $this> */
+    public function replacementVersions(): HasMany
+    {
+        return $this->hasMany(
+            self::class,
+            'replaces_document_version_id',
+        );
     }
 
     /** @return BelongsTo<User, $this> */

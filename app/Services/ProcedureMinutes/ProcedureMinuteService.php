@@ -3,10 +3,13 @@
 namespace App\Services\ProcedureMinutes;
 
 use App\Enums\ProcedureMinuteStatus;
+use App\Models\Application;
+use App\Models\Contest;
 use App\Models\ProcedureMinute;
 use App\Models\ProcedureTemplate;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\ProcedureMinutes\Renderers\AlcanenaAta01Renderer;
 use App\Services\ProcedureTemplates\TemplateRenderingService;
 use App\Services\ProcedureTemplates\TemplateVariableResolver;
@@ -22,6 +25,7 @@ class ProcedureMinuteService
         private readonly TemplateRenderingService $renderer,
         private readonly AlcanenaAta01Renderer $alcanenaAta01Renderer,
         private readonly AuditLogger $auditLogger,
+        private readonly MunicipalRecordScopeService $municipalScope,
     ) {}
 
     /**
@@ -29,6 +33,13 @@ class ProcedureMinuteService
      */
     public function generate(array $data, User $actor): ProcedureMinute
     {
+        abort_unless(
+            $actor->hasPermission('documents.generate')
+                && $this->municipalScope->hasMunicipalOrGlobalScope($actor),
+            403,
+        );
+        $this->authorizeContext($data, $actor);
+
         return DB::transaction(function () use ($data, $actor): ProcedureMinute {
             $template = ProcedureTemplate::query()->findOrFail((int) $data['procedure_template_id']);
             $payload = $this->payloadBuilder->build($data, $actor);
@@ -68,6 +79,15 @@ class ProcedureMinuteService
 
     public function approve(ProcedureMinute $minute, User $actor): ProcedureMinute
     {
+        abort_unless(
+            $actor->hasPermission('documents.approve')
+                && $this->municipalScope->ownsProcedureMinute(
+                    $actor,
+                    $minute,
+                ),
+            403,
+        );
+
         $minute->forceFill([
             'status' => ProcedureMinuteStatus::Approved,
             'approved_by' => $actor->id,
@@ -93,6 +113,15 @@ class ProcedureMinuteService
 
     public function delete(ProcedureMinute $minute, User $actor): void
     {
+        abort_unless(
+            $actor->hasPermission('documents.delete')
+                && $this->municipalScope->ownsProcedureMinute(
+                    $actor,
+                    $minute,
+                ),
+            403,
+        );
+
         $minute->delete();
 
         $this->auditLogger->record(
@@ -101,6 +130,37 @@ class ProcedureMinuteService
             'documents',
             'procedure_minute_delete',
             'Ata do procedimento eliminada.'
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function authorizeContext(array $data, User $actor): void
+    {
+        $contest = isset($data['contest_id'])
+            ? $this->municipalScope
+                ->contests(Contest::query(), $actor)
+                ->whereKey((int) $data['contest_id'])
+                ->firstOrFail()
+            : null;
+        $application = isset($data['application_id'])
+            ? $this->municipalScope
+                ->applications(Application::query(), $actor)
+                ->whereKey((int) $data['application_id'])
+                ->firstOrFail()
+            : null;
+
+        abort_if(
+            $contest instanceof Contest
+                && $application instanceof Application
+                && (int) $application->contest_id !== (int) $contest->id,
+            422,
+        );
+        abort_if(
+            ! ($contest instanceof Contest)
+                && ! ($application instanceof Application),
+            422,
         );
     }
 }

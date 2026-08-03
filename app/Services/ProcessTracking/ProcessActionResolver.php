@@ -20,7 +20,7 @@ class ProcessActionResolver
         $actions = collect();
 
         foreach ($application->correctionRequests as $request) {
-            if ($request->candidate_visible && in_array($request->status, [CorrectionRequestStatus::Issued, CorrectionRequestStatus::Open], true)) {
+            if ($request->candidate_visible && in_array($request->status, [CorrectionRequestStatus::Notified, CorrectionRequestStatus::Open], true)) {
                 $actions->push([
                     'type' => ProcessActionType::RespondCorrection->value,
                     'status' => ProcessActionStatus::Available->value,

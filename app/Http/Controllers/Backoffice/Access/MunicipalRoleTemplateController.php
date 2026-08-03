@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Policies\RolePolicy;
 use App\Services\Access\MunicipalRoleTemplateRegistry;
 use App\Services\Access\PermissionCatalogService;
+use App\Services\Access\RoleManagementService;
 use DomainException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -30,13 +31,15 @@ class MunicipalRoleTemplateController extends Controller
         Request $request,
         string $template,
         RolePolicy $policy,
-        MunicipalRoleTemplateRegistry $templates,
         PermissionCatalogService $permissions,
+        RoleManagementService $roles,
     ): View|RedirectResponse {
-        abort_unless($policy->create($this->authenticatedUser($request)), 403);
+        $actor = $this->authenticatedUser($request);
+
+        abort_unless($policy->create($actor), 403);
 
         try {
-            $resolved = $templates->resolve($template);
+            $preview = $roles->previewTemplate($actor, $template);
         } catch (DomainException $exception) {
             return redirect()->route('backoffice.role-templates.index')
                 ->withErrors(['template' => $exception->getMessage()]);
@@ -45,10 +48,11 @@ class MunicipalRoleTemplateController extends Controller
         return view('backoffice.access.roles.create', [
             'permissionGroups' => $permissions->grouped(),
             'roleDraft' => new Role([
-                'label' => $resolved['label'],
-                'description' => $resolved['description'],
+                'label' => $preview['template']['label'],
+                'description' => $preview['template']['description'],
             ]),
-            'template' => $resolved,
+            'template' => $preview['template'],
+            'templatePreview' => $preview,
         ]);
     }
 }

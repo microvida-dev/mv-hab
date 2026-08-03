@@ -9,7 +9,9 @@ use App\Http\Requests\UpdateContestRequest;
 use App\Models\Contest;
 use App\Models\Program;
 use App\Models\User;
+use App\Services\Contests\ContestApplicationPhaseService;
 use App\Services\Contests\ContestService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,13 +19,18 @@ use Illuminate\Support\Facades\Gate;
 
 class ContestController extends Controller
 {
-    public function __construct(private readonly ContestService $contestService) {}
+    public function __construct(
+        private readonly ContestService $contestService,
+        private readonly ContestApplicationPhaseService $phaseService,
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
         Gate::authorize('viewAnyBackoffice', Contest::class);
 
-        $contests = Contest::query()
+        $contests = $this->municipalScope
+            ->contests(Contest::query(), $this->authenticatedUser($request))
             ->with('program')
             ->latest()
             ->paginate(15);
@@ -31,11 +38,14 @@ class ContestController extends Controller
         return view('admin.contests.index', compact('contests'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         Gate::authorize('createBackoffice', Contest::class);
 
-        return view('admin.contests.create', $this->formData());
+        return view(
+            'admin.contests.create',
+            $this->formData($this->authenticatedUser($request)),
+        );
     }
 
     public function store(StoreContestRequest $request): RedirectResponse
@@ -52,17 +62,19 @@ class ContestController extends Controller
 
         $contest->load(['program.municipality', 'deadlines', 'juryMembers.user']);
 
-        return view('admin.contests.show', compact('contest'));
+        $phaseContext = $this->phaseService->context($contest);
+
+        return view('admin.contests.show', compact('contest', 'phaseContext'));
     }
 
-    public function edit(Contest $contest): View
+    public function edit(Request $request, Contest $contest): View
     {
         Gate::authorize('updateBackoffice', $contest);
 
         $contest->load(['deadlines', 'juryMembers']);
 
         return view('admin.contests.edit', [
-            ...$this->formData(),
+            ...$this->formData($this->authenticatedUser($request)),
             'contest' => $contest,
         ]);
     }
@@ -97,12 +109,16 @@ class ContestController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formData(): array
+    private function formData(User $actor): array
     {
         return [
-            'programs' => Program::query()->orderBy('name')->get(['id', 'name', 'status']),
+            'programs' => $this->municipalScope
+                ->programs(Program::query(), $actor)
+                ->orderBy('name')
+                ->get(['id', 'name', 'status']),
             'deadlineTypes' => ContestDeadlineType::options(),
-            'juryUsers' => User::query()
+            'juryUsers' => $this->municipalScope
+                ->users(User::query(), $actor)
                 ->whereHas('roles', fn ($query) => $query->where('name', 'jury'))
                 ->orderBy('name')
                 ->get(['id', 'name', 'email']),

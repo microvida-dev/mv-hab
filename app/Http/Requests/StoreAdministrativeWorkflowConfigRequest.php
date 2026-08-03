@@ -2,13 +2,24 @@
 
 namespace App\Http\Requests;
 
+use App\Models\AdministrativeWorkflowConfig;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreAdministrativeWorkflowConfigRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $config = $this->route('administrativeWorkflowConfig');
+
+        return $config instanceof AdministrativeWorkflowConfig
+            ? $this->user()?->can(
+                'updateBackoffice',
+                $config,
+            ) === true
+            : $this->user()?->can(
+                'createBackoffice',
+                AdministrativeWorkflowConfig::class,
+            ) === true;
     }
 
     /**

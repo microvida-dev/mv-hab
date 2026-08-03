@@ -281,12 +281,15 @@ class Sprint7EligibilityEngineTest extends TestCase
 
         $this->assertSame(EligibilityResult::Eligible, $check->result);
         $this->assertSame($ruleSet->criteria()->count(), $check->results()->count());
-        $this->assertSame(8, $check->snapshots()->count());
+        $this->assertSame(9, $check->snapshots()->count());
         $this->assertDatabaseHas('audit_logs', [
             'user_id' => $candidate->id,
             'module' => 'eligibility',
             'action' => 'run_pre_check',
         ]);
+        $this->assertTrue(
+            $check->snapshots()->where('snapshot_type', 'regulatory')->exists(),
+        );
         $snapshotJson = json_encode($check->snapshots()->pluck('data'));
         $this->assertStringNotContainsString('storage_path', $snapshotJson);
         $this->assertStringNotContainsString('document_number', $snapshotJson);

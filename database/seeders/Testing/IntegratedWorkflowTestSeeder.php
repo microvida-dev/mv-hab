@@ -5,11 +5,22 @@ namespace Database\Seeders\Testing;
 use App\Enums\AdministrativeProcessStatus;
 use App\Enums\AllocationMethod;
 use App\Enums\AllocationStatus;
+use App\Enums\ApplicationReviewBatchCycle;
+use App\Enums\ApplicationReviewBatchOutcome;
+use App\Enums\ApplicationReviewBatchStatus;
+use App\Enums\ApplicationReviewResult;
 use App\Enums\ApplicationScoreStatus;
 use App\Enums\ApplicationStatus;
 use App\Enums\ArrearStatus;
 use App\Enums\ComplaintStatus;
+use App\Enums\ContestDeadlineType;
 use App\Enums\ContractStatus;
+use App\Enums\CorrectionRequestItemStatus;
+use App\Enums\CorrectionRequestStatus;
+use App\Enums\CorrectionResponseKind;
+use App\Enums\CorrectionResponseReviewResult;
+use App\Enums\CorrectionResponseStatus;
+use App\Enums\CorrectionRevalidationAggregateResult;
 use App\Enums\DefinitiveListStatus;
 use App\Enums\DocumentStatus;
 use App\Enums\EligibilityCheckType;
@@ -31,14 +42,18 @@ use App\Models\Allocation;
 use App\Models\AllocationRuleSet;
 use App\Models\AllocationRun;
 use App\Models\Application;
+use App\Models\ApplicationReviewBatch;
+use App\Models\ApplicationReviewBatchItem;
 use App\Models\ApplicationScore;
 use App\Models\Arrear;
 use App\Models\AuditEvent;
 use App\Models\Complaint;
 use App\Models\Contest;
+use App\Models\ContestDeadline;
 use App\Models\ContestHousingUnit;
 use App\Models\Contract;
 use App\Models\CorrectionRequest;
+use App\Models\CorrectionResponse;
 use App\Models\CurrentHousingSituation;
 use App\Models\DefinitiveList;
 use App\Models\DefinitiveListEntry;
@@ -52,6 +67,7 @@ use App\Models\HousingUnit;
 use App\Models\IncomeRecord;
 use App\Models\LeasePayment;
 use App\Models\MaintenanceRequest;
+use App\Models\Municipality;
 use App\Models\OfficialNotification;
 use App\Models\Program;
 use App\Models\ProvisionalList;
@@ -63,17 +79,28 @@ use App\Models\RentInstallment;
 use App\Models\RentRuleSet;
 use App\Models\RentSchedule;
 use App\Models\ReportExport;
+use App\Models\RequiredDocument;
 use App\Models\ScoringRuleSet;
 use App\Models\ScoringRun;
 use App\Models\TenantFinancialAccount;
 use App\Models\User;
+use App\Services\Administrative\ApplicationReviewPublicationService;
+use App\Services\Administrative\CorrectionDifferentialResolver;
+use App\Services\Administrative\CorrectionResolutionService;
+use App\Services\Administrative\CorrectionRevalidationService;
+use App\Services\Administrative\CorrectionSubmissionService;
+use App\Services\Support\CanonicalJsonHasher;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use LogicException;
 
 class IntegratedWorkflowTestSeeder extends Seeder
 {
+    private Municipality $municipality;
+
     private Program $program;
 
     private Contest $contest;
@@ -83,6 +110,7 @@ class IntegratedWorkflowTestSeeder extends Seeder
     public function run(): void
     {
         $this->call(SystemAccessSeeder::class);
+        $this->municipality = Municipality::factory()->create();
 
         $this->administrator = $this->user('s19-admin@example.test', 'Administrador QA Sprint 19', 'administrator');
         $technician = $this->user('s19-tecnico@example.test', 'Tecnico Municipal QA Sprint 19', 'municipal_technician');
@@ -91,6 +119,7 @@ class IntegratedWorkflowTestSeeder extends Seeder
         $this->user('s19-manutencao@example.test', 'Gestor Manutencao QA Sprint 19', 'maintenance_manager');
 
         $this->program = Program::factory()->published()->create([
+            'municipality_id' => $this->municipality->id,
             'name' => 'Programa QA Integrado Sprint 19',
             'slug' => 'programa-qa-integrado-sprint-19',
             'description' => 'Programa fictício para testes integrados de qualidade.',
@@ -116,9 +145,10 @@ class IntegratedWorkflowTestSeeder extends Seeder
             'administrative_process_id' => $correction['process']->id,
             'application_id' => $correction['application']->id,
             'user_id' => $correction['user']->id,
-            'status' => 'issued',
+            'status' => CorrectionRequestStatus::Notified,
             'candidate_visible' => true,
         ]);
+        $this->seedDifferentialRevalidationScenario();
 
         $scoringRuleSet = ScoringRuleSet::factory()->active()->for($this->program)->for($this->contest)->create();
         $scoringRun = ScoringRun::factory()->create([
@@ -380,14 +410,265 @@ class IntegratedWorkflowTestSeeder extends Seeder
         $user = User::query()->firstOrCreate(
             ['email' => $email],
             [
+                'municipality_id' => $this->municipality->id,
                 'name' => $name,
                 'password' => Hash::make(Str::random(40)),
                 'email_verified_at' => now(),
             ],
         );
+        $user->forceFill([
+            'municipality_id' => $this->municipality->id,
+        ])->save();
         $user->assignRole($role);
 
         return $user;
+    }
+
+    private function seedDifferentialRevalidationScenario(): void
+    {
+        $scenario = $this->candidateScenario(
+            'correction-revalidation',
+            ApplicationStatus::Submitted,
+            EligibilityResult::RequiresReview,
+            AdministrativeProcessStatus::DocumentReview,
+        );
+        $application = $scenario['application'];
+        $process = $scenario['process'];
+        $candidate = $scenario['user'];
+        $documentType = DocumentType::factory()->create([
+            'name' => 'Documento fictício para revalidação diferencial',
+        ]);
+        $requiredDocument = RequiredDocument::factory()->create([
+            'document_type_id' => $documentType->id,
+            'program_id' => $this->program->id,
+            'contest_id' => $this->contest->id,
+        ]);
+        ContestDeadline::query()->updateOrCreate(
+            [
+                'contest_id' => $this->contest->id,
+                'type' => ContestDeadlineType::Corrections->value,
+            ],
+            [
+                'label' => ContestDeadlineType::Corrections->defaultLabel(),
+                'starts_at' => now()->subDay(),
+                'ends_at' => now()->addWeeks(2),
+                'sort_order' => 30,
+            ],
+        );
+        $payload = [
+            'schema_version' => 2,
+            'process' => [
+                'id' => $process->id,
+                'number' => $process->process_number,
+                'status' => $process->status->value,
+                'assigned_to' => $this->administrator->id,
+                'application_id' => $application->id,
+                'contest_id' => $application->contest_id,
+                'program_id' => $application->program_id,
+            ],
+            'application' => [
+                'id' => $application->id,
+                'public_id' => $application->public_id,
+                'number' => $application->application_number,
+                'status' => $application->status->value,
+                'submitted_at' => $application->submitted_at?->toIso8601String(),
+                'program_id' => $application->program_id,
+                'contest_id' => $application->contest_id,
+                'legal_regime' => null,
+                'regulatory_snapshot_id' => null,
+            ],
+            'outcome' => ApplicationReviewBatchOutcome::CorrectionRequired->value,
+            'technical_result' => ApplicationReviewResult::RequiresCorrection->value,
+            'review' => null,
+            'readiness' => [
+                'ready' => false,
+                'missing' => 1,
+                'blockers' => ['1 elemento obrigatório em falta'],
+            ],
+            'documents' => [],
+            'findings' => [[
+                'finding_status' => 'missing',
+                'document_status' => DocumentStatus::Missing->value,
+                'target_type' => $application->getMorphClass(),
+                'target_id' => $application->id,
+                'target_label' => $application->application_number,
+                'document_type_id' => $documentType->id,
+                'required_document_id' => $requiredDocument->id,
+                'source_document_submission_id' => null,
+                'requirement_instance' => 1,
+                'title' => 'Elemento fictício para revalidação diferencial',
+                'description' => 'Submeter o elemento fictício solicitado.',
+                'is_required' => true,
+                'sort_order' => 1,
+            ]],
+        ];
+        $hasher = app(CanonicalJsonHasher::class);
+        $snapshotHash = $hasher->hash($payload);
+        $batchHash = $hasher->hash([
+            'schema_version' => 1,
+            'contest_id' => $application->contest_id,
+            'cycle' => ApplicationReviewBatchCycle::InitialReview->value,
+            'items' => [[
+                'application_id' => $application->id,
+                'snapshot_hash' => $snapshotHash,
+                'payload' => $payload,
+            ]],
+        ]);
+        $batch = new ApplicationReviewBatch([
+            'municipality_id' => $this->municipality->id,
+            'contest_id' => $this->contest->id,
+            'cycle' => ApplicationReviewBatchCycle::InitialReview,
+            'sequence_number' => 53001,
+            'status' => ApplicationReviewBatchStatus::Sealed,
+            'reason' => 'Fixture integrada da revalidação diferencial 53F.',
+            'item_count' => 1,
+            'seal_key' => hash('sha256', 'sprint53f-initial-seal-'.$application->id),
+            'source_fingerprint' => hash('sha256', 'sprint53f-initial-source-'.$application->id),
+            'snapshot_hash' => $batchHash,
+        ]);
+        $batch->forceFill([
+            'sealed_by' => $this->administrator->id,
+            'sealed_at' => now(),
+        ])->save();
+        ApplicationReviewBatchItem::query()->create([
+            'application_review_batch_id' => $batch->id,
+            'administrative_process_id' => $process->id,
+            'application_id' => $application->id,
+            'application_review_id' => null,
+            'process_number' => $process->process_number,
+            'application_number' => $application->application_number,
+            'application_public_id' => $application->public_id,
+            'outcome' => ApplicationReviewBatchOutcome::CorrectionRequired,
+            'technical_result' => ApplicationReviewResult::RequiresCorrection->value,
+            'review_lock_version' => 1,
+            'readiness_snapshot' => $payload['readiness'],
+            'document_snapshot' => [],
+            'snapshot_payload' => $payload,
+            'source_fingerprint' => hash('sha256', 'sprint53f-initial-item-'.$application->id),
+            'snapshot_hash' => $snapshotHash,
+        ]);
+
+        Auth::login($this->administrator);
+        $publicationService = app(ApplicationReviewPublicationService::class);
+        $publicationReason = 'Publicação inicial da fixture integrada 53F.';
+        $publicationPreview = $publicationService->preview(
+            $batch->refresh()->load(['contest.program', 'items']),
+            $this->administrator,
+            $publicationReason,
+        );
+        $publicationService->publish(
+            $batch->refresh(),
+            $this->administrator,
+            [
+                'reason' => $publicationReason,
+                'preview_token' => $publicationPreview['token'],
+            ],
+        );
+        $request = CorrectionRequest::query()
+            ->where('application_id', $application->id)
+            ->whereNotNull('application_review_publication_result_id')
+            ->sole();
+        $requestItem = $request->items()->sole();
+        $submission = DocumentSubmission::factory()->create([
+            'document_type_id' => $documentType->id,
+            'required_document_id' => $requiredDocument->id,
+            'requirement_instance' => 1,
+            'user_id' => $candidate->id,
+            'adhesion_registration_id' => $application->adhesion_registration_id,
+            'application_id' => $application->id,
+            'status' => DocumentStatus::Submitted,
+            'title' => 'Documento fictício de resposta 53F',
+            'original_filename' => 'documento-ficticio-53f.pdf',
+            'storage_path' => 'documents/testing/s53f/documento-ficticio-53f.pdf',
+            'submitted_by' => $candidate->id,
+        ]);
+        $version = DocumentVersion::factory()->create([
+            'document_submission_id' => $submission->id,
+            'version_number' => 1,
+            'original_filename' => 'documento-ficticio-53f.pdf',
+            'storage_path' => $submission->storage_path,
+            'uploaded_by' => $candidate->id,
+            'status_at_upload' => DocumentStatus::Submitted,
+        ]);
+        $submission->forceFill(['current_version_id' => $version->id])->save();
+        $response = new CorrectionResponse;
+        $response->forceFill([
+            'correction_request_id' => $request->id,
+            'correction_request_item_id' => $requestItem->id,
+            'application_id' => $application->id,
+            'user_id' => $candidate->id,
+            'document_submission_id' => $submission->id,
+            'document_version_id' => $version->id,
+            'response_text' => null,
+            'response_kind' => CorrectionResponseKind::Document,
+            'status' => CorrectionResponseStatus::Draft,
+            'prepared_at' => now(),
+        ])->save();
+        $requestItem->forceFill([
+            'status' => CorrectionRequestItemStatus::Responded,
+        ])->save();
+
+        Auth::login($candidate);
+        app(CorrectionSubmissionService::class)->submit(
+            $request->refresh(),
+            $candidate,
+        );
+        Auth::login($this->administrator);
+        $revalidation = app(CorrectionRevalidationService::class);
+        $revalidation->start($request->refresh(), $this->administrator);
+        $differentialItem = app(CorrectionDifferentialResolver::class)
+            ->resolve($request->refresh())
+            ->reviewableItems()[0];
+        $revalidation->decide(
+            request: $request->refresh(),
+            response: $response->refresh(),
+            result: CorrectionResponseReviewResult::Accepted,
+            reviewNotes: 'Elemento fictício aceite na segunda análise.',
+            sourceFingerprint: $differentialItem->sourceFingerprint,
+            expectedDecisionToken: null,
+            actor: $this->administrator,
+        );
+        $resolution = app(CorrectionResolutionService::class);
+        $resolutionPreview = $resolution->preview(
+            $request->refresh(),
+            $this->administrator,
+            'Fecho da fixture integrada de revalidação 53F.',
+        );
+        $revalidationBatch = $resolution->seal(
+            $request->refresh(),
+            $this->administrator,
+            $resolutionPreview['reason'],
+            $resolutionPreview['token'],
+        );
+        $finalReason = 'Publicação final da fixture integrada 53F.';
+        $finalPreview = $publicationService->preview(
+            $revalidationBatch->refresh()->load(['contest.program', 'items']),
+            $this->administrator,
+            $finalReason,
+        );
+        $finalPublication = $publicationService->publish(
+            $revalidationBatch->refresh(),
+            $this->administrator,
+            [
+                'reason' => $finalReason,
+                'preview_token' => $finalPreview['token'],
+            ],
+        );
+        $request->refresh();
+        $process->refresh();
+
+        if (
+            $request->status !== CorrectionRequestStatus::Resolved
+            || $request->revalidation_result !== CorrectionRevalidationAggregateResult::Accepted
+            || $process->status !== AdministrativeProcessStatus::EligibilityReview
+            || $finalPublication->results()->count() !== 1
+        ) {
+            throw new LogicException(
+                'A fixture integrada 53F não concluiu o ciclo canónico esperado.',
+            );
+        }
+
+        Auth::logout();
     }
 
     /**

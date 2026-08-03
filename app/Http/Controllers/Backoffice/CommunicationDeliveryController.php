@@ -15,7 +15,7 @@ class CommunicationDeliveryController extends Controller
 
     public function resend(CommunicationDelivery $communicationDelivery): RedirectResponse
     {
-        Gate::authorize('update', $communicationDelivery);
+        Gate::authorize('resendBackoffice', $communicationDelivery);
         $this->service->resend($communicationDelivery, $this->currentUser());
 
         return back()->with('success', 'Nova tentativa registada.');
@@ -23,7 +23,7 @@ class CommunicationDeliveryController extends Controller
 
     public function registerPostal(RegisterPostalDeliveryRequest $request, CommunicationDelivery $communicationDelivery): RedirectResponse
     {
-        Gate::authorize('update', $communicationDelivery);
+        Gate::authorize('registerPostalBackoffice', $communicationDelivery);
         $this->service->registerPostal($communicationDelivery, $request->validated(), $this->authenticatedUser($request));
 
         return back()->with('success', 'Envio postal registado.');

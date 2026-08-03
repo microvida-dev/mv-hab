@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\HousingPreferenceInputsChanged;
 use App\Http\Requests\StoreHouseholdRequest;
 use App\Http\Requests\UpdateHouseholdRequest;
 use App\Models\Citizen;
@@ -92,7 +93,18 @@ class HouseholdController extends Controller
     public function update(UpdateHouseholdRequest $request, Household $household): RedirectResponse
     {
         Gate::authorize('updateBackoffice', $household);
-        $household->update($request->validated());
+        $household->fill($request->validated());
+        $changedFields = array_keys($household->getDirty());
+        $household->save();
+
+        if ($changedFields !== []) {
+            HousingPreferenceInputsChanged::dispatch(
+                $household,
+                'Dados do agregado alterados no backoffice.',
+                HousingPreferenceInputsChanged::COMPOSITION,
+            );
+        }
+
         $this->auditLogger->record(
             AuditEvents::UPDATE,
             $household,
@@ -109,6 +121,11 @@ class HouseholdController extends Controller
     {
         Gate::authorize('deleteBackoffice', $household);
         $household->delete();
+        HousingPreferenceInputsChanged::dispatch(
+            $household,
+            'Agregado removido no backoffice.',
+            HousingPreferenceInputsChanged::COMPOSITION,
+        );
         $this->auditLogger->record(
             AuditEvents::DELETE,
             $household,

@@ -8,6 +8,7 @@ use App\Models\ApplicationDocument;
 use App\Models\DocumentSubmission;
 use App\Models\DocumentType;
 use App\Models\RequiredDocument;
+use App\Services\Applications\HousingPreferenceSnapshotService;
 use App\Services\Documents\DocumentChecklistService;
 use App\Services\Documents\DocumentSubmissionContextResolver;
 use Illuminate\Support\Collection;
@@ -18,13 +19,15 @@ final class DocumentDossierBuilder
         private readonly DocumentChecklistService $checklist,
         private readonly DocumentSubmissionContextResolver $context,
         private readonly DocumentStandardizationService $standardization,
+        private readonly HousingPreferenceSnapshotService $housingPreferences,
     ) {}
 
     /**
      * @param  array<string, mixed>  $options
      * @return array{
      *     items:list<array<string,mixed>>,
-     *     summary:array<string,int>
+     *     summary:array<string,int>,
+     *     housing_preferences:list<array<string,mixed>>
      * }
      */
     public function build(
@@ -70,6 +73,13 @@ final class DocumentDossierBuilder
         $checklistItems = $rawCollection
             ->filter(
                 fn (mixed $item): bool => is_array($item),
+            )
+            ->when(
+                ($options['required_only'] ?? false) === true,
+                static fn (Collection $items): Collection => $items
+                    ->filter(
+                        static fn (array $item): bool => ($item['is_required'] ?? false) === true,
+                    ),
             )
             ->values();
 
@@ -142,6 +152,8 @@ final class DocumentDossierBuilder
         return [
             'items' => $items,
             'summary' => $this->summary($items),
+            'housing_preferences' => $this->housingPreferences
+                ->forApplication($application),
         ];
     }
 

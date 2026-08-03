@@ -23,6 +23,7 @@ class DashboardAccessibilityTest extends TestCase
         $this->createAnalyticsFixtures($administrator);
 
         $this->actingAs($administrator)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.analytics.index'))
             ->assertOk()
             ->assertSee('aria-label="Tendências operacionais"', false)

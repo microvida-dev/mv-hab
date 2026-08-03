@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AffordableRentLegalRegime;
 use App\Enums\ProgramStatus;
 use Database\Factories\ProgramFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -10,9 +11,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property int $municipality_id
+ * @property int|null $regulatory_profile_id
+ * @property int|null $regulatory_snapshot_id
  * @property ProgramStatus $status
+ * @property AffordableRentLegalRegime|null $legal_regime
+ * @property Carbon|null $starts_at
+ * @property Carbon|null $ends_at
  */
 class Program extends Model
 {
@@ -21,6 +30,8 @@ class Program extends Model
 
     protected $fillable = [
         'municipality_id',
+        'regulatory_profile_id',
+        'legal_regime',
         'created_by',
         'updated_by',
         'name',
@@ -38,6 +49,7 @@ class Program extends Model
     {
         return [
             'status' => ProgramStatus::class,
+            'legal_regime' => AffordableRentLegalRegime::class,
             'starts_at' => 'date',
             'ends_at' => 'date',
             'published_at' => 'datetime',
@@ -48,6 +60,18 @@ class Program extends Model
     public function municipality(): BelongsTo
     {
         return $this->belongsTo(Municipality::class);
+    }
+
+    /** @return BelongsTo<AffordableRentRegulatoryProfile, $this> */
+    public function regulatoryProfile(): BelongsTo
+    {
+        return $this->belongsTo(AffordableRentRegulatoryProfile::class);
+    }
+
+    /** @return BelongsTo<RegulatorySnapshot, $this> */
+    public function regulatorySnapshot(): BelongsTo
+    {
+        return $this->belongsTo(RegulatorySnapshot::class);
     }
 
     /** @return BelongsTo<User, $this> */

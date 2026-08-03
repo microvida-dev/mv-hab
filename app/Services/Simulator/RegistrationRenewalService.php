@@ -3,6 +3,7 @@
 namespace App\Services\Simulator;
 
 use App\Enums\RegistrationRenewalStatus;
+use App\Events\HousingPreferenceInputsChanged;
 use App\Models\AdhesionRegistration;
 use App\Models\RegistrationRenewal;
 use App\Models\User;
@@ -86,7 +87,16 @@ class RegistrationRenewalService
         }
 
         $registration->fill(Arr::only($this->arraySnapshot($renewal->getAttribute('updated_snapshot')), $this->allowedFields()));
+        $registrationChanged = $registration->isDirty();
         $registration->save();
+
+        if ($registrationChanged) {
+            HousingPreferenceInputsChanged::dispatch(
+                $registration,
+                'Dados do Registo de Adesão alterados na renovação.',
+                HousingPreferenceInputsChanged::REGISTRATION,
+            );
+        }
 
         $renewal->forceFill([
             'status' => RegistrationRenewalStatus::Completed,

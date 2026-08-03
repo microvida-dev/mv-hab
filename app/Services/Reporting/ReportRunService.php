@@ -7,11 +7,14 @@ use App\Enums\ExportScope;
 use App\Enums\ReportAccessType;
 use App\Enums\ReportFormat;
 use App\Enums\ReportRunStatus;
+use App\Models\Contest;
+use App\Models\Program;
 use App\Models\ReportDefinition;
 use App\Models\ReportRun;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\Municipalities\MunicipalRecordScopeService;
+use App\Services\Platform\PlatformOperatorScopeService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -27,6 +30,7 @@ class ReportRunService
         private readonly SensitiveDataMaskingService $masking,
         private readonly AuditLogger $audit,
         private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly PlatformOperatorScopeService $platformScope,
     ) {}
 
     /**
@@ -38,26 +42,40 @@ class ReportRunService
         array $filters,
         ReportFormat $format = ReportFormat::Html,
         ExportScope $scope = ExportScope::Aggregated,
+        string $requiredPermission = 'reports.run',
     ): ReportRunResult {
-        if (! $this->permissions->canViewReport($user, $definition)) {
+        abort_unless(
+            in_array(
+                $requiredPermission,
+                ['reports.run', 'reports.export'],
+                true,
+            ),
+            403,
+        );
+
+        if (
+            ! $user->hasPermission($requiredPermission)
+            || ! $this->municipalScope->hasMunicipalOrGlobalScope($user)
+            || ! $this->permissions->canViewReport($user, $definition)
+        ) {
             throw new AuthorizationException;
         }
 
         $normalized = $this->filters->normalize($filters);
 
-        if ($this->permissions->isApplicationReport($definition)) {
-            if ($user->municipality_id === null) {
-                throw new AuthorizationException;
-            }
-
+        if ($user->municipality_id !== null) {
             $normalized['municipality_id'] = (int) $user->municipality_id;
             ksort($normalized);
+        } elseif (! $this->platformScope->hasGlobalScope($user)) {
+            throw new AuthorizationException;
         }
 
+        $this->assertFilterScope($normalized, $user);
+
         if (
-            ! $user->hasRole('administrator')
+            ! $this->platformScope->hasGlobalScope($user)
             && $definition->requires_filters
-            && $normalized === []
+            && collect($normalized)->except('municipality_id')->isEmpty()
         ) {
             throw new AuthorizationException(
                 'Este relatório exige pelo menos um filtro.'
@@ -165,5 +183,31 @@ class ReportRunService
             ),
             $scope,
         );
+    }
+
+    /**
+     * @param  array<string, int|string>  $filters
+     */
+    private function assertFilterScope(array $filters, User $user): void
+    {
+        if (isset($filters['program_id'])) {
+            abort_unless(
+                $this->municipalScope
+                    ->programs(Program::query(), $user)
+                    ->whereKey((int) $filters['program_id'])
+                    ->exists(),
+                403,
+            );
+        }
+
+        if (isset($filters['contest_id'])) {
+            abort_unless(
+                $this->municipalScope
+                    ->contests(Contest::query(), $user)
+                    ->whereKey((int) $filters['contest_id'])
+                    ->exists(),
+                403,
+            );
+        }
     }
 }

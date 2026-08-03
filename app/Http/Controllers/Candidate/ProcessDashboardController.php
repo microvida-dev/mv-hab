@@ -48,8 +48,6 @@ class ProcessDashboardController extends Controller
             'application.additionalDocumentRequests',
             'application.additionalDocumentSubmissions',
             'application.controlledWithdrawals',
-            'application.housingVisits',
-            'application.supportTickets',
             'contest',
             'program',
             'correctionRequests' => fn ($query) => $query->where('candidate_visible', true)->latest(),

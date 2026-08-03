@@ -7,6 +7,7 @@ use App\Enums\CorrectionRequestItemStatus;
 use App\Enums\CorrectionRequestStatus;
 use App\Enums\CorrectionResponseReviewResult;
 use App\Enums\CorrectionResponseStatus;
+use App\Events\HousingPreferenceInputsChanged;
 use App\Models\AdministrativeProcess;
 use App\Models\Application;
 use App\Models\CorrectionRequest;
@@ -31,6 +32,8 @@ class CorrectionResponseService
      */
     public function submit(CorrectionRequest $request, array $data, User $candidate): CorrectionResponse
     {
+        $this->assertLegacyFlow($request);
+
         if ($request->user_id !== $candidate->id || ! $request->isOpenForCandidateResponse()) {
             throw ValidationException::withMessages(['correction_request' => 'Este pedido não aceita resposta neste momento.']);
         }
@@ -84,6 +87,17 @@ class CorrectionResponseService
                 metadata: ['document_linked' => $documentId !== null],
             );
 
+            $application = $this->requiredApplication($request);
+            $household = $application->household;
+
+            if ($household !== null) {
+                HousingPreferenceInputsChanged::dispatch(
+                    $household,
+                    'Resposta a pedido de aperfeiçoamento submetida.',
+                    HousingPreferenceInputsChanged::CORRECTION,
+                );
+            }
+
             $response->refresh();
 
             return $response->load(['correctionRequestItem', 'documentSubmission']);
@@ -120,6 +134,10 @@ class CorrectionResponseService
         ?string $notes,
         User $actor,
     ): CorrectionResponse {
+        $this->assertLegacyFlow(
+            $this->requiredCorrectionRequest($response),
+        );
+
         return DB::transaction(function () use ($response, $result, $notes, $actor) {
             $status = $result === CorrectionResponseReviewResult::Accepted
                 ? CorrectionResponseStatus::Accepted
@@ -141,11 +159,12 @@ class CorrectionResponseService
             $request = $this->requiredCorrectionRequest($response);
             if ($this->allRequiredItemsAccepted($request)) {
                 $request->forceFill([
-                    'status' => CorrectionRequestStatus::Accepted,
+                    'status' => CorrectionRequestStatus::Resolved,
+                    'resolved_at' => now(),
                     'closed_at' => now(),
                 ])->save();
             } else {
-                $request->forceFill(['status' => CorrectionRequestStatus::UnderReview])->save();
+                $request->forceFill(['status' => CorrectionRequestStatus::Submitted])->save();
             }
 
             $process = $this->requiredAdministrativeProcess($request);
@@ -185,7 +204,7 @@ class CorrectionResponseService
             ->count();
 
         $request->forceFill([
-            'status' => $responded >= $required ? CorrectionRequestStatus::Responded : CorrectionRequestStatus::PartiallyResponded,
+            'status' => $responded >= $required ? CorrectionRequestStatus::Submitted : CorrectionRequestStatus::PartiallyCompleted,
             'responded_at' => $responded >= $required ? now() : null,
         ])->save();
     }
@@ -235,10 +254,14 @@ class CorrectionResponseService
 
     private function requiredCorrectionRequest(CorrectionResponse $response): CorrectionRequest
     {
-        $request = $response->correctionRequest;
+        $request = $response->getRelationValue(
+            'correctionRequest',
+        );
 
         if (! $request instanceof CorrectionRequest) {
-            throw ValidationException::withMessages(['correction_request' => 'Resposta sem pedido de aperfeiçoamento associado.']);
+            throw ValidationException::withMessages([
+                'correction_request' => 'Resposta sem pedido de aperfeiçoamento associado.',
+            ]);
         }
 
         return $request;
@@ -246,7 +269,7 @@ class CorrectionResponseService
 
     private function requiredAdministrativeProcess(CorrectionRequest $request): AdministrativeProcess
     {
-        $process = $request->administrativeProcess;
+        $process = $request->getRelationValue('administrativeProcess');
 
         if (! $process instanceof AdministrativeProcess) {
             throw ValidationException::withMessages(['process' => 'Pedido sem processo administrativo associado.']);
@@ -266,9 +289,18 @@ class CorrectionResponseService
         return is_string($status) ? AdministrativeProcessStatus::tryFrom($status) : null;
     }
 
+    private function assertLegacyFlow(CorrectionRequest $request): void
+    {
+        if (! $request->isLegacy()) {
+            throw ValidationException::withMessages([
+                'correction_request' => 'Este pedido utiliza a segunda análise diferencial e não pode ser decidido pelo fluxo legado.',
+            ]);
+        }
+    }
+
     private function requiredApplication(CorrectionRequest $request): Application
     {
-        $application = $request->application;
+        $application = $request->getRelationValue('application');
 
         if (! $application instanceof Application) {
             throw ValidationException::withMessages(['application' => 'Pedido sem candidatura associada.']);

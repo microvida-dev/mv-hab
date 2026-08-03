@@ -7,7 +7,9 @@ use App\Enums\ProcedureTemplateType;
 use App\Models\ProcedureTemplate;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Platform\PlatformOperatorScopeService;
 use App\Support\AuditEvents;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 
 class ProcedureTemplateService
@@ -15,6 +17,7 @@ class ProcedureTemplateService
     public function __construct(
         private readonly TemplateRenderingService $renderer,
         private readonly AuditLogger $auditLogger,
+        private readonly PlatformOperatorScopeService $platformScope,
     ) {}
 
     /**
@@ -22,6 +25,21 @@ class ProcedureTemplateService
      */
     public function store(array $data, User $actor): ProcedureTemplate
     {
+        $this->authorize(
+            $actor,
+            'documents.create',
+        );
+
+        return $this->persist($data, $actor);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function persist(
+        array $data,
+        User $actor,
+    ): ProcedureTemplate {
         $content = (string) $data['content'];
         $variables = $data['variables'] ?? $this->renderer->placeholders($content);
         $template = new ProcedureTemplate([
@@ -48,10 +66,15 @@ class ProcedureTemplateService
      */
     public function update(ProcedureTemplate $template, array $data, User $actor): ProcedureTemplate
     {
+        $this->authorize(
+            $actor,
+            'documents.update',
+        );
+
         if ($template->status === ProcedureTemplateStatus::Active) {
             return DB::transaction(function () use ($template, $data, $actor): ProcedureTemplate {
                 $template->forceFill(['status' => ProcedureTemplateStatus::Superseded])->save();
-                $new = $this->store([
+                $new = $this->persist([
                     'type' => ($data['type'] ?? $template->type->value),
                     'name' => $data['name'] ?? $template->name,
                     'description' => $data['description'] ?? $template->description,
@@ -81,6 +104,11 @@ class ProcedureTemplateService
 
     public function publish(ProcedureTemplate $template, User $actor): ProcedureTemplate
     {
+        $this->authorize(
+            $actor,
+            'documents.publish',
+        );
+
         ProcedureTemplate::query()
             ->where('type', $template->type->value)
             ->where('status', ProcedureTemplateStatus::Active->value)
@@ -117,5 +145,15 @@ class ProcedureTemplateService
         } while (ProcedureTemplate::withTrashed()->where('template_number', $number)->exists());
 
         return $number;
+    }
+
+    private function authorize(User $actor, string $permission): void
+    {
+        if (
+            ! $actor->hasPermission($permission)
+            || ! $this->platformScope->hasGlobalScope($actor)
+        ) {
+            throw new AuthorizationException;
+        }
     }
 }

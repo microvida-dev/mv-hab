@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ApplicationStatus;
 use App\Models\Application;
 use App\Models\HousingPreference;
 use App\Models\User;
@@ -11,6 +12,10 @@ class HousingPreferencePolicy
 {
     use ChecksPermissions;
 
+    public function __construct(
+        private readonly ApplicationPolicy $applications,
+    ) {}
+
     public function viewAny(User $user): bool
     {
         return $this->canAccess($user, 'allocations', 'view');
@@ -18,15 +23,19 @@ class HousingPreferencePolicy
 
     public function view(User $user, HousingPreference $preference): bool
     {
-        return $user->hasRole('candidate')
-            ? $preference->user_id === $user->id && $this->canAccess($user, 'allocations', 'view')
-            : $this->viewAny($user);
+        $application = $preference->application;
+
+        return $application instanceof Application
+            && $this->applications->view($user, $application)
+            && $this->canAccess($user, 'allocations', 'view');
     }
 
     public function update(User $user, Application $application): bool
     {
-        return $user->hasRole('candidate')
-            && $application->user_id === $user->id
+        return $this->applications->update($user, $application)
+            && $application->status === ApplicationStatus::Draft
+            && $application->locked_at === null
+            && $application->housingPreferences()->whereNotNull('locked_at')->doesntExist()
             && $application->allocations()->doesntExist()
             && $this->canAccess($user, 'allocations', 'update');
     }

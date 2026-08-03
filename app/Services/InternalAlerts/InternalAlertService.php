@@ -8,12 +8,20 @@ use App\Enums\InternalAlertType;
 use App\Models\InternalAlert;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Municipalities\CommunicationMunicipalContextService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
+use App\Services\Platform\PlatformOperatorScopeService;
 use App\Support\AuditEvents;
 use Illuminate\Database\Eloquent\Model;
 
 class InternalAlertService
 {
-    public function __construct(private readonly AuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly CommunicationMunicipalContextService $context,
+        private readonly PlatformOperatorScopeService $platformScope,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -27,6 +35,21 @@ class InternalAlertService
         array $data = [],
         ?User $actor = null,
     ): InternalAlert {
+        $municipalityId = $this->municipalityId(
+            $related,
+            $data['municipality_id'] ?? null,
+        );
+
+        if ($actor instanceof User) {
+            abort_unless(
+                $this->actorCanAccessMunicipality(
+                    $actor,
+                    $municipalityId,
+                ),
+                403,
+            );
+        }
+
         $query = InternalAlert::query()
             ->where('type', $type->value)
             ->whereIn('status', [InternalAlertStatus::Open->value, InternalAlertStatus::Seen->value, InternalAlertStatus::InProgress->value]);
@@ -54,7 +77,7 @@ class InternalAlertService
             'severity' => $severity,
             'status' => InternalAlertStatus::Open,
             'assigned_to' => $data['assigned_to'] ?? null,
-            'municipality_id' => $data['municipality_id'] ?? null,
+            'municipality_id' => $municipalityId,
             'program_id' => $data['program_id'] ?? null,
             'contest_id' => $data['contest_id'] ?? null,
             'application_id' => $data['application_id'] ?? null,
@@ -82,6 +105,12 @@ class InternalAlertService
 
     public function resolve(InternalAlert $alert, User $actor): InternalAlert
     {
+        abort_unless(
+            $actor->hasPermission('internal_alerts.resolve')
+                && $this->municipalScope->ownsInternalAlert($actor, $alert),
+            403,
+        );
+
         $alert->forceFill([
             'status' => InternalAlertStatus::Resolved,
             'resolved_at' => now(),
@@ -95,6 +124,12 @@ class InternalAlertService
 
     public function dismiss(InternalAlert $alert, User $actor): InternalAlert
     {
+        abort_unless(
+            $actor->hasPermission('internal_alerts.dismiss')
+                && $this->municipalScope->ownsInternalAlert($actor, $alert),
+            403,
+        );
+
         $alert->forceFill([
             'status' => InternalAlertStatus::Dismissed,
             'resolved_at' => now(),
@@ -116,5 +151,45 @@ class InternalAlertService
         } while (InternalAlert::withTrashed()->where('alert_number', $number)->exists());
 
         return $number;
+    }
+
+    private function municipalityId(
+        ?Model $related,
+        mixed $providedMunicipalityId,
+    ): int {
+        $relatedMunicipalityId = $related instanceof Model
+            ? $this->context->forModel($related)
+            : null;
+        $providedMunicipalityId = is_numeric($providedMunicipalityId)
+            && (int) $providedMunicipalityId > 0
+                ? (int) $providedMunicipalityId
+                : null;
+
+        abort_if(
+            $relatedMunicipalityId !== null
+                && $providedMunicipalityId !== null
+                && $relatedMunicipalityId !== $providedMunicipalityId,
+            422,
+        );
+
+        $municipalityId = $relatedMunicipalityId
+            ?? $providedMunicipalityId;
+
+        abort_unless($municipalityId !== null, 422);
+
+        return $municipalityId;
+    }
+
+    private function actorCanAccessMunicipality(
+        User $actor,
+        int $municipalityId,
+    ): bool {
+        return (
+            $actor->municipality_id !== null
+            && (int) $actor->municipality_id === $municipalityId
+        ) || (
+            $actor->municipality_id === null
+            && $this->platformScope->hasGlobalScope($actor)
+        );
     }
 }

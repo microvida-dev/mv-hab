@@ -49,26 +49,45 @@ class TodayProvider
      * @param  array<string, mixed>  $dashboard
      * @return array<string, mixed>
      */
-    public function timelineForUser(User $user, array $dashboard): array
-    {
-        return $this->aggregator()->forUser($user, $dashboard);
+    public function timelineForUser(
+        User $user,
+        array $dashboard,
+    ): array {
+        return $this->aggregator()->forUser(
+            $user,
+            $dashboard,
+        );
     }
 
     /**
      * @param  array<string, mixed>  $dashboard
      * @return list<TimelineEvent>
      */
-    public function eventsForUser(User $user, array $dashboard): array
-    {
-        return array_values(collect($this->providers())
-            ->flatMap(fn (TimelineProviderInterface $provider): array => $provider->forUser($user, $dashboard))
-            ->values()
-            ->all());
+    public function eventsForUser(
+        User $user,
+        array $dashboard,
+    ): array {
+        return array_values(
+            collect($this->providers())
+                ->flatMap(
+                    fn (
+                        TimelineProviderInterface $provider,
+                    ): array => $provider->forUser(
+                        $user,
+                        $dashboard,
+                    ),
+                )
+                ->values()
+                ->all(),
+        );
     }
 
     private function aggregator(): TimelineAggregatorService
     {
-        return $this->timelineAggregator ?? new TimelineAggregatorService($this->providers());
+        return $this->timelineAggregator
+            ?? new TimelineAggregatorService(
+                $this->providers(),
+            );
     }
 
     /**
@@ -80,7 +99,7 @@ class TodayProvider
             new WorkTaskTimelineProvider,
             app(VisitTimelineProvider::class),
             app(InspectionTimelineProvider::class),
-            new CorrectionRequestTimelineProvider,
+            app(CorrectionRequestTimelineProvider::class),
             new HearingTimelineProvider,
             new ComplaintTimelineProvider,
             new DeadlineTimelineProvider,

@@ -23,19 +23,96 @@ class NotificationEventDispatcher
         private readonly CommunicationLogService $communications,
         private readonly OfficialNotificationService $notifications,
         private readonly CommunicationDeliveryService $deliveries,
+        private readonly ProceduralEmailDeliveryService $proceduralEmails,
+        private readonly ProceduralNotificationPolicy $proceduralPolicy,
     ) {}
 
     /**
      * @param  array<string, mixed>  $context
      * @return Collection<int, CommunicationLog>
      */
-    public function dispatch(string $eventCode, Model $related, array $context = [], ?User $actor = null): Collection
-    {
+    public function dispatch(
+        string $eventCode,
+        Model $related,
+        array $context = [],
+        ?User $actor = null,
+    ): Collection {
         $created = collect();
 
+        /**
+         * @var array<int, array{
+         *     recipient: User,
+         *     communication: CommunicationLog,
+         *     has_in_app: bool,
+         *     has_email: bool
+         * }>
+         */
+        $mandatoryCoverage = [];
+
         foreach ($this->rules->resolve($eventCode, $context) as $rule) {
-            foreach ($this->recipients->resolve($rule, $related, $context) as $recipient) {
-                $created->push($this->dispatchRule($rule, $recipient, $related, $context, $actor));
+            foreach (
+                $this->recipients->resolve(
+                    $rule,
+                    $related,
+                    $context,
+                ) as $recipient
+            ) {
+                $communication = $this->dispatchRule(
+                    $rule,
+                    $recipient,
+                    $related,
+                    $context,
+                    $actor,
+                );
+                $created->push($communication);
+
+                $template = $rule->template;
+                assert($template instanceof NotificationTemplate);
+
+                if (
+                    ! $this->proceduralPolicy->requiresMandatoryEmail(
+                        $rule->event_code,
+                        (bool) $template->is_official,
+                    )
+                ) {
+                    continue;
+                }
+
+                $coverage = $mandatoryCoverage[$recipient->id] ?? [
+                    'recipient' => $recipient,
+                    'communication' => $communication,
+                    'has_in_app' => false,
+                    'has_email' => false,
+                ];
+
+                $coverage['has_in_app'] = $coverage['has_in_app']
+                    || $rule->channel === CommunicationChannel::InApp;
+                $coverage['has_email'] = $coverage['has_email']
+                    || $rule->channel === CommunicationChannel::Email;
+                $mandatoryCoverage[$recipient->id] = $coverage;
+            }
+        }
+
+        foreach ($mandatoryCoverage as $coverage) {
+            if (! $coverage['has_in_app']) {
+                $this->notifications->createFromCommunication(
+                    communication: $coverage['communication'],
+                    user: $coverage['recipient'],
+                    type: OfficialNotificationType::tryFrom($eventCode)
+                        ?? OfficialNotificationType::Other,
+                    channel: OfficialNotificationChannel::InApp,
+                    notifiable: $related,
+                    actor: $actor,
+                    actionUrl: $context['action_url'] ?? null,
+                    enforceMandatoryEmail: false,
+                );
+            }
+
+            if (! $coverage['has_email']) {
+                $this->proceduralEmails->ensureQueued(
+                    $coverage['communication'],
+                    $coverage['recipient'],
+                );
             }
         }
 
@@ -45,8 +122,13 @@ class NotificationEventDispatcher
     /**
      * @param  array<string, mixed>  $context
      */
-    private function dispatchRule(NotificationEventRule $rule, User $recipient, Model $related, array $context, ?User $actor): CommunicationLog
-    {
+    private function dispatchRule(
+        NotificationEventRule $rule,
+        User $recipient,
+        Model $related,
+        array $context,
+        ?User $actor,
+    ): CommunicationLog {
         $template = $rule->template;
         assert($template instanceof NotificationTemplate);
         $channel = $rule->channel;
@@ -73,37 +155,72 @@ class NotificationEventDispatcher
             actor: $actor,
             priority: $rule->priority,
             official: $template->is_official,
-            requiresAcknowledgement: $rule->requires_acknowledgement || $template->requires_acknowledgement,
+            requiresAcknowledgement: $rule->requires_acknowledgement
+                || $template->requires_acknowledgement,
         );
 
-        $notification = null;
-        if (in_array($channel, [CommunicationChannel::InApp, CommunicationChannel::Internal], true)) {
-            $notification = $this->notifications->createFromCommunication(
+        if (
+            in_array($channel, [
+                CommunicationChannel::InApp,
+                CommunicationChannel::Internal,
+            ], true)
+        ) {
+            $this->notifications->createFromCommunication(
                 communication: $communication,
                 user: $recipient,
-                type: OfficialNotificationType::tryFrom($rule->event_code) ?? OfficialNotificationType::Other,
-                channel: $channel === CommunicationChannel::Internal ? OfficialNotificationChannel::Internal : OfficialNotificationChannel::InApp,
+                type: OfficialNotificationType::tryFrom(
+                    $rule->event_code,
+                ) ?? OfficialNotificationType::Other,
+                channel: $channel === CommunicationChannel::Internal
+                    ? OfficialNotificationChannel::Internal
+                    : OfficialNotificationChannel::InApp,
                 notifiable: $related,
                 actor: $actor,
                 actionUrl: $context['action_url'] ?? null,
+                enforceMandatoryEmail: false,
             );
 
             return $communication->refresh();
         }
 
-        $preference = $recipient->notificationPreference instanceof NotificationPreference
+        if (
+            $channel === CommunicationChannel::Email
+            && $this->proceduralPolicy->requiresMandatoryEmail(
+                $rule->event_code,
+                (bool) $template->is_official,
+            )
+        ) {
+            $this->proceduralEmails->ensureQueued(
+                $communication,
+                $recipient,
+            );
+
+            return $communication->refresh();
+        }
+
+        $preference = $recipient->notificationPreference
+            instanceof NotificationPreference
             ? $recipient->notificationPreference
             : null;
 
         $destination = match ($channel) {
-            CommunicationChannel::Email => $preference?->email_for_notifications ?: $recipient->email,
-            CommunicationChannel::Sms => $preference?->phone_for_notifications,
+            CommunicationChannel::Email => $preference
+                ?->email_for_notifications ?: $recipient->email,
+            CommunicationChannel::Sms => $preference
+                ?->phone_for_notifications,
             CommunicationChannel::Postal => $preference?->postal_address,
             default => null,
         };
-        $delivery = $this->deliveries->create($communication, $channel, $destination, $notification);
+        $delivery = $this->deliveries->create(
+            $communication,
+            $channel,
+            $destination,
+        );
 
-        if ($rule->send_immediately && $rule->delay_minutes === 0) {
+        if (
+            $rule->send_immediately
+            && $rule->delay_minutes === 0
+        ) {
             $this->deliveries->execute($delivery, $actor);
         }
 

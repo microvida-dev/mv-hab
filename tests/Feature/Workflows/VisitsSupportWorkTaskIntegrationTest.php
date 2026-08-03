@@ -11,11 +11,12 @@ use App\Models\WorkTask;
 use Database\Seeders\MunicipalTeamSeeder;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesTenantSupportEligibility;
 use Tests\TestCase;
 
 class VisitsSupportWorkTaskIntegrationTest extends TestCase
 {
-    use RefreshDatabase;
+    use CreatesTenantSupportEligibility, RefreshDatabase;
 
     public function test_support_ticket_creates_competency_work_task_with_minimized_metadata(): void
     {
@@ -88,6 +89,9 @@ class VisitsSupportWorkTaskIntegrationTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole($role);
 
+        if ($role === 'candidate') {
+            $this->enableTenantSupportFor($user);
+        }
         if ($teamName !== null) {
             MunicipalTeam::query()->where('name', $teamName)->firstOrFail()->members()->syncWithoutDetaching([
                 $user->id => ['joined_at' => now(), 'role_in_team' => $teamName],

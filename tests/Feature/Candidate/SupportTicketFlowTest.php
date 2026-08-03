@@ -10,11 +10,12 @@ use App\Models\User;
 use Database\Seeders\MunicipalTeamSeeder;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesTenantSupportEligibility;
 use Tests\TestCase;
 
 class SupportTicketFlowTest extends TestCase
 {
-    use RefreshDatabase;
+    use CreatesTenantSupportEligibility, RefreshDatabase;
 
     public function test_candidate_support_ticket_flow_keeps_internal_notes_private(): void
     {
@@ -63,6 +64,10 @@ class SupportTicketFlowTest extends TestCase
     {
         $user = User::factory()->create();
         $user->assignRole($role);
+
+        if ($role === 'candidate') {
+            $this->enableTenantSupportFor($user);
+        }
 
         return $user;
     }

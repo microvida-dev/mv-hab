@@ -48,37 +48,49 @@ class ContestPolicy
     public function viewAnyBackoffice(User $user): bool
     {
         return ! $user->hasRole('candidate')
-            && $this->canAccess($user, self::MODULE, 'view');
+            && $this->canAccess($user, self::MODULE, 'view')
+            && $this->municipalScope->hasMunicipalOrGlobalScope($user);
     }
 
     public function viewBackoffice(User $user, Contest $contest): bool
     {
         return ! $user->hasRole('candidate')
-            && $this->canAccess($user, self::MODULE, 'view');
+            && $this->canAccess($user, self::MODULE, 'view')
+            && $this->municipalScope->ownsContest($user, $contest);
     }
 
     public function createBackoffice(User $user): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, self::MODULE, 'create');
+            && $this->canAccess($user, self::MODULE, 'create')
+            && $this->municipalScope->hasMunicipalOrGlobalScope($user);
     }
 
     public function updateBackoffice(User $user, Contest $contest): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, self::MODULE, 'update');
+            && $this->canAccess($user, self::MODULE, 'update')
+            && $this->municipalScope->ownsContest($user, $contest);
     }
 
     public function deleteBackoffice(User $user, Contest $contest): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, self::MODULE, 'delete');
+            && $this->canAccess($user, self::MODULE, 'delete')
+            && $this->municipalScope->ownsContest($user, $contest);
     }
 
     public function publishBackoffice(User $user, Contest $contest): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, self::MODULE, 'publish');
+            && $this->canAccess($user, self::MODULE, 'publish')
+            && $this->municipalScope->ownsContest($user, $contest);
+    }
+
+    public function closeBackoffice(User $user, Contest $contest): bool
+    {
+        return $this->canAccess($user, self::MODULE, 'close')
+            && $this->municipalScope->ownsContest($user, $contest);
     }
 
     public function viewListsBackoffice(User $user, Contest $contest): bool

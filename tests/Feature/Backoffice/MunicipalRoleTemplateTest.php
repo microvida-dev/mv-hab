@@ -64,17 +64,22 @@ class MunicipalRoleTemplateTest extends TestCase
         $response = $this->get(route('backoffice.role-templates.create', 'operador-recolha'));
 
         $response->assertOk()
-            ->assertSee('Reveja e ajuste a matriz')
+            ->assertSee('Confirme a matriz oficial')
             ->assertSee('applications.create')
             ->assertSee('documents.create');
 
+        $content = $response->getContent();
+        if (! is_string($content)) {
+            $this->fail('A resposta do template municipal não devolveu conteúdo HTML.');
+        }
+
         $this->assertMatchesRegularExpression(
             '/<input(?=[^>]*value="'.$applicationCreate->id.'")(?=[^>]*checked)[^>]*>/',
-            $response->getContent(),
+            $content,
         );
         $this->assertDoesNotMatchRegularExpression(
             '/<input(?=[^>]*value="'.$applicationExport->id.'")(?=[^>]*checked)[^>]*>/',
-            $response->getContent(),
+            $content,
         );
 
         $this->assertSame($rolesBefore, Role::query()->count());

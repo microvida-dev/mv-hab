@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\AffordableRentLegalRegime;
+use App\Enums\ContestApplicationPhase;
 use App\Enums\ContestStatus;
 use App\Enums\ProgramStatus;
+use App\Services\Contests\ContestApplicationPhaseService;
 use Database\Factories\ContestFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +17,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property int $program_id
+ * @property int|null $regulatory_profile_id
+ * @property int|null $regulatory_snapshot_id
  * @property ContestStatus $status
+ * @property AffordableRentLegalRegime|null $legal_regime
  * @property Carbon|null $opens_at
  * @property Carbon|null $closes_at
  * @property Carbon|null $published_at
@@ -26,6 +34,8 @@ class Contest extends Model
 
     protected $fillable = [
         'program_id',
+        'regulatory_profile_id',
+        'legal_regime',
         'created_by',
         'updated_by',
         'code',
@@ -44,6 +54,7 @@ class Contest extends Model
     {
         return [
             'status' => ContestStatus::class,
+            'legal_regime' => AffordableRentLegalRegime::class,
             'opens_at' => 'datetime',
             'closes_at' => 'datetime',
             'published_at' => 'datetime',
@@ -54,6 +65,18 @@ class Contest extends Model
     public function program(): BelongsTo
     {
         return $this->belongsTo(Program::class);
+    }
+
+    /** @return BelongsTo<AffordableRentRegulatoryProfile, $this> */
+    public function regulatoryProfile(): BelongsTo
+    {
+        return $this->belongsTo(AffordableRentRegulatoryProfile::class);
+    }
+
+    /** @return BelongsTo<RegulatorySnapshot, $this> */
+    public function regulatorySnapshot(): BelongsTo
+    {
+        return $this->belongsTo(RegulatorySnapshot::class);
     }
 
     /** @return BelongsTo<User, $this> */
@@ -322,31 +345,19 @@ class Contest extends Model
 
     public function isOpenForApplications(): bool
     {
-        return $this->status === ContestStatus::Published
-            && $this->published_at?->isPast() === true
-            && ($this->opens_at && $this->closes_at
-                ? now()->between($this->opens_at, $this->closes_at)
-                : false);
+        return app(ContestApplicationPhaseService::class)
+            ->isOpenForApplications($this);
     }
 
     public function publicPhase(): string
     {
-        if ($this->status === ContestStatus::Cancelled) {
-            return 'cancelled';
-        }
+        return app(ContestApplicationPhaseService::class)
+            ->publicPhase($this);
+    }
 
-        if ($this->opens_at === null || $this->closes_at === null) {
-            return 'upcoming';
-        }
-
-        if (now()->lt($this->opens_at)) {
-            return 'upcoming';
-        }
-
-        if (now()->gt($this->closes_at)) {
-            return 'closed';
-        }
-
-        return 'open';
+    public function applicationPhase(): ContestApplicationPhase
+    {
+        return app(ContestApplicationPhaseService::class)
+            ->current($this);
     }
 }

@@ -46,8 +46,6 @@ class ProcessTimelineBuilder
             'hearings.submissions',
             'officialNotifications',
             'documentSubmissions',
-            'housingVisits',
-            'supportTickets',
             'simulationInconsistencies',
         ]);
 

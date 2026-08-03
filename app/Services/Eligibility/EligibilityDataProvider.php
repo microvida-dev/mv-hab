@@ -10,14 +10,22 @@ use App\Models\Application;
 use App\Models\Contest;
 use App\Models\ContestHousingUnit;
 use App\Models\CurrentHousingSituation;
+use App\Models\EligibilityCriterion;
+use App\Models\EligibilityRuleSet;
 use App\Models\Household;
 use App\Models\HouseholdMember;
+use App\Models\HousingPreference;
 use App\Models\IncomeRecord;
 use App\Models\Program;
 use App\Models\User;
 use App\Services\Allocation\TypologyAdequacyService;
+use App\Services\Applications\ApplicationHousingPreferenceSourceResolver;
 use App\Services\Documents\DocumentChecklistService;
+use App\Services\Regulatory\AnnualHouseholdIncomeLimitCalculator;
+use App\Services\Regulatory\MunicipalRegulatoryOverlayService;
+use App\Support\DecimalMoney;
 use BackedEnum;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -30,13 +38,13 @@ use Illuminate\Support\Str;
  */
 class EligibilityDataProvider
 {
-    public const ALCANENA_RMMG_2026 = 920.00;
-
-    public const ALCANENA_MAX_EFFORT_RATE = 35.00;
-
     public function __construct(
         private readonly DocumentChecklistService $documentChecklistService,
         private readonly TypologyAdequacyService $typologyAdequacyService,
+        private readonly MunicipalRegulatoryOverlayService $overlayService,
+        private readonly EligibilityRuleSetResolver $ruleSetResolver,
+        private readonly AnnualHouseholdIncomeLimitCalculator $annualIncomeLimits,
+        private readonly ApplicationHousingPreferenceSourceResolver $preferenceSource,
     ) {}
 
     /**
@@ -47,9 +55,16 @@ class EligibilityDataProvider
         ?Program $program = null,
         ?Contest $contest = null,
         ?Application $application = null,
+        ?EligibilityRuleSet $ruleSet = null,
+        ?CarbonInterface $referenceDate = null,
     ): array {
+        $referenceDate = $referenceDate === null
+            ? CarbonImmutable::now('Europe/Lisbon')
+            : CarbonImmutable::instance($referenceDate)->setTimezone('Europe/Lisbon');
         $contest?->loadMissing('program');
         $program ??= $contest?->program;
+        $ruleSet ??= $this->ruleSetResolver->resolveAt($referenceDate, $program, $contest);
+        $ruleSet?->loadMissing(['criteria', 'regulatoryProfile.parentProfile']);
         $application?->loadMissing([
             'housingPreferences.contestHousingUnit.housingUnit',
             'preferences.housingUnit',
@@ -78,8 +93,11 @@ class EligibilityDataProvider
         $adultCount = $members->filter(fn ($member) => ($member->age() ?? 0) >= 18)->count();
         $minorCount = $members->filter(fn ($member) => ($member->age() ?? 18) < 18)->count();
         $dependentCount = $members->where('is_dependent', true)->count();
-        $monthlyIncome = (float) $incomeRecords->sum('monthly_amount');
-        $annualIncome = (float) $incomeRecords->sum('annual_amount');
+        $monthlyIncome = DecimalMoney::sum($incomeRecords->pluck('monthly_amount'));
+        $annualIncome = DecimalMoney::sum($incomeRecords->pluck('annual_amount'));
+        $regulatoryParameters = $this->regulatoryParameters($ruleSet);
+        $minimumAdultMonthlyIncome = $regulatoryParameters['minimum_adult_monthly_income'];
+        $maximumEffortRate = $regulatoryParameters['maximum_effort_rate_percentage'];
         $incomeComplete = $members->isNotEmpty()
             && $members->every(fn ($member) => $member->has_no_income || $member->incomeRecords->isNotEmpty());
         $nonDependentAdults = $members->filter(
@@ -93,17 +111,26 @@ class EligibilityDataProvider
                 )));
         $allMembersHaveValidResidency = $residencyDataMissing
             ? null
-            : $members->every(fn (HouseholdMember $member) => $this->hasValidNationalityOrResidencePermit($member));
-        $adultIncomeDataMissing = $nonDependentAdults->isEmpty()
+            : $members->every(fn (HouseholdMember $member) => $this->hasValidNationalityOrResidencePermit($member, $referenceDate));
+        $adultIncomeDataMissing = $minimumAdultMonthlyIncome === null
+            || $nonDependentAdults->isEmpty()
             || $nonDependentAdults->contains(
                 fn (HouseholdMember $member) => ! $member->has_no_income && $member->incomeRecords->isEmpty(),
             );
         $allAdultsMeetRmmg = $adultIncomeDataMissing
             ? null
             : $nonDependentAdults->every(
-                fn (HouseholdMember $member) => $this->monthlyIncomeFor($member) >= self::ALCANENA_RMMG_2026,
+                fn (HouseholdMember $member) => DecimalMoney::compare(
+                    $this->monthlyIncomeFor($member),
+                    $minimumAdultMonthlyIncome,
+                ) >= 0,
             );
-        $annualIncomeLimit = $memberCount > 0 ? $this->alcanenaAnnualIncomeLimit($memberCount) : null;
+        $annualIncomeLimitResult = $this->annualIncomeLimits->calculate(
+            $memberCount,
+            $regulatoryParameters,
+            $referenceDate,
+        );
+        $annualIncomeLimit = $annualIncomeLimitResult->effectiveLimit;
         $selectedUnits = $this->selectedContestUnits($application);
         $typologyResults = $application instanceof Application
             ? $selectedUnits->map(
@@ -114,14 +141,20 @@ class EligibilityDataProvider
         $typologyIsAdequate = $typologyDataMissing
             ? null
             : $typologyResults->every(fn (TypologyAdequacyResult $result) => $result === TypologyAdequacyResult::Adequate);
-        $rentEffortDataMissing = $application !== null && ($selectedUnits->isEmpty() || $monthlyIncome <= 0);
+        $rentEffortDataMissing = $application !== null && (
+            $selectedUnits->isEmpty()
+            || ! DecimalMoney::isPositive($monthlyIncome)
+            || $maximumEffortRate === null
+        );
         $rentEffortWithinLimit = $rentEffortDataMissing
             ? null
-            : $selectedUnits->every(function (ContestHousingUnit $unit) use ($monthlyIncome): bool {
-                $rent = (float) ($unit->monthly_rent ?? $unit->housingUnit->monthly_rent ?? 0);
+            : $selectedUnits->every(function (ContestHousingUnit $unit) use ($monthlyIncome, $maximumEffortRate): bool {
+                $rent = DecimalMoney::normalize((string) ($unit->monthly_rent ?? $unit->housingUnit->monthly_rent ?? 0));
+                $effortRate = DecimalMoney::ratioPercentage($rent, $monthlyIncome);
 
-                return $rent > 0
-                    && round(($rent / $monthlyIncome) * 100, 2) <= self::ALCANENA_MAX_EFFORT_RATE;
+                return DecimalMoney::isPositive($rent)
+                    && $effortRate !== null
+                    && DecimalMoney::compare($effortRate, $maximumEffortRate, 4) <= 0;
             });
 
         $documentChecklist = $registration
@@ -179,7 +212,9 @@ class EligibilityDataProvider
             'income_below_maximum' => $this->value($household !== null, $incomeComplete ? $annualIncome : null, ! $incomeComplete),
             'annual_income_within_alcanena_limit' => $this->value(
                 $household !== null,
-                $incomeComplete && $annualIncomeLimit !== null ? $annualIncome <= $annualIncomeLimit : null,
+                $incomeComplete && $annualIncomeLimit !== null
+                    ? DecimalMoney::compare($annualIncome, $annualIncomeLimit) <= 0
+                    : null,
                 ! $incomeComplete || $annualIncomeLimit === null,
             ),
             'all_non_dependent_adults_meet_rmmg' => $this->value(
@@ -266,12 +301,13 @@ class EligibilityDataProvider
                 ],
                 'income_records' => [
                     'records_count' => $incomeRecords->count(),
-                    'monthly_total' => $monthlyIncome,
-                    'annual_total' => $annualIncome,
-                    'monthly_per_capita' => $memberCount > 0 ? round($monthlyIncome / $memberCount, 2) : null,
-                    'annual_per_capita' => $memberCount > 0 ? round($annualIncome / $memberCount, 2) : null,
-                    'alcanena_annual_income_limit' => $annualIncomeLimit,
-                    'rmmg_2026' => self::ALCANENA_RMMG_2026,
+                    'monthly_total' => (float) $monthlyIncome,
+                    'annual_total' => (float) $annualIncome,
+                    'monthly_per_capita' => $memberCount > 0 ? (float) DecimalMoney::divide($monthlyIncome, $memberCount) : null,
+                    'annual_per_capita' => $memberCount > 0 ? (float) DecimalMoney::divide($annualIncome, $memberCount) : null,
+                    'alcanena_annual_income_limit' => $annualIncomeLimit !== null ? (float) $annualIncomeLimit : null,
+                    'annual_income_limit_evidence' => $annualIncomeLimitResult->toArray(),
+                    'rmmg_2026' => $minimumAdultMonthlyIncome !== null ? (float) $minimumAdultMonthlyIncome : null,
                     'all_non_dependent_adults_meet_rmmg' => $allAdultsMeetRmmg,
                 ],
                 'current_housing_situation' => [
@@ -279,7 +315,7 @@ class EligibilityDataProvider
                     'status' => $this->enumValue($housing?->housing_status),
                     'resides_in_municipality' => $housing?->resides_in_municipality,
                     'works_in_municipality' => $housing?->works_in_municipality,
-                    'effort_rate' => $housing?->effortRate($monthlyIncome),
+                    'effort_rate' => $housing?->effortRate((float) $monthlyIncome),
                     'special_condition_requires_review' => (bool) $specialCondition,
                 ],
                 'documents' => $documentSummary ?? [
@@ -297,13 +333,19 @@ class EligibilityDataProvider
                     'typology_is_adequate' => $typologyIsAdequate,
                     'rent_effort_within_35_percent' => $rentEffortWithinLimit,
                 ],
+                'regulatory' => [
+                    'reference_date' => $referenceDate->toIso8601String(),
+                    'regulatory_profile_id' => $ruleSet?->regulatory_profile_id,
+                    'parameters' => $regulatoryParameters,
+                    'annual_income_limit' => $annualIncomeLimitResult->toArray(),
+                ],
                 'calculated_values' => [
                     'members_count' => $memberCount,
                     'adults_count' => $adultCount,
                     'minors_count' => $minorCount,
                     'dependents_count' => $dependentCount,
-                    'monthly_income_total' => $monthlyIncome,
-                    'annual_income_total' => $annualIncome,
+                    'monthly_income_total' => (float) $monthlyIncome,
+                    'annual_income_total' => (float) $annualIncome,
                     'duplicate_active_application' => $duplicateExists,
                 ],
             ],
@@ -344,8 +386,10 @@ class EligibilityDataProvider
         return in_array($normalized, ['portugal', 'portugues', 'portuguesa'], true);
     }
 
-    private function hasValidNationalityOrResidencePermit(HouseholdMember $member): bool
-    {
+    private function hasValidNationalityOrResidencePermit(
+        HouseholdMember $member,
+        CarbonInterface $referenceDate,
+    ): bool {
         if ($this->isPortuguese($member->nationality)) {
             return true;
         }
@@ -353,21 +397,125 @@ class EligibilityDataProvider
         $validUntil = $this->dateTime($member->document_valid_until);
 
         return Str::contains(Str::lower((string) $member->document_type), ['resid', 'permanencia'])
-            && $validUntil?->gte(today()) === true;
+            && $validUntil?->gte($referenceDate) === true;
     }
 
-    private function monthlyIncomeFor(HouseholdMember $member): float
+    private function monthlyIncomeFor(HouseholdMember $member): string
     {
-        return (float) $member->incomeRecords->sum('monthly_amount');
+        return DecimalMoney::sum($member->incomeRecords->pluck('monthly_amount'));
     }
 
-    private function alcanenaAnnualIncomeLimit(int $memberCount): float
+    /**
+     * @return array{
+     *     maximum_effort_rate_percentage: string|null,
+     *     minimum_adult_monthly_income: string|null,
+     *     annual_income_base_limit: string|null,
+     *     second_person_increment: string|null,
+     *     additional_person_increment: string|null,
+     *     tax_year: int|null,
+     *     sixth_irs_bracket_upper_limit: string|null,
+     *     irs_source_reference: string|null,
+     *     irs_source_version: string|null,
+     *     irs_effective_from: string|null,
+     *     irs_effective_until: string|null,
+     *     metadata: array<string, mixed>
+     * }
+     */
+    private function regulatoryParameters(?EligibilityRuleSet $ruleSet): array
     {
-        return match (true) {
-            $memberCount <= 1 => 38632.00,
-            $memberCount === 2 => 48632.00,
-            default => 48632.00 + (($memberCount - 2) * 5000.00),
-        };
+        if ($ruleSet === null) {
+            return [
+                'maximum_effort_rate_percentage' => null,
+                'minimum_adult_monthly_income' => null,
+                'annual_income_base_limit' => null,
+                'second_person_increment' => null,
+                'additional_person_increment' => null,
+                'tax_year' => null,
+                'sixth_irs_bracket_upper_limit' => null,
+                'irs_source_reference' => null,
+                'irs_source_version' => null,
+                'irs_effective_from' => null,
+                'irs_effective_until' => null,
+                'metadata' => [],
+            ];
+        }
+
+        $criteria = $ruleSet->criteria;
+        $profile = $ruleSet->regulatoryProfile;
+        $effective = $profile === null ? [] : $this->overlayService->effectiveParameters($profile);
+        $incomeLimit = $this->criterionExpectedValue($criteria->firstWhere(
+            'code',
+            'annual_income_within_alcanena_limit',
+        ));
+        $minimumIncome = $this->criterionExpectedValue($criteria->firstWhere(
+            'code',
+            'all_non_dependent_adults_meet_rmmg',
+        ));
+        $effortRate = $this->criterionExpectedValue($criteria->firstWhere(
+            'code',
+            'rent_effort_within_35_percent',
+        ));
+
+        return [
+            'maximum_effort_rate_percentage' => $this->decimalParameter(
+                $effective['maximum_effort_rate_percentage'] ?? $effortRate['maximum_percentage'] ?? null,
+            ),
+            'minimum_adult_monthly_income' => $this->decimalParameter(
+                $effective['minimum_adult_monthly_income'] ?? $minimumIncome['monthly_minimum'] ?? null,
+            ),
+            'annual_income_base_limit' => $this->decimalParameter(
+                $effective['annual_income_base_limit'] ?? $incomeLimit['base_one_person'] ?? null,
+            ),
+            'second_person_increment' => $this->decimalParameter(
+                $effective['second_person_increment'] ?? $incomeLimit['second_person_increment'] ?? null,
+            ),
+            'additional_person_increment' => $this->decimalParameter(
+                $effective['additional_person_increment'] ?? $incomeLimit['additional_person_increment'] ?? null,
+            ),
+            'tax_year' => is_numeric($effective['tax_year'] ?? null)
+                ? (int) $effective['tax_year']
+                : null,
+            'sixth_irs_bracket_upper_limit' => $this->decimalParameter(
+                $effective['sixth_irs_bracket_upper_limit'] ?? null,
+            ),
+            'irs_source_reference' => $this->stringParameter(
+                $effective['irs_source_reference'] ?? null,
+            ),
+            'irs_source_version' => $this->stringParameter(
+                $effective['irs_source_version'] ?? null,
+            ),
+            'irs_effective_from' => $this->stringParameter(
+                $effective['irs_effective_from'] ?? null,
+            ),
+            'irs_effective_until' => $this->stringParameter(
+                $effective['irs_effective_until'] ?? null,
+            ),
+            'metadata' => is_array($effective['metadata'] ?? null)
+                ? $effective['metadata']
+                : [],
+        ];
+    }
+
+    /**
+     * @return array<string, bool|float|int|string|null>
+     */
+    private function criterionExpectedValue(mixed $criterion): array
+    {
+        return $criterion instanceof EligibilityCriterion
+            ? ($criterion->expected_value ?? [])
+            : [];
+    }
+
+    private function decimalParameter(mixed $value): ?string
+    {
+        return is_numeric($value) ? DecimalMoney::normalize((string) $value) : null;
+    }
+
+    private function stringParameter(mixed $value): ?string
+    {
+        return is_string($value) && trim($value) !== ''
+            ? trim($value)
+            : null;
     }
 
     private function enumValue(mixed $value): string|int|null
@@ -389,21 +537,30 @@ class EligibilityDataProvider
             return collect();
         }
 
-        $currentPreferences = $application->housingPreferences
-            ->pluck('contestHousingUnit')
-            ->filter();
+        $preferences = $this->preferenceSource->preferencesFor($application);
+        $source = $this->preferenceSource->source($application);
 
-        if ($currentPreferences->isNotEmpty()) {
-            return $currentPreferences->values();
+        if ($source->isOfficial()) {
+            return $preferences
+                ->filter(
+                    fn (mixed $preference): bool => $preference instanceof HousingPreference,
+                )
+                ->map(
+                    fn (HousingPreference $preference) => $preference->contestHousingUnit,
+                )
+                ->filter()
+                ->values();
         }
 
-        return $application->preferences
-            ->map(fn ($preference) => ContestHousingUnit::query()
-                ->with('housingUnit')
-                ->where('contest_id', $application->contest_id)
-                ->where('housing_unit_id', $preference->housing_unit_id)
-                ->first())
-            ->filter()
+        $preferenceOrder = $preferences
+            ->pluck('preference_order', 'housing_unit_id');
+
+        return ContestHousingUnit::query()
+            ->with('housingUnit')
+            ->where('contest_id', $application->contest_id)
+            ->whereIn('housing_unit_id', $preferenceOrder->keys())
+            ->get()
+            ->sortBy(fn (ContestHousingUnit $unit) => $preferenceOrder->get($unit->housing_unit_id, PHP_INT_MAX))
             ->values();
     }
 }

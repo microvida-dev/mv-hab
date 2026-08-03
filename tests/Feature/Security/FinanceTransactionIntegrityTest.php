@@ -13,6 +13,7 @@ use App\Enums\RentInstallmentStatus;
 use App\Models\AuditLog;
 use App\Models\Contract;
 use App\Models\FinancialTransaction;
+use App\Models\HousingUnit;
 use App\Models\LeasePayment;
 use App\Models\Municipality;
 use App\Models\PaymentAllocation;
@@ -483,9 +484,13 @@ class FinanceTransactionIntegrityTest extends TestCase
             ->create([
                 'municipality_id' => $municipality->id,
             ]);
+        $housingUnit = HousingUnit::factory()->create([
+            'municipality_id' => $municipality->id,
+        ]);
 
         $contract = Contract::factory()->create([
             'program_id' => $program->id,
+            'housing_unit_id' => $housingUnit->id,
             'user_id' => $tenant->id,
             'tenant_name' => $tenant->name,
             'tenant_email' => $tenant->email,

@@ -7,11 +7,27 @@ use Database\Factories\ApplicationSnapshotFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use LogicException;
 
 class ApplicationSnapshot extends Model
 {
     /** @use HasFactory<ApplicationSnapshotFactory> */
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::updating(function (): never {
+            throw new LogicException(
+                'Os snapshots finais de candidatura são imutáveis.',
+            );
+        });
+
+        static::deleting(function (): never {
+            throw new LogicException(
+                'Os snapshots finais de candidatura não podem ser removidos.',
+            );
+        });
+    }
 
     protected $fillable = [
         'snapshot_type',

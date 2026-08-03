@@ -15,6 +15,7 @@ use App\Services\Reporting\Exporters\HtmlReportExporter;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use LogicException;
 
 class ReportExportService
 {
@@ -38,6 +39,12 @@ class ReportExportService
         ExportScope $scope,
         bool $confirmed,
     ): ReportExport {
+        if ($definition->code === Temporal\TemporalApplicationResultExportService::REPORT_CODE) {
+            throw new LogicException(
+                'As exportações temporais usam exclusivamente o lifecycle assíncrono dedicado.',
+            );
+        }
+
         if (! $this->permissions->canExport($user, $definition, $scope)) {
             throw new AuthorizationException;
         }
@@ -61,6 +68,7 @@ class ReportExportService
             $filters,
             $actual,
             $scope,
+            'reports.export',
         );
 
         $run = $result->reportRun;

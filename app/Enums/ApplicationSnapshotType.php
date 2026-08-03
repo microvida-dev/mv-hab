@@ -13,6 +13,7 @@ enum ApplicationSnapshotType: string
     case HouseholdMembers = 'household_members';
     case IncomeRecords = 'income_records';
     case CurrentHousingSituation = 'current_housing_situation';
+    case HousingPreferences = 'housing_preferences';
     case Documents = 'documents';
     case Summary = 'summary';
 
@@ -24,6 +25,7 @@ enum ApplicationSnapshotType: string
             self::HouseholdMembers => 'Membros do agregado',
             self::IncomeRecords => 'Rendimentos',
             self::CurrentHousingSituation => 'Situação habitacional',
+            self::HousingPreferences => 'Habitações pretendidas',
             self::Documents => 'Documentos',
             self::Summary => 'Resumo',
         };

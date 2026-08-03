@@ -17,6 +17,10 @@
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             <x-flash-message />
 
+            @include('candidate.applications.partials.navigation', [
+                'application' => $application,
+            ])
+
             <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <x-mv.stat-card
                     label="Programa"
@@ -92,6 +96,10 @@
                                 Habitação atual
                             </a>
 
+                            <a href="{{ route('candidate.housing-preferences.edit', $application) }}" class="mv-button-secondary">
+                                Fogos
+                            </a>
+
                             <a href="{{ route('candidate.documents.checklist') }}" class="mv-button-secondary">
                                 Documentos
                             </a>
@@ -119,6 +127,48 @@
                         <p class="mt-2 text-sm font-semibold text-ink-900">{{ $application->currentHousingSituation->housing_status->label() }}</p>
                     </div>
                 </div>
+            </x-mv.section>
+
+            <x-mv.section
+                title="Fogos"
+                description="A ordem apresentada inclui todos os fogos compatíveis para este concurso."
+            >
+                @if ($application->housingPreferences->isNotEmpty())
+                    <ol class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        @foreach ($application->housingPreferences as $preference)
+                            <li class="rounded-2xl border border-ink-100 p-4">
+                                <div class="flex items-start gap-3">
+                                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-mvhab-surface font-semibold text-mvhab-primary">
+                                        {{ $preference->preference_order }}
+                                    </span>
+                                    <div>
+                                        <p class="font-semibold text-ink-900">
+                                            {{ $preference->housingUnit?->public_title
+                                                ?: $preference->housingUnit?->public_reference
+                                                ?: 'Habitação selecionada' }}
+                                        </p>
+                                        <p class="mt-1 text-sm text-ink-500">
+                                            {{ $preference->housingUnit?->typology ?? 'Tipologia a confirmar' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ol>
+                @else
+                    <x-mv.alert>
+                        Ainda não existe uma ordem completa de fogos registada.
+                    </x-mv.alert>
+                @endif
+
+                @if ($application->isEditable())
+                    <a
+                        href="{{ route('candidate.housing-preferences.edit', $application) }}"
+                        class="mv-button-secondary mt-5"
+                    >
+                        Ordenar fogos
+                    </a>
+                @endif
             </x-mv.section>
 
             @if ($application->latestEligibilityCheck)

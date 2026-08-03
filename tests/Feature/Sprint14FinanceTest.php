@@ -12,6 +12,7 @@ use App\Models\AnnualDocumentUpdateRequest;
 use App\Models\Arrear;
 use App\Models\Contract;
 use App\Models\DefaultNotice;
+use App\Models\HousingUnit;
 use App\Models\IncomeChangeDeclaration;
 use App\Models\LeasePayment;
 use App\Models\PaymentReceipt;
@@ -263,8 +264,12 @@ class Sprint14FinanceTest extends TestCase
         $municipality = $program->municipality()->firstOrFail();
         $this->assignMunicipality($candidate, $municipality);
         $this->assignMunicipality($manager, $municipality);
+        $housingUnit = HousingUnit::factory()->create([
+            'municipality_id' => $municipality->id,
+        ]);
         $contract = Contract::factory()->create([
             'program_id' => $program->id,
+            'housing_unit_id' => $housingUnit->id,
             'user_id' => $candidate->id,
             'tenant_name' => $candidate->name,
             'tenant_email' => $candidate->email,

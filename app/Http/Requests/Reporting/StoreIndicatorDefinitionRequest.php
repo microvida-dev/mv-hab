@@ -12,7 +12,10 @@ class StoreIndicatorDefinitionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', IndicatorDefinition::class) ?? false;
+        return $this->user()?->can(
+            'createBackoffice',
+            IndicatorDefinition::class,
+        ) === true;
     }
 
     /**

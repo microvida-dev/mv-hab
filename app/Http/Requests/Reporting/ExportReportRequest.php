@@ -5,6 +5,7 @@ namespace App\Http\Requests\Reporting;
 use App\Enums\ExportScope;
 use App\Enums\ReportFormat;
 use App\Models\ReportDefinition;
+use App\Services\Reporting\Temporal\TemporalApplicationResultExportService;
 use Illuminate\Validation\Rule;
 
 class ExportReportRequest extends DashboardFilterRequest
@@ -14,7 +15,9 @@ class ExportReportRequest extends DashboardFilterRequest
         /** @var ReportDefinition|null $reportDefinition */
         $reportDefinition = $this->route('reportDefinition');
 
-        return $this->user()?->can('export', $reportDefinition) ?? false;
+        return $reportDefinition instanceof ReportDefinition
+            && $reportDefinition->code !== TemporalApplicationResultExportService::REPORT_CODE
+            && ($this->user()?->can('export', $reportDefinition) ?? false);
     }
 
     /**
@@ -31,9 +34,19 @@ class ExportReportRequest extends DashboardFilterRequest
             && $reportDefinition->sensitivity_level->requiresConfirmation()
                 ? ['required', 'accepted']
                 : ['nullable'];
+        $availableFormats = $reportDefinition?->getAttribute('available_formats');
+        $availableFormats = is_array($availableFormats)
+            ? $availableFormats
+            : [];
 
         return array_merge(parent::rules(), [
-            'format' => ['required', Rule::enum(ReportFormat::class)],
+            'format' => [
+                'required',
+                Rule::in(array_values(array_intersect(
+                    ReportFormat::legacyValues(),
+                    $availableFormats,
+                ))),
+            ],
             'scope' => ['required', Rule::enum(ExportScope::class)],
             'confirmed' => $confirmationRules,
         ]);

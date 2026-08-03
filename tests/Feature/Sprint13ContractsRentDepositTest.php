@@ -27,12 +27,14 @@ use App\Models\Contract;
 use App\Models\ContractClause;
 use App\Models\ContractTemplate;
 use App\Models\CurrentHousingSituation;
+use App\Models\DefinitiveList;
 use App\Models\Household;
 use App\Models\HouseholdMember;
 use App\Models\HousingUnit;
 use App\Models\IncomeRecord;
 use App\Models\Municipality;
 use App\Models\Program;
+use App\Models\ProvisionalList;
 use App\Models\RentCalculation;
 use App\Models\RentRuleSet;
 use App\Models\User;
@@ -144,6 +146,7 @@ class Sprint13ContractsRentDepositTest extends TestCase
                 'status' => ContractStatus::Active->value,
                 'contract_number' => 'FORCED-S13',
             ])
+            ->assertSessionHasNoErrors()
             ->assertRedirect();
 
         $contract = Contract::query()->processual()->with(['deposit', 'clauses', 'parties'])->firstOrFail();
@@ -271,6 +274,7 @@ class Sprint13ContractsRentDepositTest extends TestCase
             'status' => ApplicationStatus::Submitted->value,
         ]);
         $housingUnit = HousingUnit::factory()->create([
+            'municipality_id' => $municipality->id,
             'code' => 'HU-S13-'.fake()->unique()->numerify('###'),
             'address' => 'Rua de Teste Sprint 13, 1',
             'typology' => 'T1',
@@ -287,9 +291,22 @@ class Sprint13ContractsRentDepositTest extends TestCase
             'min_occupants' => 1,
             'max_occupants' => 2,
         ]);
+        $provisionalList = ProvisionalList::factory()->create([
+            'program_id' => $program->id,
+            'contest_id' => $contest->id,
+            'generated_by' => $administrator->id,
+        ]);
+        $definitiveList = DefinitiveList::factory()->create([
+            'program_id' => $program->id,
+            'contest_id' => $contest->id,
+            'provisional_list_id' => $provisionalList->id,
+            'generated_by' => $administrator->id,
+        ]);
         $allocation = Allocation::factory()->create([
             'program_id' => $program->id,
             'contest_id' => $contest->id,
+            'definitive_list_id' => $definitiveList->id,
+            'definitive_list_entry_id' => null,
             'application_id' => $application->id,
             'user_id' => $candidate->id,
             'contest_housing_unit_id' => $contestHousingUnit->id,
@@ -369,6 +386,7 @@ class Sprint13ContractsRentDepositTest extends TestCase
                 'deposit_amount' => 1,
                 'payment_day' => 8,
             ])
+            ->assertSessionHasNoErrors()
             ->assertRedirect();
 
         return Contract::query()->processual()->latest('id')->firstOrFail();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Analytics;
 
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AnalyticsFilterRequest extends FormRequest
@@ -11,8 +12,9 @@ class AnalyticsFilterRequest extends FormRequest
         $user = $this->user();
 
         return $user !== null
-            && ! $user->hasRole('candidate')
-            && $user->hasPermission('reports.view');
+            && $user->hasPermission('reports.view')
+            && app(MunicipalRecordScopeService::class)
+                ->hasMunicipalOrGlobalScope($user);
     }
 
     /**

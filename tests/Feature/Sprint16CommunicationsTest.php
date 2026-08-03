@@ -2,13 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Contracts\Program53\Program53FaultInjector;
 use App\Enums\CommunicationAttemptStatus;
 use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationDeliveryStatus;
 use App\Enums\CommunicationReceiptType;
 use App\Enums\DocumentGenerationStatus;
 use App\Enums\OfficialNotificationType;
+use App\Enums\Program53FailureCode;
 use App\Enums\TemplateStatus;
+use App\Jobs\DeliverProceduralEmail;
 use App\Models\CommunicationReceipt;
 use App\Models\DocumentTemplate;
 use App\Models\DocumentTemplateVersion;
@@ -23,12 +26,14 @@ use App\Services\Notifications\CommunicationLogService;
 use App\Services\Notifications\NotificationEventDispatcher;
 use App\Services\Notifications\OfficialNotificationService;
 use App\Services\Notifications\TemplateRenderingService;
+use App\Services\Program53\Resilience\ControlledProgram53FaultInjector;
 use Database\Seeders\DocumentTemplateSeeder;
 use Database\Seeders\NotificationEventRuleSeeder;
 use Database\Seeders\NotificationTemplateSeeder;
 use Database\Seeders\SystemAccessSeeder;
 use Database\Seeders\TemplateVariableSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
@@ -119,6 +124,7 @@ class Sprint16CommunicationsTest extends TestCase
         $recipient = $this->userWithRole('candidate');
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.communications.templates.store'), [
                 'code' => 'test_notice',
                 'name' => 'Template de teste',
@@ -138,9 +144,11 @@ class Sprint16CommunicationsTest extends TestCase
         $this->assertSame(1, $version->version_number);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.communications.template-versions.approve', $version))
             ->assertRedirect();
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.communications.template-versions.activate', $version))
             ->assertRedirect();
 
@@ -148,15 +156,18 @@ class Sprint16CommunicationsTest extends TestCase
         $this->assertSame($version->id, $template->active_version_id);
 
         $this->actingAs($admin)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.communications.templates.preview', $template))
             ->assertOk()
             ->assertSee('Conteúdo sem variáveis.');
 
         $this->actingAs($auditor)
+            ->withSession(['mfa.verified_at' => now()])
             ->get(route('backoffice.communications.logs.index'))
             ->assertOk();
 
         $this->actingAs($auditor)
+            ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.communications.logs.store'), [
                 'recipient_user_id' => $recipient->id,
                 'event_code' => 'audit.forbidden',
@@ -170,7 +181,15 @@ class Sprint16CommunicationsTest extends TestCase
 
     public function test_event_dispatch_creates_snapshots_delivery_attempt_and_receipt(): void
     {
+        Queue::fake();
         $candidate = $this->userWithRole('candidate');
+        $candidate->notificationPreference()->create([
+            'allow_in_app' => true,
+            'allow_email' => false,
+            'allow_sms' => false,
+            'allow_postal' => false,
+            'email_for_notifications' => 'alternativo@example.test',
+        ]);
         $admin = $this->userWithRole('administrator');
         $this->createVariable('recipient_name');
         $this->createVariable('event_reference');
@@ -198,12 +217,23 @@ class Sprint16CommunicationsTest extends TestCase
         $this->assertCount(1, $created);
         $communication = $created->first();
         $this->assertStringContainsString('CAN-TEST-001', $communication->body_snapshot);
-        $this->assertSame(1, $communication->deliveries()->count());
-        $delivery = $communication->deliveries()->firstOrFail();
+        $this->assertSame(2, $communication->deliveries()->count());
+        $delivery = $communication->deliveries()
+            ->where('channel', CommunicationChannel::InApp->value)
+            ->firstOrFail();
         $this->assertSame(CommunicationDeliveryStatus::Delivered, $delivery->status);
         $this->assertSame(CommunicationAttemptStatus::Success, $delivery->attempts()->firstOrFail()->status);
         $this->assertTrue($communication->receipts()->where('receipt_type', CommunicationReceiptType::SendProof)->exists());
         $this->assertSame(1, $candidate->officialNotifications()->count());
+        $emailDelivery = $communication->deliveries()
+            ->where('channel', CommunicationChannel::Email->value)
+            ->firstOrFail();
+        $this->assertSame($candidate->email, $emailDelivery->destination);
+        Queue::assertPushed(
+            DeliverProceduralEmail::class,
+            fn (DeliverProceduralEmail $job): bool => $job->communicationDeliveryId
+                === $emailDelivery->id,
+        );
     }
 
     public function test_template_renderer_rejects_missing_unknown_and_sensitive_sms_variables(): void
@@ -263,6 +293,51 @@ class Sprint16CommunicationsTest extends TestCase
         $this->assertSame(CommunicationAttemptStatus::Skipped, $sms->attempts()->firstOrFail()->status);
     }
 
+    public function test_retry_after_persisted_delivery_does_not_duplicate_attempt(): void
+    {
+        $candidate = $this->userWithRole('candidate');
+        $admin = $this->userWithRole('administrator');
+        $communication = app(CommunicationLogService::class)->create(
+            eventCode: 'program53.delivery.retry',
+            recipient: $candidate,
+            content: [
+                'title' => 'Teste de retoma',
+                'body' => 'Conteúdo exclusivamente fictício.',
+            ],
+            actor: $admin,
+        );
+        $this->app->instance(
+            Program53FaultInjector::class,
+            new ControlledProgram53FaultInjector([
+                'after_delivery_before_ack' => Program53FailureCode::DatabaseUnavailable,
+            ]),
+        );
+        $deliveries = app(CommunicationDeliveryService::class);
+        $delivery = $deliveries->create(
+            $communication,
+            CommunicationChannel::InApp,
+        );
+
+        try {
+            $deliveries->execute($delivery, $admin);
+            $this->fail('A falha após persistência deveria interromper o ack.');
+        } catch (\Throwable) {
+            $this->assertSame(
+                CommunicationDeliveryStatus::Delivered,
+                $delivery->refresh()->status,
+            );
+        }
+        $attempts = $delivery->attempts()->count();
+
+        $deliveries->execute($delivery, $admin);
+
+        $this->assertSame($attempts, $delivery->attempts()->count());
+        $this->assertSame(
+            CommunicationDeliveryStatus::Delivered,
+            $delivery->refresh()->status,
+        );
+    }
+
     public function test_official_document_is_private_versioned_and_only_visible_to_recipient(): void
     {
         $candidate = $this->userWithRole('candidate');
@@ -300,8 +375,11 @@ class Sprint16CommunicationsTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_candidate_preferences_keep_in_app_channel_mandatory(): void
+    public function test_candidate_preferences_keep_official_email_and_in_app_channels_mandatory(): void
     {
+        config([
+            'mvhab.candidate_experience_runtime.notification_preferences' => true,
+        ]);
         $candidate = $this->userWithRole('candidate');
 
         $this->actingAs($candidate)
@@ -317,7 +395,8 @@ class Sprint16CommunicationsTest extends TestCase
 
         $preference = $candidate->notificationPreference()->firstOrFail();
         $this->assertTrue($preference->allow_in_app);
-        $this->assertFalse($preference->allow_email);
+        $this->assertTrue($preference->allow_email);
+        $this->assertSame($candidate->email, $preference->email_for_notifications);
         $this->assertTrue($preference->allow_sms);
     }
 
@@ -334,6 +413,10 @@ class Sprint16CommunicationsTest extends TestCase
         ]);
         $this->assertDatabaseHas('notification_templates', [
             'code' => 'payment_overdue_email',
+            'channel' => CommunicationChannel::Email->value,
+        ]);
+        $this->assertDatabaseHas('notification_templates', [
+            'code' => 'provisional_list_published_email',
             'channel' => CommunicationChannel::Email->value,
         ]);
         $this->assertDatabaseHas('notification_event_rules', [

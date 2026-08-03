@@ -52,6 +52,7 @@ class InitialMunicipalRoleProfilesTest extends TestCase
         $operator = $registry->resolve('operador-recolha');
         $analyst = $registry->resolve('analista-candidaturas');
         $exporter = $registry->resolve('exportador-candidaturas');
+        $visitManager = $registry->resolve('gestor-visitas');
 
         $this->assertContains('administrative_processes.create', $operator['permissions']);
         $this->assertNotContains('documents.approve', $operator['permissions']);
@@ -70,6 +71,40 @@ class InitialMunicipalRoleProfilesTest extends TestCase
             $exporter['permissions'],
             fn (string $permission): bool => str_starts_with($permission, 'exports.'),
         )));
+
+        $this->assertSame([
+            'dashboard.view',
+            'visits.view',
+            'visits.create',
+            'visits.update',
+            'visits.approve',
+            'visits.reject',
+            'visits.availabilities.view',
+            'visits.availabilities.create',
+            'visits.availabilities.update',
+            'visits.availabilities.delete',
+            'visits.availabilities.generate_slots',
+            'visits.slots.view',
+            'visits.slots.block',
+            'visits.slots.unblock',
+            'visits.confirm',
+            'visits.complete',
+            'visits.mark_no_show',
+            'visits.cancel',
+        ], $visitManager['permissions']);
+
+        $this->assertNotContains(
+            'applications.view',
+            $visitManager['permissions'],
+        );
+        $this->assertNotContains(
+            'documents.view',
+            $visitManager['permissions'],
+        );
+        $this->assertNotContains(
+            'applications.export',
+            $visitManager['permissions'],
+        );
     }
 
     public function test_operator_reaches_collection_workflow_but_not_decisions_or_prohibited_domains(): void

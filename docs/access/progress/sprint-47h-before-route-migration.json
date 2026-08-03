@@ -1,0 +1,3164 @@
+{
+  "summary": {
+    "manifest_routes": 123,
+    "runtime_found": 123,
+    "missing": 0,
+    "duplicates": 0,
+    "permission_exact": 0,
+    "permission_pending": 123,
+    "role_middleware_remaining": 123,
+    "active_backoffice_missing": 101,
+    "mfa_backoffice_missing": 101,
+    "log_backoffice_missing": 101,
+    "total_backoffice_fixed_role_routes": 123
+  },
+  "domains": {
+    "communications": 36,
+    "configuration": 8,
+    "notifications": 41,
+    "reports": 38
+  },
+  "routes": [
+    {
+      "name": "backoffice.procedure-minutes.download",
+      "domain": "communications",
+      "expected_permission": "documents.download",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/procedure-minutes/{procedureMinute}/download",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureMinuteController@download",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.support-ticket-attachments.download",
+      "domain": "communications",
+      "expected_permission": "support.attachments.download",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/support-ticket-attachments/{supportTicketAttachment}/download",
+      "action": "App\\Http\\Controllers\\Backoffice\\SupportTicketAttachmentController@download",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.communications.deliveries.postal",
+      "domain": "communications",
+      "expected_permission": "communications.deliveries.postal",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/deliveries/{communicationDelivery}/postal",
+      "action": "App\\Http\\Controllers\\Backoffice\\CommunicationDeliveryController@registerPostal",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.deliveries.resend",
+      "domain": "communications",
+      "expected_permission": "communications.deliveries.resend",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/deliveries/{communicationDelivery}/resend",
+      "action": "App\\Http\\Controllers\\Backoffice\\CommunicationDeliveryController@resend",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.logs.archive",
+      "domain": "communications",
+      "expected_permission": "communications.archive",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/logs/{communicationLog}/archive",
+      "action": "App\\Http\\Controllers\\Backoffice\\CommunicationLogController@archive",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.logs.cancel",
+      "domain": "communications",
+      "expected_permission": "communications.cancel",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/logs/{communicationLog}/cancel",
+      "action": "App\\Http\\Controllers\\Backoffice\\CommunicationLogController@cancel",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.logs.index",
+      "domain": "communications",
+      "expected_permission": "communications.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/communications/logs",
+      "action": "App\\Http\\Controllers\\Backoffice\\CommunicationLogController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.logs.show",
+      "domain": "communications",
+      "expected_permission": "communications.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/communications/logs/{communicationLog}",
+      "action": "App\\Http\\Controllers\\Backoffice\\CommunicationLogController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.logs.store",
+      "domain": "communications",
+      "expected_permission": "communications.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/logs",
+      "action": "App\\Http\\Controllers\\Backoffice\\CommunicationLogController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.variables.index",
+      "domain": "communications",
+      "expected_permission": "communication_variables.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/communications/variables",
+      "action": "App\\Http\\Controllers\\Backoffice\\TemplateVariableController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.variables.store",
+      "domain": "communications",
+      "expected_permission": "communication_variables.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/variables",
+      "action": "App\\Http\\Controllers\\Backoffice\\TemplateVariableController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.variables.update",
+      "domain": "communications",
+      "expected_permission": "communication_variables.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/communications/variables/{templateVariable}",
+      "action": "App\\Http\\Controllers\\Backoffice\\TemplateVariableController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.contextual-faqs.create",
+      "domain": "communications",
+      "expected_permission": "contextual_faqs.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/contextual-faqs/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\ContextualFaqController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.contextual-faqs.destroy",
+      "domain": "communications",
+      "expected_permission": "contextual_faqs.delete",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "DELETE",
+      "uri": "backoffice/contextual-faqs/{contextualFaq}",
+      "action": "App\\Http\\Controllers\\Backoffice\\ContextualFaqController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.contextual-faqs.edit",
+      "domain": "communications",
+      "expected_permission": "contextual_faqs.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/contextual-faqs/{contextualFaq}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\ContextualFaqController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.contextual-faqs.index",
+      "domain": "communications",
+      "expected_permission": "contextual_faqs.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/contextual-faqs",
+      "action": "App\\Http\\Controllers\\Backoffice\\ContextualFaqController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.contextual-faqs.store",
+      "domain": "communications",
+      "expected_permission": "contextual_faqs.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/contextual-faqs",
+      "action": "App\\Http\\Controllers\\Backoffice\\ContextualFaqController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.contextual-faqs.update",
+      "domain": "communications",
+      "expected_permission": "contextual_faqs.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/contextual-faqs/{contextualFaq}",
+      "action": "App\\Http\\Controllers\\Backoffice\\ContextualFaqController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.procedure-minutes.approve",
+      "domain": "communications",
+      "expected_permission": "documents.approve",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/procedure-minutes/{procedureMinute}/approve",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureMinuteController@approve",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.procedure-minutes.destroy",
+      "domain": "communications",
+      "expected_permission": "documents.delete",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "DELETE",
+      "uri": "backoffice/procedure-minutes/{procedureMinute}",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureMinuteController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.procedure-minutes.generate",
+      "domain": "communications",
+      "expected_permission": "documents.generate",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/procedure-minutes",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureMinuteController@generate",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.procedure-minutes.index",
+      "domain": "communications",
+      "expected_permission": "documents.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/procedure-minutes",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureMinuteController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.procedure-minutes.show",
+      "domain": "communications",
+      "expected_permission": "documents.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/procedure-minutes/{procedureMinute}",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureMinuteController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.procedure-templates.create",
+      "domain": "communications",
+      "expected_permission": "documents.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/procedure-templates/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.procedure-templates.edit",
+      "domain": "communications",
+      "expected_permission": "documents.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/procedure-templates/{procedureTemplate}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.procedure-templates.index",
+      "domain": "communications",
+      "expected_permission": "documents.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/procedure-templates",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.procedure-templates.preview",
+      "domain": "communications",
+      "expected_permission": "documents.preview",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET|POST",
+      "uri": "backoffice/procedure-templates/{procedureTemplate}/preview",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@render",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.procedure-templates.publish",
+      "domain": "communications",
+      "expected_permission": "documents.publish",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/procedure-templates/{procedureTemplate}/publish",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@publish",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.procedure-templates.show",
+      "domain": "communications",
+      "expected_permission": "documents.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/procedure-templates/{procedureTemplate}",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.procedure-templates.store",
+      "domain": "communications",
+      "expected_permission": "documents.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/procedure-templates",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.procedure-templates.update",
+      "domain": "communications",
+      "expected_permission": "documents.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/procedure-templates/{procedureTemplate}",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProcedureTemplateController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.support-ticket-messages.store",
+      "domain": "communications",
+      "expected_permission": "support.message",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/support-tickets/{supportTicket}/messages",
+      "action": "App\\Http\\Controllers\\Backoffice\\SupportTicketMessageController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.support-tickets.assign",
+      "domain": "communications",
+      "expected_permission": "support.assign",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/support-tickets/{supportTicket}/assign",
+      "action": "App\\Http\\Controllers\\Backoffice\\SupportTicketController@assign",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.support-tickets.index",
+      "domain": "communications",
+      "expected_permission": "support.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/support-tickets",
+      "action": "App\\Http\\Controllers\\Backoffice\\SupportTicketController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.support-tickets.show",
+      "domain": "communications",
+      "expected_permission": "support.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/support-tickets/{supportTicket}",
+      "action": "App\\Http\\Controllers\\Backoffice\\SupportTicketController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.support-tickets.status",
+      "domain": "communications",
+      "expected_permission": "support.resolve",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/support-tickets/{supportTicket}/status",
+      "action": "App\\Http\\Controllers\\Backoffice\\SupportTicketController@updateStatus",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.administrative-workflow-configs.activate",
+      "domain": "configuration",
+      "expected_permission": "settings.activate",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/administrative-workflow-configs/{administrativeWorkflowConfig}/activate",
+      "action": "App\\Http\\Controllers\\Backoffice\\AdministrativeWorkflowConfigController@activate",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.administrative-workflow-configs.create",
+      "domain": "configuration",
+      "expected_permission": "settings.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/administrative-workflow-configs/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\AdministrativeWorkflowConfigController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.administrative-workflow-configs.deactivate",
+      "domain": "configuration",
+      "expected_permission": "settings.deactivate",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/administrative-workflow-configs/{administrativeWorkflowConfig}/deactivate",
+      "action": "App\\Http\\Controllers\\Backoffice\\AdministrativeWorkflowConfigController@deactivate",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.administrative-workflow-configs.edit",
+      "domain": "configuration",
+      "expected_permission": "settings.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/administrative-workflow-configs/{administrativeWorkflowConfig}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\AdministrativeWorkflowConfigController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.administrative-workflow-configs.index",
+      "domain": "configuration",
+      "expected_permission": "settings.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/administrative-workflow-configs",
+      "action": "App\\Http\\Controllers\\Backoffice\\AdministrativeWorkflowConfigController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.administrative-workflow-configs.store",
+      "domain": "configuration",
+      "expected_permission": "settings.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/administrative-workflow-configs",
+      "action": "App\\Http\\Controllers\\Backoffice\\AdministrativeWorkflowConfigController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.administrative-workflow-configs.update",
+      "domain": "configuration",
+      "expected_permission": "settings.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/administrative-workflow-configs/{administrativeWorkflowConfig}",
+      "action": "App\\Http\\Controllers\\Backoffice\\AdministrativeWorkflowConfigController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.contests.close",
+      "domain": "configuration",
+      "expected_permission": "contests.close",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/concursos/{contest}/fechar",
+      "action": "App\\Http\\Controllers\\Backoffice\\ContestClosureController@close",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.event-rules.activate",
+      "domain": "notifications",
+      "expected_permission": "notification_event_rules.activate",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/event-rules/{notificationEventRule}/activate",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationEventRuleController@activate",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.event-rules.create",
+      "domain": "notifications",
+      "expected_permission": "notification_event_rules.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/communications/event-rules/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationEventRuleController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.event-rules.deactivate",
+      "domain": "notifications",
+      "expected_permission": "notification_event_rules.deactivate",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/event-rules/{notificationEventRule}/deactivate",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationEventRuleController@deactivate",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.event-rules.edit",
+      "domain": "notifications",
+      "expected_permission": "notification_event_rules.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/communications/event-rules/{notificationEventRule}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationEventRuleController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.event-rules.index",
+      "domain": "notifications",
+      "expected_permission": "notification_event_rules.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/communications/event-rules",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationEventRuleController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.event-rules.store",
+      "domain": "notifications",
+      "expected_permission": "notification_event_rules.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/event-rules",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationEventRuleController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.event-rules.update",
+      "domain": "notifications",
+      "expected_permission": "notification_event_rules.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/communications/event-rules/{notificationEventRule}",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationEventRuleController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.index",
+      "domain": "notifications",
+      "expected_permission": "notifications.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/communications",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationCenterController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.preferences.index",
+      "domain": "notifications",
+      "expected_permission": "notification_preferences.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/communications/preferences",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationPreferenceController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.template-versions.activate",
+      "domain": "notifications",
+      "expected_permission": "notification_template_versions.activate",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/template-versions/{notificationTemplateVersion}/activate",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateVersionController@activate",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.template-versions.approve",
+      "domain": "notifications",
+      "expected_permission": "notification_template_versions.approve",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/template-versions/{notificationTemplateVersion}/approve",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateVersionController@approve",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.template-versions.archive",
+      "domain": "notifications",
+      "expected_permission": "notification_template_versions.archive",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/template-versions/{notificationTemplateVersion}/archive",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateVersionController@archive",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.template-versions.show",
+      "domain": "notifications",
+      "expected_permission": "notification_template_versions.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/communications/template-versions/{notificationTemplateVersion}",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateVersionController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.template-versions.store",
+      "domain": "notifications",
+      "expected_permission": "notification_template_versions.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/templates/{notificationTemplate}/versions",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateVersionController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.templates.archive",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.archive",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/templates/{notificationTemplate}/archive",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@archive",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.templates.create",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/communications/templates/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.templates.edit",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/communications/templates/{notificationTemplate}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.templates.index",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/communications/templates",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.templates.preview",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.preview",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET|POST",
+      "uri": "backoffice/communications/templates/{notificationTemplate}/preview",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@preview",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.templates.show",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/communications/templates/{notificationTemplate}",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.templates.store",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/communications/templates",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.templates.update",
+      "domain": "notifications",
+      "expected_permission": "notification_templates.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/communications/templates/{notificationTemplate}",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationTemplateController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.internal-alerts.detect",
+      "domain": "notifications",
+      "expected_permission": "internal_alerts.detect",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/internal-alerts/detect",
+      "action": "App\\Http\\Controllers\\Backoffice\\InternalAlertController@detect",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.internal-alerts.dismiss",
+      "domain": "notifications",
+      "expected_permission": "internal_alerts.dismiss",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/internal-alerts/{internalAlert}/dismiss",
+      "action": "App\\Http\\Controllers\\Backoffice\\InternalAlertController@dismiss",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.internal-alerts.index",
+      "domain": "notifications",
+      "expected_permission": "internal_alerts.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/internal-alerts",
+      "action": "App\\Http\\Controllers\\Backoffice\\InternalAlertController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.internal-alerts.resolve",
+      "domain": "notifications",
+      "expected_permission": "internal_alerts.resolve",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/internal-alerts/{internalAlert}/resolve",
+      "action": "App\\Http\\Controllers\\Backoffice\\InternalAlertController@resolve",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.internal-alerts.show",
+      "domain": "notifications",
+      "expected_permission": "internal_alerts.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/internal-alerts/{internalAlert}",
+      "action": "App\\Http\\Controllers\\Backoffice\\InternalAlertController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.official-notifications.create",
+      "domain": "notifications",
+      "expected_permission": "notifications.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/official-notifications/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\OfficialNotificationController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.official-notifications.index",
+      "domain": "notifications",
+      "expected_permission": "notifications.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/official-notifications",
+      "action": "App\\Http\\Controllers\\Backoffice\\OfficialNotificationController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.official-notifications.mark-failed",
+      "domain": "notifications",
+      "expected_permission": "notifications.mark_failed",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/official-notifications/{officialNotification}/mark-failed",
+      "action": "App\\Http\\Controllers\\Backoffice\\OfficialNotificationController@markFailed",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.official-notifications.mark-sent",
+      "domain": "notifications",
+      "expected_permission": "notifications.mark_sent",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/official-notifications/{officialNotification}/mark-sent",
+      "action": "App\\Http\\Controllers\\Backoffice\\OfficialNotificationController@markSent",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.official-notifications.show",
+      "domain": "notifications",
+      "expected_permission": "notifications.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/official-notifications/{officialNotification}",
+      "action": "App\\Http\\Controllers\\Backoffice\\OfficialNotificationController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.official-notifications.store",
+      "domain": "notifications",
+      "expected_permission": "notifications.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/official-notifications",
+      "action": "App\\Http\\Controllers\\Backoffice\\OfficialNotificationController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.work-tasks.claim",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.claim",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/work-tasks/{workTask}/claim",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@claim",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.index",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/work-tasks",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.my",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/work-tasks/my",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@my",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.overdue",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/work-tasks/overdue",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@overdue",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.reassign",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.reassign",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/work-tasks/{workTask}/reassign",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@reassign",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.show",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/work-tasks/{workTask}",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.status",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.update_status",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/work-tasks/{workTask}/status",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@updateStatus",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.work-tasks.team",
+      "domain": "notifications",
+      "expected_permission": "work_tasks.view_team",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/work-tasks/team",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskController@team",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.analytics.index",
+      "domain": "reports",
+      "expected_permission": "reports.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/analytics",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\AnalyticsController",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.cases.audit.show",
+      "domain": "reports",
+      "expected_permission": "audit_logs.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/cases/audit/{auditEvent}",
+      "action": "App\\Http\\Controllers\\Backoffice\\CaseWorkspaceController@audit",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.cases.contests.show",
+      "domain": "reports",
+      "expected_permission": "contests.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/cases/contests/{contest}",
+      "action": "App\\Http\\Controllers\\Backoffice\\CaseWorkspaceController@contest",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.cases.tickets.show",
+      "domain": "reports",
+      "expected_permission": "support.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/cases/tickets/{supportTicket}",
+      "action": "App\\Http\\Controllers\\Backoffice\\CaseWorkspaceController@ticket",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.communications.dashboard",
+      "domain": "reports",
+      "expected_permission": "notifications.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/communications/dashboard",
+      "action": "App\\Http\\Controllers\\Backoffice\\NotificationCenterController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.operational.dashboard",
+      "domain": "reports",
+      "expected_permission": "dashboard.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/operational/dashboard",
+      "action": "App\\Http\\Controllers\\Backoffice\\OperationalDashboardController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.operational.executive-dashboard",
+      "domain": "reports",
+      "expected_permission": "reports.view_executive",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/operational/executive-dashboard",
+      "action": "App\\Http\\Controllers\\Backoffice\\ExecutiveDashboardController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.productivity.index",
+      "domain": "reports",
+      "expected_permission": "dashboard.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/productivity",
+      "action": "App\\Http\\Controllers\\Backoffice\\ProductivityController",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    },
+    {
+      "name": "backoffice.reports.analytics",
+      "domain": "reports",
+      "expected_permission": "reports.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/reports/analytics",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\AnalyticsController",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.dashboard",
+      "domain": "reports",
+      "expected_permission": "reports.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/reports/dashboard",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\OperationalDashboardController",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.dashboards.create",
+      "domain": "reports",
+      "expected_permission": "dashboard_definitions.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/reports/dashboards/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardDefinitionController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.dashboards.destroy",
+      "domain": "reports",
+      "expected_permission": "dashboard_definitions.delete",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "DELETE",
+      "uri": "backoffice/reports/dashboards/{dashboardDefinition}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardDefinitionController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.dashboards.edit",
+      "domain": "reports",
+      "expected_permission": "dashboard_definitions.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/reports/dashboards/{dashboardDefinition}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardDefinitionController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.dashboards.index",
+      "domain": "reports",
+      "expected_permission": "dashboard_definitions.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/reports/dashboards",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardDefinitionController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.dashboards.store",
+      "domain": "reports",
+      "expected_permission": "dashboard_definitions.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/reports/dashboards",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardDefinitionController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.dashboards.update",
+      "domain": "reports",
+      "expected_permission": "dashboard_definitions.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/reports/dashboards/{dashboardDefinition}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardDefinitionController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.definitions.create",
+      "domain": "reports",
+      "expected_permission": "report_definitions.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/reports/definitions/create",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportDefinitionController@create",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.definitions.destroy",
+      "domain": "reports",
+      "expected_permission": "report_definitions.delete",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "DELETE",
+      "uri": "backoffice/reports/definitions/{reportDefinition}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportDefinitionController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.definitions.edit",
+      "domain": "reports",
+      "expected_permission": "report_definitions.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/reports/definitions/{reportDefinition}/edit",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportDefinitionController@edit",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.definitions.store",
+      "domain": "reports",
+      "expected_permission": "report_definitions.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/reports/definitions",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportDefinitionController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.definitions.update",
+      "domain": "reports",
+      "expected_permission": "report_definitions.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/reports/definitions/{reportDefinition}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportDefinitionController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.executive",
+      "domain": "reports",
+      "expected_permission": "reports.view_executive",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/reports/executive",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ExecutiveDashboardController",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.filter-presets.destroy",
+      "domain": "reports",
+      "expected_permission": "report_filter_presets.delete",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "DELETE",
+      "uri": "backoffice/reports/filter-presets/{reportFilterPreset}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportFilterPresetController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.filter-presets.index",
+      "domain": "reports",
+      "expected_permission": "report_filter_presets.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/reports/filter-presets",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportFilterPresetController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.filter-presets.store",
+      "domain": "reports",
+      "expected_permission": "report_filter_presets.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/reports/filter-presets",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportFilterPresetController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.filter-presets.update",
+      "domain": "reports",
+      "expected_permission": "report_filter_presets.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/reports/filter-presets/{reportFilterPreset}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportFilterPresetController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.indicators.index",
+      "domain": "reports",
+      "expected_permission": "indicator_definitions.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/reports/indicators",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\IndicatorController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.indicators.show",
+      "domain": "reports",
+      "expected_permission": "indicator_definitions.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/reports/indicators/{indicatorDefinition}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\IndicatorController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.indicators.store",
+      "domain": "reports",
+      "expected_permission": "indicator_definitions.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/reports/indicators",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\IndicatorController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.indicators.update",
+      "domain": "reports",
+      "expected_permission": "indicator_definitions.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/reports/indicators/{indicatorDefinition}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\IndicatorController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.operational",
+      "domain": "reports",
+      "expected_permission": "reports.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/reports/operational",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\OperationalDashboardController",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.runs.index",
+      "domain": "reports",
+      "expected_permission": "reports.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/reports/runs",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportRunController@index",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.runs.show",
+      "domain": "reports",
+      "expected_permission": "reports.view",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/reports/runs/{reportRun}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportRunController@show",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.runs.store",
+      "domain": "reports",
+      "expected_permission": "reports.run",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/reports/definitions/{reportDefinition}/run",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\ReportRunController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.widgets.destroy",
+      "domain": "reports",
+      "expected_permission": "dashboard_widgets.delete",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "DELETE",
+      "uri": "backoffice/reports/widgets/{dashboardWidget}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardWidgetController@destroy",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.widgets.store",
+      "domain": "reports",
+      "expected_permission": "dashboard_widgets.create",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "POST",
+      "uri": "backoffice/reports/widgets",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardWidgetController@store",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.reports.widgets.update",
+      "domain": "reports",
+      "expected_permission": "dashboard_widgets.update",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "PUT|PATCH",
+      "uri": "backoffice/reports/widgets/{dashboardWidget}",
+      "action": "App\\Http\\Controllers\\Backoffice\\Reporting\\DashboardWidgetController@update",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": false,
+      "has_mfa_backoffice": false,
+      "has_log_backoffice": false
+    },
+    {
+      "name": "backoffice.work-tasks.dashboard",
+      "domain": "reports",
+      "expected_permission": "work_tasks.dashboard",
+      "mfa_required": true,
+      "runtime_count": 1,
+      "found": true,
+      "status": "found",
+      "methods": "GET",
+      "uri": "backoffice/work-tasks/dashboard",
+      "action": "App\\Http\\Controllers\\Backoffice\\WorkTaskDashboardController",
+      "middleware": [
+        "web",
+        "auth",
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor",
+        "active.backoffice",
+        "mfa.backoffice",
+        "log.backoffice"
+      ],
+      "permission_middleware": [],
+      "role_middleware": [
+        "role:administrator,municipal_technician,jury,legal_manager,financial_manager,housing_manager,maintenance_manager,inspection_manager,support_agent,auditor"
+      ],
+      "permission_exact": false,
+      "has_active_backoffice": true,
+      "has_mfa_backoffice": true,
+      "has_log_backoffice": true
+    }
+  ]
+}

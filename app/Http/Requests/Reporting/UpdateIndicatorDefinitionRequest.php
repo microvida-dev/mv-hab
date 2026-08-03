@@ -6,6 +6,9 @@ class UpdateIndicatorDefinitionRequest extends StoreIndicatorDefinitionRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('update', $this->route('indicatorDefinition')) ?? false;
+        return $this->user()?->can(
+            'updateBackoffice',
+            $this->route('indicatorDefinition'),
+        ) === true;
     }
 }

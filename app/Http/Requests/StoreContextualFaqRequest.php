@@ -9,7 +9,14 @@ class StoreContextualFaqRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', ContextualFaq::class) ?? false;
+        $faq = $this->route('contextualFaq');
+
+        return $faq instanceof ContextualFaq
+            ? $this->user()?->can('updateBackoffice', $faq) === true
+            : $this->user()?->can(
+                'createBackoffice',
+                ContextualFaq::class,
+            ) === true;
     }
 
     /**

@@ -15,6 +15,13 @@ class HousingIndicatorsService
     private function query(array $filters): Builder
     {
         return HousingUnit::query()
+            ->when(
+                $filters['municipality_id'] ?? null,
+                fn (Builder $query, int $municipalityId) => $query->where(
+                    'municipality_id',
+                    $municipalityId,
+                ),
+            )
             ->when($filters['location'] ?? null, fn (Builder $query, string $location) => $query->where('address', 'like', '%'.$location.'%'))
             ->when($filters['status'] ?? null, fn (Builder $query, string $status) => $query->where('status', $status))
             ->when($filters['contest_id'] ?? null, fn (Builder $query, int $id) => $query->whereHas('contestHousingUnits', fn (Builder $link) => $link->where('contest_id', $id)));

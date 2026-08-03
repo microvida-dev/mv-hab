@@ -17,6 +17,8 @@ use App\Models\User;
 use App\Models\WorkTask;
 use App\Services\Audit\AuditLogger;
 use App\Services\CandidateExperience\CandidateInteractionService;
+use App\Services\CandidateExperience\TenantSupportEligibilityService;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use App\Services\Notifications\OfficialNotificationService;
 use App\Services\Workflows\WorkTaskCreationService;
 use App\Support\AuditEvents;
@@ -32,6 +34,8 @@ class SupportTicketService
         private readonly AuditLogger $auditLogger,
         private readonly OfficialNotificationService $notifications,
         private readonly WorkTaskCreationService $tasks,
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly TenantSupportEligibilityService $tenantSupport,
     ) {}
 
     /**
@@ -39,6 +43,11 @@ class SupportTicketService
      */
     public function create(User $candidate, array $data): SupportTicket
     {
+        abort_unless(
+            $this->tenantSupport->isAvailableFor($candidate),
+            403,
+        );
+
         return DB::transaction(function () use ($candidate, $data): SupportTicket {
             $application = $this->applicationForCandidate($candidate, $data);
             $contest = $this->contestFromData($data, $application);
@@ -95,6 +104,13 @@ class SupportTicketService
 
     public function assign(SupportTicket $ticket, User $staff, User $actor): SupportTicket
     {
+        abort_unless(
+            $actor->hasPermission('support.assign')
+            && $this->municipalScope->ownsSupportTicket($actor, $ticket)
+            && $this->municipalScope->ownsUser($actor, $staff),
+            403,
+        );
+
         $ticket->forceFill([
             'assigned_to' => $staff->id,
             'status' => TicketStatus::InProgress,
@@ -110,6 +126,12 @@ class SupportTicketService
 
     public function updateStatus(SupportTicket $ticket, TicketStatus $status, User $actor, ?string $message = null): SupportTicket
     {
+        abort_unless(
+            $actor->hasPermission('support.resolve')
+                && $this->municipalScope->ownsSupportTicket($actor, $ticket),
+            403,
+        );
+
         $payload = ['status' => $status];
 
         if ($status === TicketStatus::Resolved) {

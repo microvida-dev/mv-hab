@@ -26,23 +26,35 @@ class ReportExportController extends Controller
     public function index(): View
     {
         Gate::authorize('viewAny', ReportExport::class);
-        $allowed = ReportDefinition::query()
-            ->get()
-            ->filter(function (ReportDefinition $report): bool {
-                if (! $this->currentUser()->can('view', $report)) {
-                    return false;
-                }
-
-                return ! $this->permissions->isApplicationReport($report)
-                    || $this->currentUser()->can('export', $report);
-            })
-            ->pluck('id');
+        $allowed = $this->permissions
+            ->visibleReports(
+                ReportDefinition::query(),
+                $this->currentUser(),
+            )
+            ->when(
+                ! $this->permissions
+                    ->canAccessApplicationExportCatalog(
+                        $this->currentUser(),
+                    ),
+                fn ($reports) => $reports->whereNotIn(
+                    'code',
+                    $this->permissions->applicationReportCodes(),
+                ),
+            )
+            ->select('id');
 
         return view('backoffice.reports.exports.index', [
             'exports' => $this->municipalScope
                 ->reportExports(ReportExport::query(), $this->currentUser())
-                ->whereHas('run', fn ($query) => $query->whereIn('report_definition_id', $allowed))
+                ->whereHas(
+                    'run',
+                    fn ($query) => $query->whereIn(
+                        'report_definition_id',
+                        $allowed,
+                    ),
+                )
                 ->with(['run.definition', 'user'])
+                ->whereNull('export_profile')
                 ->latest()
                 ->paginate(30),
         ]);

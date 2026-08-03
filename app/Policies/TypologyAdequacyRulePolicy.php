@@ -5,10 +5,13 @@ namespace App\Policies;
 use App\Models\TypologyAdequacyRule;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 
 class TypologyAdequacyRulePolicy
 {
     use ChecksPermissions;
+
+    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
 
     public function viewAny(User $user): bool
     {
@@ -23,7 +26,8 @@ class TypologyAdequacyRulePolicy
     public function viewAnyBackoffice(User $user): bool
     {
         return ! $user->hasRole('candidate')
-            && $this->canAccess($user, 'allocations', 'view');
+            && $this->canAccess($user, 'allocations', 'view')
+            && $this->municipalScope->hasMunicipalOrGlobalScope($user);
     }
 
     public function create(User $user): bool
@@ -34,7 +38,8 @@ class TypologyAdequacyRulePolicy
     public function createBackoffice(User $user): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, 'allocations', 'create');
+            && $this->canAccess($user, 'allocations', 'create')
+            && $this->municipalScope->hasMunicipalOrGlobalScope($user);
     }
 
     public function update(User $user, TypologyAdequacyRule $rule): bool
@@ -45,6 +50,7 @@ class TypologyAdequacyRulePolicy
     public function updateBackoffice(User $user, TypologyAdequacyRule $rule): bool
     {
         return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, 'allocations', 'update');
+            && $this->canAccess($user, 'allocations', 'update')
+            && $this->municipalScope->ownsTypologyAdequacyRule($user, $rule);
     }
 }

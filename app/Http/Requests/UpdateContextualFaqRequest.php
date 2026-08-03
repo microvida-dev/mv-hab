@@ -10,6 +10,7 @@ class UpdateContextualFaqRequest extends StoreContextualFaqRequest
     {
         $faq = $this->route('contextualFaq');
 
-        return $faq instanceof ContextualFaq && ($this->user()?->can('update', $faq) ?? false);
+        return $faq instanceof ContextualFaq
+            && $this->user()?->can('updateBackoffice', $faq) === true;
     }
 }

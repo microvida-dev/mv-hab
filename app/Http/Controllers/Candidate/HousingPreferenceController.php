@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Candidate;
 
+use App\Enums\ApplicationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreHousingPreferenceRequest;
 use App\Http\Requests\UpdateHousingPreferenceRequest;
@@ -18,23 +19,33 @@ class HousingPreferenceController extends Controller
 
     public function index(): View
     {
+        Gate::authorize('viewAny', HousingPreference::class);
+
         return view('candidate.housing-preferences.index', [
             'applications' => Application::query()
                 ->forUser($this->currentUser())
-                ->readyForAllocation()
+                ->where('status', ApplicationStatus::Draft->value)
                 ->with(['contest', 'housingPreferences.housingUnit'])
                 ->latest()
-                ->get(),
+                ->paginate(10),
         ]);
     }
 
     public function edit(Application $application): View
     {
         Gate::authorize('update', [HousingPreference::class, $application]);
+        $compatibleOptions = $this->service->optionsFor($application);
 
         return view('candidate.housing-preferences.edit', [
             'application' => $application->load(['contest', 'housingPreferences.housingUnit']),
-            'availableUnits' => $this->service->availableFor($application),
+            'compatibleOptions' => $compatibleOptions,
+            'compatibilitySummary' => $this->service
+                ->compatibilitySummary($application),
+            'selectionConfiguration' => $this->service->selectionConfiguration(
+                $application,
+                $compatibleOptions,
+            ),
+            'preferenceReadiness' => $this->service->readinessForSubmission($application),
         ]);
     }
 
@@ -43,7 +54,7 @@ class HousingPreferenceController extends Controller
         Gate::authorize('update', [HousingPreference::class, $application]);
         $this->service->replace($application, $request->validated('preferences'), $this->authenticatedUser($request), false);
 
-        return to_route('candidate.housing-preferences.edit', $application)->with('success', 'Preferências guardadas.');
+        return to_route('candidate.housing-preferences.edit', $application)->with('success', 'Ordem dos fogos guardada.');
     }
 
     public function submit(StoreHousingPreferenceRequest $request, Application $application): RedirectResponse
@@ -51,6 +62,6 @@ class HousingPreferenceController extends Controller
         Gate::authorize('update', [HousingPreference::class, $application]);
         $this->service->replace($application, $request->validated('preferences'), $this->authenticatedUser($request), true);
 
-        return to_route('candidate.housing-preferences.index')->with('success', 'Preferências submetidas.');
+        return to_route('candidate.housing-preferences.index')->with('success', 'Ordem dos fogos confirmada.');
     }
 }

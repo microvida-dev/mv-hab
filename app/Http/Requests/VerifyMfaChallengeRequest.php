@@ -2,20 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Models\MfaDevice;
 use Illuminate\Foundation\Http\FormRequest;
 
 class VerifyMfaChallengeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $user = $this->user();
-
-        if ($user === null) {
-            return false;
-        }
-
-        return $user->municipality_id !== null
-            && $user->hasPermission('security.manage_own_mfa');
+        return $this->user()?->can('viewAny', MfaDevice::class) ?? false;
     }
 
     /**

@@ -69,9 +69,6 @@ class NotificationTemplateSeeder extends Seeder
         $templates = [];
         foreach ($events as $event => [$title, $message, $acknowledgement]) {
             foreach (['in_app', 'email'] as $channel) {
-                if (in_array($event, ['provisional_list_published'], true) && $channel === 'email') {
-                    continue;
-                }
                 $templates[] = [
                     'code' => $event.'_'.$channel,
                     'name' => $title.' · '.($channel === 'email' ? 'Email' : 'Área pessoal'),

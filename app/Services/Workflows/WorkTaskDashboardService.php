@@ -4,11 +4,16 @@ namespace App\Services\Workflows;
 
 use App\Models\User;
 use App\Models\WorkTask;
+use App\Services\Municipalities\MunicipalRecordScopeService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 class WorkTaskDashboardService
 {
+    public function __construct(
+        private readonly MunicipalRecordScopeService $municipalScope,
+    ) {}
+
     /**
      * @return array<string, mixed>
      */
@@ -40,9 +45,11 @@ class WorkTaskDashboardService
     /** @return Builder<WorkTask> */
     public function visibleQuery(User $actor): Builder
     {
-        $query = WorkTask::query()->with(['municipalTeam', 'assignedUser']);
+        $query = $this->municipalScope
+            ->workTasks(WorkTask::query(), $actor)
+            ->with(['municipalTeam', 'assignedUser']);
 
-        if ($actor->hasPermission('work_tasks.assign') || $actor->hasRole(['administrator', 'auditor'])) {
+        if ($actor->hasPermission('work_tasks.assign')) {
             return $query;
         }
 

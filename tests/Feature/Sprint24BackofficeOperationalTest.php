@@ -18,6 +18,7 @@ use App\Models\DocumentDossier;
 use App\Models\GeneratedProcedureDocument;
 use App\Models\InternalAlert;
 use App\Models\ListAutomationRun;
+use App\Models\PlatformOperatorAssignment;
 use App\Models\ProcedureMinute;
 use App\Models\ProcedureTemplate;
 use App\Models\Program;
@@ -114,6 +115,13 @@ class Sprint24BackofficeOperationalTest extends TestCase
     public function test_procedure_templates_generate_and_approve_documents_and_minutes(): void
     {
         $admin = $this->userWithRole('administrator');
+        $platformOperator = User::factory()
+            ->withoutMunicipality()
+            ->create();
+        $platformOperator->assignRole('administrator');
+        PlatformOperatorAssignment::factory()
+            ->for($platformOperator)
+            ->create();
         $application = $this->submittedApplication();
         $this->assignApplicationMunicipality(
             $admin,
@@ -121,7 +129,7 @@ class Sprint24BackofficeOperationalTest extends TestCase
             FeatureKey::ApplicationReview,
         );
 
-        $this->actingAs($admin)
+        $this->actingAs($platformOperator)
             ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.procedure-templates.store'), [
                 'type' => ProcedureTemplateType::ProcedureMinute->value,
@@ -135,7 +143,7 @@ class Sprint24BackofficeOperationalTest extends TestCase
         $template = ProcedureTemplate::query()->firstOrFail();
         $this->assertSame(ProcedureTemplateStatus::Draft, $template->status);
 
-        $this->actingAs($admin)
+        $this->actingAs($platformOperator)
             ->withSession(['mfa.verified_at' => now()])
             ->post(route('backoffice.procedure-templates.publish', $template))
             ->assertRedirect();
@@ -190,7 +198,10 @@ class Sprint24BackofficeOperationalTest extends TestCase
     public function test_internal_alerts_and_list_automation_require_backoffice_review(): void
     {
         $admin = $this->userWithRole('administrator');
-        $alert = InternalAlert::factory()->create(['assigned_to' => $admin->id]);
+        $alert = InternalAlert::factory()->create([
+            'municipality_id' => $admin->municipality_id,
+            'assigned_to' => $admin->id,
+        ]);
 
         $this->actingAs($admin)
             ->withSession(['mfa.verified_at' => now()])

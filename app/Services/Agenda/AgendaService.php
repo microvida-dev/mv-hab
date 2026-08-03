@@ -52,11 +52,14 @@ final readonly class AgendaService
      */
     public function today(User $user, array $dashboard = []): array
     {
+        $today = now();
+
         return $this->build(
             $user,
             new AgendaFilters(
                 view: AgendaView::Day,
-                from: now(),
+                from: $today->copy()->startOfDay(),
+                to: $today->copy()->endOfDay(),
             ),
             $dashboard,
         );

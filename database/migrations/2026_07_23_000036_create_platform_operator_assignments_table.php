@@ -19,7 +19,7 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();
-            $table->timestamp('granted_at');
+            $table->dateTime('granted_at');
             $table->text('grant_justification');
             $table->string('approval_reference_primary', 160)->nullable();
             $table->string('approval_reference_secondary', 160)->nullable();

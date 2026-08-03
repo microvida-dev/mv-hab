@@ -11,7 +11,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int|null $regulatory_profile_id
+ * @property bool $allow_preferences
+ * @property int $minimum_preferences
+ * @property int $maximum_preferences
+ * @property bool $preferences_required_before_submission
+ * @property bool $allow_unselected_unit_fallback
+ * @property Carbon|null $preference_selection_starts_at
+ * @property Carbon|null $preference_selection_ends_at
+ */
 class AllocationRuleSet extends Model
 {
     /** @use HasFactory<AllocationRuleSetFactory> */
@@ -25,6 +37,12 @@ class AllocationRuleSet extends Model
             'status' => AllocationRuleSetStatus::class,
             'allocation_method' => AllocationMethod::class,
             'allow_preferences' => 'boolean',
+            'minimum_preferences' => 'integer',
+            'maximum_preferences' => 'integer',
+            'preferences_required_before_submission' => 'boolean',
+            'allow_unselected_unit_fallback' => 'boolean',
+            'preference_selection_starts_at' => 'datetime',
+            'preference_selection_ends_at' => 'datetime',
             'allow_lottery' => 'boolean',
             'allow_manual_override' => 'boolean',
             'requires_acceptance' => 'boolean',
@@ -47,6 +65,12 @@ class AllocationRuleSet extends Model
     public function contest(): BelongsTo
     {
         return $this->belongsTo(Contest::class);
+    }
+
+    /** @return BelongsTo<AffordableRentRegulatoryProfile, $this> */
+    public function regulatoryProfile(): BelongsTo
+    {
+        return $this->belongsTo(AffordableRentRegulatoryProfile::class);
     }
 
     /**

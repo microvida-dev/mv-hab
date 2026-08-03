@@ -52,4 +52,14 @@ class CorrectionResponsePolicy
             && $this->canAccess($user, self::MODULE, 'decide')
             && $this->municipalScope->ownsCorrectionResponse($user, $response);
     }
+
+    public function decideRevalidationBackoffice(
+        User $user,
+        CorrectionResponse $response,
+    ): bool {
+        return $this->decideBackoffice($user, $response)
+            && $response->correctionRequest()
+                ->whereNotNull('application_review_publication_result_id')
+                ->exists();
+    }
 }

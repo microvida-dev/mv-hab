@@ -40,6 +40,12 @@ class TypologyAdequacyRule extends Model
         return $this->belongsTo(Contest::class);
     }
 
+    /** @return BelongsTo<AffordableRentRegulatoryProfile, $this> */
+    public function regulatoryProfile(): BelongsTo
+    {
+        return $this->belongsTo(AffordableRentRegulatoryProfile::class);
+    }
+
     /**
      * @param  Builder<self>  $query
      * @return Builder<self>

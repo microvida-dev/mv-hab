@@ -1,0 +1,138 @@
+# Sprint 53E — Ciclo de aperfeiçoamento pelo candidato
+
+## Bloco A — Projeção do resultado publicado
+
+Base: `dcd640b23b0061f8d55eeae706abb15dae16402f`.
+
+Este bloco liga o pedido de aperfeiçoamento ao resultado individual publicado
+pela Sprint 53D. `ApplicationReviewPublicationResult` e
+`ApplicationReviewBatchItem` permanecem imutáveis. O pedido é uma projeção
+idempotente do snapshot comunicado.
+
+## Schema
+
+`correction_requests` passa a guardar:
+
+- origem única em `application_review_publication_result_id`;
+- `source_snapshot_hash`;
+- datas canónicas de notificação, abertura, submissão, expiração e resolução;
+- índice de estado/prazo.
+
+A tabela `correction_request_sequences` reserva números humanos por Município e
+ano através de lock transacional. Não existe backfill inferido para pedidos
+legacy.
+
+## Estados
+
+Estados canónicos:
+
+- `notified`;
+- `open`;
+- `partially_completed`;
+- `submitted`;
+- `expired`;
+- `cancelled`;
+- `resolved`.
+
+A leitura de estados legacy usa um cast explícito. Estados ambíguos, como
+`draft` e `rejected`, falham fechado e exigem regularização operacional.
+
+O estado principal de `applications` não é alterado pelo ciclo de correção.
+
+## Relação com 53C e 53D
+
+Novos snapshots de lote incluem `findings` documentais estruturados produzidos
+a partir da checklist do momento da selagem. Apenas documentos obrigatórios em
+falta, rejeitados ou expirados originam itens de aperfeiçoamento. Documentos
+validados não são novamente pedidos.
+
+Durante a publicação coletiva, cada resultado `correction_required` com
+`next_action=await_correction_request` projeta exatamente um pedido. Falhas de
+integridade, ausência da fase de aperfeiçoamento ou ausência de achados seguros
+fazem rollback da publicação.
+
+O prazo é resolvido exclusivamente por `ContestApplicationPhaseService` e pelo
+prazo `ContestDeadlineType::Corrections`.
+
+## Compatibilidade legacy
+
+Pedidos sem `application_review_publication_result_id` são considerados legacy
+e não ganham visibilidade do candidato por simples inferência.
+
+Durante a transição incremental, mantém-se compatibilidade apenas para pedidos
+legacy explicitamente emitidos pelo serviço municipal existente. A visibilidade
+exige cumulativamente:
+
+- `candidate_visible=true`;
+- `issued_at`, `notified_at` e `opened_at` preenchidos;
+- candidatura, candidato e processo administrativo coerentes entre si;
+- pedido não cancelado;
+- instante de emissão e notificação não futuro.
+
+Pedidos legacy em rascunho, órfãos, incoerentes ou sem metadados de emissão
+continuam fail-closed. Não existe backfill baseado em email, role, Município
+nulo ou estado atual mutável da candidatura. Novos pedidos provenientes da
+publicação coletiva continuam obrigatoriamente ligados ao resultado 53D.
+
+## Fora do Bloco A
+
+Ficam reservados aos blocos seguintes:
+
+- workspace e upload versionado;
+- submissão formal e recibo;
+- prorrogações e expiração operacional;
+- métricas agregadas;
+- revalidação diferencial, segundo lote e segunda publicação.
+
+## Bloco 53E-B — workspace único do candidato
+
+O pedido publicado possui agora uma área única e restrita aos elementos
+solicitados. Cada elemento pode ser preparado individualmente sem gerar uma
+notificação municipal isolada.
+
+Regras implementadas:
+
+- apenas itens pertencentes ao pedido autenticado podem ser alterados;
+- elementos documentais aceitam novo ficheiro ou justificação fundamentada;
+- elementos não documentais aceitam apenas esclarecimento textual;
+- documentos validados não voltam a ser solicitados;
+- documentos substituídos preservam todas as versões;
+- cada nova versão referencia explicitamente a versão que substitui;
+- os ficheiros permanecem no disco privado `local`;
+- respostas por item permanecem em rascunho até à submissão formal do Bloco C;
+- o progresso agregado é apresentado no workspace;
+- o fluxo legacy continua isolado e compatível.
+
+A gravação de um item não executa revisão técnica, segunda publicação,
+notificação municipal, exportação ou submissão formal.
+
+## Bloco 53E-C — submissão formal, recibo e controlo temporal
+
+- submissão agregada de toda a checklist sob lock pessimista;
+- respostas em rascunho promovidas atomicamente a submetidas;
+- recibo único, imutável e idempotente com snapshot canónico;
+- bloqueio de alterações depois da submissão;
+- uma notificação interna municipal por submissão formal;
+- prazo original preservado e histórico imutável de prorrogações;
+- prorrogação municipal autorizada por `administrative_processes.update`;
+- reabertura controlada de pedidos expirados após prorrogação;
+- expiração automática através de `corrections:expire`;
+- agendamento de cinco em cinco minutos com prevenção de sobreposição;
+- compatibilidade do ciclo de migrations com SQLite e MySQL a validar;
+- revisão técnica das respostas continua reservada ao Bloco 53E-F.
+
+
+## Bloco 53E-D — métricas agregadas e integração operacional
+
+- serviço único para progresso por pedido, por processo e por Município;
+- métricas agregadas sem conteúdo documental ou dados pessoais desnecessários;
+- isolamento municipal fail-closed em dashboard, timeline e agenda;
+- autorização alinhada com `administrative_processes.view`;
+- um único evento operacional por pedido, mesmo quando existem várias respostas;
+- pedidos submetidos representados ao nível da submissão formal agregada;
+- navegação direta para o pedido autorizado;
+- progresso visível nos índices candidate e backoffice;
+- painel municipal com ativos, submetidos, vencidos e checklist concluída;
+- integração automática com Agenda através do `TimelineProviderRegistry`;
+- nenhuma migration, nova permission, role, exportação ou decisão de revisão;
+- revalidação diferencial e decisão técnica permanecem reservadas à Sprint 53F.

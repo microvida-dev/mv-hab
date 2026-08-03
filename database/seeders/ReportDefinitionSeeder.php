@@ -43,5 +43,27 @@ class ReportDefinitionSeeder extends Seeder
                 'is_active' => true, 'deleted_at' => null,
             ])->save();
         }
+
+        $temporal = ReportDefinition::withTrashed()->firstOrNew([
+            'code' => 'temporal_application_results',
+        ]);
+        $temporal->forceFill([
+            'name' => 'Resultados temporais das candidaturas',
+            'description' => 'Pacote municipal versionado com snapshot, schemas, manifesto e checksums.',
+            'report_type' => ReportType::Operational,
+            'sensitivity_level' => ReportSensitivityLevel::Restricted,
+            'required_permission' => 'applications.export',
+            'query_service' => ReportQueryService::class,
+            'query_method' => 'applicationStatusSummary',
+            'available_formats' => [ReportFormat::Zip->value],
+            'available_scopes' => [
+                ExportScope::Pseudonymized->value,
+                ExportScope::Nominal->value,
+            ],
+            'filter_schema' => ['contest_id', 'mode'],
+            'requires_filters' => true,
+            'is_active' => true,
+            'deleted_at' => null,
+        ])->save();
     }
 }

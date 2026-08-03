@@ -40,6 +40,29 @@
         <dt>Documentos associados</dt><dd>{{ $application->applicationDocuments->count() }}</dd>
     </dl>
 
+    <h2>Habitações pretendidas</h2>
+    @if (collect($housingPreferences ?? [])->isNotEmpty())
+        <table>
+            <thead><tr><th>Ordem</th><th>Habitação</th><th>Tipologia</th><th>Renda mensal</th></tr></thead>
+            <tbody>
+                @foreach ($housingPreferences as $preference)
+                    <tr>
+                        <td>{{ $preference['preference_order'] }}</td>
+                        <td>{{ $preference['public_title'] ?: $preference['public_reference'] ?: 'Habitação selecionada' }}</td>
+                        <td>{{ $preference['typology'] ?? '—' }}</td>
+                        <td>
+                            {{ $preference['monthly_rent'] !== null
+                                ? number_format((float) $preference['monthly_rent'], 2, ',', ' ') . ' €'
+                                : '—' }}
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @else
+        <p>Não existem habitações pretendidas no snapshot da submissão.</p>
+    @endif
+
     <h2>Documentos</h2>
     <table>
         <thead><tr><th>Tipo</th><th>Estado na submissão</th></tr></thead>

@@ -2,6 +2,7 @@
 
 namespace App\Services\Candidate;
 
+use App\Events\HousingPreferenceInputsChanged;
 use App\Models\AdhesionRegistration;
 use App\Models\Household;
 use App\Models\HouseholdMember;
@@ -43,6 +44,11 @@ class IncomeService
             ]);
             $record->save();
             $this->refreshTotals($member, $household);
+            HousingPreferenceInputsChanged::dispatch(
+                $household,
+                'Rendimentos do agregado alterados.',
+                HousingPreferenceInputsChanged::INCOME,
+            );
 
             $this->auditLogger->record(
                 event: AuditEvents::CREATE,
@@ -96,6 +102,14 @@ class IncomeService
                 $this->memberService->refreshIncomeSummary($previousMember);
             }
 
+            if ($changedFields !== []) {
+                HousingPreferenceInputsChanged::dispatch(
+                    $household,
+                    'Rendimentos do agregado alterados.',
+                    HousingPreferenceInputsChanged::INCOME,
+                );
+            }
+
             $this->auditLogger->record(
                 event: AuditEvents::UPDATE,
                 auditable: $record,
@@ -122,6 +136,11 @@ class IncomeService
         DB::transaction(function () use ($record, $actor, $member, $household) {
             $record->delete();
             $this->refreshTotals($member, $household);
+            HousingPreferenceInputsChanged::dispatch(
+                $household,
+                'Rendimentos do agregado alterados.',
+                HousingPreferenceInputsChanged::INCOME,
+            );
 
             $this->auditLogger->record(
                 event: AuditEvents::DELETE,

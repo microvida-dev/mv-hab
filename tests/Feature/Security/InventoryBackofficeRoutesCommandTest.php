@@ -39,9 +39,10 @@ class InventoryBackofficeRoutesCommandTest extends TestCase
             $payload['summary']['route_collection_total'],
         );
         $this->assertGreaterThan(0, $payload['summary']['inventoried_routes']);
-        $this->assertGreaterThan(0, $payload['summary']['missing_active_backoffice_routes']);
-        $this->assertGreaterThan(0, $payload['summary']['missing_mfa_backoffice_routes']);
-        $this->assertGreaterThan(0, $payload['summary']['missing_log_backoffice_routes']);
+        $this->assertSame(0, $payload['summary']['fixed_role_routes']);
+        $this->assertSame(0, $payload['summary']['missing_active_backoffice_routes']);
+        $this->assertSame(0, $payload['summary']['missing_mfa_backoffice_routes']);
+        $this->assertSame(0, $payload['summary']['missing_log_backoffice_routes']);
         $this->assertGreaterThan(0, $payload['summary']['routes_without_detected_tests']);
         $this->assertSame(0, collect($payload['routes'])
             ->filter(fn (array $route): bool => trim((string) $route['bounded_context']) === '')
@@ -180,17 +181,14 @@ class InventoryBackofficeRoutesCommandTest extends TestCase
             'missing-policy' => [
                 'predicate' => fn (array $route): bool => is_string($route['record_model'])
                     && $route['policy_class'] === null,
-                'may_be_empty' => true,
             ],
             'missing-scope' => [
                 'predicate' => fn (array $route): bool => $route['municipal_record_scope'] === 'missing',
-                'may_be_empty' => false,
             ],
             'mutation-without-audit' => [
                 'predicate' => fn (array $route): bool => $route['operation_type'] === 'mutation'
                     && $route['audit_requirement'] === 'required'
                     && $route['audit_implementation'] === 'missing',
-                'may_be_empty' => false,
             ],
         ];
 
@@ -206,9 +204,10 @@ class InventoryBackofficeRoutesCommandTest extends TestCase
 
             $routes = collect($this->jsonFile($output)['routes']);
 
-            if (! $expectation['may_be_empty']) {
-                $this->assertNotEmpty($routes, "O filtro {$option} deve produzir achados.");
-            }
+            $this->assertEmpty(
+                $routes,
+                "O inventário final não deve ter rotas backoffice com role fixa para o filtro {$option}.",
+            );
 
             $this->assertTrue(
                 $routes->every($expectation['predicate']),

@@ -29,6 +29,7 @@ class ApplicationSubmissionController extends Controller
             'household.members.incomeRecords.incomeSource',
             'household.incomeRecords.incomeSource',
             'currentHousingSituation',
+            'housingPreferences.housingUnit',
         ]);
         $readiness = $this->validationService->readinessForSubmission($application);
 
