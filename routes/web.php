@@ -114,6 +114,7 @@ use App\Http\Controllers\Backoffice\NotificationTemplateVersionController as Bac
 use App\Http\Controllers\Backoffice\OfficialNotificationController as BackofficeOfficialNotificationController;
 use App\Http\Controllers\Backoffice\OperationalDashboardController as BackofficeSprint24OperationalDashboardController;
 use App\Http\Controllers\Backoffice\Platform\MunicipalityFeatureController as BackofficeMunicipalityFeatureController;
+use App\Http\Controllers\Backoffice\Platform\PlatformMunicipalContextController as BackofficePlatformMunicipalContextController;
 use App\Http\Controllers\Backoffice\Platform\PlatformOperatorController as BackofficePlatformOperatorController;
 use App\Http\Controllers\Backoffice\PostDrawReportController as BackofficePostDrawReportController;
 use App\Http\Controllers\Backoffice\PreliminaryHearingSubmissionController as BackofficePreliminaryHearingSubmissionController;
@@ -1609,6 +1610,28 @@ Route::middleware('auth')->group(function () {
                             ->middleware('permission:roles.remove')
                             ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
                             ->name('users.roles.remove');
+
+                        Route::get('platform/municipal-context', [BackofficePlatformMunicipalContextController::class, 'index'])
+                            ->middleware([
+                                'platform.operator',
+                                'permission:municipalities.view',
+                            ])
+                            ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                            ->name('platform.municipal-context.index');
+                        Route::post('platform/municipal-context', [BackofficePlatformMunicipalContextController::class, 'store'])
+                            ->middleware([
+                                'platform.operator',
+                                'permission:municipalities.view',
+                            ])
+                            ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                            ->name('platform.municipal-context.store');
+                        Route::delete('platform/municipal-context', [BackofficePlatformMunicipalContextController::class, 'destroy'])
+                            ->middleware([
+                                'platform.operator',
+                                'permission:municipalities.view',
+                            ])
+                            ->withoutMiddleware('role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor')
+                            ->name('platform.municipal-context.destroy');
 
                         Route::get('platform/municipalities/features', [BackofficeMunicipalityFeatureController::class, 'index'])
                             ->middleware('permission:municipality_features.view')

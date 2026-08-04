@@ -22,6 +22,18 @@
                             'Acompanhe Municípios, segurança, acessos, onboarding e operação transversal do MV-HAB.',
                         ) }}
                     </p>
+
+                    @if (Route::has('backoffice.platform.municipal-context.index')
+                        && Auth::user()?->hasPermission('municipalities.view'))
+                        <div class="mt-6">
+                            <a
+                                href="{{ route('backoffice.platform.municipal-context.index') }}"
+                                class="mv-button-secondary"
+                            >
+                                Selecionar Município
+                            </a>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="grid gap-5 p-6 sm:p-8 lg:grid-cols-2">

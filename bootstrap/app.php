@@ -12,6 +12,7 @@ use App\Http\Middleware\LogSensitiveResourceAccess;
 use App\Http\Middleware\RequestCorrelationId;
 use App\Http\Middleware\RequireOperationalMunicipalityContext;
 use App\Http\Middleware\RequirePermission;
+use App\Http\Middleware\RequirePlatformAdministrator;
 use App\Http\Middleware\RequireSensitivePermission;
 use App\Services\Security\AuthorizationFailureResponder;
 use Illuminate\Foundation\Application;
@@ -37,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.support' => EnsureTenantSupportIsAvailable::class,
             'municipality.feature' => EnsureMunicipalityFeatureIsEnabled::class,
             'municipality.context' => RequireOperationalMunicipalityContext::class,
+            'platform.operator' => RequirePlatformAdministrator::class,
             'password.policy' => EnforcePasswordPolicyOnChange::class,
             'role' => EnsureUserHasRole::class,
             'permission' => RequirePermission::class,
