@@ -6,6 +6,7 @@ use App\Enums\FeatureKey;
 use App\Models\Application;
 use App\Models\Contest;
 use App\Models\Municipality;
+use App\Models\MunicipalTeam;
 use App\Models\Program;
 use App\Models\User;
 use App\Models\WorkTask;
@@ -42,9 +43,14 @@ class UniversalSearchTest extends TestCase
             'code' => 'CONC-UX05',
             'title' => 'Concurso UX Cinco',
         ]);
+        $team = MunicipalTeam::factory()->create([
+            'municipality_id' => $this->municipality->id,
+        ]);
         WorkTask::factory()->assigned($administrator)->create([
+            'municipal_team_id' => $team->id,
             'task_number' => 'WTK-UX05-001',
             'type' => WorkTask::TYPE_DOCUMENT_REVIEW,
+            'created_by' => $administrator->id,
         ]);
 
         $this->actingAs($administrator)

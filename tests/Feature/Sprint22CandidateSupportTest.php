@@ -151,7 +151,10 @@ class Sprint22CandidateSupportTest extends TestCase
         $this->seed(SystemAccessSeeder::class);
         $candidate = $this->userWithRole('candidate');
         $otherCandidate = $this->userWithRole('candidate');
-        $staff = $this->userWithRole('municipal_technician');
+        $staff = $this->assignMunicipality(
+            $this->userWithRole('municipal_technician'),
+            $candidate->municipality()->firstOrFail(),
+        );
 
         $this->actingAs($candidate)
             ->post(route('candidate.support-tickets.store'), [

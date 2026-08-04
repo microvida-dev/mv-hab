@@ -35,6 +35,57 @@ use DomainException;
  */
 class MunicipalRoleTemplateRegistry
 {
+    /** @var list<string> */
+    private const MUNICIPAL_ADMINISTRATOR_BASE_PERMISSIONS = [
+        'dashboard.view',
+        'security.manage_own_mfa',
+        'users.view',
+        'users.create',
+        'users.update',
+        'users.delete',
+        'users.deactivate',
+        'users.reactivate',
+        'users.force_mfa',
+        'users.reset_password',
+        'users.audit',
+        'roles.view',
+        'roles.create',
+        'roles.update',
+        'roles.delete',
+        'roles.assign',
+        'roles.remove',
+        'roles.audit',
+        'teams.view',
+        'teams.create',
+        'teams.update',
+        'teams.manage_members',
+        'teams.audit',
+        'access_audit.view',
+        'access_audit.export',
+        'access_audit.audit',
+        'security.view',
+        'security.update',
+        'security.resolve',
+        'security.approve',
+        'security.view_access_logs',
+        'security.revoke_sessions',
+        'security.audit_sensitive_access',
+        'permission_reviews.view',
+        'permission_reviews.create',
+        'permission_reviews.update',
+        'permission_reviews.complete',
+        'permission_reviews.audit',
+        'municipalities.view',
+        'municipalities.update',
+        'municipalities.audit',
+        'programs.create',
+        'programs.update',
+        'programs.audit',
+        'contests.create',
+        'contests.update',
+        'contests.audit',
+    ];
+
     /**
      * @var array<string, array{
      *     version: string,
@@ -48,6 +99,31 @@ class MunicipalRoleTemplateRegistry
      * }>
      */
     private const TEMPLATES = [
+        'municipal-administrator' => [
+            'version' => '1.0.0',
+            'label' => 'Administrador Municipal',
+            'description' => 'Administração do contexto municipal, utilizadores, perfis, equipas e segurança, com capacidade de delegar o perfil técnico do concurso sem poderes de plataforma.',
+            'permissions' => self::MUNICIPAL_ADMINISTRATOR_BASE_PERMISSIONS,
+            'capabilities' => [
+                'Gerir utilizadores, perfis e equipas do próprio Município',
+                'Gerir segurança e auditoria municipal',
+                'Criar e configurar programas e concursos em rascunho',
+                'Aplicar e atribuir o template Técnico de Operações do Concurso',
+            ],
+            'excluded_permissions' => [
+                '*',
+                'platform_operators.*',
+                'municipality_features.*',
+                'settings.*',
+                'privacy.*',
+                'rgpd.*',
+                'finance.*',
+                'payments.*',
+                'contracts.*',
+            ],
+            'entitlement_dependencies' => [],
+            'segregation_class' => 'municipal_administration_mutable',
+        ],
         'operador-recolha' => [
             'version' => '1.0.0',
             'label' => 'Operador de recolha',
@@ -492,6 +568,13 @@ class MunicipalRoleTemplateRegistry
 
         if ($template === null) {
             throw new DomainException('O modelo de perfil municipal indicado não existe.');
+        }
+
+        if ($key === 'municipal-administrator') {
+            $template['permissions'] = array_values(array_unique([
+                ...$template['permissions'],
+                ...self::TEMPLATES['tecnico-operacoes-concurso']['permissions'],
+            ]));
         }
 
         $permissions = $template['permissions'];

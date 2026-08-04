@@ -311,6 +311,13 @@ final class VisitOperationalMunicipalScopeTest extends TestCase
         $chainA = $this->visitChain($municipalityA, $staffA);
         $chainB = $this->visitChain($municipalityB);
 
+        $chainA['availability']->forceFill([
+            'title' => 'Disponibilidade municipal A',
+        ])->saveQuietly();
+        $chainB['availability']->forceFill([
+            'title' => 'Disponibilidade municipal B',
+        ])->saveQuietly();
+
         $this->actingAs($staffA)
             ->get(route('backoffice.visit-availabilities.index'))
             ->assertRedirect();

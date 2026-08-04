@@ -5,6 +5,15 @@ return [
     'seed_state_of_art_demo' => env('MVHAB_SEED_STATE_OF_ART_DEMO', false),
     'regulatory_demo_mode' => env('MVHAB_REGULATORY_DEMO_MODE', false),
 
+    'municipality_onboarding' => [
+        'administrator_role_template' => 'municipal-administrator',
+        'administrator_role_version' => '1.0.0',
+        'invitation_queue' => env(
+            'MVHAB_MUNICIPAL_ADMIN_INVITATION_QUEUE',
+            'notifications',
+        ),
+    ],
+
     // Limites técnicos conservadores; não representam prazos regulamentares.
     'rate_limits' => [
         'program53' => [
