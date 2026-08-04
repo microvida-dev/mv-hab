@@ -1,13 +1,13 @@
 # Auditoria arquitetural — Onboarding Municipal MV-HAB
 
-**Projeto:** MV-HAB  
-**Bloco:** Onboarding Municipal e catálogo inicial de Alcanena  
-**Branch auditada:** `feature/mvhab-municipality-onboarding`  
-**Commit-base:** `e5b2053ff1476061d8a83d1834cd0d3a35a60ce3`  
-**Tag de referência:** `mvhab-53i-mariadb103-rc5`  
-**Bundle de auditoria:** `mvhab-onboarding-audit-20260803T234154Z.tar.gz`  
-**SHA-256 do bundle:** `95a066865e7b7e9655bac3cd8375a702b01b057ba24dc5a7becb08e2261eb22c`  
-**Data da recolha:** 3 de agosto de 2026, 23:41:54 UTC  
+**Projeto:** MV-HAB
+**Bloco:** Onboarding Municipal e catálogo inicial de Alcanena
+**Branch auditada:** `feature/mvhab-municipality-onboarding`
+**Commit-base:** `e5b2053ff1476061d8a83d1834cd0d3a35a60ce3`
+**Tag de referência:** `mvhab-53i-mariadb103-rc5`
+**Bundle de auditoria:** `mvhab-onboarding-audit-20260803T234154Z.tar.gz`
+**SHA-256 do bundle:** `95a066865e7b7e9655bac3cd8375a702b01b057ba24dc5a7becb08e2261eb22c`
+**Data da recolha:** 3 de agosto de 2026, 23:41:54 UTC
 **Classificação:** `GO_FOR_IMPLEMENTATION / DEPLOYMENT_GATED`
 
 ---
