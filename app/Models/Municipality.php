@@ -6,7 +6,18 @@ use Database\Factories\MunicipalityFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $code
+ * @property string|null $tax_number
+ * @property string $contact_email
+ * @property array<string, mixed>|null $settings
+ * @property bool $active
+ * @property string|null $official_logo_path
+ */
 class Municipality extends Model
 {
     /** @use HasFactory<MunicipalityFactory> */
@@ -28,6 +39,12 @@ class Municipality extends Model
             'settings' => 'array',
             'active' => 'boolean',
         ];
+    }
+
+    /** @return HasOne<MunicipalityOnboardingRun, $this> */
+    public function onboardingRun(): HasOne
+    {
+        return $this->hasOne(MunicipalityOnboardingRun::class);
     }
 
     /**

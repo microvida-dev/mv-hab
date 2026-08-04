@@ -477,6 +477,18 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(UserWorkspacePreference::class);
     }
 
+    /** @return HasOne<MunicipalityOnboardingRun, $this> */
+    public function municipalityOnboardingRunAsAdministrator(): HasOne
+    {
+        return $this->hasOne(MunicipalityOnboardingRun::class, 'admin_user_id');
+    }
+
+    /** @return HasOne<MunicipalAdministratorInvitation, $this> */
+    public function municipalAdministratorInvitation(): HasOne
+    {
+        return $this->hasOne(MunicipalAdministratorInvitation::class);
+    }
+
     /** @return HasOne<PlatformOperatorAssignment, $this> */
     public function platformOperatorAssignment(): HasOne
     {
