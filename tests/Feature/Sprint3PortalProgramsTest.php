@@ -202,6 +202,9 @@ class Sprint3PortalProgramsTest extends TestCase
 
     public function test_administrator_can_create_and_publish_contest_with_formal_deadline(): void
     {
+        $this->travelTo('2026-08-05 10:00:00');
+        config()->set('mvhab.regulatory_demo_mode', true);
+
         $administrator = $this->administrator();
         $profile = AffordableRentRegulatoryProfile::factory()->create();
         $program = Program::factory()->published()->create([
@@ -262,9 +265,12 @@ class Sprint3PortalProgramsTest extends TestCase
             'regulatory_profile_id' => $profile->id,
         ]);
 
-        $this->actingAs($administrator)
+        $publicationResponse = $this->actingAs($administrator)
             ->withSession(['mfa.verified_at' => now()])
-            ->post(route('admin.contests.publish', $contest))
+            ->post(route('admin.contests.publish', $contest));
+
+        $publicationResponse
+            ->assertSessionHasNoErrors()
             ->assertRedirect();
 
         $this->assertSame(ContestStatus::Published, $contest->fresh()->status);
