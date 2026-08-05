@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Access;
 
 use App\Enums\FeatureKey;
@@ -25,6 +27,7 @@ class RoleManagementService
         private readonly MunicipalRoleTemplateRegistry $templates,
         private readonly PermissionCatalogService $permissionCatalog,
         private readonly MunicipalityEntitlementService $entitlements,
+        private readonly AccessMunicipalScopeService $municipalScope,
     ) {}
 
     /**
@@ -494,7 +497,7 @@ class RoleManagementService
         $description = $data['description'] ?? null;
 
         $role = Role::query()->create([
-            'municipality_id' => $actor->municipality_id,
+            'municipality_id' => $this->municipalScope->municipalityId($actor),
             'name' => $this->uniqueIdentifier($label),
             'label' => $label,
             'description' => $this->nullableTrim(is_string($description) ? $description : null),
@@ -561,16 +564,7 @@ class RoleManagementService
         if (! $this->policy->create($actor)) {
             throw new AuthorizationException('Sem permissão para aplicar templates municipais.');
         }
-
-        if ($actor->municipality_id === null) {
-            throw new AuthorizationException('A aplicação de templates exige um Município autenticado.');
-        }
-
-        $municipality = Municipality::query()->find($actor->municipality_id);
-
-        if (! $municipality instanceof Municipality) {
-            throw new AuthorizationException('O Município autenticado deixou de estar disponível.');
-        }
+        $municipality = $this->municipalScope->requireMunicipality($actor);
 
         return $municipality;
     }
@@ -626,6 +620,7 @@ class RoleManagementService
      */
     private function missingEntitlements(User $actor, array $template): array
     {
+        $municipality = $this->municipalScope->requireMunicipality($actor);
         $missing = [];
 
         foreach ($template['entitlement_dependencies'] as $dependency) {
@@ -635,7 +630,7 @@ class RoleManagementService
                 throw new DomainException('O template declara um entitlement desconhecido: '.$dependency.'.');
             }
 
-            if (! $this->entitlements->enabledForUser($actor, $feature)) {
+            if (! $this->entitlements->enabledFor($municipality, $feature)) {
                 $missing[] = [
                     'key' => $feature->value,
                     'label' => $feature->label(),

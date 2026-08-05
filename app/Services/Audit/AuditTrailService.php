@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Audit;
 
 use App\Enums\AuditEventCategory;
@@ -33,15 +35,22 @@ class AuditTrailService
         ?Model $related = null,
         ?User $actor = null,
         bool $useAuthenticatedUser = true,
+        ?int $municipalityId = null,
     ): AuditEvent {
         $request = $this->request();
         $resolvedActor = $this->actor($actor, $useAuthenticatedUser);
+        $subjectMunicipalityId = $subject instanceof User
+            ? $subject->municipality_id
+            : null;
+        $actorMunicipalityId = $resolvedActor instanceof User
+            ? $resolvedActor->municipality_id
+            : null;
 
         return AuditEvent::query()->create([
             'event_number' => $this->number(),
-            'municipality_id' => $subject->municipality_id
-                ?? $resolvedActor->municipality_id
-                ?? null,
+            'municipality_id' => $municipalityId
+                ?? $subjectMunicipalityId
+                ?? $actorMunicipalityId,
             'user_id' => $resolvedActor?->id,
             'event_code' => $eventCode,
             'event_category' => $category,
