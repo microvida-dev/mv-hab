@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests\Backoffice\Access;
 
 use App\Models\MunicipalTeam;
 use App\Models\User;
 use App\Policies\TeamManagementPolicy;
+use App\Services\Access\AccessMunicipalScopeService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -26,7 +29,10 @@ class UpdateMunicipalTeamRequest extends FormRequest
     public function rules(): array
     {
         $team = $this->route('municipalTeam');
-        $municipalityId = $this->user()?->municipality_id;
+        $actor = $this->user();
+        $municipalityId = $actor instanceof User
+            ? app(AccessMunicipalScopeService::class)->municipalityId($actor)
+            : null;
 
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('municipal_teams', 'name')->ignore($team)],

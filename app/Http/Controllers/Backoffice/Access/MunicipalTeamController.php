@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Backoffice\Access;
 
 use App\Http\Controllers\Controller;
@@ -114,11 +116,15 @@ class MunicipalTeamController extends Controller
 
     public function addMember(MunicipalTeamMemberRequest $request, MunicipalTeam $municipalTeam, MunicipalTeamService $teams): RedirectResponse
     {
-        $member = User::query()->findOrFail((int) $request->validated('user_id'));
+        $actor = $this->authenticatedUser($request);
+        $member = $this->municipalScope->requireUser(
+            $actor,
+            (int) $request->validated('user_id'),
+        );
 
         try {
             $teams->addMember(
-                $this->authenticatedUser($request),
+                $actor,
                 $municipalTeam,
                 $member,
                 $request->validated('justification'),
@@ -133,11 +139,15 @@ class MunicipalTeamController extends Controller
 
     public function removeMember(MunicipalTeamMemberRequest $request, MunicipalTeam $municipalTeam, MunicipalTeamService $teams): RedirectResponse
     {
-        $member = User::query()->findOrFail((int) $request->validated('user_id'));
+        $actor = $this->authenticatedUser($request);
+        $member = $this->municipalScope->requireUser(
+            $actor,
+            (int) $request->validated('user_id'),
+        );
 
         try {
             $teams->removeMember(
-                $this->authenticatedUser($request),
+                $actor,
                 $municipalTeam,
                 $member,
                 $request->validated('justification'),

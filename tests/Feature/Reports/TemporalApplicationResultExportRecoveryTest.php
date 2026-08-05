@@ -21,6 +21,7 @@ use App\Models\ReportRun;
 use App\Models\User;
 use App\Services\Program53\Resilience\ControlledProgram53FaultInjector;
 use App\Services\Reporting\Temporal\TemporalApplicationResultExportService;
+use Carbon\CarbonImmutable;
 use Database\Seeders\ReportDefinitionSeeder;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -64,7 +65,16 @@ final class TemporalApplicationResultExportRecoveryTest extends TestCase
             'report-exports/temporal/'.$export->public_id.'/staging/source',
         ));
 
-        $service->process((int) $export->getKey());
+        CarbonImmutable::setTestNow(
+            CarbonImmutable::now('UTC')->addSeconds(5),
+        );
+
+        try {
+            $service->process((int) $export->getKey());
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+
         $export->refresh();
 
         $this->assertSame(ReportExportStatus::Completed, $export->status);

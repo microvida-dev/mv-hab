@@ -393,7 +393,12 @@ class InitialMunicipalRoleProfilesTest extends TestCase
         FeatureKey ...$additionalFeatures,
     ): array {
         $template = app(MunicipalRoleTemplateRegistry::class)->resolve($templateKey);
+        $municipality = $this->municipalityWithFeatures(
+            $feature,
+            ...$additionalFeatures,
+        );
         $role = Role::query()->create([
+            'municipality_id' => $municipality->id,
             'name' => $templateKey.'_'.Str::lower(Str::random(8)),
             'label' => $template['label'],
             'description' => $template['description'],
@@ -403,10 +408,6 @@ class InitialMunicipalRoleProfilesTest extends TestCase
         ]);
         $role->permissions()->sync($template['permission_ids']);
 
-        $municipality = $this->municipalityWithFeatures(
-            $feature,
-            ...$additionalFeatures,
-        );
         $user = User::factory()->create([
             'municipality_id' => $municipality->id,
             'status' => 'active',

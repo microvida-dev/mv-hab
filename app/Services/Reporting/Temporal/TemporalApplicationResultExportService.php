@@ -346,10 +346,17 @@ final class TemporalApplicationResultExportService
             }
 
             $metadata = $this->metadata($export);
+            $parameters = $this->array($metadata['parameters'] ?? []);
+            $retryCapturedAt = $this->retryCapturedAt($mode, $metadata);
+
+            if ($retryCapturedAt !== null) {
+                $parameters['captured_at'] = $retryCapturedAt;
+            }
+
             $source = $this->sources->resolve(
                 $contest,
                 $mode,
-                $this->array($metadata['parameters'] ?? []),
+                $parameters,
             );
             $this->faults->checkpoint(
                 'after_source_resolution',
@@ -365,6 +372,16 @@ final class TemporalApplicationResultExportService
             );
             $reusedSnapshot = $snapshot !== null;
             if (! $snapshot instanceof ApplicationResultExportSnapshotData) {
+                if ($retryCapturedAt !== null) {
+                    unset($parameters['captured_at']);
+
+                    $source = $this->sources->resolve(
+                        $contest,
+                        $mode,
+                        $parameters,
+                    );
+                }
+
                 $snapshot = $this->snapshots->build(
                     $source,
                     $sourceDirectory,
@@ -711,6 +728,39 @@ final class TemporalApplicationResultExportService
             AuditEventSeverity::Warning,
             $export->user,
         );
+    }
+
+    /**
+     * Recupera o instante da origem operacional anterior exclusivamente para
+     * validar um checkpoint preservado. Um checkpoint inválido é reconstruído
+     * com uma nova origem atual.
+     *
+     * @param  array<string, mixed>  $metadata
+     */
+    private function retryCapturedAt(
+        ApplicationResultExportMode $mode,
+        array $metadata,
+    ): ?string {
+        if ($mode !== ApplicationResultExportMode::CurrentState) {
+            return null;
+        }
+
+        $capturedAt = data_get(
+            $metadata,
+            'resolved_source.source_references.captured_at',
+        );
+
+        if (! is_string($capturedAt) || trim($capturedAt) === '') {
+            return null;
+        }
+
+        try {
+            return CarbonImmutable::parse($capturedAt, 'UTC')
+                ->utc()
+                ->toIso8601String();
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     private function start(int $exportId): ?ReportExport

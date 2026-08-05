@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Access;
 
 use App\Models\MunicipalTeam;
@@ -31,7 +33,7 @@ class MunicipalTeamService
 
         return DB::transaction(function () use ($actor, $data, $manager): MunicipalTeam {
             $team = MunicipalTeam::query()->create([
-                'municipality_id' => $actor->municipality_id,
+                'municipality_id' => $this->municipalScope->municipalityId($actor),
                 'name' => (string) $data['name'],
                 'slug' => Str::slug((string) $data['name']),
                 'description' => $data['description'] ?? null,
@@ -199,7 +201,9 @@ class MunicipalTeamService
             return null;
         }
 
-        return $this->municipalScope->users(User::query(), $actor)
-            ->findOrFail((int) $data['manager_user_id']);
+        return $this->municipalScope->requireUser(
+            $actor,
+            (int) $data['manager_user_id'],
+        );
     }
 }

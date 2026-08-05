@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
 use App\Models\Role;
@@ -12,7 +14,7 @@ class RolePolicy
 
     public function viewAny(User $user): bool
     {
-        return $this->canRead($user, 'roles.view') && $user->municipality_id !== null;
+        return $this->canRead($user, 'roles.view') && $this->municipalScope->hasMunicipality($user);
     }
 
     public function view(User $user, Role $role): bool
@@ -22,19 +24,17 @@ class RolePolicy
 
     public function create(User $user): bool
     {
-        return $this->canMutate($user, 'roles.create') && $user->municipality_id !== null;
+        return $this->canMutate($user, 'roles.create') && $this->municipalScope->hasMunicipality($user);
     }
 
     public function duplicate(User $user, Role $role): bool
     {
-        return $this->canMutate($user, 'roles.create')
-            && $this->municipalScope->ownsRole($user, $role);
+        return $this->canMutate($user, 'roles.create') && $this->municipalScope->ownsRole($user, $role);
     }
 
     public function update(User $user, Role $role): bool
     {
-        return $this->canMutate($user, 'roles.update')
-            && $this->municipalScope->ownsMutableRole($user, $role);
+        return $this->canMutate($user, 'roles.update') && $this->municipalScope->ownsMutableRole($user, $role);
     }
 
     public function toggle(User $user, Role $role): bool
@@ -44,8 +44,7 @@ class RolePolicy
 
     public function delete(User $user, Role $role): bool
     {
-        return $this->canMutate($user, 'roles.delete')
-            && $this->municipalScope->ownsMutableRole($user, $role);
+        return $this->canMutate($user, 'roles.delete') && $this->municipalScope->ownsMutableRole($user, $role);
     }
 
     public function viewUsers(User $user, Role $role): bool
@@ -55,8 +54,7 @@ class RolePolicy
 
     public function audit(User $user, Role $role): bool
     {
-        return $this->canRead($user, 'roles.audit')
-            && $this->municipalScope->ownsRole($user, $role);
+        return $this->canRead($user, 'roles.audit') && $this->municipalScope->ownsRole($user, $role);
     }
 
     private function canRead(User $user, string $permission): bool

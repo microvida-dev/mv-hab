@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Access;
 
 use App\Models\MunicipalTeam;
@@ -36,20 +38,20 @@ class UserAdministrationService
             throw new AuthorizationException('Sem permissão para criar utilizadores.');
         }
 
-        $role = $this->municipalScope->roles(Role::query(), $actor)
-            ->active()
-            ->where('name', (string) $data['role'])
-            ->firstOrFail();
+        $role = $this->municipalScope->requireRoleByName(
+            $actor,
+            (string) $data['role'],
+        );
         $this->authorizeInitialRole($actor, $role);
         $team = $this->teamFromData($data, $actor);
         $this->ensureTeamAcceptsMembers($team);
 
         return DB::transaction(function () use ($actor, $data, $role, $team): User {
             $user = new User;
-            $user->municipality_id = $actor->municipality_id;
+            $user->municipality_id = $this->municipalScope->municipalityId($actor);
             $user->name = (string) $data['name'];
             $user->email = (string) $data['email'];
-            $user->email_verified_at = now();
+            $user->setAttribute('email_verified_at', now());
             $user->password = Str::password(40);
             $user->status = (string) ($data['status'] ?? 'active');
             $user->mfa_required = (bool) ($data['mfa_required'] ?? false)
@@ -303,8 +305,10 @@ class UserAdministrationService
             return null;
         }
 
-        return $this->municipalScope->teams(MunicipalTeam::query(), $actor)
-            ->findOrFail((int) $data['team_id']);
+        return $this->municipalScope->requireTeam(
+            $actor,
+            (int) $data['team_id'],
+        );
     }
 
     private function ensureTeamAcceptsMembers(?MunicipalTeam $team): void

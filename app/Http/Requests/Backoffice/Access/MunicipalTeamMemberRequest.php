@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests\Backoffice\Access;
 
 use App\Models\MunicipalTeam;
 use App\Models\User;
 use App\Policies\TeamManagementPolicy;
+use App\Services\Access\AccessMunicipalScopeService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -25,7 +28,10 @@ class MunicipalTeamMemberRequest extends FormRequest
      */
     public function rules(): array
     {
-        $municipalityId = $this->user()?->municipality_id;
+        $actor = $this->user();
+        $municipalityId = $actor instanceof User
+            ? app(AccessMunicipalScopeService::class)->municipalityId($actor)
+            : null;
 
         return [
             'user_id' => [

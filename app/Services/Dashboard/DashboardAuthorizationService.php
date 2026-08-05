@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Dashboard;
 
+use App\Enums\ActorProfile;
 use App\Enums\FeatureKey;
 use App\Models\User;
 use App\Services\Entitlements\MunicipalityEntitlementService;
+use App\Services\Platform\ActorProfileResolver;
 use Illuminate\Support\Facades\Route;
 
 class DashboardAuthorizationService
@@ -15,12 +19,20 @@ class DashboardAuthorizationService
     /** @var array<int, array<int, string>> */
     private array $permissionNamesByUser = [];
 
-    public function __construct(private readonly MunicipalityEntitlementService $entitlements) {}
+    public function __construct(
+        private readonly MunicipalityEntitlementService $entitlements,
+        private readonly ActorProfileResolver $profiles,
+    ) {}
 
     public function isActive(User $user): bool
     {
         return $user->deactivated_at === null
             && $user->status === 'active';
+    }
+
+    public function actorProfile(User $user): ActorProfile
+    {
+        return $this->profiles->primary($user);
     }
 
     public function hasPermission(User $user, string $permission): bool
@@ -82,44 +94,20 @@ class DashboardAuthorizationService
      */
     public function profileKeys(User $user): array
     {
-        $ordered = [
-            'administrator',
-            'municipal_technician',
-            'jury',
-            'legal_manager',
-            'financial_manager',
-            'housing_manager',
-            'maintenance_manager',
-            'inspection_manager',
-            'support_agent',
-            'auditor',
-            'candidate',
-        ];
-
-        return array_values(array_filter($ordered, fn (string $role): bool => $this->hasAnyRole($user, [$role])));
+        return array_map(
+            static fn (ActorProfile $profile): string => $profile->dashboardKey(),
+            $this->profiles->profiles($user),
+        );
     }
 
     public function primaryProfile(User $user): string
     {
-        return $this->profileKeys($user)[0] ?? 'municipal_technician';
+        return $this->actorProfile($user)->dashboardKey();
     }
 
     public function profileLabel(User $user): string
     {
-        return match ($this->primaryProfile($user)) {
-            'administrator' => 'Administração municipal',
-            'municipal_technician' => 'Técnico municipal',
-            'jury' => 'Júri',
-            'legal_manager' => 'Gestão jurídica',
-            'financial_manager' => 'Gestão financeira',
-            'housing_manager' => 'Gestão habitacional',
-            'maintenance_manager' => 'Manutenção',
-            'inspection_manager' => 'Vistorias',
-            'support_agent' => 'Atendimento',
-            'auditor' => 'Auditoria',
-            'candidate' => 'Candidato',
-            default => 'Backoffice municipal',
-        };
+        return $this->actorProfile($user)->label();
     }
 
     /**

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
 use App\Models\User;
@@ -11,7 +13,7 @@ class UserAdministrationPolicy
 
     public function viewAny(User $user): bool
     {
-        return $this->can($user, 'view') && $user->municipality_id !== null;
+        return $this->can($user, 'view') && $this->municipalScope->hasMunicipality($user);
     }
 
     public function view(User $user, User $target): bool
@@ -21,7 +23,7 @@ class UserAdministrationPolicy
 
     public function create(User $user): bool
     {
-        return $this->can($user, 'create') && $user->municipality_id !== null;
+        return $this->can($user, 'create') && $this->municipalScope->hasMunicipality($user);
     }
 
     public function update(User $user, User $target): bool
@@ -51,8 +53,7 @@ class UserAdministrationPolicy
 
     private function canTarget(User $user, User $target, string $action): bool
     {
-        return $this->can($user, $action)
-            && $this->municipalScope->ownsUser($user, $target);
+        return $this->can($user, $action) && $this->municipalScope->ownsUser($user, $target);
     }
 
     private function can(User $user, string $action): bool

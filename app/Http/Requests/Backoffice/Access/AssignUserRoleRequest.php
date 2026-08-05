@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests\Backoffice\Access;
 
 use App\Models\Role;
@@ -45,10 +47,13 @@ class AssignUserRoleRequest extends FormRequest
     public function rules(): array
     {
         $actor = $this->user();
+        $municipalityId = $actor instanceof User
+            ? app(AccessMunicipalScopeService::class)->municipalityId($actor)
+            : null;
         $roleExists = Rule::exists('roles', 'name')
             ->where(fn ($query) => $query->where(fn ($roles) => $roles
                 ->where('is_system', true)
-                ->orWhere('municipality_id', $actor?->municipality_id)));
+                ->orWhere('municipality_id', $municipalityId)));
 
         if ($this->routeIs('backoffice.users.roles.assign')) {
             $roleExists->where(fn ($query) => $query->where('is_active', true));

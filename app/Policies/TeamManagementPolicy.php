@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
 use App\Models\MunicipalTeam;
@@ -12,7 +14,7 @@ class TeamManagementPolicy
 
     public function viewAny(User $user): bool
     {
-        return $this->can($user, 'view') && $user->municipality_id !== null;
+        return $this->can($user, 'view') && $this->municipalScope->hasMunicipality($user);
     }
 
     public function view(User $user, MunicipalTeam $team): bool
@@ -22,7 +24,7 @@ class TeamManagementPolicy
 
     public function create(User $user): bool
     {
-        return $this->can($user, 'create') && $user->municipality_id !== null;
+        return $this->can($user, 'create') && $this->municipalScope->hasMunicipality($user);
     }
 
     public function update(User $user, MunicipalTeam $team): bool
@@ -37,8 +39,7 @@ class TeamManagementPolicy
 
     private function canTeam(User $user, MunicipalTeam $team, string $action): bool
     {
-        return $this->can($user, $action)
-            && $this->municipalScope->ownsTeam($user, $team);
+        return $this->can($user, $action) && $this->municipalScope->ownsTeam($user, $team);
     }
 
     private function can(User $user, string $action): bool
