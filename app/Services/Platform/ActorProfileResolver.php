@@ -61,9 +61,24 @@ final class ActorProfileResolver
             }
         }
 
+        if ($profiles === []
+            && $this->hasActiveMunicipalCustomRole($user)) {
+            return [ActorProfile::MunicipalTechnician];
+        }
+
         return $profiles === []
             ? [ActorProfile::Unclassified]
             : $profiles;
+    }
+
+    private function hasActiveMunicipalCustomRole(User $user): bool
+    {
+        return $user->roles()
+            ->where('roles.is_active', true)
+            ->where('roles.is_system', false)
+            ->where('roles.scope', 'municipal')
+            ->where('roles.municipality_id', $user->municipality_id)
+            ->exists();
     }
 
     private function isActive(User $user): bool

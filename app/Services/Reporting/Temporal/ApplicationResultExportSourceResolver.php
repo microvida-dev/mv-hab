@@ -51,6 +51,7 @@ final class ApplicationResultExportSourceResolver
             ApplicationResultExportMode::CurrentState => $this->currentState(
                 $contest,
                 $municipality,
+                $parameters,
             ),
             ApplicationResultExportMode::SealedBatch => $this->sealedBatch(
                 $contest,
@@ -80,11 +81,22 @@ final class ApplicationResultExportSourceResolver
         };
     }
 
+    /** @param array<string, mixed> $parameters */
     private function currentState(
         Contest $contest,
         Municipality $municipality,
+        array $parameters,
     ): ApplicationResultExportSourceData {
         $snapshotAt = CarbonImmutable::now('UTC');
+        $capturedAt = $parameters['captured_at'] ?? null;
+
+        if (is_string($capturedAt) && trim($capturedAt) !== '') {
+            $resolved = $this->date($capturedAt, 'captured_at');
+
+            if ($resolved instanceof CarbonImmutable) {
+                $snapshotAt = $resolved;
+            }
+        }
 
         return $this->source(
             mode: ApplicationResultExportMode::CurrentState,

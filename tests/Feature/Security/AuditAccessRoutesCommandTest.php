@@ -49,9 +49,28 @@ class AuditAccessRoutesCommandTest extends TestCase
         );
 
         $this->assertSame(
-            937,
+            940,
             $payload['summary']['permission_middleware_routes'],
         );
+
+        $platformContextRoutes = collect($payload['routes'])
+            ->whereIn('name', [
+                'backoffice.platform.municipal-context.index',
+                'backoffice.platform.municipal-context.store',
+                'backoffice.platform.municipal-context.destroy',
+            ])
+            ->keyBy('name');
+
+        $this->assertCount(3, $platformContextRoutes);
+
+        foreach ($platformContextRoutes as $route) {
+            $this->assertFalse($route['uses_fixed_role_middleware']);
+            $this->assertContains(
+                'permission:municipalities.view',
+                $route['permission_middleware'],
+            );
+            $this->assertSame([], $route['missing_backoffice_guards']);
+        }
 
         $temporalExportPermissions = [
             'backoffice.reports.temporal-exports.index' => [
