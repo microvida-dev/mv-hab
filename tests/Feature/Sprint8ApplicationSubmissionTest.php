@@ -163,7 +163,8 @@ class Sprint8ApplicationSubmissionTest extends TestCase
                 route('candidate.applications.submit', $application),
                 $this->acceptedDeclarations(),
             )
-            ->assertSessionHasErrors('application');
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('verification.notice'));
 
         $this->assertSame(
             ApplicationStatus::Draft,
