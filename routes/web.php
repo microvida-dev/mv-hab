@@ -351,7 +351,10 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('area-candidato')
         ->name('candidate.')
-        ->middleware('role:candidate')
+        ->middleware([
+            'role:candidate',
+            'verified',
+        ])
         ->group(function () {
             Route::get('/', CandidateDashboardController::class)->name('dashboard');
 
@@ -757,26 +760,32 @@ Route::middleware('auth')->group(function () {
             });
         });
 
-    Route::prefix('area-inquilino')->name('tenant.')->middleware('role:candidate')->group(function () {
-        Route::get('/', TenantDashboardController::class)->name('dashboard');
-        Route::get('/contratos', [TenantContractController::class, 'index'])->name('contracts.index');
-        Route::get('/contratos/{contract}', [TenantContractController::class, 'show'])->name('contracts.show');
-        Route::get('/faturas', [TenantInvoiceController::class, 'index'])->name('invoices.index');
-        Route::get('/faturas/{tenantInvoice}', [TenantInvoiceController::class, 'show'])->name('invoices.show');
-        Route::get('/pagamentos', [TenantPaymentController::class, 'index'])->name('payments.index');
-        Route::get('/pagamentos/{tenantPayment}', [TenantPaymentController::class, 'show'])->name('payments.show');
-        Route::get('/manutencao', [TenantMaintenanceRequestController::class, 'index'])->name('maintenance.index');
-        Route::get('/manutencao/criar', [TenantMaintenanceRequestController::class, 'create'])->name('maintenance.create');
-        Route::post('/manutencao', [TenantMaintenanceRequestController::class, 'store'])->name('maintenance.store');
-        Route::get('/manutencao/{maintenanceRequest}', [TenantMaintenanceRequestController::class, 'show'])->name('maintenance.show');
-        Route::get('/vistorias', [TenantInspectionController::class, 'index'])->name('inspections.index');
-        Route::get('/vistorias/{propertyInspection}', [TenantInspectionController::class, 'show'])->name('inspections.show');
-        Route::get('/comunicacoes', [TenantCommunicationController::class, 'index'])->name('communications.index');
-        Route::get('/comunicacoes/criar', [TenantCommunicationController::class, 'create'])->name('communications.create');
-        Route::post('/comunicacoes', [TenantCommunicationController::class, 'store'])->name('communications.store');
-        Route::get('/comunicacoes/{tenantCommunication}', [TenantCommunicationController::class, 'show'])->name('communications.show');
-        Route::post('/comunicacoes/{tenantCommunication}/mensagens', [TenantCommunicationMessageController::class, 'store'])->name('communications.messages.store');
-    });
+    Route::prefix('area-inquilino')
+        ->name('tenant.')
+        ->middleware([
+            'role:candidate',
+            'verified',
+        ])
+        ->group(function () {
+            Route::get('/', TenantDashboardController::class)->name('dashboard');
+            Route::get('/contratos', [TenantContractController::class, 'index'])->name('contracts.index');
+            Route::get('/contratos/{contract}', [TenantContractController::class, 'show'])->name('contracts.show');
+            Route::get('/faturas', [TenantInvoiceController::class, 'index'])->name('invoices.index');
+            Route::get('/faturas/{tenantInvoice}', [TenantInvoiceController::class, 'show'])->name('invoices.show');
+            Route::get('/pagamentos', [TenantPaymentController::class, 'index'])->name('payments.index');
+            Route::get('/pagamentos/{tenantPayment}', [TenantPaymentController::class, 'show'])->name('payments.show');
+            Route::get('/manutencao', [TenantMaintenanceRequestController::class, 'index'])->name('maintenance.index');
+            Route::get('/manutencao/criar', [TenantMaintenanceRequestController::class, 'create'])->name('maintenance.create');
+            Route::post('/manutencao', [TenantMaintenanceRequestController::class, 'store'])->name('maintenance.store');
+            Route::get('/manutencao/{maintenanceRequest}', [TenantMaintenanceRequestController::class, 'show'])->name('maintenance.show');
+            Route::get('/vistorias', [TenantInspectionController::class, 'index'])->name('inspections.index');
+            Route::get('/vistorias/{propertyInspection}', [TenantInspectionController::class, 'show'])->name('inspections.show');
+            Route::get('/comunicacoes', [TenantCommunicationController::class, 'index'])->name('communications.index');
+            Route::get('/comunicacoes/criar', [TenantCommunicationController::class, 'create'])->name('communications.create');
+            Route::post('/comunicacoes', [TenantCommunicationController::class, 'store'])->name('communications.store');
+            Route::get('/comunicacoes/{tenantCommunication}', [TenantCommunicationController::class, 'show'])->name('communications.show');
+            Route::post('/comunicacoes/{tenantCommunication}/mensagens', [TenantCommunicationMessageController::class, 'store'])->name('communications.messages.store');
+        });
 
     Route::prefix('backoffice')
         ->name('backoffice.')

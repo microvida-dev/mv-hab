@@ -4,7 +4,9 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
@@ -37,8 +39,29 @@ class EmailVerificationTest extends TestCase
         $response = $this->actingAs($user)->get($verificationUrl);
 
         Event::assertDispatched(Verified::class);
-        $this->assertTrue($user->fresh()->hasVerifiedEmail());
+        $this->assertTrue(User::query()->findOrFail($user->id)->hasVerifiedEmail());
         $response->assertRedirect(route('dashboard', absolute: false).'?verified=1');
+    }
+
+    public function test_verification_email_is_branded_and_in_portuguese(): void
+    {
+        $user = User::factory()->unverified()->create([
+            'name' => 'Bruno Teste',
+        ]);
+
+        $mail = (new VerifyEmail)->toMail($user);
+
+        $this->assertInstanceOf(MailMessage::class, $mail);
+        $this->assertSame('Confirme o seu endereço de email — MV-HAB', $mail->subject);
+        $this->assertSame('mail.auth.verify-email', $mail->markdown);
+        $this->assertSame('mvhab', $mail->theme);
+
+        $rendered = $mail->render();
+
+        $this->assertStringContainsString('Confirme o seu endereço de email', $rendered);
+        $this->assertStringContainsString('Confirmar endereço de email', $rendered);
+        $this->assertStringContainsString('Bruno Teste', $rendered);
+        $this->assertStringNotContainsString('Verify Email Address', $rendered);
     }
 
     public function test_email_is_not_verified_with_invalid_hash(): void
@@ -53,6 +76,6 @@ class EmailVerificationTest extends TestCase
 
         $this->actingAs($user)->get($verificationUrl);
 
-        $this->assertFalse($user->fresh()->hasVerifiedEmail());
+        $this->assertFalse(User::query()->findOrFail($user->id)->hasVerifiedEmail());
     }
 }

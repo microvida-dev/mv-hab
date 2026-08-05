@@ -27,6 +27,10 @@ class DashboardController extends Controller
         $profile = $authorization->actorProfile($user);
 
         if ($profile === ActorProfile::Candidate) {
+            if (! $user->hasVerifiedEmail()) {
+                return to_route('verification.notice');
+            }
+
             return to_route('candidate.dashboard');
         }
 

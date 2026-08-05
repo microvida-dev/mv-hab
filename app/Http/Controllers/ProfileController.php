@@ -26,13 +26,23 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $this->authenticatedUser($request)->fill($request->validated());
+        $user = $this->authenticatedUser($request);
+        $user->fill($request->validated());
 
-        if ($this->authenticatedUser($request)->isDirty('email')) {
-            $this->authenticatedUser($request)->email_verified_at = null;
+        $emailChanged = $user->isDirty('email');
+
+        if ($emailChanged) {
+            $user->email_verified_at = null;
         }
 
-        $this->authenticatedUser($request)->save();
+        $user->save();
+
+        if ($emailChanged && $user->hasRole('candidate')) {
+            $user->sendEmailVerificationNotification();
+
+            return Redirect::route('verification.notice')
+                ->with('status', 'verification-link-sent');
+        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
