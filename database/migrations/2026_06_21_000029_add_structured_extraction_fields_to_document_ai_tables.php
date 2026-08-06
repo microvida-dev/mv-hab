@@ -31,6 +31,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('document_ai_fields', function (Blueprint $table): void {
+            $table->dropIndex('document_ai_fields_document_type_index');
+            $table->dropIndex('document_ai_fields_source_index');
+            $table->dropIndex('document_ai_fields_requires_review_index');
+
             $table->dropColumn([
                 'document_type',
                 'source',
@@ -39,6 +43,9 @@ return new class extends Migration
         });
 
         Schema::table('document_ai_analyses', function (Blueprint $table): void {
+            $table->dropIndex('document_ai_analyses_extraction_status_index');
+            $table->dropIndex('document_ai_analyses_extraction_requires_manual_review_index');
+
             $table->dropColumn([
                 'extraction_status',
                 'extraction_schema_version',

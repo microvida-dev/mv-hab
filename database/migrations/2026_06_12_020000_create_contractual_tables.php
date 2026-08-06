@@ -449,8 +449,8 @@ return new class extends Migration
         Schema::dropIfExists('lease_contract_parties');
 
         Schema::table('contracts', function (Blueprint $table) {
-            $table->dropForeign('contracts_rent_calculation_fk');
-            $table->dropForeign('contracts_template_fk');
+            $this->dropForeignConstraint($table, 'contracts_rent_calculation_fk', ['rent_calculation_id']);
+            $this->dropForeignConstraint($table, 'contracts_template_fk', ['contract_template_id']);
         });
 
         Schema::dropIfExists('contract_template_clauses');
@@ -463,19 +463,22 @@ return new class extends Migration
         Schema::dropIfExists('rent_rule_sets');
 
         Schema::table('contracts', function (Blueprint $table) {
-            $table->dropForeign('contracts_program_fk');
-            $table->dropForeign('contracts_contest_fk');
-            $table->dropForeign('contracts_application_fk');
-            $table->dropForeign('contracts_allocation_fk');
-            $table->dropForeign('contracts_offer_fk');
-            $table->dropForeign('contracts_user_fk');
-            $table->dropForeign('contracts_household_fk');
-            $table->dropForeign('contracts_chu_fk');
-            $table->dropForeign('contracts_issued_by_fk');
-            $table->dropForeign('contracts_signed_by_fk');
-            $table->dropForeign('contracts_activated_by_fk');
-            $table->dropForeign('contracts_created_by_fk');
-            $table->dropForeign('contracts_updated_by_fk');
+            $this->dropForeignConstraint($table, 'contracts_program_fk', ['program_id']);
+            $this->dropForeignConstraint($table, 'contracts_contest_fk', ['contest_id']);
+            $this->dropForeignConstraint($table, 'contracts_application_fk', ['application_id']);
+            $this->dropForeignConstraint($table, 'contracts_allocation_fk', ['allocation_id']);
+            $this->dropForeignConstraint($table, 'contracts_offer_fk', ['allocation_offer_id']);
+            $this->dropForeignConstraint($table, 'contracts_user_fk', ['user_id']);
+            $this->dropForeignConstraint($table, 'contracts_household_fk', ['household_id']);
+            $this->dropForeignConstraint($table, 'contracts_chu_fk', ['contest_housing_unit_id']);
+            $this->dropForeignConstraint($table, 'contracts_issued_by_fk', ['issued_by']);
+            $this->dropForeignConstraint($table, 'contracts_signed_by_fk', ['signed_by']);
+            $this->dropForeignConstraint($table, 'contracts_activated_by_fk', ['activated_by']);
+            $this->dropForeignConstraint($table, 'contracts_created_by_fk', ['created_by']);
+            $this->dropForeignConstraint($table, 'contracts_updated_by_fk', ['updated_by']);
+            $table->dropUnique('contracts_contract_number_unique');
+            $table->dropUnique('contracts_allocation_id_unique');
+            $table->dropIndex('contracts_status_user_idx');
             $table->dropColumn([
                 'contract_number',
                 'program_id',
@@ -527,5 +530,20 @@ return new class extends Migration
                 'deleted_at',
             ]);
         });
+    }
+
+    /**
+     * @param  list<string>  $columns
+     */
+    private function dropForeignConstraint(
+        Blueprint $table,
+        string $constraint,
+        array $columns,
+    ): void {
+        $table->dropForeign(
+            Schema::getConnection()->getDriverName() === 'sqlite'
+                ? $columns
+                : $constraint,
+        );
     }
 };

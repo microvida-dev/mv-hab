@@ -110,7 +110,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('inspection_checklist_templates', function (Blueprint $table): void {
-            $table->dropForeign('insp_tpl_municipality_fk');
+            $this->dropForeignConstraint($table, 'insp_tpl_municipality_fk', ['municipality_id']);
             $table->dropIndex('insp_tpl_municipality_system_idx');
             $table->dropColumn([
                 'is_system',
@@ -119,18 +119,33 @@ return new class extends Migration
         });
 
         Schema::table('maintenance_suppliers', function (Blueprint $table): void {
-            $table->dropForeign('maint_supplier_municipality_fk');
+            $this->dropForeignConstraint($table, 'maint_supplier_municipality_fk', ['municipality_id']);
             $table->dropIndex('maint_supplier_municipality_idx');
             $table->dropColumn('municipality_id');
         });
 
         Schema::table('maintenance_categories', function (Blueprint $table): void {
-            $table->dropForeign('maint_cat_municipality_fk');
+            $this->dropForeignConstraint($table, 'maint_cat_municipality_fk', ['municipality_id']);
             $table->dropIndex('maint_cat_municipality_system_idx');
             $table->dropColumn([
                 'is_system',
                 'municipality_id',
             ]);
         });
+    }
+
+    /**
+     * @param  list<string>  $columns
+     */
+    private function dropForeignConstraint(
+        Blueprint $table,
+        string $constraint,
+        array $columns,
+    ): void {
+        $table->dropForeign(
+            Schema::getConnection()->getDriverName() === 'sqlite'
+                ? $columns
+                : $constraint,
+        );
     }
 };

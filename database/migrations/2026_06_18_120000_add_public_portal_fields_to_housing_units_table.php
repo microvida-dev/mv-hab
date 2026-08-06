@@ -54,8 +54,25 @@ return new class extends Migration
         }
 
         Schema::table('housing_units', function (Blueprint $table): void {
-            $table->dropForeign(['municipality_id']);
+            $table->dropUnique('housing_units_public_reference_unique');
+            $table->dropUnique('housing_units_public_slug_unique');
+            $table->dropIndex('housing_units_parish_index');
+            $table->dropIndex('housing_units_public_location_precision_index');
+            $table->dropIndex('housing_units_public_status_index');
+            $table->dropIndex('housing_units_public_visibility_status_index');
+            $table->dropIndex('housing_units_is_public_index');
+            $table->dropIndex('housing_units_published_at_index');
+            $table->dropIndex('housing_units_public_sort_order_index');
+            $table->dropIndex('hu_public_state_idx');
+            $table->dropIndex('hu_public_coords_idx');
+            $table->dropIndex('hu_typology_rent_idx');
+        });
 
+        Schema::table('housing_units', function (Blueprint $table): void {
+            $table->dropForeign(['municipality_id']);
+        });
+
+        Schema::table('housing_units', function (Blueprint $table): void {
             $table->dropColumn([
                 'municipality_id',
                 'public_reference',

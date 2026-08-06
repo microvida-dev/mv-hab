@@ -392,18 +392,19 @@ return new class extends Migration
         }
 
         Schema::table('maintenance_requests', function (Blueprint $table) {
-            $table->dropForeign('maint_req_contract_fk');
-            $table->dropForeign('maint_req_application_fk');
-            $table->dropForeign('maint_req_user_fk');
-            $table->dropForeign('maint_req_category_fk');
-            $table->dropForeign('maint_req_reviewed_by_fk');
-            $table->dropForeign('maint_req_closed_by_fk');
-            $table->dropForeign('maint_req_cancelled_by_fk');
-            $table->dropForeign('maint_req_created_by_fk');
-            $table->dropForeign('maint_req_updated_by_fk');
+            $this->dropForeignConstraint($table, 'maint_req_contract_fk', ['lease_contract_id']);
+            $this->dropForeignConstraint($table, 'maint_req_application_fk', ['application_id']);
+            $this->dropForeignConstraint($table, 'maint_req_user_fk', ['user_id']);
+            $this->dropForeignConstraint($table, 'maint_req_category_fk', ['maintenance_category_id']);
+            $this->dropForeignConstraint($table, 'maint_req_reviewed_by_fk', ['reviewed_by']);
+            $this->dropForeignConstraint($table, 'maint_req_closed_by_fk', ['closed_by']);
+            $this->dropForeignConstraint($table, 'maint_req_cancelled_by_fk', ['cancelled_by']);
+            $this->dropForeignConstraint($table, 'maint_req_created_by_fk', ['created_by']);
+            $this->dropForeignConstraint($table, 'maint_req_updated_by_fk', ['updated_by']);
             $table->dropIndex('maint_req_status_urgency_idx');
             $table->dropIndex('maint_req_unit_status_idx');
             $table->dropIndex('maint_req_contract_status_idx');
+            $table->dropUnique('maintenance_requests_request_number_unique');
             $table->dropColumn([
                 'request_number',
                 'lease_contract_id',
@@ -435,5 +436,20 @@ return new class extends Migration
 
         Schema::dropIfExists('maintenance_suppliers');
         Schema::dropIfExists('maintenance_categories');
+    }
+
+    /**
+     * @param  list<string>  $columns
+     */
+    private function dropForeignConstraint(
+        Blueprint $table,
+        string $constraint,
+        array $columns,
+    ): void {
+        $table->dropForeign(
+            Schema::getConnection()->getDriverName() === 'sqlite'
+                ? $columns
+                : $constraint,
+        );
     }
 };

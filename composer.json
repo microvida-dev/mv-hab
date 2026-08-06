@@ -40,6 +40,7 @@
     "scripts": {
         "quality:pint": "@php vendor/bin/pint --test",
         "quality:pint:changed": "@php scripts/quality/pint-changed.php",
+        "quality:migrations:rollback": "@php scripts/quality/audit-migration-rollback-portability.php",
         "quality:tests:integrity": "@php scripts/quality/audit-test-integrity.php",
         "setup": [
             "composer install",

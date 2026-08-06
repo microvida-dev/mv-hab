@@ -182,9 +182,9 @@ return new class extends Migration
         DB::table('households')->whereNull('citizen_id')->delete();
 
         Schema::table('households', function (Blueprint $table) {
-            $table->dropForeign('households_registration_fk');
+            $this->dropForeignConstraint($table, 'households_registration_fk', ['adhesion_registration_id']);
             $table->dropUnique('households_registration_unique');
-            $table->dropForeign('households_citizen_id_foreign');
+            $this->dropForeignConstraint($table, 'households_citizen_id_foreign', ['citizen_id']);
             $table->dropColumn(['adhesion_registration_id', 'household_type', 'deleted_at']);
             $table->foreignId('citizen_id')->nullable(false)->change();
             $table->foreign('citizen_id', 'households_citizen_id_foreign')
@@ -192,5 +192,20 @@ return new class extends Migration
                 ->on('citizens')
                 ->cascadeOnDelete();
         });
+    }
+
+    /**
+     * @param  list<string>  $columns
+     */
+    private function dropForeignConstraint(
+        Blueprint $table,
+        string $constraint,
+        array $columns,
+    ): void {
+        $table->dropForeign(
+            Schema::getConnection()->getDriverName() === 'sqlite'
+                ? $columns
+                : $constraint,
+        );
     }
 };
