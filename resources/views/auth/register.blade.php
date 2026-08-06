@@ -10,7 +10,9 @@
 
             <x-auth-text-input id="email" name="email" label="Email" type="email" icon="user" :value="old('email')" placeholder="nome@exemplo.pt" autocomplete="username" required />
 
-            <x-auth-text-input id="password" name="password" label="Palavra-passe" type="password" icon="security" placeholder="Defina uma palavra-passe" autocomplete="new-password" required />
+            <x-auth-text-input id="password" name="password" label="Palavra-passe" type="password" icon="security" placeholder="Defina uma palavra-passe" autocomplete="new-password" aria-describedby="register-password-requirements" required />
+
+            <x-password-requirements id="register-password-requirements" />
 
             <x-auth-text-input id="password_confirmation" name="password_confirmation" label="Confirmar palavra-passe" type="password" icon="security" placeholder="Repita a palavra-passe" autocomplete="new-password" required />
 
