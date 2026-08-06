@@ -50,5 +50,12 @@ return [
             'MVHAB_PUBLIC_VISITS_TURNSTILE_TIMEOUT',
             5,
         ),
+        'expected_hostname' => env(
+            'MVHAB_PUBLIC_VISITS_TURNSTILE_EXPECTED_HOSTNAME',
+        ),
+        'action' => env(
+            'MVHAB_PUBLIC_VISITS_TURNSTILE_ACTION',
+            'public_visit',
+        ),
     ],
 ];

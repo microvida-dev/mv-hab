@@ -48,6 +48,8 @@
                 </span>
             </label>
 
+            <x-turnstile-widget context="login" />
+
             <x-auth-button>
                 Iniciar sessão
             </x-auth-button>

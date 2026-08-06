@@ -18,6 +18,21 @@ class PublicVisitTurnstileTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_enabled_turnstile_renders_site_key_and_action(): void
+    {
+        config()->set('public_visits.turnstile.enabled', true);
+        config()->set('public_visits.turnstile.site_key', 'site-key');
+        config()->set('public_visits.turnstile.secret_key', 'secret');
+        config()->set('public_visits.turnstile.expected_hostname', 'hab.microvida.pt');
+        config()->set('public_visits.turnstile.action', 'public_visit');
+        [$unit] = $this->slot();
+
+        $this->get(route('public.housing-units.show', $unit->public_slug))
+            ->assertOk()
+            ->assertSee('data-sitekey="site-key"', escape: false)
+            ->assertSee('data-action="public_visit"', escape: false);
+    }
+
     public function test_enabled_turnstile_fails_closed_without_valid_response(): void
     {
         Queue::fake();
@@ -25,6 +40,9 @@ class PublicVisitTurnstileTest extends TestCase
         config()->set('public_visits.turnstile.secret_key', 'secret');
         $verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
         config()->set('public_visits.turnstile.verify_url', $verifyUrl);
+        config()->set('public_visits.turnstile.site_key', 'site-key');
+        config()->set('public_visits.turnstile.expected_hostname', 'hab.microvida.pt');
+        config()->set('public_visits.turnstile.action', 'public_visit');
         Http::fake([
             $verifyUrl => Http::response(['success' => false]),
         ]);
@@ -53,8 +71,15 @@ class PublicVisitTurnstileTest extends TestCase
         config()->set('public_visits.turnstile.secret_key', 'secret');
         $verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
         config()->set('public_visits.turnstile.verify_url', $verifyUrl);
+        config()->set('public_visits.turnstile.site_key', 'site-key');
+        config()->set('public_visits.turnstile.expected_hostname', 'hab.microvida.pt');
+        config()->set('public_visits.turnstile.action', 'public_visit');
         Http::fake([
-            $verifyUrl => Http::response(['success' => true]),
+            $verifyUrl => Http::response([
+                'success' => true,
+                'hostname' => 'hab.microvida.pt',
+                'action' => 'public_visit',
+            ]),
         ]);
         [$unit, $slot] = $this->slot();
 
@@ -73,7 +98,8 @@ class PublicVisitTurnstileTest extends TestCase
 
         $this->assertDatabaseCount('public_visit_bookings', 1);
         Http::assertSent(static fn (Request $request): bool => $request['secret'] === 'secret'
-            && $request['response'] === 'valid');
+            && $request['response'] === 'valid'
+            && is_string($request['idempotency_key']));
     }
 
     /**

@@ -222,7 +222,7 @@
                         </label>
 
                         @if ($publicVisitTurnstileEnabled && $publicVisitTurnstileSiteKey)
-                            <div class="cf-turnstile" data-sitekey="{{ $publicVisitTurnstileSiteKey }}"></div>
+                            <div class="cf-turnstile" data-sitekey="{{ $publicVisitTurnstileSiteKey }}" data-action="{{ $publicVisitTurnstileAction }}"></div>
                         @endif
 
                         <button type="submit" class="mv-button-primary">

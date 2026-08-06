@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\Access\MunicipalRoleTemplateRegistry;
 use App\Services\Entitlements\MunicipalityEntitlementService;
+use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\MunicipalApplicationDemoAccessSeeder;
 use Database\Seeders\Demo\MunicipalApplicationDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -42,6 +43,24 @@ class MunicipalApplicationDemoAccessSeederTest extends TestCase
             'mvhab.municipal_application_demo.user_password',
             self::PASSWORD,
         );
+
+        CarbonImmutable::setTestNow(
+            CarbonImmutable::create(
+                2026,
+                7,
+                27,
+                12,
+                0,
+                timezone: 'Europe/Lisbon',
+            ),
+        );
+    }
+
+    protected function tearDown(): void
+    {
+        CarbonImmutable::setTestNow();
+
+        parent::tearDown();
     }
 
     public function test_seeder_creates_an_isolated_demo_municipality(): void

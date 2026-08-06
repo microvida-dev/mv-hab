@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Contracts\Program53\Program53FaultInjector;
 use App\Contracts\Program53\Program53MetricsRecorder;
+use App\Contracts\Security\HumanVerificationVerifier;
 use App\Listeners\MarkMunicipalAdministratorInvitationConsumed;
 use App\Models\User;
 use App\Services\Dashboard\Timeline\TimelineAggregatorService;
@@ -13,6 +14,8 @@ use App\Services\Program53\Resilience\NoopProgram53FaultInjector;
 use App\Services\Regulatory\RentLimits\PaaRentLimitProvider;
 use App\Services\Regulatory\RentLimits\RentLimitProviderRegistry;
 use App\Services\Regulatory\RentLimits\RsaaRentLimitProvider;
+use App\Services\Security\AuthRateLimitService;
+use App\Services\Security\CloudflareTurnstileVerifier;
 use App\Services\Security\PasswordPolicyService;
 use App\Services\Security\Program53RateLimitService;
 use Illuminate\Auth\Events\PasswordReset;
@@ -28,6 +31,10 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->singleton(
+            HumanVerificationVerifier::class,
+            CloudflareTurnstileVerifier::class,
+        );
         $this->app->singleton(
             Program53FaultInjector::class,
             NoopProgram53FaultInjector::class,
@@ -80,6 +87,14 @@ class AppServiceProvider extends ServiceProvider
             PasswordReset::class,
             MarkMunicipalAdministratorInvitationConsumed::class,
         );
+
+        foreach (AuthRateLimitService::LIMITERS as $name => $operation) {
+            RateLimiter::for(
+                $name,
+                fn (Request $request): array => app(AuthRateLimitService::class)
+                    ->limits($request, $operation),
+            );
+        }
 
         $limiters = [
             'program53.export-preview' => Program53RateLimitService::EXPORT_PREVIEW,
