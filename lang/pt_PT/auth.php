@@ -4,6 +4,8 @@ return [
     'failed' => 'As credenciais introduzidas não correspondem aos nossos registos.',
     'password' => 'A palavra-passe introduzida está incorreta.',
     'throttle' => 'Demasiadas tentativas de autenticação. Tente novamente dentro de :seconds segundos.',
+    'rate_limited' => 'Demasiadas tentativas. Tente novamente dentro de :seconds segundos.',
+    'human_verification_failed' => 'Não foi possível validar a verificação de segurança. Atualize a página e tente novamente.',
 
     'password_requirements' => [
         'title' => 'A palavra-passe deve cumprir os seguintes requisitos:',

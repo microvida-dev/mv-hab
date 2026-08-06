@@ -1,54 +1,101 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests\Auth;
 
+use App\Contracts\Security\HumanVerificationVerifier;
+use App\Enums\Security\HumanVerificationContext;
+use App\Services\Security\AuthAbuseAuditService;
+use App\Services\Security\AuthRateLimitService;
 use App\Services\Security\LoginHistoryService;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Validator;
 
 class LoginRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
      * @return array<string, ValidationRule|array<mixed>|string>
-     */
-    /**
-     * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'turnstile_token' => ['nullable', 'string', 'max:2048'],
         ];
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
-     *
+     * @return list<callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                if ($validator->errors()->isNotEmpty()) {
+                    return;
+                }
+
+                $result = app(HumanVerificationVerifier::class)->verify(
+                    HumanVerificationContext::Login,
+                    $this->string('turnstile_token')->toString(),
+                    $this->ip(),
+                );
+
+                if ($result->successful) {
+                    return;
+                }
+
+                if ($result->failureReason !== null) {
+                    app(AuthAbuseAuditService::class)
+                        ->recordHumanVerificationFailure(
+                            $this,
+                            HumanVerificationContext::Login,
+                            $result->failureReason,
+                        );
+                }
+
+                $validator->errors()->add(
+                    'turnstile_token',
+                    trans('auth.human_verification_failed'),
+                );
+            },
+        ];
+    }
+
+    /**
      * @throws ValidationException
      */
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+        if (! Auth::attempt(
+            $this->only('email', 'password'),
+            $this->boolean('remember'),
+        )) {
+            $rateLimits = app(AuthRateLimitService::class);
 
-            app(LoginHistoryService::class)->recordFailed((string) $this->string('email'));
+            RateLimiter::hit(
+                $this->throttleKey(),
+                $rateLimits->loginCredentialDecaySeconds(),
+            );
+
+            app(LoginHistoryService::class)->recordFailed(
+                (string) $this->string('email'),
+            );
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
@@ -59,17 +106,24 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Ensure the login request is not rate limited.
-     *
      * @throws ValidationException
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        $rateLimits = app(AuthRateLimitService::class);
+
+        if (! RateLimiter::tooManyAttempts(
+            $this->throttleKey(),
+            $rateLimits->loginCredentialAttempts(),
+        )) {
             return;
         }
 
         event(new Lockout($this));
+        app(AuthAbuseAuditService::class)->recordRateLimitExceeded(
+            $this,
+            'login_credentials',
+        );
 
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
@@ -81,11 +135,24 @@ class LoginRequest extends FormRequest
         ]);
     }
 
-    /**
-     * Get the rate limiting throttle key for the request.
-     */
     public function throttleKey(): string
     {
-        return str((string) $this->string('email'))->lower()->transliterate().'|'.$this->ip();
+        return app(AuthRateLimitService::class)
+            ->loginCredentialKey($this);
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $email = $this->input('email');
+
+        $this->merge([
+            'email' => is_string($email)
+                ? Str::lower(trim($email))
+                : $email,
+            'turnstile_token' => $this->input(
+                'turnstile_token',
+                $this->input('cf-turnstile-response'),
+            ),
+        ]);
     }
 }

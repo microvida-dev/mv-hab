@@ -27,9 +27,22 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $this->post('/forgot-password', ['email' => $user->email])
+            ->assertSessionHas('status', trans('passwords.sent'));
 
         Notification::assertSentTo($user, ResetPassword::class);
+    }
+
+    public function test_unknown_email_receives_same_generic_reset_response(): void
+    {
+        Notification::fake();
+
+        $response = $this->post('/forgot-password', [
+            'email' => 'unknown@example.test',
+        ]);
+
+        $response->assertSessionHas('status', trans('passwords.sent'));
+        Notification::assertNothingSent();
     }
 
     public function test_reset_password_screen_can_be_rendered_with_password_requirements(): void

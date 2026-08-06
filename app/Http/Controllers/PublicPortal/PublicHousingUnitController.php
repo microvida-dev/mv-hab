@@ -39,6 +39,7 @@ class PublicHousingUnitController extends Controller
             'publicVisitSlots' => $publicVisits->slotsFor($housingUnit),
             'publicVisitTurnstileEnabled' => $challenge->enabled(),
             'publicVisitTurnstileSiteKey' => $challenge->siteKey(),
+            'publicVisitTurnstileAction' => $challenge->action(),
         ]);
     }
 
