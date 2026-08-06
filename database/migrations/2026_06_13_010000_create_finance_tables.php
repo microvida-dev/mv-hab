@@ -548,7 +548,7 @@ return new class extends Migration
         Schema::dropIfExists('rent_reviews');
         Schema::dropIfExists('regularization_installments');
         Schema::table('arrears', function (Blueprint $table) {
-            $table->dropForeign('arrears_reg_agreement_fk');
+            $this->dropForeignConstraint($table, 'arrears_reg_agreement_fk', ['regularization_agreement_id']);
         });
         Schema::dropIfExists('regularization_agreements');
         Schema::dropIfExists('default_notices');
@@ -562,5 +562,20 @@ return new class extends Migration
         Schema::dropIfExists('rent_installments');
         Schema::dropIfExists('rent_schedules');
         Schema::dropIfExists('tenant_financial_accounts');
+    }
+
+    /**
+     * @param  list<string>  $columns
+     */
+    private function dropForeignConstraint(
+        Blueprint $table,
+        string $constraint,
+        array $columns,
+    ): void {
+        $table->dropForeign(
+            Schema::getConnection()->getDriverName() === 'sqlite'
+                ? $columns
+                : $constraint,
+        );
     }
 };

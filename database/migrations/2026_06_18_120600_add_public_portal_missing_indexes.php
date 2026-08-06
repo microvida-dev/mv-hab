@@ -39,23 +39,11 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (Schema::hasTable('housing_units')) {
-            Schema::table('housing_units', function (Blueprint $table): void {
-                foreach (['hu_public_state_idx', 'hu_public_coords_idx', 'hu_typology_rent_idx'] as $index) {
-                    if ($this->indexExists('housing_units', $index)) {
-                        $table->dropIndex($index);
-                    }
-                }
-            });
-        }
-
         /*
-         * These indexes are canonically created by
-         * 2026_06_18_120300_create_housing_unit_public_documents_table.
-         *
-         * This compatibility migration may restore them when absent, but must
-         * not remove them during rollback because MariaDB can use them to
-         * support the housing_unit_id and contest_id foreign keys.
+         * This compatibility migration only restores indexes that are
+         * canonically owned by earlier migrations. It must not remove them
+         * during rollback because their owning migrations are responsible for
+         * doing so in the correct dependency order.
          */
     }
 

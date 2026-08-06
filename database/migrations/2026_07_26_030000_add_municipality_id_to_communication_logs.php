@@ -25,13 +25,26 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('communication_logs', function (Blueprint $table): void {
-            $table->dropForeign(
-                'communication_logs_municipality_id_foreign',
-            );
+            $this->dropForeignConstraint($table, 'communication_logs_municipality_id_foreign', ['municipality_id']);
             $table->dropIndex(
                 'communication_logs_municipality_status_idx',
             );
             $table->dropColumn('municipality_id');
         });
+    }
+
+    /**
+     * @param  list<string>  $columns
+     */
+    private function dropForeignConstraint(
+        Blueprint $table,
+        string $constraint,
+        array $columns,
+    ): void {
+        $table->dropForeign(
+            Schema::getConnection()->getDriverName() === 'sqlite'
+                ? $columns
+                : $constraint,
+        );
     }
 };

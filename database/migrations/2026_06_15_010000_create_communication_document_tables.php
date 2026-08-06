@@ -365,7 +365,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('generated_official_documents');
-        Schema::table('document_templates', fn (Blueprint $table) => $table->dropForeign('dt_active_version_fk'));
+        Schema::table('document_templates', fn (Blueprint $table) => $this->dropForeignConstraint($table, 'dt_active_version_fk', ['active_version_id']));
         Schema::dropIfExists('document_template_versions');
         Schema::dropIfExists('document_templates');
         Schema::dropIfExists('notification_preferences');
@@ -374,7 +374,10 @@ return new class extends Migration
         Schema::dropIfExists('communication_deliveries');
 
         Schema::table('official_notifications', function (Blueprint $table) {
-            $table->dropForeign('on_communication_fk');
+            $this->dropForeignConstraint($table, 'on_communication_fk', ['communication_log_id']);
+            $table->dropUnique('official_notifications_notification_number_unique');
+            $table->dropIndex('official_notifications_event_code_index');
+            $table->dropIndex('official_notifications_priority_index');
             $table->dropColumn([
                 'notification_number',
                 'communication_log_id',
@@ -395,8 +398,23 @@ return new class extends Migration
         Schema::dropIfExists('communication_logs');
         Schema::dropIfExists('notification_event_rules');
         Schema::dropIfExists('template_variables');
-        Schema::table('notification_templates', fn (Blueprint $table) => $table->dropForeign('nt_active_version_fk'));
+        Schema::table('notification_templates', fn (Blueprint $table) => $this->dropForeignConstraint($table, 'nt_active_version_fk', ['active_version_id']));
         Schema::dropIfExists('notification_template_versions');
         Schema::dropIfExists('notification_templates');
+    }
+
+    /**
+     * @param  list<string>  $columns
+     */
+    private function dropForeignConstraint(
+        Blueprint $table,
+        string $constraint,
+        array $columns,
+    ): void {
+        $table->dropForeign(
+            Schema::getConnection()->getDriverName() === 'sqlite'
+                ? $columns
+                : $constraint,
+        );
     }
 };

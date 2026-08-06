@@ -347,7 +347,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('administrative_processes', function (Blueprint $table) {
-            $table->dropForeign('administrative_processes_current_request_fk');
+            $this->dropForeignConstraint($table, 'administrative_processes_current_request_fk', ['current_correction_request_id']);
         });
 
         Schema::dropIfExists('administrative_workflow_configs');
@@ -361,5 +361,20 @@ return new class extends Migration
         Schema::dropIfExists('application_reviews');
         Schema::dropIfExists('administrative_process_status_histories');
         Schema::dropIfExists('administrative_processes');
+    }
+
+    /**
+     * @param  list<string>  $columns
+     */
+    private function dropForeignConstraint(
+        Blueprint $table,
+        string $constraint,
+        array $columns,
+    ): void {
+        $table->dropForeign(
+            Schema::getConnection()->getDriverName() === 'sqlite'
+                ? $columns
+                : $constraint,
+        );
     }
 };

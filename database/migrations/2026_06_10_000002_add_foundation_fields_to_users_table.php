@@ -22,7 +22,14 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            $table->dropIndex('users_status_index');
+        });
+
+        Schema::table('users', function (Blueprint $table) {
             $table->dropConstrainedForeignId('municipality_id');
+        });
+
+        Schema::table('users', function (Blueprint $table) {
             $table->dropColumn(['status', 'last_login_at']);
         });
     }

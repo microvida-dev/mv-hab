@@ -59,13 +59,9 @@ return new class extends Migration
          * rollback determinístico, incluindo após uma tentativa parcial.
          */
         Schema::table('document_submissions', function (Blueprint $table): void {
-            $table->dropForeign(
-                'document_submissions_required_document_id_foreign',
-            );
+            $this->dropForeignConstraint($table, 'document_submissions_required_document_id_foreign', ['required_document_id']);
 
-            $table->dropForeign(
-                'document_submissions_income_record_id_foreign',
-            );
+            $this->dropForeignConstraint($table, 'document_submissions_income_record_id_foreign', ['income_record_id']);
         });
 
         foreach ([
@@ -113,5 +109,20 @@ return new class extends Migration
                 'reference_period_recency',
             ]);
         });
+    }
+
+    /**
+     * @param  list<string>  $columns
+     */
+    private function dropForeignConstraint(
+        Blueprint $table,
+        string $constraint,
+        array $columns,
+    ): void {
+        $table->dropForeign(
+            Schema::getConnection()->getDriverName() === 'sqlite'
+                ? $columns
+                : $constraint,
+        );
     }
 };

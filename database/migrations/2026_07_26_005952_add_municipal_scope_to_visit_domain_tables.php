@@ -113,6 +113,25 @@ return new class extends Migration
             return;
         }
 
+        if (DB::getDriverName() === 'sqlite') {
+            Schema::table(
+                $table,
+                function (Blueprint $blueprint) use (
+                    $indexes,
+                ): void {
+                    $blueprint->dropForeign(['municipality_id']);
+
+                    foreach ($indexes as $index) {
+                        $blueprint->dropIndex($index);
+                    }
+
+                    $blueprint->dropColumn('municipality_id');
+                },
+            );
+
+            return;
+        }
+
         if ($this->foreignKeyExists($table, $foreignKey)) {
             Schema::table(
                 $table,

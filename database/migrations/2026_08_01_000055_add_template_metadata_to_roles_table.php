@@ -54,7 +54,10 @@ return new class extends Migration
 
     private function ensureMunicipalityIndex(): void
     {
-        if (Schema::hasIndex('roles', self::MUNICIPALITY_INDEX)) {
+        if (
+            DB::connection()->getDriverName() === 'sqlite'
+            || Schema::hasIndex('roles', self::MUNICIPALITY_INDEX)
+        ) {
             return;
         }
 

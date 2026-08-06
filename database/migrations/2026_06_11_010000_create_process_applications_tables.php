@@ -115,7 +115,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('document_submissions', function (Blueprint $table) {
-            $table->dropForeign('document_submissions_application_fk');
+            $this->dropForeignConstraint($table, 'document_submissions_application_fk', ['application_id']);
         });
 
         Schema::dropIfExists('application_declarations');
@@ -124,5 +124,20 @@ return new class extends Migration
         Schema::dropIfExists('application_snapshots');
         Schema::dropIfExists('application_status_histories');
         Schema::dropIfExists('applications');
+    }
+
+    /**
+     * @param  list<string>  $columns
+     */
+    private function dropForeignConstraint(
+        Blueprint $table,
+        string $constraint,
+        array $columns,
+    ): void {
+        $table->dropForeign(
+            Schema::getConnection()->getDriverName() === 'sqlite'
+                ? $columns
+                : $constraint,
+        );
     }
 };

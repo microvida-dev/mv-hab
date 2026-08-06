@@ -33,6 +33,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('document_ai_analyses', function (Blueprint $table): void {
+            $table->dropIndex('document_ai_analyses_ocr_status_index');
+            $table->dropIndex('document_ai_analyses_ocr_available_index');
+            $table->dropIndex('document_ai_analyses_classification_status_index');
+            $table->dropIndex('document_ai_analyses_detected_document_type_index');
+            $table->dropIndex('document_ai_analyses_classification_requires_manual_review_index');
+            $table->dropIndex('document_ai_analyses_classified_at_index');
+
             $table->dropColumn([
                 'ocr_status',
                 'ocr_available',
