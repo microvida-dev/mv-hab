@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Middleware\BlockInactiveBackofficeUsers;
-use App\Http\Middleware\EnforcePasswordPolicyOnChange;
 use App\Http\Middleware\EnsureBackofficeMfaVerified;
 use App\Http\Middleware\EnsureCandidateExperienceFeatureIsEnabled;
 use App\Http\Middleware\EnsureMunicipalityFeatureIsEnabled;
@@ -39,7 +38,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'municipality.feature' => EnsureMunicipalityFeatureIsEnabled::class,
             'municipality.context' => RequireOperationalMunicipalityContext::class,
             'platform.operator' => RequirePlatformAdministrator::class,
-            'password.policy' => EnforcePasswordPolicyOnChange::class,
             'role' => EnsureUserHasRole::class,
             'permission' => RequirePermission::class,
             'log.backoffice' => LogBackofficeAccess::class,

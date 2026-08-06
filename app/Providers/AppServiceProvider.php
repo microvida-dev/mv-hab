@@ -13,6 +13,7 @@ use App\Services\Program53\Resilience\NoopProgram53FaultInjector;
 use App\Services\Regulatory\RentLimits\PaaRentLimitProvider;
 use App\Services\Regulatory\RentLimits\RentLimitProviderRegistry;
 use App\Services\Regulatory\RentLimits\RsaaRentLimitProvider;
+use App\Services\Security\PasswordPolicyService;
 use App\Services\Security\Program53RateLimitService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -21,6 +22,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -53,6 +55,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Password::defaults(
+            static fn (): Password => app(PasswordPolicyService::class)->rule(),
+        );
+
         VerifyEmail::toMailUsing(
             static function (object $notifiable, string $url): MailMessage {
                 $recipientName = $notifiable instanceof User
