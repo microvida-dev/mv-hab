@@ -21,6 +21,7 @@ use App\Models\RentLimitTableRow;
 use App\Models\RentRuleSet;
 use App\Models\TypologyAdequacyRule;
 use App\Models\User;
+use App\Services\Platform\PlatformMunicipalContextService;
 use App\Services\Regulatory\RegulatorySnapshotService;
 use App\Services\Regulatory\RentLimits\RentLimitTableChecksumService;
 use Database\Seeders\SystemAccessSeeder;
@@ -196,7 +197,10 @@ class RegulatoryPublicationReadinessTest extends TestCase
         $paa = AffordableRentRegulatoryProfile::factory()->create();
 
         $this->actingAs($actor)
-            ->withSession(['mfa.verified_at' => now()])
+            ->withSession([
+                'mfa.verified_at' => now(),
+                PlatformMunicipalContextService::SESSION_KEY => $municipality->id,
+            ])
             ->post(route('admin.programs.store'), [
                 'municipality_id' => $municipality->id,
                 'regulatory_profile_id' => $paa->id,

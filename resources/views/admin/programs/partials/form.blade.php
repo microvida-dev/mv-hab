@@ -12,26 +12,51 @@
 <div class="grid gap-6 lg:grid-cols-2">
     <div>
         <x-input-label for="municipality_id" value="Município" />
-        <select id="municipality_id" name="municipality_id" class="mv-input mt-1 block w-full" required>
-            <option value="">Selecionar município</option>
-            @foreach ($municipalities as $municipality)
-                <option value="{{ $municipality->id }}" @selected(old('municipality_id', $program->municipality_id ?? null) == $municipality->id)>{{ $municipality->name }}</option>
-            @endforeach
-        </select>
+        @if ($municipalities->count() === 1)
+            @php($selectedMunicipality = $municipalities->first())
+            @if (isset($program))
+                <input type="hidden" name="municipality_id" value="{{ $selectedMunicipality->id }}">
+            @endif
+            <div class="mv-input mt-1 flex min-h-11 items-center bg-ink-50 font-semibold text-ink-800">
+                {{ $selectedMunicipality->name }}
+            </div>
+            <p class="mt-1 text-xs text-ink-500">Município definido pelo contexto operacional selecionado.</p>
+        @else
+            <select id="municipality_id" name="municipality_id" class="mv-input mt-1 block w-full" required>
+                <option value="">Selecionar município</option>
+                @foreach ($municipalities as $municipality)
+                    <option value="{{ $municipality->id }}" @selected(old('municipality_id', $program->municipality_id ?? null) == $municipality->id)>{{ $municipality->name }}</option>
+                @endforeach
+            </select>
+        @endif
         <x-input-error :messages="$errors->get('municipality_id')" class="mt-2" />
     </div>
 
     <div>
         <x-input-label for="regulatory_profile_id" value="Perfil regulamentar" />
-        <select id="regulatory_profile_id" name="regulatory_profile_id" class="mv-input mt-1 block w-full" required>
-            <option value="">Selecionar perfil regulamentar</option>
-            @foreach ($regulatoryProfiles as $regulatoryProfile)
-                <option value="{{ $regulatoryProfile->id }}" @selected(old('regulatory_profile_id', $program->regulatory_profile_id ?? null) == $regulatoryProfile->id)>
-                    {{ $regulatoryProfile->legal_regime->label() }} · {{ $regulatoryProfile->name }} · {{ $regulatoryProfile->municipality?->name ?? 'Nacional' }}
-                </option>
-            @endforeach
-        </select>
-        <p class="mt-1 text-xs text-ink-500">O perfil tem de corresponder ao Município e à data de início do programa.</p>
+        @if (($structuralFieldsLocked ?? false) && isset($program))
+            <input type="hidden" name="regulatory_profile_id" value="{{ $program->regulatory_profile_id }}">
+            <div class="mv-input mt-1 flex min-h-11 items-center bg-ink-50 text-ink-800">
+                {{ $program->regulatoryProfile?->name ?? 'A configurar pela administração global' }}
+            </div>
+            <p class="mt-1 text-xs text-ink-500">O enquadramento regulamentar estrutural é gerido pela administração global.</p>
+        @else
+            <select id="regulatory_profile_id" name="regulatory_profile_id" class="mv-input mt-1 block w-full" required>
+                <option value="">Selecionar perfil regulamentar</option>
+                @foreach ($regulatoryProfiles as $regulatoryProfile)
+                    <option value="{{ $regulatoryProfile->id }}" @selected(old('regulatory_profile_id', $program->regulatory_profile_id ?? null) == $regulatoryProfile->id)>
+                        {{ $regulatoryProfile->legal_regime->label() }} · {{ $regulatoryProfile->name }} · {{ $regulatoryProfile->municipality?->name ?? 'Nacional' }} · {{ $regulatoryProfile->configuration_status->label() }}
+                    </option>
+                @endforeach
+            </select>
+            <p class="mt-1 text-xs text-ink-500">O perfil tem de corresponder ao Município e à data de início do programa.</p>
+            @if ($regulatoryProfiles->isEmpty())
+                <x-mv.alert tone="warning" class="mt-3">
+                    <strong>Sem perfil regulamentar disponível.</strong> Configure primeiro o enquadramento regulamentar para este Município.
+                    <a href="{{ route('admin.regulatory-profiles.index') }}" class="font-semibold underline">Abrir configuração regulamentar</a>.
+                </x-mv.alert>
+            @endif
+        @endif
         <x-input-error :messages="$errors->get('regulatory_profile_id')" class="mt-2" />
     </div>
 

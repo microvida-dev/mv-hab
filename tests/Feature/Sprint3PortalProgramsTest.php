@@ -17,6 +17,7 @@ use App\Models\RentLimitTableRow;
 use App\Models\RentRuleSet;
 use App\Models\TypologyAdequacyRule;
 use App\Models\User;
+use App\Services\Platform\PlatformMunicipalContextService;
 use App\Services\Regulatory\RentLimits\RentLimitTableChecksumService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -151,7 +152,10 @@ class Sprint3PortalProgramsTest extends TestCase
         $profile = AffordableRentRegulatoryProfile::factory()->create();
 
         $response = $this->actingAs($administrator)
-            ->withSession(['mfa.verified_at' => now()])
+            ->withSession([
+                'mfa.verified_at' => now(),
+                PlatformMunicipalContextService::SESSION_KEY => $municipality->id,
+            ])
             ->post(route('admin.programs.store'), [
                 'municipality_id' => $municipality->id,
                 'regulatory_profile_id' => $profile->id,

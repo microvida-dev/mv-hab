@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\ContestController as AdminContestController;
 use App\Http\Controllers\Admin\DocumentReviewController as AdminDocumentReviewController;
 use App\Http\Controllers\Admin\DocumentTypeController as AdminDocumentTypeController;
 use App\Http\Controllers\Admin\ProgramController as AdminProgramController;
+use App\Http\Controllers\Admin\RegulatoryProfileController as AdminRegulatoryProfileController;
+use App\Http\Controllers\Admin\RegulatoryRentLimitTableController as AdminRegulatoryRentLimitTableController;
 use App\Http\Controllers\Admin\RequiredDocumentController as AdminRequiredDocumentController;
 use App\Http\Controllers\Backoffice\Access\AccessAuditController as BackofficeAccessAuditController;
 use App\Http\Controllers\Backoffice\Access\MunicipalRoleTemplateController as BackofficeMunicipalRoleTemplateController;
@@ -1018,6 +1020,136 @@ Route::middleware('auth')->group(function () {
                     'log.backoffice',
                 ])
                 ->group(function () {
+                    Route::get('regulatory-profiles', [AdminRegulatoryProfileController::class, 'index'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'municipality.context',
+                            'permission:programs.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('regulatory-profiles.index');
+
+                    Route::get('regulatory-profiles/create', [AdminRegulatoryProfileController::class, 'create'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'municipality.context',
+                            'permission:programs.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('regulatory-profiles.create');
+
+                    Route::post('regulatory-profiles', [AdminRegulatoryProfileController::class, 'store'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'municipality.context',
+                            'permission:programs.create',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('regulatory-profiles.store');
+
+                    Route::get('regulatory-profiles/{regulatoryProfile}', [AdminRegulatoryProfileController::class, 'show'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'municipality.context',
+                            'permission:programs.view',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('regulatory-profiles.show');
+
+                    Route::get('regulatory-profiles/{regulatoryProfile}/edit', [AdminRegulatoryProfileController::class, 'edit'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'municipality.context',
+                            'permission:programs.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('regulatory-profiles.edit');
+
+                    Route::match(['put', 'patch'], 'regulatory-profiles/{regulatoryProfile}', [AdminRegulatoryProfileController::class, 'update'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'municipality.context',
+                            'permission:programs.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('regulatory-profiles.update');
+
+                    Route::post('regulatory-profiles/{regulatoryProfile}/activate', [AdminRegulatoryProfileController::class, 'activate'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'municipality.context',
+                            'permission:programs.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('regulatory-profiles.activate');
+
+                    Route::post('regulatory-profiles/{regulatoryProfile}/archive', [AdminRegulatoryProfileController::class, 'archive'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'municipality.context',
+                            'permission:programs.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('regulatory-profiles.archive');
+
+                    Route::get('regulatory-profiles/{regulatoryProfile}/rent-limits', [AdminRegulatoryRentLimitTableController::class, 'edit'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'municipality.context',
+                            'permission:programs.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('regulatory-profiles.rent-limits.edit');
+
+                    Route::put('regulatory-profiles/{regulatoryProfile}/rent-limits', [AdminRegulatoryRentLimitTableController::class, 'update'])
+                        ->middleware([
+                            'active.backoffice',
+                            'mfa.backoffice',
+                            'log.backoffice',
+                            'municipality.context',
+                            'permission:programs.update',
+                        ])
+                        ->withoutMiddleware(
+                            'role:administrator,municipal_technician,jury,financial_manager,maintenance_manager,auditor'
+                        )
+                        ->name('regulatory-profiles.rent-limits.update');
+
                     Route::get('programs', [AdminProgramController::class, 'index'])
                         ->middleware([
                             'active.backoffice',
@@ -1035,6 +1167,7 @@ Route::middleware('auth')->group(function () {
                             'active.backoffice',
                             'mfa.backoffice',
                             'log.backoffice',
+                            'municipality.context',
                             'permission:programs.create',
                         ])
                         ->withoutMiddleware(
@@ -1047,6 +1180,7 @@ Route::middleware('auth')->group(function () {
                             'active.backoffice',
                             'mfa.backoffice',
                             'log.backoffice',
+                            'municipality.context',
                             'permission:programs.create',
                         ])
                         ->withoutMiddleware(
