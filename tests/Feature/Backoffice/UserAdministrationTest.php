@@ -6,11 +6,11 @@ use App\Models\Municipality;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Notifications\Auth\ResetPasswordNotification;
 use App\Services\Access\UserAdministrationService;
 use Database\Seeders\SystemAccessSeeder;
 use DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -94,7 +94,7 @@ class UserAdministrationTest extends TestCase
             ])
             ->assertRedirect();
 
-        Notification::assertSentTo($target, ResetPassword::class);
+        Notification::assertSentTo($target, ResetPasswordNotification::class);
         $this->assertDatabaseHas('access_change_events', [
             'event_code' => 'user_password_reset_requested',
             'target_user_id' => $target->id,
