@@ -213,6 +213,24 @@ class RegulatoryConfigurationBackofficeTest extends TestCase
         $this->assertSame('600.00', $ruleSet->maximum_rent);
     }
 
+    public function test_rent_rule_set_create_renders_form_partial_instead_of_literal_blade_directive(): void
+    {
+        $municipality = Municipality::factory()->create();
+        $global = $this->globalAdministrator();
+
+        $this->actingAs($global)
+            ->withSession([
+                'mfa.verified_at' => now(),
+                PlatformMunicipalContextService::SESSION_KEY => $municipality->id,
+            ])
+            ->get(route('backoffice.contracts.rent-rule-sets.create'))
+            ->assertOk()
+            ->assertSee('Nova regra de renda')
+            ->assertSee('Taxa de esforço (%)')
+            ->assertSee('Renda máxima')
+            ->assertDontSee("@include('backoffice.contracts.rent-rule-sets.form')", false);
+    }
+
     private function globalAdministrator(): User
     {
         $actor = User::factory()->withoutMunicipality()->create(['status' => 'active']);

@@ -152,3 +152,18 @@ Funções principais:
 
 A biblioteca não executa operações quando é carregada; scripts concretos de
 deploy devem fazer `source` e usar estas primitivas.
+
+## 8. Validação do contrato: checkout e release imutável
+
+O validator oficial suporta dois contextos sem enfraquecer as invariantes:
+
+```bash
+bash scripts/production/validate-production-runtime-contract.sh --mode=source
+bash scripts/production/validate-production-runtime-contract.sh --mode=artifact
+```
+
+Em `source`, a raiz tem de ser uma checkout Git e `git diff --check` é obrigatório.
+Em `artifact`, a release pode ter sido criada por `git archive`, não recebe um
+`.git` artificial e tem de conter `.mvhab-release-sha` com o SHA Git completo.
+As validações de ownership, rename atómico, travessia web, runtime do `APP_USER`
+e evidências privadas são as mesmas. Sem `--mode`, o modo é detetado automaticamente.
