@@ -3,6 +3,7 @@
 namespace App\Services\Navigation;
 
 use App\Enums\FeatureKey;
+use App\Models\AffordableRentRegulatoryProfile;
 use App\Models\Application;
 use App\Models\AuditEvent;
 use App\Models\Contest;
@@ -242,6 +243,7 @@ class WorkspaceService
                     $this->group('Configuração do concurso', [
                         $this->workspaceDashboard('concursos'),
                         $this->item('Programas', 'admin.programs.index', 'admin.programs.*', 'programs.view', null, Program::class),
+                        $this->item('Configuração regulamentar', 'admin.regulatory-profiles.index', 'admin.regulatory-profiles.*', model: AffordableRentRegulatoryProfile::class),
                         $this->item('Concursos', 'admin.contests.index', 'admin.contests.*', 'contests.view', null, Contest::class),
                         $this->item('Tipos documentais', 'admin.document-types.index', 'admin.document-types.*', 'documents.view', null, DocumentType::class),
                         $this->item('Documentos obrigatórios', 'admin.required-documents.index', 'admin.required-documents.*', 'documents.view', null, RequiredDocument::class),
@@ -404,6 +406,7 @@ class WorkspaceService
             'backoffice.contextual-faqs.index' => 'faq',
 
             'admin.programs.index' => 'program',
+            'admin.regulatory-profiles.index' => 'settings',
             'admin.contests.index' => 'contest',
             'admin.document-types.index' => 'document',
             'admin.required-documents.index' => 'candidate-document',

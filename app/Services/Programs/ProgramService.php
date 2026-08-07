@@ -79,7 +79,16 @@ class ProgramService
         return DB::transaction(function () use ($program, $data, $actor) {
             $rules = Arr::pull($data, 'rules', []);
             $this->assertActorCanManageMunicipality($actor, $program->municipality_id);
-            $this->assertActorCanManageMunicipality($actor, (int) $data['municipality_id']);
+
+            // O Município é parte da identidade estrutural do Programa e nunca é alterado
+            // através do formulário. O operador global pode alterar o perfil enquanto o
+            // Programa não tiver snapshot; utilizadores municipais não podem fazê-lo.
+            $data['municipality_id'] = $program->municipality_id;
+            if (! $this->platformScope->hasGlobalScope($actor)) {
+                $data['regulatory_profile_id'] = $program->regulatory_profile_id;
+            }
+
+            $this->assertActorCanManageMunicipality($actor, $program->municipality_id);
             $profile = AffordableRentRegulatoryProfile::query()
                 ->with('parentProfile')
                 ->findOrFail((int) $data['regulatory_profile_id']);

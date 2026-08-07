@@ -5,7 +5,7 @@
                 <p class="text-sm font-semibold text-civic-700">Configuração pública</p>
                 <h1 class="mt-1 text-2xl font-semibold text-ink-900">Programas</h1>
             </div>
-            @can('create', \App\Models\Program::class)
+            @can('createBackoffice', \App\Models\Program::class)
                 <a href="{{ route('admin.programs.create') }}" class="mv-button-primary">
                     <x-ui-icon name="plus" class="h-4 w-4" />
                     Novo programa

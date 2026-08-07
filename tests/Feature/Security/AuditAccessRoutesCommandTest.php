@@ -49,9 +49,47 @@ class AuditAccessRoutesCommandTest extends TestCase
         );
 
         $this->assertSame(
-            940,
+            950,
             $payload['summary']['permission_middleware_routes'],
         );
+
+        $regulatoryProfilePermissions = [
+            'admin.regulatory-profiles.index' => 'permission:programs.view',
+            'admin.regulatory-profiles.create' => 'permission:programs.create',
+            'admin.regulatory-profiles.store' => 'permission:programs.create',
+            'admin.regulatory-profiles.show' => 'permission:programs.view',
+            'admin.regulatory-profiles.edit' => 'permission:programs.update',
+            'admin.regulatory-profiles.update' => 'permission:programs.update',
+            'admin.regulatory-profiles.activate' => 'permission:programs.update',
+            'admin.regulatory-profiles.archive' => 'permission:programs.update',
+            'admin.regulatory-profiles.rent-limits.edit' => 'permission:programs.update',
+            'admin.regulatory-profiles.rent-limits.update' => 'permission:programs.update',
+        ];
+
+        $regulatoryProfileRoutes = collect($payload['routes'])
+            ->whereIn(
+                'name',
+                array_keys($regulatoryProfilePermissions),
+            )
+            ->keyBy('name');
+
+        $this->assertCount(10, $regulatoryProfileRoutes);
+
+        foreach ($regulatoryProfilePermissions as $routeName => $permission) {
+            $route = $regulatoryProfileRoutes->get($routeName);
+
+            $this->assertNotNull($route);
+            $this->assertFalse($route['uses_fixed_role_middleware']);
+            $this->assertSame([], $route['missing_backoffice_guards']);
+            $this->assertContains(
+                'municipality.context',
+                $route['middleware'],
+            );
+            $this->assertContains(
+                $permission,
+                $route['permission_middleware'],
+            );
+        }
 
         $platformContextRoutes = collect($payload['routes'])
             ->whereIn('name', [

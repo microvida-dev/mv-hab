@@ -6,6 +6,7 @@ use App\Models\Program;
 use App\Models\User;
 use App\Policies\Concerns\ChecksPermissions;
 use App\Services\Municipalities\MunicipalRecordScopeService;
+use App\Services\Platform\PlatformOperatorScopeService;
 
 class ProgramPolicy
 {
@@ -13,7 +14,10 @@ class ProgramPolicy
 
     private const MODULE = 'programs';
 
-    public function __construct(private readonly MunicipalRecordScopeService $municipalScope) {}
+    public function __construct(
+        private readonly MunicipalRecordScopeService $municipalScope,
+        private readonly PlatformOperatorScopeService $platformScope,
+    ) {}
 
     public function viewAny(User $user): bool
     {
@@ -27,7 +31,9 @@ class ProgramPolicy
 
     public function create(User $user): bool
     {
-        return $this->canAccess($user, self::MODULE, 'create');
+        return ! $user->hasRole(['candidate', 'auditor'])
+            && $this->canAccess($user, self::MODULE, 'create')
+            && $this->platformScope->hasGlobalScope($user);
     }
 
     public function update(User $user, Program $program): bool
@@ -61,9 +67,7 @@ class ProgramPolicy
 
     public function createBackoffice(User $user): bool
     {
-        return ! $user->hasRole(['candidate', 'auditor'])
-            && $this->canAccess($user, self::MODULE, 'create')
-            && $this->municipalScope->hasMunicipalOrGlobalScope($user);
+        return $this->create($user);
     }
 
     public function updateBackoffice(User $user, Program $program): bool

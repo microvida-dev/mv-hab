@@ -20,7 +20,6 @@ class StoreProgramRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'municipality_id' => ['required', 'exists:municipalities,id'],
             'regulatory_profile_id' => ['required', 'integer', 'exists:affordable_rent_regulatory_profiles,id'],
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('programs', 'slug')],
