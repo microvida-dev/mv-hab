@@ -36,6 +36,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate production runtime contract
+        run: |
+          bash scripts/production/validate-production-runtime-contract.sh --mode=source
+
+          ARTIFACT_DIR="$(mktemp -d)"
+          trap 'rm -rf "$ARTIFACT_DIR"' EXIT
+
+          git archive --format=tar HEAD | tar -xf - -C "$ARTIFACT_DIR"
+          printf '%s\n' "$(git rev-parse HEAD)" > "$ARTIFACT_DIR/.mvhab-release-sha"
+
+          bash "$ARTIFACT_DIR/scripts/production/validate-production-runtime-contract.sh" --mode=artifact
+
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
           php-version: "8.4"
