@@ -43,8 +43,18 @@ jobs:
           ARTIFACT_DIR="$(mktemp -d)"
           trap 'rm -rf "$ARTIFACT_DIR"' EXIT
 
+          bash scripts/production/test-production-release-permissions.sh
+
           git archive --format=tar HEAD | tar -xf - -C "$ARTIFACT_DIR"
           printf '%s\n' "$(git rev-parse HEAD)" > "$ARTIFACT_DIR/.mvhab-release-sha"
+
+          source "$ARTIFACT_DIR/scripts/production/lib/mvhab-production-runtime.sh"
+
+          mvhab_normalize_release_permissions             "$ARTIFACT_DIR"             "$(id -un)"             "$(id -gn)"
+
+          mvhab_assert_release_permissions             "$ARTIFACT_DIR"             "$(id -un)"             "$(id -gn)"
+
+          mvhab_assert_web_traversal             "$ARTIFACT_DIR"             "$(id -un)"
 
           bash "$ARTIFACT_DIR/scripts/production/validate-production-runtime-contract.sh" --mode=artifact
 
@@ -157,6 +167,9 @@ jobs:
 
       - name: Validate route registration
         run: php artisan route:list --except-vendor
+
+      - name: Validate machine-readable route assertion
+        run: php scripts/production/assert-laravel-route.php login login GET
 
       - name: Run static analysis
         run: ./vendor/bin/phpstan analyse --memory-limit=1G -v

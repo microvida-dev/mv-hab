@@ -16,7 +16,7 @@ mvhab_assert_linux_tools()
     local command_name
 
     for command_name in \
-        ln mv chown stat readlink install runuser id test rm mkdir
+        ln mv chown stat readlink install runuser id test rm mkdir find chmod
     do
         command -v "$command_name" >/dev/null 2>&1 \
             || mvhab_fail "Comando obrigatório em falta: $command_name" \
@@ -105,11 +105,15 @@ mvhab_atomic_owned_symlink_switch()
 
 mvhab_assert_web_traversal()
 {
-    local current="$1"
+    local release="$1"
     shift
 
+    local current_user
     local web_user
     local failures=0
+    local tested_users=0
+
+    current_user="$(id -un)"
 
     for web_user in "$@"
     do
@@ -118,9 +122,21 @@ mvhab_assert_web_traversal()
             continue
         fi
 
-        if runuser -u "$web_user" -- test -x "$current" \
-            && runuser -u "$web_user" -- test -x "$current/public" \
-            && runuser -u "$web_user" -- test -r "$current/public/index.php"
+        tested_users=$((tested_users + 1))
+
+        if [[ "$web_user" == "$current_user" ]]; then
+            if test -x "$release" \
+                && test -x "$release/public" \
+                && test -r "$release/public/index.php"
+            then
+                printf 'WEB_ACCESS user=%s result=PASS\n' "$web_user"
+            else
+                printf 'WEB_ACCESS user=%s result=FAIL\n' "$web_user"
+                failures=1
+            fi
+        elif runuser -u "$web_user" -- test -x "$release" \
+            && runuser -u "$web_user" -- test -x "$release/public" \
+            && runuser -u "$web_user" -- test -r "$release/public/index.php"
         then
             printf 'WEB_ACCESS user=%s result=PASS\n' "$web_user"
         else
@@ -129,11 +145,90 @@ mvhab_assert_web_traversal()
         fi
     done
 
+    [[ "$tested_users" -gt 0 ]] \
+        || mvhab_fail "Nenhum utilizador web indicado existe neste host." \
+        || return 1
+
     [[ "$failures" -eq 0 ]] \
-        || mvhab_fail "A release ativa não é atravessável pelos utilizadores web." \
+        || mvhab_fail "A release indicada não é atravessável pelos utilizadores web." \
         || return 1
 
     printf 'WEB_TRAVERSAL_GATE=PASS\n'
+}
+
+mvhab_normalize_release_permissions()
+{
+    local release="$1"
+    local app_user="$2"
+    local app_group="$3"
+    local expected_owner="${app_user}:${app_group}"
+    local actual_owner
+
+    [[ -d "$release" && ! -L "$release" ]] \
+        || mvhab_fail "Release candidata inválida: $release" \
+        || return 1
+
+    actual_owner="$(stat -c '%U:%G' "$release")"
+
+    [[ "$actual_owner" == "$expected_owner" ]] \
+        || mvhab_fail "Ownership inesperado na raiz da release: $actual_owner" \
+        || return 1
+
+    # `git archive` pode materializar diretórios 0775 e ficheiros 0664.
+    # Removemos apenas escrita de group/other, preservando bits de execução.
+    find -P "$release" -type d -exec chmod go-w {} +
+    find -P "$release" -type f -exec chmod go-w {} +
+
+    # A raiz da release precisa de travessia por utilizadores web.
+    chmod 0755 "$release"
+
+    printf 'RELEASE_PERMISSION_NORMALIZATION=PASS\n'
+}
+
+mvhab_assert_release_permissions()
+{
+    local release="$1"
+    local app_user="$2"
+    local app_group="$3"
+    local expected_owner="${app_user}:${app_group}"
+    local actual_owner
+    local root_mode
+    local writable_path
+
+    [[ -d "$release" && ! -L "$release" ]] \
+        || mvhab_fail "Release candidata inválida: $release" \
+        || return 1
+
+    actual_owner="$(stat -c '%U:%G' "$release")"
+    root_mode="$(stat -c '%a' "$release")"
+
+    printf 'RELEASE_ROOT=%s\n' "$release"
+    printf 'RELEASE_ROOT_OWNER=%s\n' "$actual_owner"
+    printf 'RELEASE_ROOT_MODE=%s\n' "$root_mode"
+
+    [[ "$actual_owner" == "$expected_owner" ]] \
+        || mvhab_fail "Ownership inesperado na raiz da release: $actual_owner" \
+        || return 1
+
+    [[ "$root_mode" == "755" ]] \
+        || mvhab_fail "Mode da raiz da release deve ser 755: $root_mode" \
+        || return 1
+
+    writable_path="$(
+        find -P "$release" \
+            \( -type f -o -type d \) \
+            -perm /022 \
+            -print \
+            -quit
+    )"
+
+    [[ -z "$writable_path" ]] \
+        || mvhab_fail "Existe conteúdo group/other-writable na release: $writable_path" \
+        || return 1
+
+    printf 'RELEASE_ROOT_MODE_GATE=PASS\n'
+    printf 'RELEASE_NO_GROUP_OTHER_WRITE_GATE=PASS\n'
+    printf 'RELEASE_PERMISSION_GATE=PASS\n'
 }
 
 mvhab_prepare_app_runtime_dir()
